@@ -6,7 +6,8 @@ import argparse
 import time
 from pathlib import Path
 
-from secondwind.sim.output import generate
+from secondwind.sim import params as P
+from secondwind.sim.output import CLEAN_COPY, generate
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -19,10 +20,23 @@ def main(argv: list[str] | None = None) -> None:
         action="store_true",
         help="also write club test values (validation experiment only; broadcasters lack them)",
     )
+    parser.add_argument(
+        "--noise-sigma",
+        type=float,
+        default=P.NOISE_SIGMA,
+        help=f"position noise per axis, m (default {P.NOISE_SIGMA})",
+    )
+    parser.add_argument(
+        "--clean-copy",
+        action="store_true",
+        help=f"also save the noise-free positions to <out>/{CLEAN_COPY} (debugging only)",
+    )
     args = parser.parse_args(argv)
 
     started = time.perf_counter()
-    match = generate(args.seed, args.out, args.match_id, args.club_tests)
+    match = generate(
+        args.seed, args.out, args.match_id, args.club_tests, args.noise_sigma, args.clean_copy
+    )
     frames = sum(len(p.alive) for p in match.periods)
     print(
         f"wrote {args.out}: {frames} frames, {len(match.events)} events "

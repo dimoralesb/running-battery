@@ -1,8 +1,12 @@
 """Print a match summary: ``python -m secondwind.sim.summary data/synthetic/m0001``.
 
 Match length, ball in play, possession, event counts against the interim targets, and per-player
-distance and top speed. Speeds are plain frame-to-frame differences at 10 Hz: fine for today's
-noise-free positions, not for noisy ones (the estimator filters first, synthesis §3.1).
+distance, high-speed and sprint distance, and top speed. ``tracking.jsonl`` is noisy, so positions
+are first smoothed as in Deutsch2025: dropouts filled by linear interpolation, then a zero-lag
+4th-order Butterworth low-pass at 1 Hz (synthesis §3.1). Raw 10 Hz differences of σ = 0.1 m noise
+would make a player standing still seem to move at about 1.8 m/s (derived: 10 Hz × 0.1 m × √2 ×
+√(π/2)). ``--clean`` reads the noise-free debug copy instead, if the match was generated with
+``--clean-copy``.
 """
 
 from __future__ import annotations
@@ -13,9 +17,12 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
+from scipy.signal import butter, filtfilt
 
 from secondwind.io import Match, read_match
-from secondwind.schema import EventType, Phase
+from secondwind.schema import Event, EventType, Phase
+from secondwind.sim import params as P
+from secondwind.sim.output import read_clean_copy
 
 RESTARTS = {"kick_off", "throw_in", "goal_kick", "corner", "free_kick"}
 
@@ -31,6 +38,7 @@ TARGETS: dict[str, tuple[float, str]] = {
     "corners": (7.6, "Bassek2025, Fig. 3, approx."),
     "offsides": (2.3, "Bassek2025, Fig. 3, approx."),
     "transitions": (50, "Bortnik2022, Tables 1–2 (± 11)"),
+    "transition_s": (10.0, "Bortnik2022, Tables 1–2 (positive 10.9, negative 9.3 s)"),
 }
 BALL_IN_PLAY_BAND = (50.0, 63.0)  # [Kavanagh2024, p.80; Allen2026b, Table 2]
 POSSESSION_BAND = (40.0, 64.0)  # [Allen2026b, Table 2]
@@ -38,6 +46,8 @@ COUNT_TOLERANCE = 0.30  # our test tolerance on event counts
 # Rare events (under 5 a match) are noisier: for 2.3 offsides, the mean of 5 matches varies by
 # about ±30% from chance alone (Poisson, derived). Our test tolerance.
 RARE_COUNT_TOLERANCE = 0.50
+FILTER_HZ, FILTER_ORDER = 1.0, 4  # [Deutsch2025, Methods]; see synthesis §3.1
+SPRINT_SPEED = 7.0  # m/s (25.2 km/h) [Allen2024, p.781; synthesis §4.1]
 
 
 @dataclass(frozen=True)
@@ -48,14 +58,15 @@ class Summary:
     counts: dict[str, int]
     transition_s: float  # mean span of the events labelled as a transition (approx.)
     distance_m: dict[str, float]
+    hid_m: dict[str, float]  # above 5.5 m/s (19.8 km/h), sprint included
+    sprint_m: dict[str, float]  # above 7 m/s (25.2 km/h)
     top_speed: dict[str, float]  # m/s
     max_step_speed: float  # fastest frame-to-frame speed of any player, m/s
     positions: dict[str, str]
     extent: dict[str, float]  # largest |x|, |y| reached by players and the ball; ball z range
 
 
-def event_counts(match: Match) -> dict[str, int]:
-    events = match.events
+def event_counts(events: list[Event]) -> dict[str, int]:
     by_type = Counter(e.type.value for e in events)
     by_subtype = Counter(e.subtype for e in events if e.type == EventType.PASS)
     open_play = sum(n for sub, n in by_subtype.items() if sub not in RESTARTS)
@@ -82,7 +93,7 @@ def event_counts(match: Match) -> dict[str, int]:
     return counts
 
 
-def transition_seconds(match: Match, dead_starts: dict[int, np.ndarray]) -> float:
+def transition_seconds(events: list[Event], dead_starts: dict[int, np.ndarray]) -> float:
     """Mean transition length (approx.): from its first event to the next event that is not
     part of it, or to the moment the ball goes dead if that comes first."""
     transition = (Phase.POSITIVE_TRANSITION, Phase.NEGATIVE_TRANSITION)
@@ -93,7 +104,7 @@ def transition_seconds(match: Match, dead_starts: dict[int, np.ndarray]) -> floa
         later = dead[dead > current[2]]
         spans.append(min(t, later[0] if len(later) else t) - current[2])
 
-    for e in match.events:
+    for e in events:
         if e.team_id is None:
             continue
         key = (e.period, e.possession_id)
@@ -106,12 +117,49 @@ def transition_seconds(match: Match, dead_starts: dict[int, np.ndarray]) -> floa
     return float(np.mean(spans)) if spans else 0.0
 
 
-def summarise(folder: Path) -> Summary:
+def smooth(xy: np.ndarray) -> np.ndarray:
+    """Fill dropouts (NaN) by linear interpolation, then low-pass filter. ``xy`` is one period,
+    (frames, players, 2)."""
+    out = xy.copy()
+    k = np.arange(len(xy))
+    for j in range(xy.shape[1]):
+        for axis in (0, 1):
+            col = out[:, j, axis]
+            ok = ~np.isnan(col)
+            if ok.any() and not ok.all():
+                out[:, j, axis] = np.interp(k, k[ok], col[ok])
+    b, a = butter(FILTER_ORDER, FILTER_HZ, fs=P.FRAME_RATE_HZ)
+    return filtfilt(b, a, out, axis=0)
+
+
+def movement(periods: list[np.ndarray], ids: list[str]) -> dict[str, dict[str, float]]:
+    """Distance, high-speed and sprint distance, and top speed per player, from positions
+    (one (frames, players, 2) array per period, already smoothed if noisy)."""
+    step = np.concatenate([np.hypot(*np.diff(xy, axis=0).transpose(2, 0, 1)) for xy in periods])
+    speed = step * P.FRAME_RATE_HZ
+    out: dict[str, dict[str, float]] = {}
+    for name, keep in (
+        ("distance_m", np.ones_like(speed, dtype=bool)),
+        ("hid_m", speed > P.HI_SPEED),
+        ("sprint_m", speed > SPRINT_SPEED),
+    ):
+        total = np.where(keep, step, 0.0)
+        out[name] = {pid: float(total[:, j].sum()) for j, pid in enumerate(ids)}
+    out["top_speed"] = {pid: float(speed[:, j].max()) for j, pid in enumerate(ids)}
+    return out
+
+
+def summarise(folder: Path, clean: bool = False) -> Summary:
     """Read (and so validate) a match folder, then summarise it."""
-    return summarise_match(read_match(folder))
+    clean_pos = None
+    if clean:
+        data = read_clean_copy(folder)
+        clean_pos = [data[f"pos_{p}"] for p in (1, 2) if f"pos_{p}" in data]
+    return summarise_match(read_match(folder), clean_pos)
 
 
-def summarise_match(match: Match) -> Summary:
+def summarise_match(match: Match, clean_pos: list[np.ndarray] | None = None) -> Summary:
+    """Summary of a match; movement from ``clean_pos`` if given, else smoothed tracking."""
     meta = match.metadata
     frames = match.frames
     alive = np.array([f.ball_status == "alive" for f in frames])
@@ -131,18 +179,20 @@ def summarise_match(match: Match) -> Summary:
     t = np.array([f.t for f in frames])
     goes_dead = np.flatnonzero(alive[:-1] & ~alive[1:]) + 1
     dead_starts = {p.period: t[goes_dead[period[goes_dead] == p.period]] for p in meta.periods}
-    same_period = period[1:] == period[:-1]
-    step = np.hypot(*(np.diff(xy, axis=0)).transpose(2, 0, 1))[same_period]
-    speed = step * meta.frame_rate_hz
+    if clean_pos is None:
+        clean_pos = [smooth(xy[period == p.period]) for p in meta.periods]
+    moved = movement(clean_pos, ids)
     return Summary(
         match_minutes=sum(p.duration_s for p in meta.periods) / 60.0,
         ball_in_play_pct=100.0 * float(alive.mean()),
         possession_pct=possession,
-        counts=event_counts(match),
-        transition_s=transition_seconds(match, dead_starts),
-        distance_m={pid: float(np.nansum(step[:, j])) for j, pid in enumerate(ids)},
-        top_speed={pid: float(np.nanmax(speed[:, j])) for j, pid in enumerate(ids)},
-        max_step_speed=float(np.nanmax(speed)),
+        counts=event_counts(match.events),
+        transition_s=transition_seconds(match.events, dead_starts),
+        distance_m=moved["distance_m"],
+        hid_m=moved["hid_m"],
+        sprint_m=moved["sprint_m"],
+        top_speed=moved["top_speed"],
+        max_step_speed=max(moved["top_speed"].values()),
         positions={p.id: p.position.value for team in meta.teams for p in team.players},
         extent={
             "player_x": float(np.nanmax(np.abs(xy[..., 0]))),
@@ -182,18 +232,27 @@ def format_summary(folder: Path, s: Summary) -> str:
     others = {k[4:]: n for k, n in s.counts.items() if k.startswith("all_")}
     lines.append("  all types: " + ", ".join(f"{k} {n}" for k, n in others.items() if n))
     lines.append("")
-    lines.append(f"  {'player':<8}{'pos':<5}{'distance (m)':>13}{'top speed m/s (km/h)':>24}")
+    lines.append(
+        f"  {'player':<8}{'pos':<5}{'distance (m)':>13}{'>5.5 m/s':>10}{'>7 m/s':>8}"
+        f"{'top speed m/s (km/h)':>24}"
+    )
     for pid, dist in s.distance_m.items():
         v = s.top_speed[pid]
-        lines.append(f"  {pid:<8}{s.positions[pid]:<5}{dist:>13.0f}{v:>13.2f} ({v * 3.6:.1f})")
+        lines.append(
+            f"  {pid:<8}{s.positions[pid]:<5}{dist:>13.0f}{s.hid_m[pid]:>10.0f}"
+            f"{s.sprint_m[pid]:>8.0f}{v:>13.2f} ({v * 3.6:.1f})"
+        )
     return "\n".join(lines)
 
 
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(prog="python -m secondwind.sim.summary", description=__doc__)
     parser.add_argument("folder", type=Path)
+    parser.add_argument(
+        "--clean", action="store_true", help="movement from the noise-free debug copy"
+    )
     args = parser.parse_args(argv)
-    print(format_summary(args.folder, summarise(args.folder)))
+    print(format_summary(args.folder, summarise(args.folder, args.clean)))
 
 
 if __name__ == "__main__":

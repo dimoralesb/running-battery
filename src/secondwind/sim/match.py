@@ -9,7 +9,9 @@ The ball is always in one of four modes:
 - ``loose``: nobody controls it; the first player to reach it logs a ball recovery.
 
 Each frame the flow is updated first (and may log events), then the frame is recorded, then
-every player takes one movement step towards a target from the team shape and their role.
+every player takes one movement step towards a target from the team shape, their runs and their
+role (``roles.py``). The purpose behind each player's movement is recorded too, so that every
+high-intensity run can be labelled afterwards (``runs.py``).
 
 Conventions (our choices, needed by the estimator and the agents later):
 
@@ -39,6 +41,7 @@ import numpy as np
 from secondwind.schema import BodyPart, EventType, Outcome, PassHeight, Phase, Position
 from secondwind.sim import movement
 from secondwind.sim import params as P
+from secondwind.sim.roles import Roles
 from secondwind.sim.rosters import SimTeam
 
 GRAVITY = 9.81
@@ -99,6 +102,7 @@ class PeriodFrames:
     ball: np.ndarray  # (n, 3)
     alive: np.ndarray  # (n,) bool
     possession: np.ndarray  # (n,) int8 team index, -1 when contested
+    purpose: np.ndarray  # (n, 22) int8 code of the movement's purpose (roles.PURPOSES), -1 none
 
 
 class MatchEngine:
@@ -116,6 +120,7 @@ class MatchEngine:
         self.score = [0, 0]
         self.poss_id = 0
         self.transition_spans: list[float] = []  # realised length of each transition, s
+        self.roles = Roles(self)
 
     # --- Geometry ----------------------------------------------------------------------------
 
@@ -222,6 +227,7 @@ class MatchEngine:
         elif self.to_uv(team, where)[0] < -P.THIRD:
             if rng.random() < self.teams[1 - team].press_chance:
                 self.press = (1 - team, t + P.PRESS_MAX_S)
+        self.roles.on_possession_change(team, t)
 
     def end_transition(self, t: float) -> None:
         """A transition ends when its time is up, the ball changes hands, or play stops."""
@@ -272,6 +278,7 @@ class MatchEngine:
                 start=self.pos[opp],
                 end_t=self.touch.t_release,
             )
+        self.roles.on_touch(player, t)
 
     def end_touch(self, t: float) -> None:
         tc = self.touch
@@ -364,8 +371,9 @@ class MatchEngine:
         elif restart is None and zone == 2:
             weight = np.where(in_box, weight * P.BOX_RECEIVER_WEIGHT, weight)
         if restart not in NO_OFFSIDE:
-            offside = mates_uv[:, 0] > self.offside_line(team, origin)
-            weight = np.where(offside, weight * P.OFFSIDE_PASS_WEIGHT, weight)
+            beyond = mates_uv[:, 0] - self.offside_line(team, origin)
+            seen = P.OFFSIDE_PASS_WEIGHT * np.exp(-np.maximum(beyond, 0.0) / P.OFFSIDE_SEEN)
+            weight = np.where(beyond > 0, weight * seen, weight)
         weight = weight / weight.sum()
         return int(mates[rng.choice(len(mates), p=weight)])
 
@@ -430,6 +438,7 @@ class MatchEngine:
         if restart in ("kick_off", "throw_in", "goal_kick"):
             p_ok += 0.05
         p_ok = float(np.clip(p_ok, 0.15, 0.99))
+        self.roles.on_pass(t, c, r, through, wide_cross, open_play=restart is None)
 
         f = Flight(origin.copy(), end, t, snap(t + flight_s), peak, "complete", by=c, to=r)
         if offside:
@@ -721,6 +730,7 @@ class MatchEngine:
         self.touch = None
         self.end_transition(t)
         self.press = None
+        self.roles.clear()
 
     def take_restart(self, t: float) -> None:
         r = self.restart
@@ -730,7 +740,7 @@ class MatchEngine:
             kind = "free_kick_box"
         self.play_pass(t, r.taker, r.spot.copy(), restart=kind)
 
-    # --- Targets and ball --------------------------------------------------------------------
+    # --- Shapes and ball --------------------------------------------------------------------
 
     def kickoff_shape(self, team: int) -> np.ndarray:
         uv = movement.shape_targets(self.slots[team], np.zeros(2), in_possession=False)
@@ -743,68 +753,6 @@ class MatchEngine:
             push = (r < 9.65) & (r > 0)
             uv[push] *= (9.65 / r[push])[:, None]
         return uv
-
-    def targets(self, t: float) -> tuple[np.ndarray, np.ndarray]:
-        tgt = np.empty((22, 2))
-        cap = P.DRIFT_SPEED * self.s0
-        chase = P.CHASE_SPEED * self.s0
-        mode = self.mode
-        kick_off = mode == "dead" and self.restart.kind == "kick_off"
-        holder = self.poss_team if self.poss_team is not None else self.last_team
-        for k in (0, 1):
-            if kick_off:
-                uv = self.kickoff_shape(k)
-            else:
-                pressing = self.press is not None and self.press[0] == k
-                uv = movement.shape_targets(
-                    self.slots[k], self.to_uv(k, self.ball_xy[:2]), holder == k, pressing
-                )
-                if self.transition is not None and self.transition[0] == k:
-                    uv[1:, 0] += 8.0
-            tgt[self.members(k)] = self.to_uv(k, uv)
-        if holder is not None and not kick_off:
-            # Attackers hold their shape just onside; roles below (carrier, receiver) may not.
-            line = self.offside_line(holder, self.ball_xy[:2]) - P.ONSIDE_MARGIN
-            idx = self.members(holder)[1:]
-            uv = self.to_uv(holder, tgt[idx])
-            uv[:, 0] = np.minimum(uv[:, 0], line)
-            tgt[idx] = self.to_uv(holder, uv)
-        if self.transition is not None:
-            cap = chase.copy()
-
-        if mode == "touch":
-            c = self.touch.player
-            tgt[c] = self.touch.carry_to
-            cap[c] = min(self.touch.carry_speed, chase[c])
-            opp_team = 1 - int(self.team_of[c])
-            n_press = 2 if self.press is not None and self.press[0] == opp_team else 1
-            idx = self.members(opp_team)[1:]
-            d = np.hypot(*(self.pos[idx] - self.pos[c]).T)
-            for i in idx[np.argsort(d)[:n_press]]:
-                tgt[i] = self.pos[c]
-                cap[i] = chase[i]
-        elif mode == "flight":
-            f = self.flight
-            for i in (f.to, f.challenger):
-                if i >= 0:
-                    tgt[i] = f.end
-                    cap[i] = chase[i]
-        elif mode == "loose":
-            for k in (0, 1):
-                idx = self.members(k)
-                d = np.hypot(*(self.pos[idx] - self.loose_point).T)
-                for i in idx[np.argsort(d)[:2]]:
-                    tgt[i] = self.loose_point
-                    cap[i] = chase[i]
-        elif mode == "dead":
-            r = self.restart
-            if r.kind == "corner" or (
-                r.kind == "free_kick" and self.to_uv(r.team, r.spot)[0] > 25.0
-            ):
-                self.set_piece_targets(tgt, r.team)
-            tgt[r.taker] = r.spot
-            cap[r.taker] = 0.7 * chase[r.taker]
-        return tgt, cap
 
     def set_piece_targets(self, tgt: np.ndarray, attackers: int) -> None:
         att = self.members(attackers)
@@ -877,11 +825,13 @@ class MatchEngine:
         self.pos[self.restart.taker] = 0.0
         self.vel = np.zeros((22, 2))
         self.ball_xy = np.zeros(3)
+        self.roles.clear()
 
         pos = np.empty((n_frames, 22, 2))
         ball = np.empty((n_frames, 3))
         alive = np.empty(n_frames, dtype=bool)
         possession = np.empty(n_frames, dtype=np.int8)
+        purpose = np.empty((n_frames, 22), dtype=np.int8)
         self.log(EventType.PERIOD_START, 0.0)
         for k in range(n_frames):
             t = round(k / P.FRAME_RATE_HZ, 1)
@@ -891,9 +841,9 @@ class MatchEngine:
             ball[k] = self.ball_xy
             alive[k] = self.mode != "dead"
             possession[k] = -1 if self.poss_team is None else self.poss_team
-            target, cap = self.targets(t)
+            target, cap, purpose[k] = self.roles.targets(t)
             self.pos, self.vel = movement.step(self.pos, self.vel, target, cap, self.a0, self.s0)
         t_end = round((n_frames - 1) / P.FRAME_RATE_HZ, 1)
         self.end_transition(t_end)
         self.log(EventType.PERIOD_END, t_end)
-        return PeriodFrames(period, pos, ball, alive, possession)
+        return PeriodFrames(period, pos, ball, alive, possession, purpose)

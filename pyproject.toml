@@ -14,6 +14,9 @@ dependencies = [
 [project.optional-dependencies]
 # Offline calibration against open data (IDSSE). Never needed to run the demo.
 calib = ["floodlight>=1.2"]
+# Replay as GIF or still frames (python -m secondwind.sim.replay --gif / --stills). The HTML
+# replay needs nothing extra.
+replay = ["matplotlib>=3.9"]
 
 [dependency-groups]
 dev = ["pytest>=8.3", "ruff>=0.8"]

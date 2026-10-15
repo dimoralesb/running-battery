@@ -1,4 +1,4 @@
-"""Tuning constants for generator v0 (BUILD_PLAN §4, "Thu 15").
+"""Tuning constants for the generator (BUILD_PLAN §4, "Thu 15" and "Fri 16").
 
 Every number has a source ("synthesis §x" is docs/RESEARCH_SYNTHESIS.md) or is labelled "our
 assumption". Most "our assumption" values are knobs tuned so that the match totals land on the
@@ -53,15 +53,66 @@ TAU_SLOW_RANGE = (400.0, 500.0)  # s, when walking
 # (synthesis §3.2.3).
 TEST_ERROR_SD = dict(cs=0.05, d_prime=0.15, a0=0.054, s0=0.033)
 
-# Braking cap. The A0–S0 profile limits speeding up only; a separate cap of about 5–6 m/s² stops
-# hard reversals at speed (synthesis §4.10, our assumption).
+# --- Motion model (synthesis §4.10) ------------------------------------------------------------
+
+# Equation of motion dv/dt = α(V·n − v) [Narizuka2023, Eq. 3], with α = A0/S0 per player and
+# V = S0 at full effort (synthesis §4.10, derived). Lower efforts use a lower V: our assumption.
+# Speeding up is capped at a_max(v) = A0·(1 − v/S0) [Morin2021, p.2]. The model allows hard
+# reversals at speed, so braking gets its own cap of about 5–6 m/s² (synthesis §4.10, our
+# assumption). Turning (sideways acceleration) uses the same cap: our assumption.
 BRAKE_MAX = 5.5
+TURN_MAX = 5.5
 # Time to close the gap to a moving target: τ ≈ S0/A0 ≈ 1.25 s (synthesis §3.6, derived).
 ARRIVE_TAU = 1.25
-# Speed caps by how urgent a movement is, as a share of S0. Our assumption; replaced by Friday's
-# role behaviours.
+
+# --- Role behaviours and run purposes ------------------------------------------------------------
+
+# A high-intensity run: above 5.5 m/s (19.8 km/h) for at least 1 s [Ju2022, p.974].
+HI_SPEED = 5.5
+HI_MIN_S = 1.0
+# Effort levels as a share of S0, by how urgent a movement is. Our assumption, tuned on Sunday.
 DRIFT_SPEED = 0.42  # holding the team shape
-CHASE_SPEED = 0.90  # receiver, presser, loose ball, transition runs
+DEAD_SPEED = 0.40  # walking back into shape while the ball is dead
+CHASE_SPEED = 0.90  # receiver, presser, interceptor, loose ball
+RUN_SPEED = 0.88  # in-possession runs: in behind, overlap, into the box, support
+SHOW_SPEED = 0.70  # coming short to receive
+ONSIDE_SPEED = 0.60  # hurrying back from an offside position
+# Shape runs: past SHAPE_RUN_GAP metres from their shape target, a player starts a labelled run
+# (recovery run, covering, pushing up, support) until the gap is back under SHAPE_RUN_END. Its
+# speed grows with the gap at the start, from SHAPE_RUN_MIN to SHAPE_RUN_SPEED at SHAPE_RUN_FULL
+# metres; a recovery run (not goal-side of the ball) is always at SHAPE_RUN_SPEED. Our assumption.
+SHAPE_RUN_GAP = 9.0
+SHAPE_RUN_FULL = 25.0
+SHAPE_RUN_END = 3.0
+SHAPE_RUN_MIN = 0.50
+SHAPE_RUN_SPEED = 0.82
+SHAPE_RUN_MAX_S = 8.0
+# A defender this close to where a pass will arrive closes the receiver down. Our assumption.
+CLOSE_DOWN_REACH = 15.0
+# Closing down aims this far goal-side of the opponent, not at the opponent. Our assumption.
+PRESS_GAP = 1.5
+# Cover: the second defender stands this far behind the presser, on the line to goal. Our
+# assumption.
+COVER_DEPTH = 8.0
+# Chances that a run starts when a team-mate gets the ball (per touch), and how long it lasts.
+# Our assumption.
+SHOW_CHANCE = 0.35  # one team-mate comes short to offer a pass
+OVERLAP_CHANCE = 0.45  # full-back overlaps a wide player on the ball, middle or final third
+BOX_RUN_CHANCE = 0.85  # each forward breaks into the box when the ball is wide in the final third
+BEHIND_CHANCE = 0.30  # a forward near the offside line runs in behind as the pass is played
+SUPPORT_RUNNERS = 2  # midfielders who sprint up in support during a positive transition
+RUN_S = (2.0, 4.5)  # length of a triggered run, s
+
+# --- Position noise (synthesis §3.1) -------------------------------------------------------------
+
+# Optical tracking error 0.06–0.18 m [Bassek2025, p.7]; σ ≈ 0.1 m per axis (synthesis §3.1).
+# Drawn after the match from the same generator, so the match itself never changes with it.
+NOISE_SIGMA = 0.1
+# Dropouts: a player is missing from a few frames now and then. The IDSSE validation found no
+# missing frames [Bassek2025, p.8]; we add them only to test the estimator's gap filling. Rate
+# and length are our assumption.
+DROPOUTS_PER_MIN = 0.2  # per player
+DROPOUT_S = (0.2, 2.0)
 
 # --- Formation ----------------------------------------------------------------------------------
 
@@ -118,10 +169,12 @@ PASS_BASE_SUCCESS = 0.93
 # Offside [IFAB2025, Law 11]: a receiver in the opponent's half, ahead of both the ball and the
 # second-last opponent, when the ball is played; not from throw-ins, goal kicks or corners.
 # About 2.3 per match [Bassek2025, Fig. 3; approx.]. Attackers hold their shape this far
-# onside, and passers mostly avoid offside team-mates: both our assumption, the weight tuned to
-# the count.
+# onside, and passers avoid offside team-mates, the more so the clearer the offside (weight
+# falls by e every OFFSIDE_SEEN metres beyond the line): our assumption, the weight tuned to the
+# count.
 ONSIDE_MARGIN = 1.0  # m
-OFFSIDE_PASS_WEIGHT = 0.08
+OFFSIDE_PASS_WEIGHT = 0.09
+OFFSIDE_SEEN = 1.0  # m
 # Through balls: a pass into space up to 15 m beyond a receiver standing near the offside line.
 # Offside is judged when the ball is played, so the run behind is legal. Our assumption.
 THROUGH_BALL = 0.7  # chance, when the receiver is within THROUGH_BALL_NEAR_LINE of the line
@@ -134,7 +187,7 @@ PASS_SPEED_GROUND = (9.0, 0.22)  # m/s = a + b·length
 PASS_SPEED_HIGH = (11.0, 0.25)
 PASS_FINAL_THIRD_PENALTY = 0.08  # passes into a crowded final third fail more often
 BOX_RECEIVER_WEIGHT = 0.8  # in the final third, fewer passes go straight into the box
-FAIL_SPLIT = dict(intercepted=0.37, out=0.55, loose=0.08)  # how a failed ground pass fails
+FAIL_SPLIT = dict(intercepted=0.42, out=0.50, loose=0.08)  # how a failed ground pass fails
 OUT_REACH = 22.0  # m; a pass failing this close to a line goes out of play
 OUT_DEFLECTED = 0.10  # share of those over the opponent's goal line a defender touched last
 AERIAL_DUEL_RADIUS = 8.0  # m; an opponent this close to a high pass's landing spot contests it
@@ -142,7 +195,7 @@ AERIAL_RECEIVER_WINS = 0.5
 MISCONTROL = 0.03  # chance a reception bounces loose
 
 # Ground duels against the ball carrier.
-DUEL_PER_TOUCH = 0.21
+DUEL_PER_TOUCH = 0.18
 DUEL_REACH = 4.0  # m; the challenger must be this close
 DUEL_CHALLENGER_WINS = 0.5
 DUEL_TACKLER_KEEPS = 0.4  # otherwise the ball runs loose
@@ -153,7 +206,7 @@ PRESSURE_RADIUS = 5.0  # m; the nearest opponent within this distance logs a pre
 # Shots. xG per shot 0.11 ± 0.15 [Bassek2025, p.6]. The logistic xG curve and the shot rate
 # are our assumption, tuned to about 24 shots per match [Bassek2025, p.6].
 SHOT_RANGE = 30.0  # m from the goal centre
-SHOT_RATE = 0.75  # chance of shooting on release, at the goal line; falls with distance
+SHOT_RATE = 0.85  # chance of shooting on release, at the goal line; falls with distance
 SHOT_RATE_SCALE = 16.0  # m
 XG_COEF = (-1.1, -0.11, 1.6)  # intercept, per m of distance, per rad of goal-mouth angle
 SHOT_SPLIT = dict(saved=0.30, wide=0.45, blocked=0.25)  # non-goals [Bassek2025, Fig. 3; approx.]
@@ -182,7 +235,7 @@ LONG_STOPPAGE_S = (30.0, 90.0)
 # 9.3 ± 3.4 s [Bortnik2022, Tables 1–2]. The chance that an open-play turnover starts one is
 # our assumption, tuned to the count. The drawn length is longer than 10 s because many end
 # early (turnover, ball out); tuned so the realised length is about 10 s (our assumption).
-TRANSITION_CHANCE = 0.35
+TRANSITION_CHANCE = 0.32
 TRANSITION_S = (15.0, 4.5, 5.0, 27.0)  # drawn length: mean, SD, min, max
 # High press: chance the defending team presses when the opponent has the ball in its own
 # third; lasts at most about 10 s (high-press spells 9.8 ± 3.7 s [Bortnik2022, Table 2]).

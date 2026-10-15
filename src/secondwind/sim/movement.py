@@ -1,8 +1,10 @@
-"""Simple movement at 10 Hz: team-shape targets and an acceleration-limited step.
+"""Movement at 10 Hz: team-shape targets and the motion model.
 
-Each player heads for a target point. Speeding up is capped by the player's own profile,
-a_max(v) = A0·(1 − v/S0) [Morin2021, p.2]; slowing down and turning by ``BRAKE_MAX``; speed by S0.
-This is the v0 stand-in for the proper motion model [Narizuka2023] that comes on Friday.
+Each player heads for a target point at a wanted speed (set by their role, see ``roles.py``).
+The motion model is dv/dt = α(V·n − v) [Narizuka2023, Eq. 3]: n points at the target, α = A0/S0
+and V = S0 at full effort (synthesis §4.10). Speeding up is capped by the player's own profile,
+a_max(v) = A0·(1 − v/S0) [Morin2021, p.2]; braking by ``BRAKE_MAX``, turning by ``TURN_MAX``, and
+speed by S0. At full effort straight ahead the model and the cap agree: α(S0 − v) = a_max(v).
 
 The team-shape helpers work in a team's *attacking frame*: u points at the opponent's goal and
 v to the team's left, so x = dir·u and y = dir·v with dir = ±1. Inline numbers (line limits,
@@ -44,6 +46,11 @@ def clip_to_pitch(points: np.ndarray, edge: float = EDGE) -> np.ndarray:
     return np.clip(points, -lim, lim)
 
 
+def a_max(speed: np.ndarray, a0: np.ndarray, s0: np.ndarray) -> np.ndarray:
+    """The most a player can speed up at ``speed``, m/s² [Morin2021, p.2]."""
+    return np.maximum(a0 * (1.0 - speed / s0), 0.0)
+
+
 def step(
     pos: np.ndarray,
     vel: np.ndarray,
@@ -52,24 +59,34 @@ def step(
     a0: np.ndarray,
     s0: np.ndarray,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Advance every player one frame towards its target. All arrays are per player."""
+    """Advance every player one frame towards its target. All arrays are per player.
+
+    ``speed_cap`` is the wanted speed V (at most S0). Near the target V falls to gap / τ, so
+    players arrive without overshooting (``ARRIVE_TAU``).
+    """
     gap = target - pos
     dist = np.hypot(gap[:, 0], gap[:, 1])
-    want_speed = np.minimum(speed_cap, dist / P.ARRIVE_TAU)
+    want_speed = np.minimum(np.minimum(speed_cap, s0), dist / P.ARRIVE_TAU)
     with np.errstate(invalid="ignore", divide="ignore"):
         heading = np.where(dist[:, None] > 1e-6, gap / dist[:, None], 0.0)
-    want_vel = heading * want_speed[:, None]
+    acc = (a0 / s0)[:, None] * (heading * want_speed[:, None] - vel)
 
-    speed = np.hypot(vel[:, 0], vel[:, 1])
-    speeding_up = want_speed > speed
-    a_cap = np.where(speeding_up, np.maximum(a0 * (1.0 - speed / s0), 0.0), P.BRAKE_MAX)
-    dv = want_vel - vel
-    dv_norm = np.hypot(dv[:, 0], dv[:, 1])
-    with np.errstate(invalid="ignore", divide="ignore"):
-        scale = np.where(dv_norm > 1e-9, np.minimum(1.0, a_cap * P.DT / dv_norm), 0.0)
-    vel = vel + dv * scale[:, None]
-
+    # Split into the part along the current velocity (speeding up or braking) and the part
+    # across it (turning), and cap each.
     speed = np.hypot(vel[:, 0], vel[:, 1])
     with np.errstate(invalid="ignore", divide="ignore"):
-        vel = vel * np.where(speed > s0, s0 / speed, 1.0)[:, None]
+        along = np.where(speed[:, None] > 1e-6, vel / speed[:, None], heading)
+    a_along = np.einsum("ij,ij->i", acc, along)
+    a_across = acc - a_along[:, None] * along
+    a_along = np.clip(a_along, -P.BRAKE_MAX, a_max(speed, a0, s0))
+    across = np.hypot(a_across[:, 0], a_across[:, 1])
+    with np.errstate(invalid="ignore", divide="ignore"):
+        a_across *= np.where(across > P.TURN_MAX, P.TURN_MAX / across, 1.0)[:, None]
+    vel = vel + (a_along[:, None] * along + a_across) * P.DT
+
+    # Turning adds a little speed in a discrete step: keep the gain within a_max(v) and S0.
+    new_speed = np.hypot(vel[:, 0], vel[:, 1])
+    limit = np.minimum(s0, speed + a_max(speed, a0, s0) * P.DT)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        vel = vel * np.where(new_speed > limit, limit / new_speed, 1.0)[:, None]
     return pos + vel * P.DT, vel

@@ -22,7 +22,14 @@ uv run ruff check . && uv run ruff format --check .
 uv run python -m secondwind.schema   # re-export JSON Schemas after changing the models
 uv run python -m secondwind.sim --seed 1 --out data/synthetic/m0001   # generate one match
 uv run python -m secondwind.sim.summary data/synthetic/m0001          # summarise it
+uv run python -m secondwind.sim.replay data/synthetic/m0001 --start 12:00 --purposes  # replay.html
+uv run python -m secondwind.sim.batch --seeds 1-10                     # means over 10 matches
 ```
+
+Replay as a GIF or still frames needs matplotlib: `uv sync --all-extras` (or `--extra replay`),
+then add `--gif` or `--stills 6`. Add `--clean-copy` when generating to keep the noise-free positions for debugging
+(`debug/tracking_clean.npz`; not part of the match data).
+
 
 ## License
 
