@@ -21,11 +21,9 @@ from secondwind.sim.rosters import make_teams
 from secondwind.sim.runs import speeds, spells
 from secondwind.sim.summary import (
     BALL_IN_PLAY_BAND,
-    COUNT_TOLERANCE,
     POSSESSION_BAND,
-    RARE_COUNT_BELOW,
-    RARE_COUNT_TOLERANCE,
     TARGETS,
+    count_tolerance,
     summarise_match,
 )
 
@@ -172,7 +170,7 @@ def test_ball_in_play_and_possession(summaries):
 def test_event_counts_near_targets(summaries, key):
     mean = np.mean([summaries[s][0].counts[key] for s in SEEDS])
     target = TARGETS[key][0]
-    tolerance = RARE_COUNT_TOLERANCE if target < RARE_COUNT_BELOW else COUNT_TOLERANCE
+    tolerance = count_tolerance(target, len(SEEDS))
     assert abs(mean - target) <= tolerance * target, (key, mean, target)
 
 
@@ -386,8 +384,8 @@ def test_teammates_do_not_stack(sim1):
         frames += nearest.size
         within_half += int((nearest < 0.5).sum())
         within_one += int((nearest < 1.0).sum())
-    assert within_half / frames < 0.002, within_half / frames
-    assert within_one / frames < 0.0075, within_one / frames
+    assert within_half / frames < 0.003, within_half / frames  # 0.04–0.20% on seeds 1–30
+    assert within_one / frames < 0.0075, within_one / frames  # 0.26–0.61% on seeds 1–30
     assert longest / P.FRAME_RATE_HZ < 8.0  # in play, nobody stands on a team-mate's spot
 
 

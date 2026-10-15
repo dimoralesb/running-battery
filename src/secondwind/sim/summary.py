@@ -12,6 +12,7 @@ would make a player standing still seem to move at about 0.9 m/s (derived: 10 Hz
 from __future__ import annotations
 
 import argparse
+import math
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
@@ -44,12 +45,16 @@ TARGETS: dict[str, tuple[float, str]] = {
 BALL_IN_PLAY_BAND = (50.0, 63.0)  # [Kavanagh2024, p.80; Allen2026b, Table 2]
 POSSESSION_BAND = (40.0, 64.0)  # [Allen2026b, Table 2]
 COUNT_TOLERANCE = 0.30  # our test tolerance on event counts
-# Rare events (under RARE_COUNT_BELOW a match) are noisier: for 2.3 offsides, the mean of 5
-# matches varies by about ±30% from chance alone (Poisson, derived); for 7.6 corners by about
-# ±17% (1 SD; 2.9 per match in our 240-seed batch, 2026-10-15), so ±30% would fail about one run
-# in 12 with the long-run mean on target (normal approximation, derived). Our test tolerance.
-RARE_COUNT_TOLERANCE = 0.50
-RARE_COUNT_BELOW = 10.0
+
+
+def count_tolerance(target: float, matches: int) -> float:
+    """Relative tolerance for the mean count over a few matches: COUNT_TOLERANCE, widened to
+    three standard errors of a Poisson count where chance alone moves the mean more (our test
+    tolerance). Over 5 matches: corners (7.6) ±49%, offsides (2.3) ±88%; ±30% for the rest.
+    Matches differ between machines (floating point), so a test must hold for any 5 matches."""
+    return max(COUNT_TOLERANCE, 3.0 * math.sqrt(target / matches) / target)
+
+
 FILTER_HZ, FILTER_ORDER = 1.0, 4  # [Deutsch2025, Methods]; see synthesis §3.1
 SPRINT_SPEED = 7.0  # m/s (25.2 km/h) [Allen2024, p.781; synthesis §4.1]
 # Speed and acceleration of tracking errors, removed before any statistic [Deutsch2025, Methods].
