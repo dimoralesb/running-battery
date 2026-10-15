@@ -116,6 +116,10 @@ class MatchEngine:
         self.a0 = np.array([p.params.a0 for p in players])
         self.s0 = np.array([p.params.s0 for p in players])
         self.slots = [np.array([p.slot for p in team.players]) for team in teams]
+        self.hold = [
+            np.array([P.OUT_OF_POSSESSION_HOLD.get(p.position, 0.0) for p in team.players])
+            for team in teams
+        ]
         self.events: list[dict] = []
         self.score = [0, 0]
         self.poss_id = 0
@@ -257,6 +261,8 @@ class MatchEngine:
             speed = rng.uniform(*P.CARRY_SPEED_TRANSITION)
         else:
             speed = rng.uniform(*P.CARRY_SPEED)
+        if not is_gk:
+            speed = max(speed, P.CARRY_MOMENTUM * float(np.hypot(*self.vel[player])))
         start = self.pos[player].copy()
         # Carry towards the opponent's goal, with a spread of angles and a pull to the middle.
         u, v = self.to_uv(team, start)
@@ -438,7 +444,7 @@ class MatchEngine:
         if restart in ("kick_off", "throw_in", "goal_kick"):
             p_ok += 0.05
         p_ok = float(np.clip(p_ok, 0.15, 0.99))
-        self.roles.on_pass(t, c, r, through, wide_cross, open_play=restart is None)
+        self.roles.on_pass(t, c, r, through, wide_cross, restart is None, end)
 
         f = Flight(origin.copy(), end, t, snap(t + flight_s), peak, "complete", by=c, to=r)
         if offside:
@@ -806,6 +812,14 @@ class MatchEngine:
         elif mode == "loose":
             self.update_loose(t)
 
+    def update_shape_weights(self) -> None:
+        """Move each team's in-possession shape weight towards 1 or 0 (``SHAPE_SWITCH_S``)."""
+        holder = self.poss_team if self.poss_team is not None else self.last_team
+        for k in (0, 1):
+            goal = 1.0 if holder == k else 0.0
+            tau = P.SHAPE_SWITCH_S[0] if goal > self.shape_w[k] else P.SHAPE_SWITCH_S[1]
+            self.shape_w[k] += (goal - self.shape_w[k]) * (1.0 - math.exp(-P.DT / tau))
+
     def run_period(self, period: int, n_frames: int, kick_team: int) -> PeriodFrames:
         self.period = period
         home_dir = 1.0 if self.teams[0].attacks_positive_x_in_period_1 else -1.0
@@ -825,6 +839,8 @@ class MatchEngine:
         self.pos[self.restart.taker] = 0.0
         self.vel = np.zeros((22, 2))
         self.ball_xy = np.zeros(3)
+        self.shape_ball = np.zeros(2)
+        self.shape_w = np.full(2, 0.5)
         self.roles.clear()
 
         pos = np.empty((n_frames, 22, 2))
@@ -832,17 +848,22 @@ class MatchEngine:
         alive = np.empty(n_frames, dtype=bool)
         possession = np.empty(n_frames, dtype=np.int8)
         purpose = np.empty((n_frames, 22), dtype=np.int8)
+        lag = 1.0 - math.exp(-P.DT / P.SHAPE_LAG_S)
         self.log(EventType.PERIOD_START, 0.0)
         for k in range(n_frames):
             t = round(k / P.FRAME_RATE_HZ, 1)
             self.update(t)
             self.ball_xy = self.ball_at(t)
+            self.shape_ball += (self.ball_xy[:2] - self.shape_ball) * lag
+            self.update_shape_weights()
             pos[k] = self.pos
             ball[k] = self.ball_xy
             alive[k] = self.mode != "dead"
             possession[k] = -1 if self.poss_team is None else self.poss_team
-            target, cap, purpose[k] = self.roles.targets(t)
-            self.pos, self.vel = movement.step(self.pos, self.vel, target, cap, self.a0, self.s0)
+            target, cap, purpose[k], calm = self.roles.targets(t)
+            self.pos, self.vel = movement.step(
+                self.pos, self.vel, target, cap, self.a0, self.s0, calm
+            )
         t_end = round((n_frames - 1) / P.FRAME_RATE_HZ, 1)
         self.end_transition(t_end)
         self.log(EventType.PERIOD_END, t_end)

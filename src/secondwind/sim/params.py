@@ -1,8 +1,12 @@
-"""Tuning constants for the generator (BUILD_PLAN §4, "Thu 15" and "Fri 16").
+"""Tuning constants for the generator (BUILD_PLAN §4, "Thu 15" to "Sun 18").
 
 Every number has a source ("synthesis §x" is docs/RESEARCH_SYNTHESIS.md) or is labelled "our
-assumption". Most "our assumption" values are knobs tuned so that the match totals land on the
-interim targets in ``secondwind.sim.summary.TARGETS``; Sunday's calibration replaces them.
+assumption". Most "our assumption" values are knobs. The movement knobs were calibrated on
+2026-10-15 with fatigue off (``sim.batch``, 90–120 seeds): distance, >5.5 m/s and >7 m/s per
+position against synthesis §4.2, running by phase [Allen2026b, Table 5], and time in speed bands
+against IDSSE (``sim.idsse``). The match-flow knobs are tuned to the interim targets in
+``secondwind.sim.summary.TARGETS``. Saturday's fatigue model will move the totals a little; the
+batch should be re-run then.
 """
 
 from __future__ import annotations
@@ -64,28 +68,68 @@ BRAKE_MAX = 5.5
 TURN_MAX = 5.5
 # Time to close the gap to a moving target: τ ≈ S0/A0 ≈ 1.25 s (synthesis §3.6, derived).
 ARRIVE_TAU = 1.25
+# Calm movement (holding the shape, repositioning, walking while the ball is dead) is not a
+# maximal effort: α is scaled by CALM_ALPHA and the arrival time is CALM_ARRIVE_TAU. Our
+# assumption, tuned to the IDSSE acceleration bands (PLAN §2.5).
+CALM_ALPHA = 0.5
+CALM_ARRIVE_TAU = 2.5
 
 # --- Role behaviours and run purposes ------------------------------------------------------------
 
 # A high-intensity run: above 5.5 m/s (19.8 km/h) for at least 1 s [Ju2022, p.974].
 HI_SPEED = 5.5
 HI_MIN_S = 1.0
-# Effort levels as a share of S0, by how urgent a movement is. Our assumption, tuned on Sunday.
+# Effort levels as a share of S0, by how urgent a movement is. Our assumption, tuned with the
+# rest of the movement knobs (module docstring).
 DRIFT_SPEED = 0.42  # holding the team shape
 DEAD_SPEED = 0.40  # walking back into shape while the ball is dead
 CHASE_SPEED = 0.90  # receiver, presser, interceptor, loose ball
 RUN_SPEED = 0.88  # in-possession runs: in behind, overlap, into the box, support
 SHOW_SPEED = 0.70  # coming short to receive
 ONSIDE_SPEED = 0.60  # hurrying back from an offside position
+# Full effort is V = S0 (synthesis §4.10). The hardest runs use a share of it: runs in behind
+# and chasing a through ball (BEHIND_EFFORT), tracking a runner (TRACK_EFFORT), support runs on
+# a counter-attack (COUNTER_SUPPORT_EFFORT), overlaps (OVERLAP_EFFORT) and recovery runs from
+# far out of position (RECOVERY_EFFORT). Our assumption, tuned to sprint distance and top speed
+# per position (synthesis §4.2; [SilvaH2025, Table 1]).
+BEHIND_EFFORT = 1.0
+TRACK_EFFORT = 0.95
+COUNTER_SUPPORT_EFFORT = 0.95
+OVERLAP_EFFORT = 0.86
+RECOVERY_EFFORT = 0.92
+SPRINT_RUN_S = (3.0, 6.0)  # how long a sprint run may last, s. Our assumption.
+# Work rate per position: the wanted speed of every run and ball role (not calm movement) is
+# multiplied by this, then capped at S0. Position differences come from role behaviour, not
+# from different physical settings (PLAN §7, decision 3). Our assumption, fitted to HID and
+# sprint distance per position (synthesis §4.2) on 90–120 seeds. Sprint distance is sensitive: 1%
+# more effort gives about 5–10% more distance above 7 m/s.
+POSITION_EFFORT = {
+    Position.GK: 1.008,
+    Position.CB: 0.945,
+    Position.FB: 1.0,
+    Position.DM: 1.04,
+    Position.CM: 1.043,
+    Position.AM: 1.008,
+    Position.WM: 1.02,
+    Position.CF: 0.974,
+}
+# Defenders (CB, FB) who track an opponent running in behind: the nearest TRACKERS, aiming
+# TRACK_GOAL_SIDE metres goal-side of where the runner is going. Our assumption.
+TRACKERS = 1
+TRACK_GOAL_SIDE = 2.0
+# A player who receives on the run keeps up to this much of their speed while carrying the
+# ball (run with ball). Our assumption.
+CARRY_MOMENTUM = 0.85
 # Shape runs: past SHAPE_RUN_GAP metres from their shape target, a player starts a labelled run
 # (recovery run, covering, pushing up, support) until the gap is back under SHAPE_RUN_END. Its
 # speed grows with the gap at the start, from SHAPE_RUN_MIN to SHAPE_RUN_SPEED at SHAPE_RUN_FULL
-# metres; a recovery run (not goal-side of the ball) is always at SHAPE_RUN_SPEED. Our assumption.
+# metres; a recovery run (not goal-side of the ball) in danger (DANGER_U) grows from
+# SHAPE_RUN_SPEED to RECOVERY_EFFORT. Our assumption.
 SHAPE_RUN_GAP = 9.0
 SHAPE_RUN_FULL = 25.0
 SHAPE_RUN_END = 3.0
 SHAPE_RUN_MIN = 0.50
-SHAPE_RUN_SPEED = 0.82
+SHAPE_RUN_SPEED = 0.84
 SHAPE_RUN_MAX_S = 8.0
 # A defender this close to where a pass will arrive closes the receiver down. Our assumption.
 CLOSE_DOWN_REACH = 15.0
@@ -97,11 +141,44 @@ COVER_DEPTH = 8.0
 # Chances that a run starts when a team-mate gets the ball (per touch), and how long it lasts.
 # Our assumption.
 SHOW_CHANCE = 0.35  # one team-mate comes short to offer a pass
-OVERLAP_CHANCE = 0.45  # full-back overlaps a wide player on the ball, middle or final third
+OVERLAP_CHANCE = 0.75  # full-back overlaps a wide player on the ball, middle or final third
 BOX_RUN_CHANCE = 0.85  # each forward breaks into the box when the ball is wide in the final third
-BEHIND_CHANCE = 0.30  # a forward near the offside line runs in behind as the pass is played
-SUPPORT_RUNNERS = 2  # midfielders who sprint up in support during a positive transition
+BEHIND_CHANCE = 0.25  # a forward near the offside line runs in behind as the pass is played
+SUPPORT_RUNNERS = 2  # midfielders (not the DM) who sprint up in support in a positive transition
+# On a positive transition, each forward ahead of the ball sprints towards goal with this
+# chance (positive transitions hold the most sprinting [Bortnik2022, Fig. 3]), COUNTER_DEPTH
+# metres ahead. These runs may go beyond the offside line; passers avoid offside team-mates
+# (OFFSIDE_PASS_WEIGHT). Our assumption, tuned to forwards' sprint distance (synthesis §4.2).
+COUNTER_RUN_CHANCE = 0.55
+COUNTER_DEPTH = (15.0, 30.0)
+# How far beyond the offside line a run in behind aims, m. Our assumption.
+BEHIND_DEPTH = (15.0, 30.0)
 RUN_S = (2.0, 4.5)  # length of a triggered run, s
+# Exploit space: when a team-mate has the ball outside their own third, one free forward may
+# run EXPLOIT_LENGTH metres into space towards goal at RUN_SPEED (Move to Receive / Exploit
+# Space [Ju2022, Table 1]). Our assumption, tuned to the purpose mix and in-possession running.
+EXPLOIT_CHANCE = 0.25
+EXPLOIT_LENGTH = (12.0, 22.0)
+# Support in settled play: when a team-mate carries the ball in the middle or final third more
+# than MID_SUPPORT_GAP metres ahead of a free midfielder (DM, CM, AM), that midfielder may run
+# up to about MID_SUPPORT_BEHIND metres behind the ball at RUN_SPEED (Support Play [Ju2022,
+# Table 1]). Our assumption, tuned to midfielders' distance (synthesis §4.2).
+MID_SUPPORT_CHANCE = 0.55
+MID_SUPPORT_GAP = 15.0
+MID_SUPPORT_BEHIND = 10.0
+# Pressing high: when an opponent gets the ball in their own half, the nearest free forward
+# within PRESS_REACH metres closes them down with this chance. Our assumption, tuned to the
+# purpose mix (forwards close down most [Ju2022, p.978–980]).
+PRESS_RUN_CHANCE = 0.4
+PRESS_REACH = 20.0
+# Central midfielders (DM, CM) close down a carrier in the middle third on their side of
+# halfway with this chance (Close Down/Press is one of the CMP actions [Ju2022, p.978–980]).
+# Our assumption, tuned to their HID (synthesis §4.2).
+MID_PRESS_CHANCE = 0.3
+# Recovery runs reach full effort only when there is danger: the ball in the team's own half
+# (u < DANGER_U in the team's frame) or the opponent on a counter-attack. Our assumption, tuned
+# to the purpose mix [Ju2022, p.975] and the HID by phase [Allen2026b, Table 5].
+DANGER_U = 0.0
 
 # --- Position noise (synthesis §3.1) -------------------------------------------------------------
 
@@ -149,6 +226,51 @@ SHAPE_OUT_OF_POSSESSION = dict(
     line_gain=0.5, line_offset=-10.0, depth=0.65, width=0.7, ball_pull=0.4
 )
 PRESS_LINE_PUSH = 12.0  # m, how much higher the block stands in a high press
+# Without the ball the front players stay this many metres higher than the block's shape: they
+# are the first line of the press and do not drop all the way. Our assumption, tuned to
+# forwards' distance (synthesis §4.2) and their purpose mix (forwards close down more and
+# cover less than defenders [Ju2022, p.978–980]).
+OUT_OF_POSSESSION_HOLD = {Position.CF: 8.0, Position.AM: 6.0, Position.WM: 3.0}
+# A team switches between its in- and out-of-possession shapes gradually: the weight of the
+# in-possession shape moves towards 1 (ball won) with time constant SHAPE_SWITCH_S[0] and
+# towards 0 (ball lost) with SHAPE_SWITCH_S[1]. Losing the ball is answered faster. Our
+# assumption, tuned to the distance per position (synthesis §4.2).
+SHAPE_SWITCH_S = (4.0, 1.5)
+# The shape follows a lagged copy of the ball: its reference point closes the gap to the ball
+# with time constant SHAPE_LAG_S, so a long pass moves the block over a few seconds, not in one
+# jump. Our assumption, tuned to the IDSSE jogging share (PLAN §2.5).
+SHAPE_LAG_S = 1.5
+# Small repositioning: every WANDER_S seconds each player picks a new spot about WANDER_SD
+# metres (SD per axis) from their shape or set-piece position, in play and while the ball is
+# dead. Our assumption, tuned to dead-ball running, 63 m/min [Allen2026b, Table 5, derived],
+# and the IDSSE walking share.
+# Central midfielders adjust the most, centre-backs and forwards the least: the size is per
+# position, tuned to the distance per position (synthesis §4.2).
+WANDER_SD = {
+    Position.GK: 0.8,
+    Position.CB: 1.6,
+    Position.FB: 2.3,
+    Position.DM: 3.2,
+    Position.CM: 3.2,
+    Position.AM: 1.8,
+    Position.WM: 1.4,
+    Position.CF: 1.0,
+}
+WANDER_S = (4.0, 10.0)
+
+# Goalkeeper. Our assumption, tuned to the goalkeeper's distance, 4,720 m (synthesis §4.2), and
+# the IDSSE goalkeeper speed bands. Without the ball the keeper stands on the line from the goal
+# centre to the ball, GK_DEPTH metres off the goal line: GK_DEPTH[0] when the ball is within
+# GK_DEPTH_FROM metres of goal, plus GK_DEPTH_SLOPE per metre further out, at most GK_DEPTH[1].
+# With the ball the keeper stays GK_BEHIND_LINE metres behind the back line, at most
+# GK_MAX_OFF metres from the goal line. A pass or cross landing within GK_CLAIM_REACH metres of
+# the goal centre makes the keeper come for it.
+GK_DEPTH = (2.0, 16.0)
+GK_DEPTH_FROM = 10.0
+GK_DEPTH_SLOPE = 0.2
+GK_BEHIND_LINE = 20.0
+GK_MAX_OFF = 24.0
+GK_CLAIM_REACH = 26.0
 
 # --- Match flow ---------------------------------------------------------------------------------
 # All "our assumption" values below are tuned to the interim targets (summary.TARGETS).
@@ -173,7 +295,7 @@ PASS_BASE_SUCCESS = 0.93
 # falls by e every OFFSIDE_SEEN metres beyond the line): our assumption, the weight tuned to the
 # count.
 ONSIDE_MARGIN = 1.0  # m
-OFFSIDE_PASS_WEIGHT = 0.09
+OFFSIDE_PASS_WEIGHT = 0.045
 OFFSIDE_SEEN = 1.0  # m
 # Through balls: a pass into space up to 15 m beyond a receiver standing near the offside line.
 # Offside is judged when the ball is played, so the run behind is legal. Our assumption.

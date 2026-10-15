@@ -23,8 +23,14 @@ uv run python -m secondwind.schema   # re-export JSON Schemas after changing the
 uv run python -m secondwind.sim --seed 1 --out data/synthetic/m0001   # generate one match
 uv run python -m secondwind.sim.summary data/synthetic/m0001          # summarise it
 uv run python -m secondwind.sim.replay data/synthetic/m0001 --start 12:00 --purposes  # replay.html
-uv run python -m secondwind.sim.batch --seeds 1-10                     # means over 10 matches
+uv run python -m secondwind.sim.batch --seeds 1-30 --json report.json # means over 30 matches
 ```
+
+Calibration against IDSSE [Bassek2025] (offline only; the data never goes into the repo or the
+demo): `uv sync --extra calib`, `uv run python scripts/fetch_idsse.py` (~2.4 GB), then
+`uv run python -m secondwind.sim.idsse` once (writes small derived files next to the raw data in
+the git-ignored `data/raw/idsse/`), and add `--idsse` to `sim.batch` to compare speed and
+acceleration bands.
 
 Replay as a GIF or still frames needs matplotlib: `uv sync --all-extras` (or `--extra replay`),
 then add `--gif` or `--stills 6`. Add `--clean-copy` when generating to keep the noise-free positions for debugging

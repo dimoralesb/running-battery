@@ -23,10 +23,11 @@ from secondwind.io import Match, read_match
 from secondwind.schema import Event, EventType, Phase
 from secondwind.sim import params as P
 from secondwind.sim.output import read_clean_copy
+from secondwind.sim.runs import spells
 
 RESTARTS = {"kick_off", "throw_in", "goal_kick", "corner", "free_kick"}
 
-# Interim per-match targets until the Wyscout fit on Sunday: (value, source).
+# Interim per-match targets until a Wyscout fit (not done yet): (value, source).
 TARGETS: dict[str, tuple[float, str]] = {
     "match_minutes": (99.5, "Allen2025, Table 2 (± 2.9)"),
     "ball_in_play_pct": (55.0, "Kavanagh2024, p.80; Allen2026b, Table 2 (accept 50–63)"),
@@ -48,6 +49,19 @@ COUNT_TOLERANCE = 0.30  # our test tolerance on event counts
 RARE_COUNT_TOLERANCE = 0.50
 FILTER_HZ, FILTER_ORDER = 1.0, 4  # [Deutsch2025, Methods]; see synthesis §3.1
 SPRINT_SPEED = 7.0  # m/s (25.2 km/h) [Allen2024, p.781; synthesis §4.1]
+# Speed and acceleration of tracking errors, removed before any statistic [Deutsch2025, Methods].
+SPEED_CAP, ACCEL_CAP = 10.5, 10.0
+# Speed bands: walking, jogging, low-, intermediate-, high- and maximum-speed running, with
+# edges at 2.22, 3.61, 4.44, 5.28 and 6.11 m/s (8, 13, 16, 19, 22 km/h) [Osgnach2010, Table 1].
+SPEED_EDGES = np.array([0.0, 8.0, 13.0, 16.0, 19.0, 22.0, np.inf]) / 3.6
+SPEED_LABELS = ["walk", "jog", "low", "medium", "high", "max"]
+# Acceleration bands, m/s² [Osgnach2010, Table 2].
+ACCEL_EDGES = np.array([-np.inf, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, np.inf])
+ACCEL_LABELS = ["<-3", "-3..-2", "-2..-1", "-1..0", "0..1", "1..2", "2..3", ">3"]
+# Efforts: sprints above 6.94 m/s (25 km/h) and high decelerations below -3 m/s², each lasting
+# at least 0.7 s [Castellano2025, Table 3]. Counts are per 98 min in that paper.
+EFFORTS = {"sprint": (6.94, 0.7), "high_decel": (3.0, 0.7)}
+EFFORT_MINUTES = 98.0
 
 
 @dataclass(frozen=True)
@@ -130,6 +144,31 @@ def smooth(xy: np.ndarray) -> np.ndarray:
                 out[:, j, axis] = np.interp(k, k[ok], col[ok])
     b, a = butter(FILTER_ORDER, FILTER_HZ, fs=P.FRAME_RATE_HZ)
     return filtfilt(b, a, out, axis=0)
+
+
+def kinematics(xy: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Speed (m/s) and tangential acceleration (the rate of change of speed, m/s²) per frame,
+    by central differences of smoothed positions (frames, players, 2) [Deutsch2025, Methods;
+    synthesis §3.1]. Frames faster than ``SPEED_CAP`` or with |a| above ``ACCEL_CAP`` are
+    tracking errors and come back as NaN, in both arrays (same source)."""
+    v = np.gradient(xy, axis=0) * P.FRAME_RATE_HZ
+    speed = np.hypot(v[..., 0], v[..., 1])
+    acc = np.gradient(speed, axis=0) * P.FRAME_RATE_HZ
+    bad = (speed > SPEED_CAP) | (np.abs(acc) > ACCEL_CAP)
+    return np.where(bad, np.nan, speed), np.where(bad, np.nan, acc)
+
+
+def effort_count(values: np.ndarray, kind: str) -> int:
+    """Efforts in one player's series (``EFFORTS``); pass minus the acceleration for
+    decelerations."""
+    threshold, min_s = EFFORTS[kind]
+    return len(spells(np.nan_to_num(values) > threshold, round(min_s * P.FRAME_RATE_HZ)))
+
+
+def band_seconds(values: np.ndarray, edges: np.ndarray) -> np.ndarray:
+    """Seconds spent in each band (10 Hz frames); NaN frames are skipped."""
+    v = np.asarray(values).ravel()
+    return np.histogram(v[np.isfinite(v)], edges)[0] / P.FRAME_RATE_HZ
 
 
 def movement(periods: list[np.ndarray], ids: list[str]) -> dict[str, dict[str, float]]:
