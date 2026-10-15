@@ -37,7 +37,7 @@ Solo developer. Python 3.12 for everything except the front end (React + Vite + 
 |---|---|---|
 | **Wed 14** | Repo, environment, JSON Schemas, CI (lint + tests). IDSSE via floodlight. Azure account created. | Schemas pass on a dummy file; IDSSE loads |
 | **Thu 15** | Generator: phases, ball status, possession, events, 99.5-min match length, simple movement | One match writes all 4 files |
-| **Fri 16** | Movement model, role behaviours with run purposes, noise | Replay plot looks like football |
+| **Fri 16** | Movement model, role behaviours with run purposes, noise. **Azure test deployment (~1 h):** empty Container App + Event Hub (Basic), to catch free-trial limits early | Replay plot looks like football; test app URL responds |
 | **Sat 17** | Hidden physiology, fatigue switch, shared tempo, `truth.json` | Fatigue on/off changes behaviour |
 | **Sun 18** | Realism checks v1 + calibration (50-match batch) | Position totals within ±5% |
 | **Mon 19** | Estimator: all signals, both modes, tired moments | Signals for one match |
