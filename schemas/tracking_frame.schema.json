@@ -1,0 +1,137 @@
+{
+  "$defs": {
+    "Ball": {
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "maximum": 60.0,
+          "minimum": -60.0,
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "maximum": 40.0,
+          "minimum": -40.0,
+          "title": "Y",
+          "type": "number"
+        },
+        "z": {
+          "maximum": 50,
+          "minimum": 0,
+          "title": "Z",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "title": "Ball",
+      "type": "object"
+    },
+    "BallStatus": {
+      "enum": [
+        "alive",
+        "dead"
+      ],
+      "title": "BallStatus",
+      "type": "string"
+    },
+    "PlayerPosition": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "x": {
+          "maximum": 60.0,
+          "minimum": -60.0,
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "maximum": 40.0,
+          "minimum": -40.0,
+          "title": "Y",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "x",
+        "y"
+      ],
+      "title": "PlayerPosition",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "One 10 Hz frame. Speeds are not stored: the estimator derives them from positions.",
+  "properties": {
+    "frame": {
+      "minimum": 0,
+      "title": "Frame",
+      "type": "integer"
+    },
+    "period": {
+      "enum": [
+        1,
+        2
+      ],
+      "title": "Period",
+      "type": "integer"
+    },
+    "t": {
+      "description": "Seconds since this period's kick-off",
+      "minimum": 0,
+      "title": "T",
+      "type": "number"
+    },
+    "clock": {
+      "description": "Match clock in seconds; period 2 starts at 2700",
+      "minimum": 0,
+      "title": "Clock",
+      "type": "number"
+    },
+    "ball_status": {
+      "$ref": "#/$defs/BallStatus"
+    },
+    "possession_team": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Team in possession; null when contested",
+      "title": "Possession Team"
+    },
+    "ball": {
+      "$ref": "#/$defs/Ball"
+    },
+    "players": {
+      "items": {
+        "$ref": "#/$defs/PlayerPosition"
+      },
+      "maxItems": 22,
+      "title": "Players",
+      "type": "array"
+    }
+  },
+  "required": [
+    "frame",
+    "period",
+    "t",
+    "clock",
+    "ball_status",
+    "possession_team",
+    "ball",
+    "players"
+  ],
+  "title": "TrackingFrame",
+  "type": "object"
+}

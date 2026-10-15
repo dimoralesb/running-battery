@@ -1,0 +1,332 @@
+{
+  "$defs": {
+    "ClubTestValues": {
+      "additionalProperties": false,
+      "description": "Club test values: truth with ±5–10% error. Used only in club mode (PLAN §3.2).",
+      "properties": {
+        "cs": {
+          "description": "Critical speed, m/s",
+          "exclusiveMaximum": 6.0,
+          "exclusiveMinimum": 1.5,
+          "title": "Cs",
+          "type": "number"
+        },
+        "d_prime": {
+          "description": "D′, m",
+          "exclusiveMaximum": 600,
+          "exclusiveMinimum": 20,
+          "title": "D Prime",
+          "type": "number"
+        },
+        "a0": {
+          "description": "Max acceleration at 0 m/s, m/s²",
+          "exclusiveMaximum": 12,
+          "exclusiveMinimum": 3,
+          "title": "A0",
+          "type": "number"
+        },
+        "s0": {
+          "description": "Theoretical top speed, m/s",
+          "exclusiveMaximum": 12,
+          "exclusiveMinimum": 6,
+          "title": "S0",
+          "type": "number"
+        }
+      },
+      "required": [
+        "cs",
+        "d_prime",
+        "a0",
+        "s0"
+      ],
+      "title": "ClubTestValues",
+      "type": "object"
+    },
+    "Generator": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "default": "secondwind.sim",
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string"
+        },
+        "seed": {
+          "title": "Seed",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "version",
+        "seed"
+      ],
+      "title": "Generator",
+      "type": "object"
+    },
+    "PeriodInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "period": {
+          "enum": [
+            1,
+            2
+          ],
+          "title": "Period",
+          "type": "integer"
+        },
+        "start_frame": {
+          "minimum": 0,
+          "title": "Start Frame",
+          "type": "integer"
+        },
+        "end_frame": {
+          "minimum": 0,
+          "title": "End Frame",
+          "type": "integer"
+        },
+        "duration_s": {
+          "exclusiveMinimum": 0,
+          "title": "Duration S",
+          "type": "number"
+        }
+      },
+      "required": [
+        "period",
+        "start_frame",
+        "end_frame",
+        "duration_s"
+      ],
+      "title": "PeriodInfo",
+      "type": "object"
+    },
+    "Pitch": {
+      "additionalProperties": false,
+      "properties": {
+        "length": {
+          "default": 105.0,
+          "title": "Length",
+          "type": "number"
+        },
+        "width": {
+          "default": 68.0,
+          "title": "Width",
+          "type": "number"
+        }
+      },
+      "title": "Pitch",
+      "type": "object"
+    },
+    "PlayerInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "shirt": {
+          "maximum": 99,
+          "minimum": 1,
+          "title": "Shirt",
+          "type": "integer"
+        },
+        "position": {
+          "$ref": "#/$defs/Position"
+        },
+        "starter": {
+          "title": "Starter",
+          "type": "boolean"
+        },
+        "test_values": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ClubTestValues"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "null for goalkeepers"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "shirt",
+        "position",
+        "starter"
+      ],
+      "title": "PlayerInfo",
+      "type": "object"
+    },
+    "Position": {
+      "description": "Position codes as in Allen2024 (synthesis §4.2).",
+      "enum": [
+        "GK",
+        "CB",
+        "FB",
+        "DM",
+        "CM",
+        "AM",
+        "WM",
+        "CF"
+      ],
+      "title": "Position",
+      "type": "string"
+    },
+    "Substitution": {
+      "additionalProperties": false,
+      "properties": {
+        "period": {
+          "enum": [
+            1,
+            2
+          ],
+          "title": "Period",
+          "type": "integer"
+        },
+        "t": {
+          "minimum": 0,
+          "title": "T",
+          "type": "number"
+        },
+        "team_id": {
+          "title": "Team Id",
+          "type": "string"
+        },
+        "player_out": {
+          "title": "Player Out",
+          "type": "string"
+        },
+        "player_in": {
+          "title": "Player In",
+          "type": "string"
+        }
+      },
+      "required": [
+        "period",
+        "t",
+        "team_id",
+        "player_out",
+        "player_in"
+      ],
+      "title": "Substitution",
+      "type": "object"
+    },
+    "TeamInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "side": {
+          "enum": [
+            "home",
+            "away"
+          ],
+          "title": "Side",
+          "type": "string"
+        },
+        "formation": {
+          "title": "Formation",
+          "type": "string"
+        },
+        "attacks_positive_x_in_period_1": {
+          "title": "Attacks Positive X In Period 1",
+          "type": "boolean"
+        },
+        "players": {
+          "items": {
+            "$ref": "#/$defs/PlayerInfo"
+          },
+          "minItems": 11,
+          "title": "Players",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "side",
+        "formation",
+        "attacks_positive_x_in_period_1",
+        "players"
+      ],
+      "title": "TeamInfo",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "0.1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "match_id": {
+      "title": "Match Id",
+      "type": "string"
+    },
+    "generator": {
+      "$ref": "#/$defs/Generator"
+    },
+    "pitch": {
+      "$ref": "#/$defs/Pitch",
+      "default": {
+        "length": 105.0,
+        "width": 68.0
+      }
+    },
+    "frame_rate_hz": {
+      "default": 10.0,
+      "title": "Frame Rate Hz",
+      "type": "number"
+    },
+    "periods": {
+      "items": {
+        "$ref": "#/$defs/PeriodInfo"
+      },
+      "maxItems": 2,
+      "minItems": 1,
+      "title": "Periods",
+      "type": "array"
+    },
+    "teams": {
+      "items": {
+        "$ref": "#/$defs/TeamInfo"
+      },
+      "maxItems": 2,
+      "minItems": 2,
+      "title": "Teams",
+      "type": "array"
+    },
+    "substitutions": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/Substitution"
+      },
+      "title": "Substitutions",
+      "type": "array"
+    }
+  },
+  "required": [
+    "match_id",
+    "generator",
+    "periods",
+    "teams"
+  ],
+  "title": "MatchMetadata",
+  "type": "object"
+}

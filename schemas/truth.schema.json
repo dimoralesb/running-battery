@@ -1,0 +1,313 @@
+{
+  "$defs": {
+    "PlayerTruth": {
+      "additionalProperties": false,
+      "properties": {
+        "player_id": {
+          "title": "Player Id",
+          "type": "string"
+        },
+        "params": {
+          "$ref": "#/$defs/TrueParams"
+        },
+        "series": {
+          "$ref": "#/$defs/TruthSeries"
+        }
+      },
+      "required": [
+        "player_id",
+        "params",
+        "series"
+      ],
+      "title": "PlayerTruth",
+      "type": "object"
+    },
+    "RunPurpose": {
+      "description": "Intended purpose of a high-intensity run: the 12 categories in Ju2022.",
+      "enum": [
+        "push_up_pitch",
+        "break_into_box",
+        "run_in_behind",
+        "over_underlap",
+        "run_with_ball",
+        "move_to_receive",
+        "support_play",
+        "interception",
+        "recovery_run",
+        "covering",
+        "close_down",
+        "other"
+      ],
+      "title": "RunPurpose",
+      "type": "string"
+    },
+    "RunTruth": {
+      "additionalProperties": false,
+      "description": "A high-intensity run the player intended. ``executed=False`` marks a skipped run.",
+      "properties": {
+        "run_id": {
+          "minimum": 0,
+          "title": "Run Id",
+          "type": "integer"
+        },
+        "player_id": {
+          "title": "Player Id",
+          "type": "string"
+        },
+        "period": {
+          "enum": [
+            1,
+            2
+          ],
+          "title": "Period",
+          "type": "integer"
+        },
+        "t_start": {
+          "minimum": 0,
+          "title": "T Start",
+          "type": "number"
+        },
+        "t_end": {
+          "minimum": 0,
+          "title": "T End",
+          "type": "number"
+        },
+        "purpose": {
+          "$ref": "#/$defs/RunPurpose"
+        },
+        "executed": {
+          "title": "Executed",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "run_id",
+        "player_id",
+        "period",
+        "t_start",
+        "t_end",
+        "purpose",
+        "executed"
+      ],
+      "title": "RunTruth",
+      "type": "object"
+    },
+    "TrueParams": {
+      "additionalProperties": false,
+      "description": "Hidden physiology of one player (synthesis §3.2.3–3.2.4).",
+      "properties": {
+        "cs": {
+          "exclusiveMinimum": 0,
+          "title": "Cs",
+          "type": "number"
+        },
+        "d_prime": {
+          "exclusiveMinimum": 0,
+          "title": "D Prime",
+          "type": "number"
+        },
+        "a0": {
+          "exclusiveMinimum": 0,
+          "title": "A0",
+          "type": "number"
+        },
+        "s0": {
+          "exclusiveMinimum": 0,
+          "title": "S0",
+          "type": "number"
+        },
+        "fast_fraction": {
+          "description": "Share of D′ in the fast pool",
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Fast Fraction",
+          "type": "number"
+        },
+        "tau_fast": {
+          "description": "Fast-pool recharge time at rest, s",
+          "exclusiveMinimum": 0,
+          "title": "Tau Fast",
+          "type": "number"
+        },
+        "tau_slow": {
+          "description": "Slow-pool recharge time at rest, s",
+          "exclusiveMinimum": 0,
+          "title": "Tau Slow",
+          "type": "number"
+        }
+      },
+      "required": [
+        "cs",
+        "d_prime",
+        "a0",
+        "s0",
+        "fast_fraction",
+        "tau_fast",
+        "tau_slow"
+      ],
+      "title": "TrueParams",
+      "type": "object"
+    },
+    "TruthSeries": {
+      "additionalProperties": false,
+      "description": "1 Hz series. All lists have the same length. Pools and tank are fractions of full.",
+      "properties": {
+        "period": {
+          "items": {
+            "enum": [
+              1,
+              2
+            ],
+            "type": "integer"
+          },
+          "title": "Period",
+          "type": "array"
+        },
+        "t": {
+          "items": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "title": "T",
+          "type": "array"
+        },
+        "fast_pool": {
+          "items": {
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "title": "Fast Pool",
+          "type": "array"
+        },
+        "slow_pool": {
+          "items": {
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "title": "Slow Pool",
+          "type": "array"
+        },
+        "tank": {
+          "items": {
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "title": "Tank",
+          "type": "array"
+        },
+        "speed_mult": {
+          "description": "Multiplier on top speed (loss capped ~5%)",
+          "items": {
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "title": "Speed Mult",
+          "type": "array"
+        },
+        "accel_mult": {
+          "items": {
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "title": "Accel Mult",
+          "type": "array"
+        },
+        "run_choice_mult": {
+          "description": "Multiplier on choosing a hard run",
+          "items": {
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "title": "Run Choice Mult",
+          "type": "array"
+        },
+        "tired": {
+          "items": {
+            "type": "boolean"
+          },
+          "title": "Tired",
+          "type": "array"
+        }
+      },
+      "required": [
+        "period",
+        "t",
+        "fast_pool",
+        "slow_pool",
+        "tank",
+        "speed_mult",
+        "accel_mult",
+        "run_choice_mult",
+        "tired"
+      ],
+      "title": "TruthSeries",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "0.1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "match_id": {
+      "title": "Match Id",
+      "type": "string"
+    },
+    "fatigue_enabled": {
+      "description": "False for no-fatigue control matches",
+      "title": "Fatigue Enabled",
+      "type": "boolean"
+    },
+    "story": {
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "boolean"
+          }
+        ]
+      },
+      "default": {},
+      "title": "Story",
+      "type": "object"
+    },
+    "players": {
+      "items": {
+        "$ref": "#/$defs/PlayerTruth"
+      },
+      "title": "Players",
+      "type": "array"
+    },
+    "runs": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/RunTruth"
+      },
+      "title": "Runs",
+      "type": "array"
+    }
+  },
+  "required": [
+    "match_id",
+    "fatigue_enabled",
+    "players"
+  ],
+  "title": "MatchTruth",
+  "type": "object"
+}

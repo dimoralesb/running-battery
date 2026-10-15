@@ -1,0 +1,315 @@
+{
+  "$defs": {
+    "BodyPart": {
+      "enum": [
+        "foot",
+        "head",
+        "other"
+      ],
+      "title": "BodyPart",
+      "type": "string"
+    },
+    "EventType": {
+      "enum": [
+        "pass",
+        "carry",
+        "reception",
+        "shot",
+        "duel",
+        "tackle",
+        "interception",
+        "pressure",
+        "ball_recovery",
+        "ball_loss",
+        "clearance",
+        "foul",
+        "ball_out",
+        "goal",
+        "card",
+        "substitution",
+        "period_start",
+        "period_end"
+      ],
+      "title": "EventType",
+      "type": "string"
+    },
+    "Outcome": {
+      "enum": [
+        "success",
+        "fail"
+      ],
+      "title": "Outcome",
+      "type": "string"
+    },
+    "PassHeight": {
+      "enum": [
+        "ground",
+        "low",
+        "high"
+      ],
+      "title": "PassHeight",
+      "type": "string"
+    },
+    "Phase": {
+      "description": "Phase of play, from the viewpoint of the event's team (synthesis §7.2).\n\n``positive_transition`` / ``negative_transition`` are the first seconds after winning / losing\nthe ball [Bortnik2022]. ``high_press`` and ``defensive_block`` are out-of-possession phases.",
+      "enum": [
+        "build_up",
+        "progression",
+        "final_third",
+        "positive_transition",
+        "negative_transition",
+        "high_press",
+        "defensive_block",
+        "set_piece"
+      ],
+      "title": "Phase",
+      "type": "string"
+    },
+    "Point": {
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "maximum": 60.0,
+          "minimum": -60.0,
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "maximum": 40.0,
+          "minimum": -40.0,
+          "title": "Y",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "title": "Point",
+      "type": "object"
+    },
+    "Score": {
+      "additionalProperties": false,
+      "properties": {
+        "home": {
+          "minimum": 0,
+          "title": "Home",
+          "type": "integer"
+        },
+        "away": {
+          "minimum": 0,
+          "title": "Away",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "home",
+        "away"
+      ],
+      "title": "Score",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "One on-ball or match event, SPADL / StatsBomb-like (synthesis §7.2).",
+  "properties": {
+    "id": {
+      "minimum": 0,
+      "title": "Id",
+      "type": "integer"
+    },
+    "period": {
+      "enum": [
+        1,
+        2
+      ],
+      "title": "Period",
+      "type": "integer"
+    },
+    "t": {
+      "description": "Seconds since this period's kick-off",
+      "minimum": 0,
+      "title": "T",
+      "type": "number"
+    },
+    "clock": {
+      "minimum": 0,
+      "title": "Clock",
+      "type": "number"
+    },
+    "type": {
+      "$ref": "#/$defs/EventType"
+    },
+    "subtype": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "e.g. throw_in, corner, free_kick, goal_kick, cross, yellow",
+      "title": "Subtype"
+    },
+    "player_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Player Id"
+    },
+    "team_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Team Id"
+    },
+    "related_player_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Pass receiver, duel opponent, or player coming on",
+      "title": "Related Player Id"
+    },
+    "start": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Point"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "end": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Point"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "end_t": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "End time of a carry, or arrival time of a pass",
+      "title": "End T"
+    },
+    "outcome": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Outcome"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "body_part": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/BodyPart"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "height": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PassHeight"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "xg": {
+      "anyOf": [
+        {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Xg"
+    },
+    "possession_id": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Possession Id"
+    },
+    "phase": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Phase"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "score": {
+      "$ref": "#/$defs/Score",
+      "description": "Score before this event"
+    }
+  },
+  "required": [
+    "id",
+    "period",
+    "t",
+    "clock",
+    "type",
+    "score"
+  ],
+  "title": "Event",
+  "type": "object"
+}

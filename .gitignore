@@ -1,0 +1,28 @@
+# Research papers (PDFs and docling conversions): cite them, don't redistribute them.
+# references.bib is ours and can be published.
+docs/papers/*
+!docs/papers/references.bib
+
+# Real open data: used only for calibration, not redistributed
+data/raw/
+
+# Hackathon rules text: Microsoft's document, not ours
+OFFICIAL RULES.md
+
+# Generated matches (regenerate from seeds)
+data/synthetic/
+
+# Python
+.venv/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Front end
+node_modules/
+dist/
+
+# Secrets
+.env
+.env.*
