@@ -24,12 +24,13 @@ Solo developer. Python 3.12 for everything except the front end (React + Vite + 
 
 ## 3. Validation runs (synthesis §6)
 
-1. **Realism** (PLAN §2.5 table): 50 matches with fatigue on. Check position and team totals, match length, sprint counts, the two-team correlation, running by phase, ball in play, IDSSE speed and acceleration distributions, events, post-peak curves, peak timing and end-of-match decline.
+1. **Realism** (PLAN §2.5 table): 50 matches with fatigue on. Movement checks first (distance, sprints, speed and acceleration distributions vs IDSSE); event counts are secondary (PLAN §2.6). Check position and team totals, match length, sprint counts, the two-team correlation, running by phase, ball in play, IDSSE speed and acceleration distributions, events, post-peak curves, peak timing and end-of-match decline.
 2. **No-fatigue control:** the same 50 seeds with fatigue off. Run the Leifsson and Ju pipelines on both sets and plot published / with fatigue / without fatigue.
-3. **Estimator vs truth:** correlation, mean absolute error and bias of battery %, 80% band coverage, and tired-moment precision ≥ 0.7 at recall ≥ 0.5 (our target, synthesis §6.3).
-4. **Sensitivity runs:** k = 1, 3, 4, 5. Broadcast vs with club test values. Position noise σ = 0.05, 0.1, 0.3 and 1.0 m. Test values ±10%.
-5. **Confounder cases**, where the agents must not say "tired": a 3–0 lead with the team sitting back, a long stoppage, the start of the 2nd half, and a low-load player's late drop.
-6. **Verifier suite:** about 50 sentences, half valid and half from the blocked list. Every blocked sentence and every unbaselined % must be caught; report the false-block rate.
+3. **Estimator vs truth:** correlation, mean absolute error and bias of battery %, 80% band coverage, and tired-moment precision ≥ 0.7 at recall ≥ 0.5 (our target, synthesis §6.3). The 50-match batch randomises its own assumptions (fatigue effect sizes, pool settings beyond the estimator's priors, noise, tempo) and results are reported across that spread. Tired-moment metrics use natural matches only, not story matches (PLAN §2.6).
+4. **Real-data conclusion check:** run the estimator on the 7 IDSSE matches and compare conclusions with the synthetic batch: post-peak drops, second-half decline, battery-drop and tired-moment distributions (PLAN §2.6).
+5. **Sensitivity runs:** k = 1, 3, 4, 5. Broadcast vs with club test values. Position noise σ = 0.05, 0.1, 0.3 and 1.0 m. Test values ±10%.
+6. **Confounder cases**, where the agents must not say "tired": a 3–0 lead with the team sitting back, a long stoppage, the start of the 2nd half, and a low-load player's late drop.
+7. **Verifier suite:** about 50 sentences, half valid and half from the blocked list. Every blocked sentence and every unbaselined % must be caught; report the false-block rate.
 
 ## 4. Day by day
 
@@ -39,14 +40,14 @@ Solo developer. Python 3.12 for everything except the front end (React + Vite + 
 | **Thu 15** | Generator: phases, ball status, possession, events, 99.5-min match length, simple movement | One match writes all 4 files |
 | **Fri 16** | Movement model, role behaviours with run purposes, noise. **Azure test deployment (~1 h):** empty Container App + Event Hub (Basic), to catch free-trial limits early | Replay plot looks like football; test app URL responds |
 | **Sat 17** | Hidden physiology, fatigue switch, shared tempo, `truth.json` | Fatigue on/off changes behaviour |
-| **Sun 18** | Realism checks v1 + calibration (50-match batch) | Position totals within ±5% |
+| **Sun 18** | Realism checks v1 + calibration (50-match batch, randomised assumptions). Movement vs IDSSE first | Position totals within ±5%; speed/accel distributions vs IDSSE |
 | **Mon 19** | Estimator: all signals, both modes, tired moments | Signals for one match |
-| **Tue 20** | No-fatigue control, estimator vs truth, k and mode sensitivity | **The two "never cut" charts exist** |
+| **Tue 20** | No-fatigue control, estimator vs truth, k and mode sensitivity. Real-data conclusion check on IDSSE (~½ day) | **The two "never cut" charts exist**; IDSSE vs synthetic comparison table |
 | **Wed 21** | MCP server; claims register as a data file; rule-based Verifier + test suite | Verifier suite passes |
 | **Thu 22** | Agents on Foundry (4 roles, handoffs, retry on failure) | Full match → explained timeline |
 | **Fri 23** | Web app: replay, battery, feed, fan/analyst toggle, pitch control at events | Runs locally end to end |
 | **Sat 24** | Azure: Container Apps, Event Hubs live stream, shared state | Public URL works |
-| **Sun 25** | README (realism table, validation charts, citations); fix bugs | README complete |
+| **Sun 25** | README (realism table, validation charts, synthetic-data card, citations); fix bugs | README complete |
 | **Mon 26** | Video under 2 min, pitch text, final test from a clean clone | Video uploaded |
 | **Tue 27** | **Submit in the morning** | Submitted |
 
@@ -62,4 +63,4 @@ Buffer: Sunday 25 and Monday 26 each have about half a day of slack.
 6. ~~Club mode~~ (decided 2026-10-15: broadcast is the only product mode; club data stays as one validation run).
 7. Shorter realism table: keep position totals, post-peak curves, end-of-match decline and running by phase.
 
-**Never cut:** the no-fatigue control, the estimator-vs-truth chart, and the rule-based Verifier. If the LLM Verifier slips, the fixed rule checks still block unsupported claims.
+**Never cut:** the no-fatigue control, the estimator-vs-truth chart, the real-data conclusion check on IDSSE (PLAN §2.6), and the rule-based Verifier. If the LLM Verifier slips, the fixed rule checks still block unsupported claims.

@@ -84,11 +84,15 @@ To avoid a circular argument (testing the model against itself), the simulator's
 - **Truth:** two pools, a whole-match tank, individual parameters, and behaviour rules (section 2.3).
 - **Estimator:** one D′ balance plus metabolic power, from positions only (section 3).
 
+This does **not** remove every circle. The behaviour rules (tired players make fewer and shorter hard runs) come from the same papers the agents will cite, so finding them in our data is true by construction. Section 2.6 sets out how we check the data against real matches and how we report this limit.
+
 Stretch goal, **cut unless time allows**: a second, structurally different truth model (three-tank hydraulic [Weigend2023]) to show the estimator copes with model mismatch. Its equations are in Weigend 2021, which is not in our set, and fitting takes at least 3 h per CS/D′ pair [Weigend2023, §4.2].
 
 ### 2.5 Realism check
 
 We compare synthetic matches against published numbers and open data, and show the comparison in the README. Pass thresholds are our proposals (synthesis §6.1).
+
+**Priority (added 2026-10-15):** the movement rows (distance, sprints, speed and acceleration distributions, running by phase, post-peak curves) come first, because they are what the estimator reads. Event counts are a secondary check: they shape the match flow but the estimator never uses them (section 2.6).
 
 | Check | Target | Source |
 |---|---|---|
@@ -114,6 +118,16 @@ We compare synthetic matches against published numbers and open data, and show t
 4. Calibrate so the with-fatigue curve matches Leifsson2024. The gap between the two synthetic curves is the part that is really fatigue.
 
 No published study controls for this, so it is our strongest rigour slide.
+
+### 2.6 Making the synthetic data credible (added 2026-10-15)
+
+A review of synthetic data in sport warns that such data can be "statistically plausible yet practically misleading". Its checklist asks how models built on synthetic data behave on real or held-out data, and whether analyses reach the same conclusions on both [RuizPinto2026, Introduction; Table 2, RQ2; Table 3]. A soccer player-detection dataset built from a simulator with simple rules (no offside) was useful because it was tested on two real datasets, and because it deliberately randomised what the simulator could not get right [Qin2025, §2.1–2.2, Table 1; arXiv preprint]. What our synthetic data can show: the estimator recovers a hidden fatigue state **under the effects we built in**. What it cannot show on its own: that those effects, or the estimator's outputs, hold in real matches. Five measures:
+
+1. **Same conclusions on real data (IDSSE, 7 matches).** Run the estimator offline on the real IDSSE matches [Bassek2025] (CC BY 4.0, calibration only, never in the demo). There is no fatigue truth there, so we compare conclusions, not accuracy: post-peak drops, second-half decline, and the distributions of battery drops and tired-moment rates, real against synthetic. Where they disagree, we say so in the README.
+2. **Realism checks aimed at what the estimator reads.** Speed and acceleration distributions, sprint counts and high-speed running per position against IDSSE and synthesis §4.2 come before event counts (section 2.5).
+3. **Randomised assumptions across the validation batch.** Each of the 50 matches draws its own fatigue effect sizes, pool settings (including values outside the estimator's priors), position noise and team tempo. We report estimator accuracy across that whole spread, not at one setting. This is a cheap stand-in for the cut second truth model (section 2.4).
+4. **Natural matches and story matches kept apart.** Story controls deliberately over-represent tired moments, which is a class-imbalance choice [RuizPinto2026, Structure]. Tired-moment precision and recall are reported on natural matches only; story matches are for the demo.
+5. **A synthetic-data card in the README**, one short paragraph per checklist dimension: objective, structure, generation, constraints, utility and fidelity, risk and deployment [RuizPinto2026, Table 3]. It states the limit in plain words: "this shows the estimator recovers fatigue under the published effects we built in; it does not prove those effects in this league."
 
 ---
 
