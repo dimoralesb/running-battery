@@ -456,7 +456,7 @@ The recovery branch is the Skiba 2015 law with τ = D′/(CS − v). Example val
 | B. "Club test values" in metadata | The simulator writes each player's true CS and D′ with ±5–10% error, as a club would have from a 3MT | Realistic (clubs test players); stable | Uses information beyond positions |
 | C. Prior plus match update | Start from the population prior; raise D′ if the observed max-mean profile proves it must be larger | Uses data, robust | More code |
 
-**Recommendation: B for the demo, with C as a stretch goal.** Show A in analyst mode as the "match speed–duration profile", with Mizelman's warning attached. Option B is also honest: real clubs combine tests with tracking.
+**Recommendation: B for the demo, with C as a stretch goal.** *(Superseded 2026-10-15: broadcast only, with a light version of C; see PLAN §7, decisions 1 and 9.)* Show A in analyst mode as the "match speed–duration profile", with Mizelman's warning attached. Option B is also honest: real clubs combine tests with tracking.
 
 **What to expect.** In real matches, with test-based CS, the battery rarely empties. University players' deepest dip was 21 ± 6% of D′ [Sutcliffe2025, Fig. 3]. So the "low battery" alert must be **relative to the player's own range**, not a fixed 20%.
 

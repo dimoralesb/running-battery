@@ -151,13 +151,21 @@ Input: tracking data only (positions over time), plus ball status and possession
 
 | Mode | CS and D′ come from | Who it fits |
 |---|---|---|
-| **Broadcast (default)** | One prior for all outfield players: CS 3.7 m/s (13.3 km/h), D′ 180 m [Sutcliffe2025, Fig. 2; Liu2021, Table 4; synthesis §3.2.3]. **One-way correction from match data:** if the battery would drop below zero, raise D′ to fit what the player actually did. Never lower D′ or move CS during a match. | Fans, TV, the league |
+| **Broadcast (default)** | One prior for all outfield players: CS 3.7 m/s (13.3 km/h), D′ 180 m [Sutcliffe2025, Fig. 2; Liu2021, Table 4; synthesis §3.2.3]. **Per-player update from match data** (decision 9): each player starts from this prior and is narrowed by what they actually run. Fallback: the one-way correction (if the battery would drop below zero, raise D′ to fit what the player did; never lower D′ or move CS). | Fans, TV, the league |
 | **Club data (validation experiment only)** | Club test values (truth plus measurement error, written only with `--club-tests`), plus the same correction | Nobody in the product: it measures how much club data would add |
 
 - **Decision 2026-10-15: broadcast is the only product mode.** Broadcasters and the league never get clubs' fitness tests, and few clubs test CS and D′ for the whole squad. Club test values are left out of `metadata.json` by default and used in one validation run. Their error is normal: A0 5.4% and S0 3.3% [Morin2021, Table 1]; CS 5% and D′ 15% (our assumption; D′ depends strongly on the method, synthesis §3.2.3).
 - Position differences come from role behaviour, not from different settings. No paper gives CS or D′ by position (synthesis §3.2.3).
 - Validation runs both modes against the truth, to show how much accuracy is lost without test data.
-- A full "prior plus match update" fit (synthesis §3.2.5, option C) is a stretch goal.
+- **Decision 2026-10-15: per-player update of CS and D′ (synthesis §3.2.5, option C, light version).**
+  1. Draw about 200 (CS, D′) pairs per player from the prior: CS 3.7 ± 0.25 m/s, clipped to 3.2–4.2; D′ 180 ± 54 m, clipped to 100–300 (synthesis §3.2.3; the SDs as in `sim/params.py`). k stays fixed within a run, so the k sensitivity runs still mean something.
+  2. Run the battery for every pair at once.
+  3. Down-weight pairs that the player's running contradicts (their battery goes well below zero), with a soft penalty rather than a cut-off. The penalty width is our assumption, tuned in validation.
+  4. Show the weighted median battery with a 10–90% band.
+  - Match data mostly gives a **lower bound** on capacity: players rarely run themselves empty (deepest dip 21 ± 6% of D′ [Sutcliffe2025, Fig. 3]), and fitting CS from match data alone gives about 2 m/s [Mizelman2024, p.2064]. So for most players the updated values stay close to the prior; the main gain is an honest band per player.
+  - Validation reports the band's coverage against the hidden truth (synthesis §6.3, 80% target). The validation batch must draw some true values outside this prior (section 2.6, point 3); otherwise the test flatters the estimator.
+  - The one-way correction stays in the code as the fallback if this slips.
+  - Roadmap, not built: carry each player's updated values into their next match as the new prior, so the band narrows over a season.
 
 ### 3.3 Signals
 
@@ -167,7 +175,7 @@ Input: tracking data only (positions over time), plus ball status and possession
 | **Load (whole match)** | Metabolic power from speed **and** acceleration. Report rolling 1- and 5-min averages and total energy; never "distance above 20 W/kg". | [Osgnach2010; diPrampero2005]; zone distance varies 73.6% between trials [Buchheit2015, Table 2] |
 | **Recent intensity** | Rolling 1-, 2- and 5-min high-speed distance compared with the player's own peak curve. "Post-peak" flag for about 2 min after a 1–2-min peak and about 5 min after a 5-min peak. Rates per ball-in-play minute. Tracks high-speed running separately from total distance. | [Leifsson2024, Table 1; Thoseby2023, Table 2; Fang2024] |
 | **Effect on play** | Pitch control, Spearman/Shaw model as used by da Silva: σ 0.45 s, λ 4.3 s⁻¹ [Spearman2017, p.7]; reaction time 0.7 s, goalkeeper λ 12.9 s⁻¹, ball speed 15 m/s (54 km/h) [daSilva2025, p.3]; κ = 1. Computed from **actual positions** at event moments (or 1–2 Hz), so a skipped recovery run shows up directly. A "fresh" version is shown only as a labelled model estimate. | [Spearman2018, Eq. 3–4; daSilva2025] |
-| **Confidence** | Every number is an estimate with a band. Band width comes from our own validation against the truth; floor is the 7–20% typical error of D′ estimates. Fan mode shows a 5-level battery icon. | [Skiba2021, p.1567; Buchheit2015] |
+| **Confidence** | Every number is an estimate with a band. The battery band comes from the per-player update (decision 9); its coverage is checked against the truth, and the band is widened if coverage falls short. Floor is the 7–20% typical error of D′ estimates. Fan mode shows a 5-level battery icon. | [Skiba2021, p.1567; Buchheit2015] |
 
 **Not built: capacity check (acceleration–speed profile).** One match doesn't give a reliable profile: match-only A0 vs a sprint test ICC 0.23 [AlonsoCallejo2024, Table 2]. Its noise (A0 5.4% [Morin2021, Table 1]) is larger than the 2–4% loss we would be looking for [SilvaJR2018, Table 5; Krustrup2006, p.1171]. A0 and S0 stay as simulator limits and metadata values. If time is left over: a post-match, half-vs-half analyst view labelled "low confidence".
 
@@ -235,7 +243,7 @@ Answered 2026-10-14: solo developer; Python for simulator, engine and agents; Re
 
 | # | Decision | Choice | Main source |
 |---|---|---|---|
-| 1 | CS and D′ source | Broadcast only: shared prior + one-way D′ correction. Club test values only as a validation experiment (revised 2026-10-15) | [Mizelman2024, p.2064]; synthesis §3.2.5 |
+| 1 | CS and D′ source | Broadcast only: shared prior, updated per player from match data (decision 9). Club test values only as a validation experiment (revised 2026-10-15) | [Mizelman2024, p.2064]; synthesis §3.2.5 |
 | 2 | Battery recharge | τ = k·D′/(CS − speed), k = 4; sensitivity k = 1, 3, 5; relative gauge only | [Bellenger2025; Skiba2021] |
 | 3 | Settings by position | One shared prior; differences come from role behaviour | synthesis §3.2.3 |
 | 4 | Position targets | 2024/25 targets in synthesis §4.2; counts from Castellano2025 | [Allen2024; Allen2025; Castellano2025] |
@@ -243,3 +251,4 @@ Answered 2026-10-14: solo developer; Python for simulator, engine and agents; Re
 | 6 | Pitch control | Spearman/Shaw model as used by daSilva2025 | [Spearman2017; Spearman2018; daSilva2025] |
 | 7 | Capacity check | Not built; optional post-match analyst view if time allows | [AlonsoCallejo2024; Morin2021] |
 | 8 | Second truth model | Cut unless time allows | [Weigend2023] |
+| 9 | Updating CS and D′ during a match (added 2026-10-15) | Light Bayesian update per player: ~200 draws from the prior, weighted by how well each fits the player's running; median battery with a 10–90% band. One-way D′ correction kept as fallback. k fixed per run | Section 3.2; synthesis §3.2.3, §3.2.5, §3.7; [Sutcliffe2025; Mizelman2024] |
