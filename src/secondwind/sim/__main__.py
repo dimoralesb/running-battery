@@ -14,10 +14,15 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--seed", type=int, required=True)
     parser.add_argument("--out", type=Path, required=True, help="match folder to write")
     parser.add_argument("--match-id", help="default: the folder name")
+    parser.add_argument(
+        "--club-tests",
+        action="store_true",
+        help="also write club test values (validation experiment only; broadcasters lack them)",
+    )
     args = parser.parse_args(argv)
 
     started = time.perf_counter()
-    match = generate(args.seed, args.out, args.match_id)
+    match = generate(args.seed, args.out, args.match_id, args.club_tests)
     frames = sum(len(p.alive) for p in match.periods)
     print(
         f"wrote {args.out}: {frames} frames, {len(match.events)} events "

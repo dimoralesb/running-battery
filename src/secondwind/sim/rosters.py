@@ -50,14 +50,14 @@ class SimPlayer:
     params: TrueParams
     test_values: ClubTestValues | None
 
-    def info(self) -> PlayerInfo:
+    def info(self, club_tests: bool) -> PlayerInfo:
         return PlayerInfo(
             id=self.id,
             name=self.name,
             shirt=self.shirt,
             position=self.position,
             starter=True,
-            test_values=self.test_values,
+            test_values=self.test_values if club_tests else None,
         )
 
 
@@ -72,14 +72,14 @@ class SimTeam:
     pass_success: float  # base pass completion before distance and pressure
     press_chance: float  # chance of a high press when the opponent builds up
 
-    def info(self) -> TeamInfo:
+    def info(self, club_tests: bool) -> TeamInfo:
         return TeamInfo(
             id=self.id,
             name=self.name,
             side=self.side,
             formation=self.formation,
             attacks_positive_x_in_period_1=self.attacks_positive_x_in_period_1,
-            players=[p.info() for p in self.players],
+            players=[p.info(club_tests) for p in self.players],
         )
 
 
@@ -101,17 +101,18 @@ def true_params(rng: np.random.Generator) -> TrueParams:
 
 
 def club_test_values(rng: np.random.Generator, truth: TrueParams) -> ClubTestValues:
-    """Truth with a 5–10% error of random sign on each value (PLAN §3.2)."""
+    """Truth plus a normal measurement error on each value (params.TEST_ERROR_SD)."""
 
-    def measured(value: float, ndigits: int) -> float:
-        error = rng.uniform(*P.TEST_ERROR_RANGE) * rng.choice([-1.0, 1.0])
-        return round(float(value * (1 + error)), ndigits)
+    def measured(name: str, ndigits: int) -> float:
+        sd = P.TEST_ERROR_SD[name]
+        error = float(np.clip(rng.normal(0.0, sd), -3 * sd, 3 * sd))
+        return round(getattr(truth, name) * (1 + error), ndigits)
 
     return ClubTestValues(
-        cs=measured(truth.cs, 2),
-        d_prime=measured(truth.d_prime, 0),
-        a0=measured(truth.a0, 2),
-        s0=measured(truth.s0, 2),
+        cs=measured("cs", 2),
+        d_prime=measured("d_prime", 0),
+        a0=measured("a0", 2),
+        s0=measured("s0", 2),
     )
 
 

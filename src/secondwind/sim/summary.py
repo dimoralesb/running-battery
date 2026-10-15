@@ -29,11 +29,15 @@ TARGETS: dict[str, tuple[float, str]] = {
     "fouls": (22, "Bassek2025, Fig. 3, approx."),
     "throw_ins": (39, "Bassek2025, Fig. 3, approx."),
     "corners": (7.6, "Bassek2025, Fig. 3, approx."),
+    "offsides": (2.3, "Bassek2025, Fig. 3, approx."),
     "transitions": (50, "Bortnik2022, Tables 1–2 (± 11)"),
 }
 BALL_IN_PLAY_BAND = (50.0, 63.0)  # [Kavanagh2024, p.80; Allen2026b, Table 2]
 POSSESSION_BAND = (40.0, 64.0)  # [Allen2026b, Table 2]
 COUNT_TOLERANCE = 0.30  # our test tolerance on event counts
+# Rare events (under 5 a match) are noisier: for 2.3 offsides, the mean of 5 matches varies by
+# about ±30% from chance alone (Poisson, derived). Our test tolerance.
+RARE_COUNT_TOLERANCE = 0.50
 
 
 @dataclass(frozen=True)
@@ -63,6 +67,7 @@ def event_counts(match: Match) -> dict[str, int]:
         "fouls": by_type["foul"],
         "throw_ins": by_subtype["throw_in"],
         "corners": by_subtype["corner"],
+        "offsides": by_type["offside"],
         "transitions": len(transitions),
         "goals": by_type["goal"],
         "crosses": by_subtype["cross"],

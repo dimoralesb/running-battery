@@ -50,7 +50,9 @@ def period_lengths(rng: np.random.Generator) -> list[int]:
     return [round(first_s * P.FRAME_RATE_HZ), round((total_s - first_s) * P.FRAME_RATE_HZ)]
 
 
-def simulate(seed: int, match_id: str) -> SimMatch:
+def simulate(seed: int, match_id: str, club_tests: bool = False) -> SimMatch:
+    """One match. Club test values go into the metadata only if ``club_tests`` is set; the
+    match itself is the same either way."""
     rng = np.random.default_rng(seed)
     teams = make_teams(rng)
     lengths = period_lengths(rng)
@@ -77,7 +79,7 @@ def simulate(seed: int, match_id: str) -> SimMatch:
         generator=Generator(version=__version__, seed=seed),
         frame_rate_hz=P.FRAME_RATE_HZ,
         periods=infos,
-        teams=[team.info() for team in teams],
+        teams=[team.info(club_tests) for team in teams],
     )
     return SimMatch(metadata, periods, to_events(engine), neutral_truth(match_id, teams, periods))
 
@@ -174,8 +176,10 @@ def write(match: SimMatch, folder: Path) -> None:
     write_match(folder, match.metadata, tracking_frames(match), match.events, match.truth)
 
 
-def generate(seed: int, folder: Path, match_id: str | None = None) -> SimMatch:
+def generate(
+    seed: int, folder: Path, match_id: str | None = None, club_tests: bool = False
+) -> SimMatch:
     """Simulate one match and write its four files to ``folder`` (match id: folder name)."""
-    match = simulate(seed, match_id or folder.name)
+    match = simulate(seed, match_id or folder.name, club_tests)
     write(match, folder)
     return match

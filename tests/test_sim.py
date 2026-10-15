@@ -9,12 +9,13 @@ import numpy as np
 import pytest
 
 from secondwind.io import EVENTS, METADATA, TRACKING, TRUTH, read_match, read_truth
-from secondwind.schema import X_LIMIT, Y_LIMIT, EventType
+from secondwind.schema import X_LIMIT, Y_LIMIT, EventType, MatchMetadata, Position
 from secondwind.sim import params as P
 from secondwind.sim.summary import (
     BALL_IN_PLAY_BAND,
     COUNT_TOLERANCE,
     POSSESSION_BAND,
+    RARE_COUNT_TOLERANCE,
     TARGETS,
     summarise_match,
 )
@@ -23,14 +24,15 @@ SEEDS = [1, 2, 3, 4, 5]
 MAX_SPEED = 12.0  # m/s (43.2 km/h): nobody is faster between two frames
 
 
-def generate(seeds_and_folders: list[tuple[int, Path]]) -> None:
+def generate(jobs: list[tuple[int, Path, list[str]]]) -> None:
     """Run the CLI for several matches at once, as a user would."""
     procs = [
         subprocess.Popen(
-            [sys.executable, "-m", "secondwind.sim", "--seed", str(seed), "--out", str(folder)],
+            [sys.executable, "-m", "secondwind.sim", "--seed", str(seed), "--out", str(folder)]
+            + extra,
             stdout=subprocess.DEVNULL,
         )
-        for seed, folder in seeds_and_folders
+        for seed, folder, extra in jobs
     ]
     for proc in procs:
         assert proc.wait(timeout=300) == 0
@@ -39,10 +41,13 @@ def generate(seeds_and_folders: list[tuple[int, Path]]) -> None:
 @pytest.fixture(scope="module")
 def folders(tmp_path_factory) -> dict:
     root = tmp_path_factory.mktemp("synthetic")
-    jobs = [(seed, root / f"m{seed:04d}") for seed in SEEDS]
-    jobs.append((1, root / "again" / "m0001"))
+    folders = {seed: root / f"m{seed:04d}" for seed in SEEDS}
+    folders["again"] = root / "again" / "m0001"
+    folders["club"] = root / "club" / "m0001"
+    jobs = [(seed, folders[seed], []) for seed in SEEDS]
+    jobs += [(1, folders["again"], []), (1, folders["club"], ["--club-tests"])]
     generate(jobs)
-    return {"again": jobs[-1][1]} | dict(jobs[:-1])
+    return folders
 
 
 @pytest.fixture(scope="module")
@@ -78,11 +83,7 @@ def _check_match(match) -> dict:
         "goals": sum(e.type == EventType.GOAL for e in match.events),
         "truth_seconds": sum((p.end_frame - p.start_frame) // 10 + 1 for p in meta.periods),
         "final_score": match.events[-1].score,
-        "gk_without_test_values": all(
-            (p.position == "GK") == (p.test_values is None)
-            for team in meta.teams
-            for p in team.players
-        ),
+        "no_test_values": all(p.test_values is None for team in meta.teams for p in team.players),
     }
 
 
@@ -109,7 +110,7 @@ def test_files_validate(folders, summaries):
         assert checks["period_2_clock_ok"]
         assert checks["players_per_frame"] == {22}
         assert checks["events_sorted"] and checks["event_ids_ok"] and checks["carries_ok"]
-        assert checks["gk_without_test_values"]
+        assert checks["no_test_values"]  # broadcast data by default
         score = checks["final_score"]
         assert score.home + score.away == checks["goals"]
 
@@ -134,12 +135,28 @@ def test_ball_in_play_and_possession(summaries):
 
 
 @pytest.mark.parametrize(
-    "key", ["passes", "shots", "duels", "fouls", "throw_ins", "corners", "transitions"]
+    "key", ["passes", "shots", "duels", "fouls", "throw_ins", "corners", "transitions", "offsides"]
 )
 def test_event_counts_near_targets(summaries, key):
     mean = np.mean([summaries[s][0].counts[key] for s in SEEDS])
     target = TARGETS[key][0]
-    assert abs(mean - target) <= COUNT_TOLERANCE * target, (key, mean, target)
+    tolerance = RARE_COUNT_TOLERANCE if target < 5 else COUNT_TOLERANCE
+    assert abs(mean - target) <= tolerance * target, (key, mean, target)
+
+
+def test_club_tests_change_only_the_metadata(folders):
+    for name in (TRACKING, EVENTS, TRUTH):
+        assert (folders[1] / name).read_bytes() == (folders["club"] / name).read_bytes(), name
+    meta = MatchMetadata.model_validate_json((folders["club"] / METADATA).read_text())
+    truth = {p.player_id: p.params for p in read_truth(folders["club"]).players}
+    for team in meta.teams:
+        for p in team.players:
+            if p.position == Position.GK:
+                assert p.test_values is None
+                continue
+            for name, sd in P.TEST_ERROR_SD.items():
+                ratio = getattr(p.test_values, name) / getattr(truth[p.id], name)
+                assert abs(ratio - 1) <= 3 * sd + 0.01, (p.id, name, ratio)
 
 
 def test_nobody_faster_than_12_m_per_s(summaries):

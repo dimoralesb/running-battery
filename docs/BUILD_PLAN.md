@@ -9,7 +9,7 @@ Solo developer. Python 3.12 for everything except the front end (React + Vite + 
 | Module | What it does | Main inputs → outputs |
 |---|---|---|
 | **`sim/` Generator** | Phase state machine (ball status, possession, phases, events). Movement at 10 Hz (Narizuka motion model, A0/S0 limits). Role behaviours (covering, recovery runs, pressing), each run labelled with its purpose. Hidden physiology: two pools + tank, with a **fatigue on/off switch**. Shared team tempo. Position noise. | seed, story controls → the 4 files below |
-| **`engine/` Estimator** | Butterworth 1 Hz + central differences. Metabolic power. Battery (k, broadcast/club mode, one-way D′ correction). Rolling 1/2/5-min intensity and post-peak flags. Tired-moment detection. Pitch control at event moments. | tracking + events + metadata → per-player, per-second signals and moments (JSON) |
+| **`engine/` Estimator** | Butterworth 1 Hz + central differences. Metabolic power. Battery (k, broadcast mode, one-way D′ correction; club test values only in a validation run). Rolling 1/2/5-min intensity and post-peak flags. Tired-moment detection. Pitch control at event moments. | tracking + events + metadata → per-player, per-second signals and moments (JSON) |
 | **`validate/`** | Realism checks, the no-fatigue control, estimator vs truth, sensitivity runs, Verifier test suite. Writes charts and tables for the README. | batches of synthetic matches → report |
 | **`agents/`** | MCP server over the engine. Four agents on Foundry + Agent Framework: Tactical, Narrator, Personalization, Verifier. The claims register (synthesis §5) is a data file; the Verifier runs fixed rule checks first, then the LLM. | engine signals → checked, sourced sentences |
 | **`app/` Overlay** | Pitch replay, battery icons (fan) or traces with bands (analyst), story cards, explanation feed, favourite player. Timestamped JSON output for video sync. Azure Container Apps; Event Hubs for the live stream. | shared match state → web UI |
@@ -18,7 +18,7 @@ Solo developer. Python 3.12 for everything except the front end (React + Vite + 
 
 - **`tracking.jsonl`** (10 Hz): `frame, t, period, clock, ball_status, possession_team, ball{x,y,z}, players[{id,x,y}]`. Centre origin, metres, 105 × 68 m pitch. Noise σ ≈ 0.1 m plus dropouts.
 - **`events.jsonl`**: `id, t, period, type, subtype, player_id, team_id, start_xy, end_xy, outcome, body_part, possession_id, phase, score_state`. Types include pass, **carry**, **reception**, shot (xG), duel, tackle, interception, pressure, recovery, loss, fouls, restarts, substitutions, goals and cards.
-- **`metadata.json`**: teams, line-ups, formations, positions (GK/CB/FB/DM/CM/AM/WM/CF), substitutions, and club test values (CS, D′, A0, S0 = truth ±5–10%).
+- **`metadata.json`**: teams, line-ups, formations, positions (GK/CB/FB/DM/CM/AM/WM/CF), substitutions. Club test values (CS, D′, A0, S0 = truth plus measurement error) only with `--club-tests`, for the club-data experiment.
 - **`truth.json`** (1 Hz, validation only): fast pool, slow pool, tank, capacity multipliers, the purpose of each run, skipped runs, tired-moment labels.
 - A JSON Schema for each file is written first; the generator, estimator and app are all checked against it.
 
@@ -27,7 +27,7 @@ Solo developer. Python 3.12 for everything except the front end (React + Vite + 
 1. **Realism** (PLAN §2.5 table): 50 matches with fatigue on. Check position and team totals, match length, sprint counts, the two-team correlation, running by phase, ball in play, IDSSE speed and acceleration distributions, events, post-peak curves, peak timing and end-of-match decline.
 2. **No-fatigue control:** the same 50 seeds with fatigue off. Run the Leifsson and Ju pipelines on both sets and plot published / with fatigue / without fatigue.
 3. **Estimator vs truth:** correlation, mean absolute error and bias of battery %, 80% band coverage, and tired-moment precision ≥ 0.7 at recall ≥ 0.5 (our target, synthesis §6.3).
-4. **Sensitivity runs:** k = 1, 3, 4, 5. Broadcast vs club mode. Position noise σ = 0.05, 0.1, 0.3 and 1.0 m. Test values ±10%.
+4. **Sensitivity runs:** k = 1, 3, 4, 5. Broadcast vs with club test values. Position noise σ = 0.05, 0.1, 0.3 and 1.0 m. Test values ±10%.
 5. **Confounder cases**, where the agents must not say "tired": a 3–0 lead with the team sitting back, a long stoppage, the start of the 2nd half, and a low-load player's late drop.
 6. **Verifier suite:** about 50 sentences, half valid and half from the blocked list. Every blocked sentence and every unbaselined % must be caught; report the false-block rate.
 
@@ -59,7 +59,7 @@ Buffer: Sunday 25 and Monday 26 each have about half a day of slack.
 3. Event Hubs: replay from a file instead of a live stream.
 4. Pitch control: show reachable-area circles instead [Narizuka2023], or drop it.
 5. Merge the Personalization agent into the Narrator.
-6. Club mode: ship broadcast mode only (keep the k sensitivity runs, which are cheap).
+6. ~~Club mode~~ (decided 2026-10-15: broadcast is the only product mode; club data stays as one validation run).
 7. Shorter realism table: keep position totals, post-peak curves, end-of-match decline and running by phase.
 
 **Never cut:** the no-fatigue control, the estimator-vs-truth chart, and the rule-based Verifier. If the LLM Verifier slips, the fixed rule checks still block unsupported claims.

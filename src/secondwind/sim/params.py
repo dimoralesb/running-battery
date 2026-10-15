@@ -16,7 +16,7 @@ DT = 1.0 / FRAME_RATE_HZ
 
 HALF_LENGTH = 52.5  # 105 x 68 m pitch [Bassek2025, Box 3]
 HALF_WIDTH = 34.0
-GOAL_HALF_WIDTH = 3.66  # 7.32 m goal (IFAB Laws of the Game, Law 1; not in References.bib)
+GOAL_HALF_WIDTH = 3.66  # 7.32 m goal [IFAB2025, Law 1]
 BOX_DEPTH = 16.5  # penalty area, same source as the goal
 BOX_HALF_WIDTH = 20.16
 THIRD = HALF_LENGTH / 3  # 35 m thirds: the middle third is |u| < 17.5 m
@@ -46,9 +46,12 @@ S0_MEAN, S0_SD, S0_RANGE = 9.3, 0.45, (8.4, 10.3)
 FAST_FRACTION_RANGE = (0.40, 0.50)
 TAU_FAST_RANGE = (15.0, 35.0)  # s
 TAU_SLOW_RANGE = (400.0, 500.0)  # s, when walking
-# Club test values = truth with a 5–10% error, sign at random (PLAN §3.2). Drawing the size of
-# the error uniformly in that range is our reading of "±5–10%".
-TEST_ERROR_RANGE = (0.05, 0.10)
+# Club test values = truth × (1 + e), e ~ N(0, SD), clipped at ±3 SD. Written only with
+# --club-tests (PLAN §3.2), but always drawn so a seed gives the same match either way.
+# A0 5.4% and S0 3.3% are the measurement noise of the profile [Morin2021, Table 1]. CS 5% and
+# D′ 15% are our assumption, larger for D′ because it depends strongly on the test method
+# (synthesis §3.2.3).
+TEST_ERROR_SD = dict(cs=0.05, d_prime=0.15, a0=0.054, s0=0.033)
 
 # Braking cap. The A0–S0 profile limits speeding up only; a separate cap of about 5–6 m/s² stops
 # hard reversals at speed (synthesis §4.10, our assumption).
@@ -92,7 +95,7 @@ SHIRTS = {
 # Our assumption.
 SHAPE_IN_POSSESSION = dict(line_gain=0.55, line_offset=6.0, depth=1.0, width=1.05, ball_pull=0.25)
 SHAPE_OUT_OF_POSSESSION = dict(
-    line_gain=0.5, line_offset=-6.0, depth=0.65, width=0.7, ball_pull=0.4
+    line_gain=0.5, line_offset=-10.0, depth=0.65, width=0.7, ball_pull=0.4
 )
 PRESS_LINE_PUSH = 12.0  # m, how much higher the block stands in a high press
 
@@ -109,9 +112,22 @@ MIN_CARRY_LENGTH = 1.0  # m; shorter touches are not logged as carries
 
 # Passes. Completion about 80% [Fang2024, Fig. 1]; the model below is our assumption.
 PASS_LENGTH_PREF, PASS_LENGTH_SD = 16.0, 9.0  # m, receiver choice
-PASS_FORWARD_GAIN = (0.10, 0.06, -0.03)  # per metre towards goal, by third (own, middle, final)
+PASS_FORWARD_GAIN = (0.10, 0.08, 0.02)  # per metre towards goal, by third (own, middle, final)
 PASS_FORWARD_GAIN_TRANSITION = 0.22
 PASS_BASE_SUCCESS = 0.93
+# Offside [IFAB2025, Law 11]: a receiver in the opponent's half, ahead of both the ball and the
+# second-last opponent, when the ball is played; not from throw-ins, goal kicks or corners.
+# About 2.3 per match [Bassek2025, Fig. 3; approx.]. Attackers hold their shape this far
+# onside, and passers mostly avoid offside team-mates: both our assumption, the weight tuned to
+# the count.
+ONSIDE_MARGIN = 1.0  # m
+OFFSIDE_PASS_WEIGHT = 0.08
+# Through balls: a pass into space up to 15 m beyond a receiver standing near the offside line.
+# Offside is judged when the ball is played, so the run behind is legal. Our assumption.
+THROUGH_BALL = 0.7  # chance, when the receiver is within THROUGH_BALL_NEAR_LINE of the line
+THROUGH_BALL_NEAR_LINE = 4.0  # m
+THROUGH_BALL_DEPTH = (5.0, 15.0)  # m ahead of the receiver
+THROUGH_BALL_PENALTY = 0.10  # lower completion than a pass to feet
 PASS_SUCCESS_PER_M = 0.004  # lost per metre beyond 10 m
 PASS_SUCCESS_TEAM_SD = 0.02  # team quality spread, gives possession shares away from 50%
 PASS_SPEED_GROUND = (9.0, 0.22)  # m/s = a + b·length
@@ -119,14 +135,14 @@ PASS_SPEED_HIGH = (11.0, 0.25)
 PASS_FINAL_THIRD_PENALTY = 0.08  # passes into a crowded final third fail more often
 BOX_RECEIVER_WEIGHT = 0.8  # in the final third, fewer passes go straight into the box
 FAIL_SPLIT = dict(intercepted=0.37, out=0.55, loose=0.08)  # how a failed ground pass fails
-OUT_REACH = 25.0  # m; a pass failing this close to a line goes out of play
+OUT_REACH = 22.0  # m; a pass failing this close to a line goes out of play
 OUT_DEFLECTED = 0.10  # share of those over the opponent's goal line a defender touched last
 AERIAL_DUEL_RADIUS = 8.0  # m; an opponent this close to a high pass's landing spot contests it
 AERIAL_RECEIVER_WINS = 0.5
 MISCONTROL = 0.03  # chance a reception bounces loose
 
 # Ground duels against the ball carrier.
-DUEL_PER_TOUCH = 0.23
+DUEL_PER_TOUCH = 0.21
 DUEL_REACH = 4.0  # m; the challenger must be this close
 DUEL_CHALLENGER_WINS = 0.5
 DUEL_TACKLER_KEEPS = 0.4  # otherwise the ball runs loose
@@ -137,18 +153,18 @@ PRESSURE_RADIUS = 5.0  # m; the nearest opponent within this distance logs a pre
 # Shots. xG per shot 0.11 ± 0.15 [Bassek2025, p.6]. The logistic xG curve and the shot rate
 # are our assumption, tuned to about 24 shots per match [Bassek2025, p.6].
 SHOT_RANGE = 30.0  # m from the goal centre
-SHOT_RATE = 0.48  # chance of shooting on release, at the goal line; falls with distance
+SHOT_RATE = 0.75  # chance of shooting on release, at the goal line; falls with distance
 SHOT_RATE_SCALE = 16.0  # m
 XG_COEF = (-1.1, -0.11, 1.6)  # intercept, per m of distance, per rad of goal-mouth angle
 SHOT_SPLIT = dict(saved=0.30, wide=0.45, blocked=0.25)  # non-goals [Bassek2025, Fig. 3; approx.]
-SAVE_TO_CORNER = 0.3
-BLOCK_TO_CORNER = 0.3
+SAVE_TO_CORNER = 0.4
+BLOCK_TO_CORNER = 0.4
 CROSS_ZONE_U = 30.0  # m from the centre line, and wider than the box
 
 # Clearances when a pass into the box is intercepted.
 CLEAR_IN_BOX = 0.6
 CLEAR_OUT = 0.45  # chance the clearance goes out of play
-CLEAR_OUT_CORNER = 0.35  # and, if so, that it goes behind for a corner (else a throw-in)
+CLEAR_OUT_CORNER = 0.4  # and, if so, that it goes behind for a corner (else a throw-in)
 
 # Dead-ball time before each restart, s: lognormal(median, sigma). Our assumption, tuned so the
 # ball is in play about 55% of the match [Kavanagh2024, p.80; Allen2026b, Table 2].

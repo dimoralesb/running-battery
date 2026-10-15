@@ -2,7 +2,7 @@
   "$defs": {
     "ClubTestValues": {
       "additionalProperties": false,
-      "description": "Club test values: truth with ±5–10% error. Used only in club mode (PLAN §3.2).",
+      "description": "Club fitness-test values: the truth plus measurement error (PLAN §3.2).\n\nBroadcasters never have these, so the generator leaves them out unless asked\n(``--club-tests``). They exist for one validation experiment: how much club data would help.",
       "properties": {
         "cs": {
           "description": "Critical speed, m/s",
@@ -271,7 +271,7 @@
   "additionalProperties": false,
   "properties": {
     "schema_version": {
-      "default": "0.1.1",
+      "default": "0.1.2",
       "title": "Schema Version",
       "type": "string"
     },

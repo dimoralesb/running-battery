@@ -20,7 +20,9 @@ Conventions (our choices, needed by the estimator and the agents later):
   tackles, pressures and fouls from the defending side.
 - A transition is the first seconds after an open-play turnover [Bortnik2022]; only a share of
   turnovers start one (``params.TRANSITION_CHANCE``).
-- No penalties and no offside in v0: fouls in the box are moved to its edge (our assumption).
+- Offside is called on the receiver when the pass arrives, and gives an indirect free kick
+  [IFAB2025, Law 11]. No penalties in v0: fouls in the box are moved to its edge (our
+  assumption).
 
 Tuned values live in ``params.py`` with their sources. The few small numbers written inline here
 (shot, clearance and loose-ball speeds, pass-success nudges, carry and touch limits) are our
@@ -45,6 +47,7 @@ GOAL_U = P.HALF_LENGTH
 BOX_SPOTS = [(1, 46.0, -5.0), (2, 46.0, 5.0), (10, 48.0, 0.0), (7, 44.0, -1.0), (6, 41.0, -8.0)]
 BOX_SPOTS += [(9, 43.0, 8.0)]
 BOX_MARKERS = [1, 2, 3, 4, 5, 6]  # defending slots that mark them
+NO_OFFSIDE = ("throw_in", "goal_kick", "corner")  # restarts with no offside [IFAB2025, Law 11]
 
 
 def snap(t: float) -> float:
@@ -144,6 +147,11 @@ class MatchEngine:
         """0, 1, 2 for the team's own, middle and attacking third."""
         u = self.to_uv(team, xy)[0]
         return 0 if u < -P.THIRD else (1 if u < P.THIRD else 2)
+
+    def offside_line(self, team: int, ball: np.ndarray) -> float:
+        """u in ``team``'s frame beyond which a team-mate is offside [IFAB2025, Law 11]."""
+        opp_u = np.sort(self.to_uv(team, self.pos[self.members(1 - team)])[:, 0])
+        return max(float(opp_u[-2]), float(self.to_uv(team, ball)[0]), 0.0)
 
     def inside(self, xy: np.ndarray, edge: float = 1.0) -> np.ndarray:
         return movement.clip_to_pitch(xy, edge)
@@ -355,6 +363,9 @@ class MatchEngine:
             weight = np.where(in_box, weight + 1e-3, 0.0)
         elif restart is None and zone == 2:
             weight = np.where(in_box, weight * P.BOX_RECEIVER_WEIGHT, weight)
+        if restart not in NO_OFFSIDE:
+            offside = mates_uv[:, 0] > self.offside_line(team, origin)
+            weight = np.where(offside, weight * P.OFFSIDE_PASS_WEIGHT, weight)
         weight = weight / weight.sum()
         return int(mates[rng.choice(len(mates), p=weight)])
 
@@ -366,6 +377,17 @@ class MatchEngine:
         r_uv = self.to_uv(team, self.pos[r])
         guess = max(np.hypot(*(self.pos[r] - origin)), 3.0) / 14.0
         end = self.pos[r] + self.vel[r] * guess * 0.6 + rng.normal(0.0, 1.0, 2)
+        line = self.offside_line(team, origin)
+        offside = restart not in NO_OFFSIDE and r_uv[0] > line
+        through = (
+            restart is None
+            and not offside
+            and r_uv[0] > max(line - P.THROUGH_BALL_NEAR_LINE, 0.0)
+            and rng.random() < P.THROUGH_BALL
+        )
+        if through:  # into space behind the line, for the receiver to run onto
+            ahead = np.array([rng.uniform(*P.THROUGH_BALL_DEPTH), rng.normal(0.0, 3.0)])
+            end = self.pos[r] + self.to_uv(team, ahead)
         end = self.inside(end)
         length = float(np.hypot(*(end - origin)))
 
@@ -404,12 +426,15 @@ class MatchEngine:
         p_ok = self.teams[team].pass_success - P.PASS_SUCCESS_PER_M * max(0.0, length - 10.0)
         p_ok -= 0.06 * (press_d < 3.0) + 0.05 * (height == PassHeight.HIGH) + 0.2 * wide_cross
         p_ok -= P.PASS_FINAL_THIRD_PENALTY * (self.zone(team, end) == 2)
+        p_ok -= P.THROUGH_BALL_PENALTY * through
         if restart in ("kick_off", "throw_in", "goal_kick"):
             p_ok += 0.05
         p_ok = float(np.clip(p_ok, 0.15, 0.99))
 
         f = Flight(origin.copy(), end, t, snap(t + flight_s), peak, "complete", by=c, to=r)
-        if height == PassHeight.HIGH:
+        if offside:
+            f.result = "offside"
+        elif height == PassHeight.HIGH:
             opp, d = self.nearest(1 - team, end)
             if d < P.AERIAL_DUEL_RADIUS:
                 f.result, f.challenger = "aerial", opp
@@ -552,6 +577,9 @@ class MatchEngine:
         result = f.result
         if result == "complete":
             self.receive(t, f.to, header=f.peak_z > 2.0)
+        elif result == "offside":
+            self.log(EventType.OFFSIDE, t, f.to, start=f.end)
+            self.free_kick(t, 1 - int(self.team_of[f.to]), f.end)
         elif result == "intercepted":
             self.gain_possession(int(self.team_of[f.to]), t, True, f.end)
             self.log(EventType.INTERCEPTION, t, f.to, start=f.end, outcome=Outcome.SUCCESS)
@@ -734,6 +762,13 @@ class MatchEngine:
                 if self.transition is not None and self.transition[0] == k:
                     uv[1:, 0] += 8.0
             tgt[self.members(k)] = self.to_uv(k, uv)
+        if holder is not None and not kick_off:
+            # Attackers hold their shape just onside; roles below (carrier, receiver) may not.
+            line = self.offside_line(holder, self.ball_xy[:2]) - P.ONSIDE_MARGIN
+            idx = self.members(holder)[1:]
+            uv = self.to_uv(holder, tgt[idx])
+            uv[:, 0] = np.minimum(uv[:, 0], line)
+            tgt[idx] = self.to_uv(holder, uv)
         if self.transition is not None:
             cap = chase.copy()
 

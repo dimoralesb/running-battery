@@ -71,7 +71,7 @@ The simulator has three layers:
 **Output format** (full schema in synthesis §7):
 - `events.jsonl`: one event per line: id, time, period, type, subtype, player, team, start and end location, outcome, possession id, **phase** label, score state. Types include **carry** (start and end) and **reception**, so carry speed and receiving speed can be computed [Fang2024].
 - `tracking.jsonl`: one frame per line (10 Hz): time, period, **ball in/out of play**, **team in possession**, ball x/y/z, and x/y for 22 players. Realistic position noise (σ ≈ 0.1 m plus dropouts, synthesis §3.1). Speeds are optional; the estimator recomputes them from positions.
-- `metadata.json`: teams, line-ups, formations, positions (GK, CB, FB, DM, CM, AM, WM, CF, as in [Allen2024]), substitutions, fictional names and clubs. Per-player **club test values** (CS, D′, A0, S0) with ±5–10% error vs the truth, used only in club mode (section 3.2).
+- `metadata.json`: teams, line-ups, formations, positions (GK, CB, FB, DM, CM, AM, WM, CF, as in [Allen2024]), substitutions, fictional names and clubs. Optional per-player **club test values** (CS, D′, A0, S0): the truth plus measurement error, written only for the club-data experiment (generator flag `--club-tests`, section 3.2). Broadcasters never have them.
 - `truth.json`: the hidden "true" fatigue per player per second: fast pool, slow pool, tank, capacity multipliers, the **intended purpose of each run**, skipped runs, and true tired-moment labels [Fang2024; Ju2022; Allen2026b]. **Only for validation, never given to the estimator.**
 
 Follow an existing event schema (e.g. SPADL or StatsBomb-like) so it looks professional and other tools can read it.
@@ -138,8 +138,9 @@ Input: tracking data only (positions over time), plus ball status and possession
 | Mode | CS and D′ come from | Who it fits |
 |---|---|---|
 | **Broadcast (default)** | One prior for all outfield players: CS 3.7 m/s (13.3 km/h), D′ 180 m [Sutcliffe2025, Fig. 2; Liu2021, Table 4; synthesis §3.2.3]. **One-way correction from match data:** if the battery would drop below zero, raise D′ to fit what the player actually did. Never lower D′ or move CS during a match. | Fans, TV, the league |
-| **Club (analyst)** | Club test values from metadata (true value ±5–10%), plus the same correction | A club's own staff |
+| **Club data (validation experiment only)** | Club test values (truth plus measurement error, written only with `--club-tests`), plus the same correction | Nobody in the product: it measures how much club data would add |
 
+- **Decision 2026-10-15: broadcast is the only product mode.** Broadcasters and the league never get clubs' fitness tests, and few clubs test CS and D′ for the whole squad. Club test values are left out of `metadata.json` by default and used in one validation run. Their error is normal: A0 5.4% and S0 3.3% [Morin2021, Table 1]; CS 5% and D′ 15% (our assumption; D′ depends strongly on the method, synthesis §3.2.3).
 - Position differences come from role behaviour, not from different settings. No paper gives CS or D′ by position (synthesis §3.2.3).
 - Validation runs both modes against the truth, to show how much accuracy is lost without test data.
 - A full "prior plus match update" fit (synthesis §3.2.5, option C) is a stretch goal.
@@ -220,7 +221,7 @@ Answered 2026-10-14: solo developer; Python for simulator, engine and agents; Re
 
 | # | Decision | Choice | Main source |
 |---|---|---|---|
-| 1 | CS and D′ source | Two modes: broadcast (shared prior + one-way D′ correction) and club (test values ±5–10%) | [Mizelman2024, p.2064]; synthesis §3.2.5 |
+| 1 | CS and D′ source | Broadcast only: shared prior + one-way D′ correction. Club test values only as a validation experiment (revised 2026-10-15) | [Mizelman2024, p.2064]; synthesis §3.2.5 |
 | 2 | Battery recharge | τ = k·D′/(CS − speed), k = 4; sensitivity k = 1, 3, 5; relative gauge only | [Bellenger2025; Skiba2021] |
 | 3 | Settings by position | One shared prior; differences come from role behaviour | synthesis §3.2.3 |
 | 4 | Position targets | 2024/25 targets in synthesis §4.2; counts from Castellano2025 | [Allen2024; Allen2025; Castellano2025] |

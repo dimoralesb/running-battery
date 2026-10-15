@@ -22,7 +22,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-SCHEMA_VERSION = "0.1.1"
+SCHEMA_VERSION = "0.1.2"
 
 # A little beyond the 52.5 x 34 m half-pitch, for players and the ball just outside the lines.
 X_LIMIT = 60.0
@@ -90,6 +90,7 @@ class EventType(StrEnum):
     BALL_LOSS = "ball_loss"
     CLEARANCE = "clearance"
     FOUL = "foul"
+    OFFSIDE = "offside"  # player_id is the offside player; an indirect free kick follows
     BALL_OUT = "ball_out"
     GOAL = "goal"
     CARD = "card"
@@ -228,7 +229,11 @@ class Event(_Model):
 
 
 class ClubTestValues(_Model):
-    """Club test values: truth with ±5–10% error. Used only in club mode (PLAN §3.2)."""
+    """Club fitness-test values: the truth plus measurement error (PLAN §3.2).
+
+    Broadcasters never have these, so the generator leaves them out unless asked
+    (``--club-tests``). They exist for one validation experiment: how much club data would help.
+    """
 
     cs: Annotated[float, Field(gt=1.5, lt=6.0, description="Critical speed, m/s")]
     d_prime: Annotated[float, Field(gt=20, lt=600, description="D′, m")]
