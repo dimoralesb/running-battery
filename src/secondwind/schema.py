@@ -22,7 +22,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-SCHEMA_VERSION = "0.1.0"
+SCHEMA_VERSION = "0.1.1"
 
 # A little beyond the 52.5 x 34 m half-pitch, for players and the ball just outside the lines.
 X_LIMIT = 60.0
@@ -160,7 +160,9 @@ class TrackingFrame(_Model):
     t: Seconds = Field(description="Seconds since this period's kick-off")
     clock: Seconds = Field(description="Match clock in seconds; period 2 starts at 2700")
     ball_status: BallStatus
-    possession_team: str | None = Field(description="Team in possession; null when contested")
+    possession_team: str | None = Field(
+        default=None, description="Team in possession; null (or left out) when contested"
+    )
     ball: Ball
     players: list[PlayerPosition] = Field(max_length=22)
 

@@ -107,7 +107,8 @@
           "type": "null"
         }
       ],
-      "description": "Team in possession; null when contested",
+      "default": null,
+      "description": "Team in possession; null (or left out) when contested",
       "title": "Possession Team"
     },
     "ball": {
@@ -128,7 +129,6 @@
     "t",
     "clock",
     "ball_status",
-    "possession_team",
     "ball",
     "players"
   ],

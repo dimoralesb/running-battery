@@ -155,6 +155,13 @@ def test_invalid_events_rejected(overrides):
         event(**overrides)
 
 
+def test_contested_frame_round_trip(tmp_path):
+    """possession_team=None is left out on write (exclude_none) and must read back as None."""
+    contested = frame(0).model_copy(update={"possession_team": None})
+    write_match(tmp_path, metadata(), [contested], [event()])
+    assert read_match(tmp_path).frames == [contested]
+
+
 def test_duplicate_player_in_frame_rejected():
     players = [{"id": "H01", "x": 0, "y": 0}, {"id": "H01", "x": 1, "y": 0}]
     with pytest.raises(ValidationError, match="duplicate player id"):

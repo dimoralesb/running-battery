@@ -20,6 +20,8 @@ uv sync                          # Python 3.12 environment
 uv run pytest                    # tests
 uv run ruff check . && uv run ruff format --check .
 uv run python -m secondwind.schema   # re-export JSON Schemas after changing the models
+uv run python -m secondwind.sim --seed 1 --out data/synthetic/m0001   # generate one match
+uv run python -m secondwind.sim.summary data/synthetic/m0001          # summarise it
 ```
 
 ## License

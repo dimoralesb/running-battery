@@ -1,0 +1,29 @@
+"""Generate one match: ``python -m secondwind.sim --seed 1 --out data/synthetic/m0001``."""
+
+from __future__ import annotations
+
+import argparse
+import time
+from pathlib import Path
+
+from secondwind.sim.output import generate
+
+
+def main(argv: list[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(prog="python -m secondwind.sim", description=__doc__)
+    parser.add_argument("--seed", type=int, required=True)
+    parser.add_argument("--out", type=Path, required=True, help="match folder to write")
+    parser.add_argument("--match-id", help="default: the folder name")
+    args = parser.parse_args(argv)
+
+    started = time.perf_counter()
+    match = generate(args.seed, args.out, args.match_id)
+    frames = sum(len(p.alive) for p in match.periods)
+    print(
+        f"wrote {args.out}: {frames} frames, {len(match.events)} events "
+        f"in {time.perf_counter() - started:.1f} s"
+    )
+
+
+if __name__ == "__main__":
+    main()
