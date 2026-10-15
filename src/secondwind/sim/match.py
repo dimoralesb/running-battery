@@ -860,9 +860,11 @@ class MatchEngine:
             ball[k] = self.ball_xy
             alive[k] = self.mode != "dead"
             possession[k] = -1 if self.poss_team is None else self.poss_team
-            target, cap, purpose[k], calm = self.roles.targets(t)
+            target, cap, purpose[k], calm, anchored = self.roles.targets(t)
+            target = movement.spread_targets(target, self.team_of, anchored)
+            push = movement.push_apart(self.pos, self.team_of, anchored)
             self.pos, self.vel = movement.step(
-                self.pos, self.vel, target, cap, self.a0, self.s0, calm
+                self.pos, self.vel, target, cap, self.a0, self.s0, calm, push
             )
         t_end = round((n_frames - 1) / P.FRAME_RATE_HZ, 1)
         self.end_transition(t_end)

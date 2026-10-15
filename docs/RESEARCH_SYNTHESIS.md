@@ -359,7 +359,7 @@ As PLAN §2.4 asks, the simulator's hidden physiology and the estimator are deli
 - **Deutsch2025** (Bundesliga, TRACAB 25 Hz): zero-lag 4th-order Butterworth low-pass at **1 Hz** on positions, central-difference velocity and acceleration (floodlight package), then remove |a| > 10 m/s² and v > 10.5 m/s [Methods, "Data analysis"]. This is the only fully specified, published recipe for optical data in our set.
 
 **Recommendation (our choice; Deutsch2025 gives a 25 Hz recipe, none is published for 10 Hz):**
-- The simulator adds Gaussian position noise with σ ≈ 0.1 m, plus occasional dropouts. This tests the estimator's smoothing.
+- The simulator adds white Gaussian position noise with σ = 0.05 m per axis, plus occasional dropouts. This tests the estimator's smoothing. (Updated 2026-10-15: σ ≈ 0.1 m was the first choice. The 0.06–0.18 m above includes slow, systematic error that does not show up in speed and acceleration; 0.1 m of white noise put four acceleration bands 3–5.5 percentage points off IDSSE through our pipeline, 0.05 m keeps all within about 2. Our calibration.)
 - The estimator applies a zero-phase low-pass filter to x and y, then differentiates. Default: Deutsch2025's Butterworth (4th order, zero-lag, 1 Hz cut-off) + central differences; check on IDSSE that it doesn't flatten short accelerations too much (try 1–2 Hz).
 - Use **tangential** acceleration (the rate of change of speed) for metabolic power and the A–S profile. Bou2026 does not say which kind it uses; Osgnach and Morin use the speed derivative.
 - Cap speed at 12 m/s and \|a\| at 10 m/s² as sanity checks.

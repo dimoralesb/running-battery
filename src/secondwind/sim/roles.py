@@ -372,9 +372,12 @@ class Roles:
         to_goal = self.e.to_uv(team, np.array([-GOAL_U, 0.0])) - xy
         return xy + to_goal / max(float(np.hypot(*to_goal)), 1e-6) * metres
 
-    def targets(self, t: float) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        """Target point, wanted speed (m/s), purpose code and calm flag (no run or ball role,
-        see ``movement.step``) for each player this frame."""
+    def targets(
+        self, t: float
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        """Target point, wanted speed (m/s), purpose code, calm flag (no run or ball role, see
+        ``movement.step``) and anchored flag (on the ball, the receiver or the restart taker:
+        not pushed apart, see ``movement.push_apart``) for each player this frame."""
         e = self.e
         mode = e.mode
         shape, holder = self.shape()
@@ -382,6 +385,7 @@ class Roles:
         frac = np.full(22, P.DEAD_SPEED if mode == "dead" else P.DRIFT_SPEED)
         purpose = np.full(22, NO_PURPOSE, dtype=np.int8)
         calm = np.ones(22, dtype=bool)
+        anchored = np.zeros(22, dtype=bool)
 
         if mode != "dead" and holder is not None:
             self.start_shape_runs(t, shape, holder)
@@ -421,6 +425,7 @@ class Roles:
 
         if mode == "touch":
             c = e.touch.player
+            anchored[c] = True
             role(
                 c,
                 e.touch.carry_to,
@@ -444,6 +449,7 @@ class Roles:
             f = e.flight
             if f.result in ("intercepted", "clear"):
                 role(f.to, f.end, P.CHASE_SPEED, RunPurpose.INTERCEPTION)
+                anchored[f.to] = True
             elif f.to >= 0 and f.result in ("complete", "aerial", "offside"):
                 chase = (
                     P.BEHIND_EFFORT
@@ -451,6 +457,7 @@ class Roles:
                     else (P.CHASE_SPEED)
                 )
                 role(f.to, f.end, chase, self.receiver_purpose)
+                anchored[f.to] = True
                 defenders = e.members(1 - int(e.team_of[f.to]))[1:]
                 d = np.hypot(*(e.pos[defenders] - f.end).T)
                 j = int(np.argmin(d))
@@ -475,5 +482,6 @@ class Roles:
             if r.kind == "corner" or (r.kind == "free_kick" and e.to_uv(r.team, r.spot)[0] > 25.0):
                 e.set_piece_targets(tgt, r.team)
             role(r.taker, r.spot, 0.7 * P.CHASE_SPEED, None)
+            anchored[r.taker] = True
         frac = np.where(calm, frac, np.minimum(frac * self.effort, 1.0))
-        return tgt, frac * e.s0, purpose, calm
+        return tgt, frac * e.s0, purpose, calm, anchored

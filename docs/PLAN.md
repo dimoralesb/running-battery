@@ -70,7 +70,7 @@ The simulator has three layers:
 
 **Output format** (full schema in synthesis §7):
 - `events.jsonl`: one event per line: id, time, period, type, subtype, player, team, start and end location, outcome, possession id, **phase** label, score state. Types include **carry** (start and end) and **reception**, so carry speed and receiving speed can be computed [Fang2024].
-- `tracking.jsonl`: one frame per line (10 Hz): time, period, **ball in/out of play**, **team in possession**, ball x/y/z, and x/y for 22 players. Realistic position noise (σ ≈ 0.1 m plus dropouts, synthesis §3.1). Speeds are optional; the estimator recomputes them from positions.
+- `tracking.jsonl`: one frame per line (10 Hz): time, period, **ball in/out of play**, **team in possession**, ball x/y/z, and x/y for 22 players. Realistic position noise (white, σ = 0.05 m per axis, plus dropouts; synthesis §3.1 and `sim/params.py`). Speeds are optional; the estimator recomputes them from positions.
 - `metadata.json`: teams, line-ups, formations, positions (GK, CB, FB, DM, CM, AM, WM, CF, as in [Allen2024]), substitutions, fictional names and clubs. Optional per-player **club test values** (CS, D′, A0, S0): the truth plus measurement error, written only for the club-data experiment (generator flag `--club-tests`, section 3.2). Broadcasters never have them.
 - `truth.json`: the hidden "true" fatigue per player per second: fast pool, slow pool, tank, capacity multipliers, the **intended purpose of each run**, skipped runs, and true tired-moment labels [Fang2024; Ju2022; Allen2026b]. **Only for validation, never given to the estimator.**
 

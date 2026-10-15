@@ -73,6 +73,19 @@ ARRIVE_TAU = 1.25
 # assumption, tuned to the IDSSE acceleration bands (PLAN §2.5).
 CALM_ALPHA = 0.5
 CALM_ARRIVE_TAU = 2.5
+# Push-apart: players do not stand on the same spot. Before each step, team-mates' targets
+# closer than SEPARATION_TEAM are moved apart, so two players are not sent to the same spot.
+# Then a player closer than their separation to someone else adds (separation − gap) /
+# SEPARATION_TAU m/s, straight away from them, to the velocity they want, at most
+# SEPARATION_MAX m/s in total. The push may turn or slow a moving player but never makes them
+# faster than they want, and the acceleration caps above still apply. Team-mates keep about
+# 1.5–2 m apart. Opponents may come closer, about 0.8–1 m: markers
+# stand 1 m goal-side of attackers at set pieces, and defenders close down to PRESS_GAP. The
+# player on the ball, the receiver and a restart taker are not pushed. Our assumption.
+SEPARATION_TEAM = 1.8
+SEPARATION_OPP = 0.9
+SEPARATION_TAU = 1.0  # s
+SEPARATION_MAX = 1.5  # m/s (5.4 km/h)
 
 # --- Role behaviours and run purposes ------------------------------------------------------------
 
@@ -101,17 +114,19 @@ SPRINT_RUN_S = (3.0, 6.0)  # how long a sprint run may last, s. Our assumption.
 # Work rate per position: the wanted speed of every run and ball role (not calm movement) is
 # multiplied by this, then capped at S0. Position differences come from role behaviour, not
 # from different physical settings (PLAN §7, decision 3). Our assumption, fitted to HID and
-# sprint distance per position (synthesis §4.2) on 90–120 seeds. Sprint distance is sensitive: 1%
-# more effort gives about 5–10% more distance above 7 m/s.
+# sprint distance per position (synthesis §4.2) on 90–240 seeds; re-fitted on 2026-10-15 after
+# the push-apart rule. Sprint distance is sensitive: 1% more effort gives about 5–10% more
+# distance above 7 m/s. One knob cannot fit both for wide midfielders (their HID runs high when
+# their sprint distance is on target), so WM sits where both are within ±5%.
 POSITION_EFFORT = {
-    Position.GK: 1.008,
-    Position.CB: 0.945,
-    Position.FB: 1.0,
-    Position.DM: 1.04,
-    Position.CM: 1.043,
-    Position.AM: 1.008,
-    Position.WM: 1.02,
-    Position.CF: 0.974,
+    Position.GK: 0.996,
+    Position.CB: 0.944,
+    Position.FB: 1.001,
+    Position.DM: 1.052,
+    Position.CM: 1.041,
+    Position.AM: 1.01,
+    Position.WM: 1.021,
+    Position.CF: 0.972,
 }
 # Defenders (CB, FB) who track an opponent running in behind: the nearest TRACKERS, aiming
 # TRACK_GOAL_SIDE metres goal-side of where the runner is going. Our assumption.
@@ -182,9 +197,13 @@ DANGER_U = 0.0
 
 # --- Position noise (synthesis §3.1) -------------------------------------------------------------
 
-# Optical tracking error 0.06–0.18 m [Bassek2025, p.7]; σ ≈ 0.1 m per axis (synthesis §3.1).
+# White Gaussian noise, σ per axis. Optical tracking against VICON is off by 0.06–0.18 m
+# [Bassek2025, p.7], but that includes slow, systematic error, which does not show up in speed
+# and acceleration (our reading). σ = 0.05 m of white noise matches IDSSE's acceleration bands
+# through our pipeline; 0.1 m (synthesis §3.1) put four bands 3–5.5 percentage points off (our
+# calibration, 2026-10-15). Sensitivity runs use 0.05, 0.1, 0.3 and 1.0 m (BUILD_PLAN §3).
 # Drawn after the match from the same generator, so the match itself never changes with it.
-NOISE_SIGMA = 0.1
+NOISE_SIGMA = 0.05
 # Dropouts: a player is missing from a few frames now and then. The IDSSE validation found no
 # missing frames [Bassek2025, p.8]; we add them only to test the estimator's gap filling. Rate
 # and length are our assumption.

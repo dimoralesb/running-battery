@@ -17,11 +17,12 @@ from secondwind.sim.batch import parse_seeds
 from secondwind.sim.match import PeriodFrames
 from secondwind.sim.output import CLEAN_COPY, observe, read_clean_copy, simulate
 from secondwind.sim.replay import load_window, write_html
-from secondwind.sim.runs import speeds
+from secondwind.sim.runs import speeds, spells
 from secondwind.sim.summary import (
     BALL_IN_PLAY_BAND,
     COUNT_TOLERANCE,
     POSSESSION_BAND,
+    RARE_COUNT_BELOW,
     RARE_COUNT_TOLERANCE,
     TARGETS,
     summarise_match,
@@ -170,7 +171,7 @@ def test_ball_in_play_and_possession(summaries):
 def test_event_counts_near_targets(summaries, key):
     mean = np.mean([summaries[s][0].counts[key] for s in SEEDS])
     target = TARGETS[key][0]
-    tolerance = RARE_COUNT_TOLERANCE if target < 5 else COUNT_TOLERANCE
+    tolerance = RARE_COUNT_TOLERANCE if target < RARE_COUNT_BELOW else COUNT_TOLERANCE
     assert abs(mean - target) <= tolerance * target, (key, mean, target)
 
 
@@ -243,6 +244,73 @@ def test_motion_model_limits_random_states():
         before = np.hypot(*vel.T)
         pos, vel = movement.step(pos, vel, target, cap, a0, s0)
         _limits_hold(before, np.hypot(*vel.T), a0, s0)
+
+
+def test_motion_model_limits_with_push():
+    """The push-apart velocity never breaks the limits, and never makes a player faster."""
+    rng = np.random.default_rng(1)
+    n = 500
+    a0 = rng.uniform(*P.A0_RANGE, n)
+    s0 = rng.uniform(*P.S0_RANGE, n)
+    pos = rng.uniform(-50, 50, (n, 2))
+    vel = rng.normal(0, 3, (n, 2))
+    for _ in range(200):
+        target = pos + rng.normal(0, 10, (n, 2))
+        cap = rng.uniform(0.0, 1.2, n) * s0
+        push = rng.normal(0, 1, (n, 2)) * rng.uniform(0, P.SEPARATION_MAX, n)[:, None]
+        before = np.hypot(*vel.T)
+        pos, vel = movement.step(pos, vel, target, cap, a0, s0, push=push)
+        _limits_hold(before, np.hypot(*vel.T), a0, s0)
+    # A sprinter pushed from behind wants no more speed than before.
+    s0 = np.array([9.3])
+    args = (np.zeros((1, 2)), np.array([[8.0, 0.0]]), np.array([[100.0, 0.0]]), s0, s0 - 1.9, s0)
+    _, plain = movement.step(*args)
+    _, pushed = movement.step(*args, push=np.array([[P.SEPARATION_MAX, 0.0]]))
+    assert pushed[0, 0] <= plain[0, 0] + 1e-9
+
+
+def test_push_apart_and_spread_targets():
+    team_of = np.array([0, 0, 1, 0])
+    # 0 and 1: team-mates on one spot; 2: an opponent 1 m away; 3: far off.
+    pos = np.array([[0.0, 0.0], [0.0, 0.0], [1.0, 0.0], [30.0, 0.0]])
+    push = movement.push_apart(pos, team_of)
+    assert push[0, 0] < 0 < push[1, 0]  # split along x
+    assert np.allclose(np.hypot(*push[:2].T), P.SEPARATION_MAX)  # 1.8 m short, capped
+    assert np.allclose(push[2:], 0.0)  # 1 m from an opponent is close enough
+    # Team-mates 1 m apart: (1.8 − 1) / τ each, straight away from the other.
+    near = movement.push_apart(np.array([[0.0, 0.0], [0.0, 1.0]]), np.array([0, 0]))
+    gap = P.SEPARATION_TEAM - 1.0
+    assert np.allclose(near, [[0.0, -gap / P.SEPARATION_TAU], [0.0, gap / P.SEPARATION_TAU]])
+    anchored = np.array([True, False, False, False])
+    assert np.allclose(movement.push_apart(pos, team_of, anchored)[0], 0.0)
+
+    spread = movement.spread_targets(pos, team_of)
+    assert np.hypot(*(spread[0] - spread[1])) == pytest.approx(P.SEPARATION_TEAM)
+    assert np.allclose(spread[2:], pos[2:])  # opponents' targets are left alone
+    spread = movement.spread_targets(pos, team_of, anchored)
+    assert np.allclose(spread[0], pos[0])  # the anchored player keeps their target
+    assert np.hypot(*(spread[1] - pos[0])) == pytest.approx(P.SEPARATION_TEAM)
+
+
+def test_teammates_do_not_stack(sim1):
+    """Push-apart on a whole match (noise-free positions). Before it (commit 145bf90), seed 1 had a
+    team-mate within 0.5 m in 0.24% of player-frames and within 1 m in 0.93%."""
+    frames = within_half = within_one = 0
+    longest = 0
+    for pf in sim1.periods:
+        nearest = np.full(pf.pos.shape[:2], np.inf)
+        for team in (range(11), range(11, 22)):
+            for i, j in itertools.combinations(team, 2):
+                d = np.hypot(*(pf.pos[:, i] - pf.pos[:, j]).T)
+                nearest[:, i] = np.minimum(nearest[:, i], d)
+                nearest[:, j] = np.minimum(nearest[:, j], d)
+                longest = max([longest] + [b - a for a, b in spells(d < 1.0, 1)])
+        frames += nearest.size
+        within_half += int((nearest < 0.5).sum())
+        within_one += int((nearest < 1.0).sum())
+    assert within_half / frames < 0.002, within_half / frames
+    assert within_one / frames < 0.0075, within_one / frames
+    assert longest / P.FRAME_RATE_HZ < 8.0  # nobody stands on a team-mate's spot
 
 
 def test_motion_model_matches_narizuka_at_full_effort():

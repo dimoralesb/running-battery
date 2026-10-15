@@ -84,6 +84,60 @@ def a_max(speed: np.ndarray, a0: np.ndarray, s0: np.ndarray) -> np.ndarray:
     return np.maximum(a0 * (1.0 - speed / s0), 0.0)
 
 
+def _too_close(
+    points: np.ndarray, team_of: np.ndarray, opponents: bool
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Pairs (i, j) closer than their separation: how much closer (m) and the unit vector from j
+    to i. Two points on exactly the same spot split along x, the lower index going left."""
+    gap = points[:, None, :] - points[None, :, :]
+    dist = np.hypot(gap[..., 0], gap[..., 1])
+    same = team_of[:, None] == team_of[None, :]
+    keep = np.where(same, P.SEPARATION_TEAM, P.SEPARATION_OPP if opponents else 0.0)
+    short = np.maximum(keep - dist, 0.0)
+    np.fill_diagonal(short, 0.0)
+    i, j = np.nonzero(short)
+    d = dist[i, j]
+    away = np.where(
+        d[:, None] > 1e-6,
+        gap[i, j] / np.maximum(d, 1e-6)[:, None],
+        np.sign(i - j)[:, None] * np.array([1.0, 0.0]),
+    )
+    return i, j, short[i, j], away
+
+
+def spread_targets(
+    target: np.ndarray, team_of: np.ndarray, anchored: np.ndarray | None = None
+) -> np.ndarray:
+    """Team-mates' targets closer than ``SEPARATION_TEAM`` move apart, each by half the
+    shortfall (all of it when the other is ``anchored``, which never moves)."""
+    i, j, short, away = _too_close(target, team_of, opponents=False)
+    if len(i) == 0:
+        return target
+    fixed = np.zeros(len(target), dtype=bool) if anchored is None else anchored
+    share = np.where(fixed[i], 0.0, np.where(fixed[j], 1.0, 0.5))
+    out = target.copy()
+    np.add.at(out, i, (share * short)[:, None] * away)
+    return clip_to_pitch(out)
+
+
+def push_apart(
+    pos: np.ndarray, team_of: np.ndarray, anchored: np.ndarray | None = None
+) -> np.ndarray:
+    """Velocity (m/s) that moves each player away from anyone closer than their separation
+    (``SEPARATION_TEAM`` for team-mates, ``SEPARATION_OPP`` for opponents), at most
+    ``SEPARATION_MAX``. ``anchored`` (bool) players are not pushed, but still push others."""
+    push = np.zeros_like(pos)
+    i, j, short, away = _too_close(pos, team_of, opponents=True)
+    if len(i) == 0:
+        return push
+    np.add.at(push, i, short[:, None] * away / P.SEPARATION_TAU)
+    size = np.hypot(push[:, 0], push[:, 1])
+    push *= np.minimum(1.0, P.SEPARATION_MAX / np.maximum(size, 1e-9))[:, None]
+    if anchored is not None:
+        push[anchored] = 0.0
+    return push
+
+
 def step(
     pos: np.ndarray,
     vel: np.ndarray,
@@ -92,12 +146,15 @@ def step(
     a0: np.ndarray,
     s0: np.ndarray,
     calm: np.ndarray | None = None,
+    push: np.ndarray | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Advance every player one frame towards its target. All arrays are per player.
 
     ``speed_cap`` is the wanted speed V (at most S0). Near the target V falls to gap / τ, so
     players arrive without overshooting (``ARRIVE_TAU``). ``calm`` (bool) marks players not on
-    a run or a ball role: they use the gentler ``CALM_ALPHA`` and ``CALM_ARRIVE_TAU``.
+    a run or a ball role: they use the gentler ``CALM_ALPHA`` and ``CALM_ARRIVE_TAU``. ``push``
+    (from ``push_apart``) is added to the wanted velocity, before the caps; it never raises the
+    wanted speed above the larger of the two.
     """
     gap = target - pos
     dist = np.hypot(gap[:, 0], gap[:, 1])
@@ -106,8 +163,15 @@ def step(
     want_speed = np.minimum(np.minimum(speed_cap, s0), dist / arrive)
     with np.errstate(invalid="ignore", divide="ignore"):
         heading = np.where(dist[:, None] > 1e-6, gap / dist[:, None], 0.0)
+    want = heading * want_speed[:, None]
+    if push is not None:
+        # The push turns or slows a moving player but never makes them faster than they want.
+        most = np.maximum(want_speed, np.hypot(push[:, 0], push[:, 1]))
+        want = want + push
+        size = np.hypot(want[:, 0], want[:, 1])
+        want *= np.minimum(1.0, most / np.maximum(size, 1e-9))[:, None]
     alpha = a0 / s0 * np.where(calm, P.CALM_ALPHA, 1.0)
-    acc = alpha[:, None] * (heading * want_speed[:, None] - vel)
+    acc = alpha[:, None] * (want - vel)
 
     # Split into the part along the current velocity (speeding up or braking) and the part
     # across it (turning), and cap each.

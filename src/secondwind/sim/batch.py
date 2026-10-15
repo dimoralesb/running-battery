@@ -63,6 +63,9 @@ POSITION_TARGETS = {
     "CF": (10600, 1020, 280),
 }
 POSITION_TOLERANCE = 0.05  # ±5% (synthesis §4.2; PLAN §2.5)
+# Goalkeepers barely sprint: 2 ± 6 m above 7 m/s (25.2 km/h) [Allen2024, Table 4], so ±5% of the
+# target means nothing. Their >7 m/s distance is judged within ±5 m of it instead (our choice).
+GK_SPRINT_TOLERANCE_M = 5.0
 # Team totals per match, mean (SD): total, >5.5 m/s, >7 m/s (m) [Allen2025, Figs 2–3].
 TEAM_TARGETS = {"distance": (113891, 4097), "hid": (9611, 1300), "sprint": (2326, 471)}
 # Efforts per 98 min [Castellano2025, Table 3]: sprints >6.94 m/s and decelerations < -3 m/s²,
@@ -233,7 +236,8 @@ def build_report(stats: list[dict], idsse: list[dict] | None = None) -> dict:
             "n": len(cols["distance"]),
             "distance": describe(cols["distance"], td),
             "hid": describe(cols["hid"], hid),
-            "sprint": describe(cols["sprint"], spr),
+            "sprint": describe(cols["sprint"], spr)
+            | ({"tolerance_m": GK_SPRINT_TOLERANCE_M} if key == "GK" else {}),
             "sprints_per_98": describe(cols["sprints_per_98"], SPRINT_COUNT_TARGETS.get(key)),
             "hdec_per_98": describe(cols["hdec_per_98"], HIGH_DECEL_TARGETS.get(key)),
             "top_speed": describe(cols["top_speed"], TOP_SPEED_TARGETS.get(key))
@@ -291,6 +295,11 @@ def _ms(d: dict, fmt: str = "8.1f") -> str:
 def _off(d: dict, tol: float | None = None, se: bool = False) -> str:
     if "off_pct" not in d:
         return ""
+    if "tolerance_m" in d:  # judged in metres, not in %
+        off = d["mean"] - d["target"]
+        flag = " ok" if abs(off) <= d["tolerance_m"] else " !!"
+        err = f" ±{d['se_pct'] * d['target'] / 100:.1f}" if se else ""
+        return f"{off:+5.1f} m{err}{flag}"
     flag = "" if tol is None else (" ok" if abs(d["off_pct"]) <= 100 * tol else " !!")
     err = f" ±{d['se_pct']:.1f}" if se else ""
     return f"{d['off_pct']:+6.1f}%{err}{flag}"
@@ -306,7 +315,7 @@ def format_report(rep: dict) -> str:
 
     lines.append("")
     lines.append("  Movement by position (truth: noise-free), per player per match. ±5% tolerance;")
-    lines.append("  'off' is the mean against the target ± its standard error.")
+    lines.append("  'off' is the mean against the target ± its standard error. GK >7 m/s: ±5 m.")
     lines.append(
         f"  {'pos':<4}{'distance m':>18}{'off':>16}{'>5.5 m/s':>17}{'off':>16}"
         f"{'>7 m/s':>16}{'off':>17}{'top m/s (target) max':>24}"

@@ -3,9 +3,9 @@
 Match length, ball in play, possession, event counts against the interim targets, and per-player
 distance, high-speed and sprint distance, and top speed. ``tracking.jsonl`` is noisy, so positions
 are first smoothed as in Deutsch2025: dropouts filled by linear interpolation, then a zero-lag
-4th-order Butterworth low-pass at 1 Hz (synthesis §3.1). Raw 10 Hz differences of σ = 0.1 m noise
-would make a player standing still seem to move at about 1.8 m/s (derived: 10 Hz × 0.1 m × √2 ×
-√(π/2)). ``--clean`` reads the noise-free debug copy instead, if the match was generated with
+4th-order Butterworth low-pass at 1 Hz (synthesis §3.1). Raw 10 Hz differences of σ = 0.05 m noise
+would make a player standing still seem to move at about 0.9 m/s (derived: 10 Hz × 0.05 m × √2
+× √(π/2)). ``--clean`` reads the noise-free debug copy instead, if the match was generated with
 ``--clean-copy``.
 """
 
@@ -44,9 +44,12 @@ TARGETS: dict[str, tuple[float, str]] = {
 BALL_IN_PLAY_BAND = (50.0, 63.0)  # [Kavanagh2024, p.80; Allen2026b, Table 2]
 POSSESSION_BAND = (40.0, 64.0)  # [Allen2026b, Table 2]
 COUNT_TOLERANCE = 0.30  # our test tolerance on event counts
-# Rare events (under 5 a match) are noisier: for 2.3 offsides, the mean of 5 matches varies by
-# about ±30% from chance alone (Poisson, derived). Our test tolerance.
+# Rare events (under RARE_COUNT_BELOW a match) are noisier: for 2.3 offsides, the mean of 5
+# matches varies by about ±30% from chance alone (Poisson, derived); for 7.6 corners by about
+# ±17% (1 SD; 2.9 per match in our 240-seed batch, 2026-10-15), so ±30% would fail about one run
+# in 12 with the long-run mean on target (normal approximation, derived). Our test tolerance.
 RARE_COUNT_TOLERANCE = 0.50
+RARE_COUNT_BELOW = 10.0
 FILTER_HZ, FILTER_ORDER = 1.0, 4  # [Deutsch2025, Methods]; see synthesis §3.1
 SPRINT_SPEED = 7.0  # m/s (25.2 km/h) [Allen2024, p.781; synthesis §4.1]
 # Speed and acceleration of tracking errors, removed before any statistic [Deutsch2025, Methods].
