@@ -22,7 +22,9 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-SCHEMA_VERSION = "0.1.2"
+# 0.1.3: truth.json gets ``settings`` (the generator assumptions used for each match, PLAN §2.6
+# point 3); tracking frames document dropouts (a player left out of ``players``).
+SCHEMA_VERSION = "0.1.3"
 
 # A little beyond the 52.5 x 34 m half-pitch, for players and the ball just outside the lines.
 X_LIMIT = 60.0
@@ -165,7 +167,10 @@ class TrackingFrame(_Model):
         default=None, description="Team in possession; null (or left out) when contested"
     )
     ball: Ball
-    players: list[PlayerPosition] = Field(max_length=22)
+    players: list[PlayerPosition] = Field(
+        max_length=22,
+        description="Players seen in this frame; a player left out is a tracking dropout",
+    )
 
     @model_validator(mode="after")
     def _unique_players(self) -> TrackingFrame:
@@ -370,6 +375,11 @@ class MatchTruth(_Model):
     match_id: str
     fatigue_enabled: bool = Field(description="False for no-fatigue control matches")
     story: dict[str, str | float | int | bool] = {}
+    settings: dict[str, str | float | int | bool] = Field(
+        default={},
+        description="Generator assumptions used for this match (position noise now; fatigue "
+        "effect sizes later), so validation can report results across them (PLAN §2.6)",
+    )
     players: list[PlayerTruth]
     runs: list[RunTruth] = []
 

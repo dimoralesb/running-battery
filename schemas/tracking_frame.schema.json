@@ -115,6 +115,7 @@
       "$ref": "#/$defs/Ball"
     },
     "players": {
+      "description": "Players seen in this frame; a player left out is a tracking dropout",
       "items": {
         "$ref": "#/$defs/PlayerPosition"
       },

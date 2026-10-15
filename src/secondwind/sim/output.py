@@ -127,7 +127,7 @@ def simulate(
         periods=infos,
         teams=[team.info(club_tests) for team in teams],
     )
-    truth = neutral_truth(match_id, teams, periods)
+    truth = neutral_truth(match_id, teams, periods, noise_settings(noise_sigma))
     return SimMatch(metadata, periods, observed, to_events(engine), truth)
 
 
@@ -185,7 +185,22 @@ def run_truth(teams: list[SimTeam], periods: list[PeriodFrames]) -> list[RunTrut
     return rows
 
 
-def neutral_truth(match_id: str, teams: list[SimTeam], periods: list[PeriodFrames]) -> MatchTruth:
+def noise_settings(sigma: float) -> dict[str, float]:
+    """The position-noise assumptions of a match, for ``truth.json``'s ``settings``."""
+    return {
+        "noise_sigma_m": sigma,
+        "dropouts_per_min": P.DROPOUTS_PER_MIN,
+        "dropout_s_min": P.DROPOUT_S[0],
+        "dropout_s_max": P.DROPOUT_S[1],
+    }
+
+
+def neutral_truth(
+    match_id: str,
+    teams: list[SimTeam],
+    periods: list[PeriodFrames],
+    settings: dict[str, float] | None = None,
+) -> MatchTruth:
     """Truth with fatigue off: full pools and tank, all multipliers 1 (physiology: Saturday).
     The runs and their purposes are real."""
     period, t = [], []
@@ -213,6 +228,7 @@ def neutral_truth(match_id: str, teams: list[SimTeam], periods: list[PeriodFrame
     return MatchTruth(
         match_id=match_id,
         fatigue_enabled=False,
+        settings=settings or {},
         players=players,
         runs=run_truth(teams, periods),
     )

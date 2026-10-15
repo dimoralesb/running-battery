@@ -48,6 +48,11 @@ az eventhubs namespace create --name "$EHNS" --location "$LOC" "${AZ[@]}" \
   --sku Basic --capacity 1 --disable-local-auth true
 az eventhubs eventhub create --name "$HUB" --namespace-name "$EHNS" "${AZ[@]}" \
   --partition-count 2 --retention-time-in-hours 1 --cleanup-policy Delete
+# Keyless sending: the signed-in user may send to this namespace (and nothing else).
+ME=$(az ad signed-in-user show --query id --output tsv)
+NS_ID=$(az eventhubs namespace show --name "$EHNS" "${AZ[@]}" --query id --output tsv)
+az role assignment create --assignee-object-id "$ME" --assignee-principal-type User \
+  --role "Azure Event Hubs Data Sender" --scope "$NS_ID" --subscription "$SUB" --output none
 
 FQDN=$(az containerapp show --name "$APP" "${AZ[@]}" \
   --query properties.configuration.ingress.fqdn --output tsv)

@@ -128,6 +128,7 @@ def test_files_validate(folders, summaries):
         assert truth.fatigue_enabled is False
         assert len(truth.players) == 22
         assert truth.runs
+        assert truth.settings["noise_sigma_m"] == P.NOISE_SIGMA
         series = truth.players[0].series
         assert set(series.fast_pool) == {1.0} and set(series.speed_mult) == {1.0}
         checks = summaries[seed][1]
