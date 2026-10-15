@@ -817,6 +817,25 @@ class MatchEngine:
             tau = P.SHAPE_SWITCH_S[0] if goal > self.shape_w[k] else P.SHAPE_SWITCH_S[1]
             self.shape_w[k] += (goal - self.shape_w[k]) * (1.0 - math.exp(-P.DT / tau))
 
+    def follow_ball(self, t: float) -> None:
+        """The ball's position this frame, the lagged copy the shapes follow (``SHAPE_LAG_S``) and
+        the shape weights."""
+        self.ball_xy = self.ball_at(t)
+        self.shape_ball += (self.ball_xy[:2] - self.shape_ball) * (
+            1.0 - math.exp(-P.DT / P.SHAPE_LAG_S)
+        )
+        self.update_shape_weights()
+
+    def move(self, t: float) -> np.ndarray:
+        """Every player takes one movement step (roles, push-apart, motion model); returns the
+        purpose codes of this frame."""
+        target, cap, purpose, calm, anchored = self.roles.targets(t)
+        push = movement.push_apart(self.pos, self.team_of, anchored, self.vel)
+        self.pos, self.vel = movement.step(
+            self.pos, self.vel, target, cap, self.a0, self.s0, calm, push
+        )
+        return purpose
+
     def run_period(self, period: int, n_frames: int, kick_team: int) -> PeriodFrames:
         self.period = period
         home_dir = 1.0 if self.teams[0].attacks_positive_x_in_period_1 else -1.0
@@ -845,23 +864,16 @@ class MatchEngine:
         alive = np.empty(n_frames, dtype=bool)
         possession = np.empty(n_frames, dtype=np.int8)
         purpose = np.empty((n_frames, 22), dtype=np.int8)
-        lag = 1.0 - math.exp(-P.DT / P.SHAPE_LAG_S)
         self.log(EventType.PERIOD_START, 0.0)
         for k in range(n_frames):
             t = round(k / P.FRAME_RATE_HZ, 1)
             self.update(t)
-            self.ball_xy = self.ball_at(t)
-            self.shape_ball += (self.ball_xy[:2] - self.shape_ball) * lag
-            self.update_shape_weights()
+            self.follow_ball(t)
             pos[k] = self.pos
             ball[k] = self.ball_xy
             alive[k] = self.mode != "dead"
             possession[k] = -1 if self.poss_team is None else self.poss_team
-            target, cap, purpose[k], calm, anchored = self.roles.targets(t)
-            push = movement.push_apart(self.pos, self.team_of, anchored, self.vel)
-            self.pos, self.vel = movement.step(
-                self.pos, self.vel, target, cap, self.a0, self.s0, calm, push
-            )
+            purpose[k] = self.move(t)
         t_end = round((n_frames - 1) / P.FRAME_RATE_HZ, 1)
         self.end_transition(t_end)
         self.log(EventType.PERIOD_END, t_end)

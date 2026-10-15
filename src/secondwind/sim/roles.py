@@ -69,6 +69,8 @@ class Roles:
     def __init__(self, engine: MatchEngine):
         self.e = engine
         self.runs: dict[int, Run] = {}
+        self.wall_for = None  # the restart the wall below belongs to
+        self.wall_members: list[int] = []
         self.receiver_purpose = RunPurpose.MOVE_TO_RECEIVE
         pos = engine.positions
         self.is_gk = np.array([p == Position.GK for p in pos])
@@ -368,9 +370,11 @@ class Roles:
         return self.e.to_uv(team, goal + gap / max(dist, 1e-6) * max(dist - 1.0, 0.5))
 
     def keep_distance(self, tgt: np.ndarray) -> None:
-        """Opponents' targets at least the legal distance from a restart (``RESTART_DISTANCE``,
-        ``CORNER_ARC``, ``THROW_IN_DISTANCE``), plus ``RESTART_MARGIN``. A target inside moves to
-        the edge on the player's own side, so they step out the shortest way."""
+        """Opponents keep the legal distance from a restart (``RESTART_DISTANCE``, ``CORNER_ARC``,
+        ``THROW_IN_DISTANCE``), plus ``RESTART_MARGIN``. A player inside, or with a target inside,
+        heads for the edge on their own side (the shortest way out); at a free kick or corner, a
+        player whose straight path would cross the circle walks round its edge instead
+        (``RESTART_ARC_STEP``)."""
         e = self.e
         r = e.restart
         keep = {
@@ -383,36 +387,54 @@ class Roles:
         keep += P.RESTART_MARGIN
         defend = 1 - r.team
         idx = e.members(defend)
-        near = np.hypot(*(tgt[idx] - r.spot).T) < keep
-        side = e.pos[idx] - r.spot
+        pos, goal = e.pos[idx], tgt[idx]
+        side = pos - r.spot
         d = np.hypot(*side.T)
         home = e.to_uv(defend, np.array([-GOAL_U, 0.0])) - r.spot  # towards their own goal
         home /= max(float(np.hypot(*home)), 1e-6)
         away = np.where(d[:, None] > 1e-6, side / np.maximum(d, 1e-6)[:, None], home)
-        tgt[idx[near]] = movement.clip_to_pitch(r.spot + away[near] * keep)
+        # Closest point to the ball on the straight path from the player to their target.
+        path = goal - pos
+        s = np.clip(
+            np.einsum("ij,ij->i", r.spot - pos, path) / np.maximum((path**2).sum(1), 1e-9), 0, 1
+        )
+        crosses = np.hypot(*(pos + s[:, None] * path - r.spot).T) < keep
+        crosses &= r.kind != "throw_in"  # 2 m circle on the line: stepping out is enough
+        # Clearly inside (not just on the edge, where walking round still works).
+        step_out = (d < keep - 0.1) | (np.hypot(*(goal - r.spot).T) < keep)
+        out = r.spot + away * keep
+        # Round the edge: a point a little further round, towards the target's side.
+        at = np.arctan2(side[:, 1], side[:, 0])
+        turn = np.angle(np.exp(1j * (np.arctan2(*(goal - r.spot).T[::-1]) - at)))
+        at = at + np.clip(turn, -P.RESTART_ARC_STEP, P.RESTART_ARC_STEP)
+        round_edge = r.spot + keep * np.stack([np.cos(at), np.sin(at)], axis=1)
+        new = np.where(step_out[:, None], out, np.where(crosses[:, None], round_edge, goal))
+        tgt[idx] = movement.clip_to_pitch(new)
 
-    def wall(self, tgt: np.ndarray, anchored: np.ndarray, set_piece: bool) -> None:
-        """A free kick in range: the nearest free defenders line up in a wall (``WALL_*``),
-        side by side; they are anchored, so the push-apart leaves their spacing alone."""
+    def wall(self, set_piece: bool) -> list[tuple[int, np.ndarray]]:
+        """A free kick in range: the defenders and their spots in a wall (``WALL_*``), side by
+        side. The members are the free defenders nearest the wall when the free kick is first
+        set up, kept until it is taken, and ordered along the wall as they come in."""
         e = self.e
         r = e.restart
         defend = 1 - r.team
         to_goal = e.to_uv(defend, np.array([-GOAL_U, 0.0])) - r.spot
         dist = float(np.hypot(*to_goal))
         if dist > P.WALL_RANGE:
-            return
+            return []
         n = P.WALL_SIZE[1] if dist < P.WALL_NEAR else P.WALL_SIZE[0]
         unit = to_goal / max(dist, 1e-6)
         across = np.array([-unit[1], unit[0]])
         centre = r.spot + unit * min(P.RESTART_DISTANCE + P.RESTART_MARGIN, dist - 1.0)
         spots = centre + np.outer(np.arange(n) - (n - 1) / 2.0, across) * P.WALL_GAP
-        markers = set(int(e.members(defend)[s]) for s in P.BOX_MARKERS) if set_piece else set()
-        free = [int(i) for i in e.members(defend)[1:] if int(i) not in markers]
-        for spot in spots:
-            i = min(free, key=lambda j: float(np.hypot(*(e.pos[j] - spot))))
-            free.remove(i)
-            tgt[i] = spot
-            anchored[i] = True
+        if self.wall_for is not r:
+            markers = set(int(e.members(defend)[s]) for s in P.BOX_MARKERS) if set_piece else set()
+            free = [int(i) for i in e.members(defend)[1:] if int(i) not in markers]
+            free.sort(key=lambda j: float(np.hypot(*(e.pos[j] - centre))))
+            members = free[:n]
+            members.sort(key=lambda j: float((e.pos[j] - centre) @ across))
+            self.wall_for, self.wall_members = r, members
+        return list(zip(self.wall_members, spots, strict=True))
 
     def behind_ball(self) -> np.ndarray:
         """Unit vector from the ball to where the taker stands (``TAKER_BEHIND``)."""
@@ -543,7 +565,10 @@ class Roles:
             if set_piece:
                 e.set_piece_targets(tgt, r.team)
             if r.kind == "free_kick":
-                self.wall(tgt, anchored, set_piece)
+                # The wall jogs into place; anchored, so the push-apart leaves its spacing alone.
+                for i, spot in self.wall(set_piece):
+                    role(i, spot, P.WALL_SPEED, None)
+                    anchored[i] = True
             role(r.taker, r.spot + self.behind_ball() * P.TAKER_BEHIND, 0.7 * P.CHASE_SPEED, None)
             anchored[r.taker] = True
         tgt = movement.spread_targets(tgt, e.team_of, anchored)

@@ -14,9 +14,10 @@ from secondwind.schema import X_LIMIT, Y_LIMIT, EventType, MatchMetadata, Positi
 from secondwind.sim import movement
 from secondwind.sim import params as P
 from secondwind.sim.batch import parse_seeds
-from secondwind.sim.match import PeriodFrames
+from secondwind.sim.match import MatchEngine, PeriodFrames
 from secondwind.sim.output import CLEAN_COPY, observe, read_clean_copy, simulate
 from secondwind.sim.replay import load_window, write_html
+from secondwind.sim.rosters import make_teams
 from secondwind.sim.runs import speeds, spells
 from secondwind.sim.summary import (
     BALL_IN_PLAY_BAND,
@@ -303,56 +304,69 @@ def test_push_apart_looks_ahead_for_team_mates():
     assert np.allclose(movement.push_apart(pos, np.array([0, 1]), vel=vel), 0.0)
 
 
-def _restarts(sim1) -> list[tuple[str, int, np.ndarray, np.ndarray, float]]:
-    """(kind, taker, spot, positions, x of the goal attacked) at each restart pass."""
-    ids = [p.id for team in sim1.metadata.teams for p in team.players]
-    out = []
-    for e in sim1.events:
-        if e.type == EventType.PASS and e.subtype in ("free_kick", "throw_in", "corner"):
-            taker = ids.index(e.player_id)
-            team = sim1.metadata.teams[taker // 11]
-            forward = team.attacks_positive_x_in_period_1 == (e.period == 1)
-            pos = sim1.periods[e.period - 1].pos[round(e.t * P.FRAME_RATE_HZ)]
-            goal_x = P.HALF_LENGTH if forward else -P.HALF_LENGTH
-            out.append((e.subtype, taker, np.array([e.start.x, e.start.y]), pos, goal_x))
-    return out
+def _held_restart(kind: str, spot_uv: tuple[float, float], seconds: float = 30.0):
+    """An engine a few seconds into a match, then a restart for team 0 at ``spot_uv`` (team 0's
+    attacking frame), held for ``seconds`` while everyone moves into place."""
+    rng = np.random.default_rng(0)
+    engine = MatchEngine(rng, make_teams(rng))
+    engine.run_period(1, 50, 0)
+    spot = engine.to_uv(0, np.array(spot_uv))
+    engine.schedule_restart(kind, 0, spot, 5.0, spot.copy())
+    engine.restart.t = np.inf  # never taken
+    for k in range(round(seconds * P.FRAME_RATE_HZ)):
+        t = 5.0 + k / P.FRAME_RATE_HZ
+        engine.follow_ball(t)
+        engine.move(t)
+    return engine, spot
 
 
-def test_restarts_keep_the_legal_distance(sim1):
-    """Opponents 9.15 m from a free kick, 2 m from a throw-in [IFAB2025, Laws 13, 15] and
-    9.15 m from the corner arc (Law 17) when the restart is taken; the taker about 1 m behind
-    the ball. Before this rule, 81% of free kicks had an opponent closer than 9.15 m."""
-    keep = {
-        "free_kick": P.RESTART_DISTANCE,
-        "throw_in": P.THROW_IN_DISTANCE,
-        "corner": P.RESTART_DISTANCE + P.CORNER_ARC,
-    }
-    close, count, taker_gap = {k: 0 for k in keep}, {k: 0 for k in keep}, []
-    for kind, taker, spot, pos, _ in _restarts(sim1):
-        opponents = pos[11:] if taker < 11 else pos[:11]
-        count[kind] += 1
-        close[kind] += int(np.hypot(*(opponents - spot).T).min() < keep[kind])
-        taker_gap.append(float(np.hypot(*(pos[taker] - spot))))
-    assert min(count.values()) > 0, count
-    assert close["corner"] == 0
-    assert close["free_kick"] / count["free_kick"] < 0.15, close
-    assert close["throw_in"] / count["throw_in"] < 0.05, close
-    assert np.mean(np.abs(np.array(taker_gap) - P.TAKER_BEHIND) < 0.5) > 0.9
+@pytest.mark.parametrize(
+    "kind, spot_uv, keep",
+    [
+        ("free_kick", (P.HALF_LENGTH - 22.0, 6.0), P.RESTART_DISTANCE),  # in wall range
+        ("free_kick", (-10.0, -20.0), P.RESTART_DISTANCE),
+        ("corner", (P.HALF_LENGTH, P.HALF_WIDTH), P.RESTART_DISTANCE + P.CORNER_ARC),
+        ("throw_in", (5.0, -P.HALF_WIDTH), P.THROW_IN_DISTANCE),
+    ],
+)
+def test_restart_distance_and_taker(kind, spot_uv, keep):
+    """Once settled, opponents stand at least 9.15 m from a free kick (Law 13), 9.15 m from the
+    corner arc (Laws 1, 17) and 2 m from a throw-in (Law 15) [IFAB2025], give or take the
+    approach (0.5 m); the taker about 1 m behind the ball."""
+    engine, spot = _held_restart(kind, spot_uv)
+    opponents = engine.pos[11:]
+    assert np.hypot(*(opponents - spot).T).min() > keep - 0.5
+    taker = engine.restart.taker
+    assert abs(np.hypot(*(engine.pos[taker] - spot)) - P.TAKER_BEHIND) < 0.3
 
 
-def test_free_kicks_in_range_get_a_wall(sim1):
-    """At a free kick within WALL_RANGE of the goal, at least WALL_SIZE[0] defenders stand side
-    by side at the legal distance."""
+def test_free_kick_in_range_gets_a_wall():
+    """WALL_SIZE[0] defenders side by side, WALL_GAP apart, at the edge of the 9.15 m circle."""
+    engine, spot = _held_restart("free_kick", (P.HALF_LENGTH - 24.0, 4.0))
     edge = P.RESTART_DISTANCE + P.RESTART_MARGIN
-    walls = 0
-    for kind, taker, spot, pos, goal_x in _restarts(sim1):
-        if kind != "free_kick" or np.hypot(goal_x - spot[0], spot[1]) > P.WALL_RANGE:
-            continue
-        opponents = pos[11:] if taker < 11 else pos[:11]
-        at_edge = np.abs(np.hypot(*(opponents - spot).T) - edge) < 0.5
-        assert at_edge.sum() >= P.WALL_SIZE[0], at_edge.sum()
-        walls += 1
-    assert walls > 0
+    d = np.hypot(*(engine.pos[11:] - spot).T)
+    wall = engine.pos[11:][np.abs(d - edge) < 0.3]
+    assert len(wall) >= P.WALL_SIZE[0], d.round(1)
+    gaps = np.hypot(*(wall[:, None] - wall[None]).T)
+    np.fill_diagonal(gaps, np.inf)
+    assert np.allclose(gaps.min(axis=1), P.WALL_GAP, atol=0.15), gaps.min(axis=1)
+
+
+def test_free_kicks_keep_distance_over_a_match(sim1):
+    """A whole match: the median nearest opponent at a free kick is outside 9.15 m (5.8 m before
+    the rule), and nobody is inside the corner circle. Quick free kicks may be taken with
+    opponents closer [IFAB2025, Law 13], so single kicks are not judged here."""
+    ids = [p.id for team in sim1.metadata.teams for p in team.players]
+    nearest = {"free_kick": [], "corner": []}
+    for e in sim1.events:
+        if e.type == EventType.PASS and e.subtype in nearest:
+            taker = ids.index(e.player_id)
+            pos = sim1.periods[e.period - 1].pos[round(e.t * P.FRAME_RATE_HZ)]
+            opponents = pos[11:] if taker < 11 else pos[:11]
+            spot = np.array([e.start.x, e.start.y])
+            nearest[e.subtype].append(np.hypot(*(opponents - spot).T).min())
+    assert np.median(nearest["free_kick"]) > P.RESTART_DISTANCE
+    assert min(nearest["corner"]) > P.RESTART_DISTANCE + P.CORNER_ARC
 
 
 def test_teammates_do_not_stack(sim1):

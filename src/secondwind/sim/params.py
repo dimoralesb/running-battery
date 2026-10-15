@@ -387,6 +387,9 @@ RESTART_DISTANCE = 9.15
 CORNER_ARC = 1.0
 THROW_IN_DISTANCE = 2.0
 RESTART_MARGIN = 0.5
+# A defender whose straight path would cross that circle walks round its edge instead, aiming
+# this far round (rad) each frame. Our assumption.
+RESTART_ARC_STEP = 0.3
 # The taker stands this far behind the ball: outside the line at a throw-in or corner, away from
 # the goal they attack otherwise. Our assumption.
 TAKER_BEHIND = 1.0
@@ -397,6 +400,10 @@ WALL_RANGE = 30.0
 WALL_NEAR = 22.0
 WALL_SIZE = (3, 4)
 WALL_GAP = 0.6
+# Wall players jog into place at this share of S0, below HI_SPEED for every player (at most
+# 0.5 × 1.053 × 10.3 = 5.4 m/s [19.6 km/h], derived from POSITION_EFFORT and S0_RANGE). Our
+# assumption.
+WALL_SPEED = 0.5
 LONG_STOPPAGE = 0.10  # chance of an extra stoppage (injury, VAR, substitution) at a dead ball
 LONG_STOPPAGE_S = (30.0, 90.0)
 
