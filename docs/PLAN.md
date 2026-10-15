@@ -34,7 +34,7 @@ We use real open data **only offline, to calibrate and validate the generator**.
 | **SkillCorner Open Data** [github](https://github.com/SkillCorner/opendata) | 10 matches, broadcast tracking (only players visible on camera). | **MIT** | Second source for movement calibration. Broadcast tracking reads top speed about 0.6 m/s (2.1 km/h) **lower** and total distance about 400 m higher than TRACAB [Castellano2025, Methods 2.3]. Correct for this before comparing. |
 | **Wyscout public dataset** (Pappalardo et al., 2019, Scientific Data) | Events for a full season of 7 competitions **including the Premier League 2017/18**. No tracking. | **CC BY 4.0** | Event rates and patterns: passes per minute, pass lengths, shots, tackles. Premier League-specific. |
 | **StatsBomb Open Data** [github](https://github.com/statsbomb/open-data) | Events for many competitions, some with "360" freeze frames. | Custom terms: attribute StatsBomb + logo | Optional extra event calibration. |
-| **Sutcliffe & Kramer (2025) raw data**, Harvard Dataverse, doi:10.7910/DVN/5FTIRQ | 26 university players: 3-minute-test CS and D′, plus match GPS at 10 Hz [Sutcliffe2025]. | **Not checked yet** | The only real data we know of with both test values and match running. Possible check of the battery on real players. Use only if the licence allows. |
+| **Sutcliffe & Kramer (2025) raw data**, Harvard Dataverse, doi:10.7910/DVN/5FTIRQ | 26 university players: 3-minute-test CS and D′, plus match GPS at 10 Hz [Sutcliffe2025]. The public file is **one summary spreadsheet** (15 KB, per-match D′-balance summaries), not raw GPS (checked 2026-10-14). | **CC0** | Compare our battery's dips (e.g. 21 ± 6% of D′) with real players' summaries. We cannot run our estimator on it. |
 | **Metrica Sports sample** [github](https://github.com/metrica-sports/sample-data) | 3 anonymized matches, tracking + events. | No formal license ("be responsible, acknowledge") | Prototyping only. Don't rely on it. |
 | **PFF FC World Cup 2022** [blog](https://www.blog.fc.pff.com/blog/enhanced-2022-world-cup-dataset) | 64 matches, tracking + events. | Unclear, behind a form | Skip unless terms are clear. |
 
@@ -208,7 +208,7 @@ Replaced by the day-by-day plan and cut list in [BUILD_PLAN.md](BUILD_PLAN.md). 
 ## 6. Open questions
 
 - Do we have Foundry model access on the Azure free account ($200 credit)? Check model quota on day 1.
-- Licences still to check: Sutcliffe2025 raw data (Harvard Dataverse); daSilva2025 pitch-control code (stated MIT).
+- Licences checked 2026-10-14: Sutcliffe2025 data CC0 (summary file only); daSilva2025 pitch-control code (github.com/Markfds01/Tracking_laliga) MIT.
 
 ---
 
