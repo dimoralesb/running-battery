@@ -292,6 +292,69 @@ def test_push_apart_and_spread_targets():
     assert np.hypot(*(spread[1] - pos[0])) == pytest.approx(P.SEPARATION_TEAM)
 
 
+def test_push_apart_looks_ahead_for_team_mates():
+    """Two players 3 m apart running at each other: team-mates move apart before they meet;
+    opponents are judged where they are now (pressing and duels are left alone)."""
+    pos = np.array([[-1.5, 0.0], [1.5, 0.0]])
+    vel = np.array([[1.5, 0.0], [-1.5, 0.0]])
+    mates = movement.push_apart(pos, np.array([0, 0]), vel=vel)
+    assert mates[0, 0] < 0 < mates[1, 0]
+    assert np.allclose(movement.push_apart(pos, np.array([0, 0])), 0.0)
+    assert np.allclose(movement.push_apart(pos, np.array([0, 1]), vel=vel), 0.0)
+
+
+def _restarts(sim1) -> list[tuple[str, int, np.ndarray, np.ndarray, float]]:
+    """(kind, taker, spot, positions, x of the goal attacked) at each restart pass."""
+    ids = [p.id for team in sim1.metadata.teams for p in team.players]
+    out = []
+    for e in sim1.events:
+        if e.type == EventType.PASS and e.subtype in ("free_kick", "throw_in", "corner"):
+            taker = ids.index(e.player_id)
+            team = sim1.metadata.teams[taker // 11]
+            forward = team.attacks_positive_x_in_period_1 == (e.period == 1)
+            pos = sim1.periods[e.period - 1].pos[round(e.t * P.FRAME_RATE_HZ)]
+            goal_x = P.HALF_LENGTH if forward else -P.HALF_LENGTH
+            out.append((e.subtype, taker, np.array([e.start.x, e.start.y]), pos, goal_x))
+    return out
+
+
+def test_restarts_keep_the_legal_distance(sim1):
+    """Opponents 9.15 m from a free kick, 2 m from a throw-in [IFAB2025, Laws 13, 15] and
+    9.15 m from the corner arc (Law 17) when the restart is taken; the taker about 1 m behind
+    the ball. Before this rule, 81% of free kicks had an opponent closer than 9.15 m."""
+    keep = {
+        "free_kick": P.RESTART_DISTANCE,
+        "throw_in": P.THROW_IN_DISTANCE,
+        "corner": P.RESTART_DISTANCE + P.CORNER_ARC,
+    }
+    close, count, taker_gap = {k: 0 for k in keep}, {k: 0 for k in keep}, []
+    for kind, taker, spot, pos, _ in _restarts(sim1):
+        opponents = pos[11:] if taker < 11 else pos[:11]
+        count[kind] += 1
+        close[kind] += int(np.hypot(*(opponents - spot).T).min() < keep[kind])
+        taker_gap.append(float(np.hypot(*(pos[taker] - spot))))
+    assert min(count.values()) > 0, count
+    assert close["corner"] == 0
+    assert close["free_kick"] / count["free_kick"] < 0.15, close
+    assert close["throw_in"] / count["throw_in"] < 0.05, close
+    assert np.mean(np.abs(np.array(taker_gap) - P.TAKER_BEHIND) < 0.5) > 0.9
+
+
+def test_free_kicks_in_range_get_a_wall(sim1):
+    """At a free kick within WALL_RANGE of the goal, at least WALL_SIZE[0] defenders stand side
+    by side at the legal distance."""
+    edge = P.RESTART_DISTANCE + P.RESTART_MARGIN
+    walls = 0
+    for kind, taker, spot, pos, goal_x in _restarts(sim1):
+        if kind != "free_kick" or np.hypot(goal_x - spot[0], spot[1]) > P.WALL_RANGE:
+            continue
+        opponents = pos[11:] if taker < 11 else pos[:11]
+        at_edge = np.abs(np.hypot(*(opponents - spot).T) - edge) < 0.5
+        assert at_edge.sum() >= P.WALL_SIZE[0], at_edge.sum()
+        walls += 1
+    assert walls > 0
+
+
 def test_teammates_do_not_stack(sim1):
     """Push-apart on a whole match (noise-free positions). Before it (commit 145bf90), seed 1 had a
     team-mate within 0.5 m in 0.24% of player-frames and within 1 m in 0.93%."""
@@ -304,13 +367,14 @@ def test_teammates_do_not_stack(sim1):
                 d = np.hypot(*(pf.pos[:, i] - pf.pos[:, j]).T)
                 nearest[:, i] = np.minimum(nearest[:, i], d)
                 nearest[:, j] = np.minimum(nearest[:, j], d)
-                longest = max([longest] + [b - a for a, b in spells(d < 1.0, 1)])
+                close = (d < 1.0) & pf.alive  # walls stand close on purpose at dead balls
+                longest = max([longest] + [b - a for a, b in spells(close, 1)])
         frames += nearest.size
         within_half += int((nearest < 0.5).sum())
         within_one += int((nearest < 1.0).sum())
     assert within_half / frames < 0.002, within_half / frames
     assert within_one / frames < 0.0075, within_one / frames
-    assert longest / P.FRAME_RATE_HZ < 8.0  # nobody stands on a team-mate's spot
+    assert longest / P.FRAME_RATE_HZ < 8.0  # in play, nobody stands on a team-mate's spot
 
 
 def test_motion_model_matches_narizuka_at_full_effort():

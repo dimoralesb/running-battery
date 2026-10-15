@@ -84,8 +84,13 @@ CALM_ARRIVE_TAU = 2.5
 # player on the ball, the receiver and a restart taker are not pushed. Our assumption.
 SEPARATION_TEAM = 1.8
 SEPARATION_OPP = 0.9
-SEPARATION_TAU = 1.0  # s
-SEPARATION_MAX = 1.5  # m/s (5.4 km/h)
+SEPARATION_TAU = 0.4  # s
+SEPARATION_MAX = 4.0  # m/s (14.4 km/h)
+# Team-mates are judged where they will be this many seconds on, at their current velocity, so
+# that crossing paths move apart before they meet. Our assumption, with SEPARATION_TAU and
+# SEPARATION_MAX tuned towards IDSSE [Bassek2025], where team-mates come within 1 m in about
+# 0.2% of in-play player-frames (our measure, 2026-10-15; ours 0.44%, 0.83% without this).
+SEPARATION_LOOKAHEAD = 1.0  # s
 
 # --- Role behaviours and run purposes ------------------------------------------------------------
 
@@ -115,18 +120,18 @@ SPRINT_RUN_S = (3.0, 6.0)  # how long a sprint run may last, s. Our assumption.
 # multiplied by this, then capped at S0. Position differences come from role behaviour, not
 # from different physical settings (PLAN §7, decision 3). Our assumption, fitted to HID and
 # sprint distance per position (synthesis §4.2) on 90–240 seeds; re-fitted on 2026-10-15 after
-# the push-apart rule. Sprint distance is sensitive: 1% more effort gives about 5–10% more
-# distance above 7 m/s. One knob cannot fit both for wide midfielders (their HID runs high when
-# their sprint distance is on target), so WM sits where both are within ±5%.
+# the push-apart rule and its look-ahead. Sprint distance is sensitive: 1% more effort gives
+# about 5–10% more distance above 7 m/s. One knob cannot fit both for wide midfielders (their
+# HID runs high when their sprint distance is on target), so WM sits where both are about ±5%.
 POSITION_EFFORT = {
-    Position.GK: 0.996,
-    Position.CB: 0.944,
-    Position.FB: 1.001,
-    Position.DM: 1.052,
-    Position.CM: 1.041,
-    Position.AM: 1.01,
-    Position.WM: 1.021,
-    Position.CF: 0.972,
+    Position.GK: 1.002,
+    Position.CB: 0.947,
+    Position.FB: 1.003,
+    Position.DM: 1.053,
+    Position.CM: 1.042,
+    Position.AM: 1.007,
+    Position.WM: 1.016,
+    Position.CF: 0.97,
 }
 # Defenders (CB, FB) who track an opponent running in behind: the nearest TRACKERS, aiming
 # TRACK_GOAL_SIDE metres goal-side of where the runner is going. Our assumption.
@@ -355,6 +360,11 @@ SAVE_TO_CORNER = 0.4
 BLOCK_TO_CORNER = 0.4
 CROSS_ZONE_U = 30.0  # m from the centre line, and wider than the box
 
+# Corner and attacking free kick: where six attackers stand, (slot index, u, v). Our assumption.
+BOX_SPOTS = [(1, 46.0, -5.0), (2, 46.0, 5.0), (10, 48.0, 0.0), (7, 44.0, -1.0), (6, 41.0, -8.0)]
+BOX_SPOTS += [(9, 43.0, 8.0)]
+BOX_MARKERS = [1, 2, 3, 4, 5, 6]  # defending slots that mark them
+
 # Clearances when a pass into the box is intercepted.
 CLEAR_IN_BOX = 0.6
 CLEAR_OUT = 0.45  # chance the clearance goes out of play
@@ -369,6 +379,24 @@ DEAD_TIME = {
     "corner": (32.0, 0.25),
     "free_kick": (26.0, 0.3),
 }
+# Opponents keep their distance until the ball is in play [IFAB2025]: 9.15 m from the ball at a
+# kick-off (Law 8) and at a free kick (Law 13), 9.15 m from the corner arc at a corner (Law 17;
+# the arc has a 1 m radius, Law 1), and 2 m from the point of a throw-in (Law 15). Their targets
+# are kept RESTART_MARGIN further out: our assumption.
+RESTART_DISTANCE = 9.15
+CORNER_ARC = 1.0
+THROW_IN_DISTANCE = 2.0
+RESTART_MARGIN = 0.5
+# The taker stands this far behind the ball: outside the line at a throw-in or corner, away from
+# the goal they attack otherwise. Our assumption.
+TAKER_BEHIND = 1.0
+# Wall: at a free kick within WALL_RANGE metres of the goal centre, the defending team lines up
+# WALL_SIZE[0] players (WALL_SIZE[1] within WALL_NEAR metres) side by side, WALL_GAP metres apart,
+# at RESTART_DISTANCE on the line from the ball to the goal centre. Our assumption.
+WALL_RANGE = 30.0
+WALL_NEAR = 22.0
+WALL_SIZE = (3, 4)
+WALL_GAP = 0.6
 LONG_STOPPAGE = 0.10  # chance of an extra stoppage (injury, VAR, substitution) at a dead ball
 LONG_STOPPAGE_S = (30.0, 90.0)
 

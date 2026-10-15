@@ -46,10 +46,6 @@ from secondwind.sim.rosters import SimTeam
 
 GRAVITY = 9.81
 GOAL_U = P.HALF_LENGTH
-# Corner and attacking free kick: where six attackers stand, (slot index, u, v). Our assumption.
-BOX_SPOTS = [(1, 46.0, -5.0), (2, 46.0, 5.0), (10, 48.0, 0.0), (7, 44.0, -1.0), (6, 41.0, -8.0)]
-BOX_SPOTS += [(9, 43.0, 8.0)]
-BOX_MARKERS = [1, 2, 3, 4, 5, 6]  # defending slots that mark them
 NO_OFFSIDE = ("throw_in", "goal_kick", "corner")  # restarts with no offside [IFAB2025, Law 11]
 
 
@@ -755,16 +751,17 @@ class MatchEngine:
             uv[10] = (-0.3, 0.0)
             uv[7] = (-3.0, 4.0)
         else:
+            keep = P.RESTART_DISTANCE + P.RESTART_MARGIN  # [IFAB2025, Law 8]
             r = np.hypot(*uv.T)
-            push = (r < 9.65) & (r > 0)
-            uv[push] *= (9.65 / r[push])[:, None]
+            push = (r < keep) & (r > 0)
+            uv[push] *= (keep / r[push])[:, None]
         return uv
 
     def set_piece_targets(self, tgt: np.ndarray, attackers: int) -> None:
         att = self.members(attackers)
         dfn = self.members(1 - attackers)
         goal = self.to_uv(attackers, np.array([GOAL_U, 0.0]))
-        for (slot, u, v), marker in zip(BOX_SPOTS, BOX_MARKERS, strict=True):
+        for (slot, u, v), marker in zip(P.BOX_SPOTS, P.BOX_MARKERS, strict=True):
             spot = self.to_uv(attackers, np.array([u, v]))
             tgt[att[slot]] = spot
             tgt[dfn[marker]] = spot + (goal - spot) / np.hypot(*(goal - spot)) * 1.0
@@ -861,8 +858,7 @@ class MatchEngine:
             alive[k] = self.mode != "dead"
             possession[k] = -1 if self.poss_team is None else self.poss_team
             target, cap, purpose[k], calm, anchored = self.roles.targets(t)
-            target = movement.spread_targets(target, self.team_of, anchored)
-            push = movement.push_apart(self.pos, self.team_of, anchored)
+            push = movement.push_apart(self.pos, self.team_of, anchored, self.vel)
             self.pos, self.vel = movement.step(
                 self.pos, self.vel, target, cap, self.a0, self.s0, calm, push
             )

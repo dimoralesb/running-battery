@@ -85,14 +85,15 @@ def a_max(speed: np.ndarray, a0: np.ndarray, s0: np.ndarray) -> np.ndarray:
 
 
 def _too_close(
-    points: np.ndarray, team_of: np.ndarray, opponents: bool
+    points: np.ndarray, team_of: np.ndarray, team_keep: float, opp_keep: float
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """Pairs (i, j) closer than their separation: how much closer (m) and the unit vector from j
-    to i. Two points on exactly the same spot split along x, the lower index going left."""
+    """Pairs (i, j) closer than ``team_keep`` (team-mates) or ``opp_keep`` (opponents): how much
+    closer (m) and the unit vector from j to i. Two points on exactly the same spot split along
+    x, the lower index going left."""
     gap = points[:, None, :] - points[None, :, :]
     dist = np.hypot(gap[..., 0], gap[..., 1])
     same = team_of[:, None] == team_of[None, :]
-    keep = np.where(same, P.SEPARATION_TEAM, P.SEPARATION_OPP if opponents else 0.0)
+    keep = np.where(same, team_keep, opp_keep)
     short = np.maximum(keep - dist, 0.0)
     np.fill_diagonal(short, 0.0)
     i, j = np.nonzero(short)
@@ -110,7 +111,7 @@ def spread_targets(
 ) -> np.ndarray:
     """Team-mates' targets closer than ``SEPARATION_TEAM`` move apart, each by half the
     shortfall (all of it when the other is ``anchored``, which never moves)."""
-    i, j, short, away = _too_close(target, team_of, opponents=False)
+    i, j, short, away = _too_close(target, team_of, P.SEPARATION_TEAM, 0.0)
     if len(i) == 0:
         return target
     fixed = np.zeros(len(target), dtype=bool) if anchored is None else anchored
@@ -121,16 +122,24 @@ def spread_targets(
 
 
 def push_apart(
-    pos: np.ndarray, team_of: np.ndarray, anchored: np.ndarray | None = None
+    pos: np.ndarray,
+    team_of: np.ndarray,
+    anchored: np.ndarray | None = None,
+    vel: np.ndarray | None = None,
 ) -> np.ndarray:
     """Velocity (m/s) that moves each player away from anyone closer than their separation
     (``SEPARATION_TEAM`` for team-mates, ``SEPARATION_OPP`` for opponents), at most
-    ``SEPARATION_MAX``. ``anchored`` (bool) players are not pushed, but still push others."""
+    ``SEPARATION_MAX``. Team-mates are judged where they will be ``SEPARATION_LOOKAHEAD``
+    seconds on at their ``vel``, so that crossing runs move apart in time. ``anchored`` (bool)
+    players are not pushed, but still push others."""
     push = np.zeros_like(pos)
-    i, j, short, away = _too_close(pos, team_of, opponents=True)
-    if len(i) == 0:
-        return push
-    np.add.at(push, i, short[:, None] * away / P.SEPARATION_TAU)
+    ahead = pos if vel is None else pos + vel * P.SEPARATION_LOOKAHEAD
+    for points, team_keep, opp_keep in (
+        (ahead, P.SEPARATION_TEAM, 0.0),
+        (pos, 0.0, P.SEPARATION_OPP),
+    ):
+        i, j, short, away = _too_close(points, team_of, team_keep, opp_keep)
+        np.add.at(push, i, short[:, None] * away / P.SEPARATION_TAU)
     size = np.hypot(push[:, 0], push[:, 1])
     push *= np.minimum(1.0, P.SEPARATION_MAX / np.maximum(size, 1e-9))[:, None]
     if anchored is not None:
