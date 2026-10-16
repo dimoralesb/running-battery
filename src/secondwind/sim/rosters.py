@@ -49,6 +49,7 @@ class SimPlayer:
     slot: tuple[float, float]  # (u, v) in the team's attacking frame, see params.FORMATION_4231
     params: TrueParams
     test_values: ClubTestValues | None
+    starter: bool = True
 
     def info(self, club_tests: bool) -> PlayerInfo:
         return PlayerInfo(
@@ -56,7 +57,7 @@ class SimPlayer:
             name=self.name,
             shirt=self.shirt,
             position=self.position,
-            starter=True,
+            starter=self.starter,
             test_values=self.test_values if club_tests else None,
         )
 
@@ -72,15 +73,27 @@ class SimTeam:
     pass_success: float  # base pass completion before distance and pressure
     press_chance: float  # chance of a high press when the opponent builds up
 
-    def info(self, club_tests: bool) -> TeamInfo:
+    def info(self, club_tests: bool, bench: tuple[SimPlayer, ...] = ()) -> TeamInfo:
+        """The starters, then ``bench``: the substitutes who came on."""
         return TeamInfo(
             id=self.id,
             name=self.name,
             side=self.side,
             formation=self.formation,
             attacks_positive_x_in_period_1=self.attacks_positive_x_in_period_1,
-            players=[p.info(club_tests) for p in self.players],
+            players=[p.info(club_tests) for p in [*self.players, *bench]],
         )
+
+
+@dataclass(frozen=True)
+class SubPlan:
+    """A planned substitution: from ``clock_s`` on the match clock (45:00 or earlier: at
+    half-time), at the next stoppage, ``player`` replaces the one in engine slot ``slot``."""
+
+    team: int
+    slot: int  # engine index 0–21
+    clock_s: float
+    player: SimPlayer
 
 
 def _clipped_normal(rng: np.random.Generator, mean: float, sd: float, lo_hi) -> float:
@@ -159,3 +172,39 @@ def make_teams(rng: np.random.Generator) -> list[SimTeam]:
             )
         )
     return teams
+
+
+def plan_substitutions(rng: np.random.Generator, teams: list[SimTeam]) -> list[SubPlan]:
+    """Each team's substitutes (params, "Substitutions"): how many, the windows, and who goes
+    off, like for like. A substitute gets their own hidden values and club test values. Ids
+    H12–H16 and A12–A16, shirts 12–16, in the order they are planned."""
+    used = {p.name for team in teams for p in team.players}
+    plans = []
+    for k, team in enumerate(teams):
+        n = int(rng.choice(P.SUBS_CHOICES, p=P.SUBS_WEIGHTS))
+        windows = sorted(
+            float(np.clip(rng.normal(mean, sd), *P.SUB_WINDOW_CLIP))
+            for mean, sd in zip(P.SUB_WINDOWS_MIN, P.SUB_WINDOW_SD, strict=True)
+        )
+        weight = np.array([P.SUB_WEIGHT[p.position] for p in team.players])
+        number = 12
+        for minute, count in zip(windows, P.SUBS_PER_WINDOW[n], strict=True):
+            clock = 45.0 * 60.0 if minute < P.HALF_TIME_SUB_BEFORE else minute * 60.0
+            for _ in range(count):
+                j = int(rng.choice(11, p=weight / weight.sum()))
+                weight[j] = 0.0  # a slot is substituted once
+                off = team.players[j]
+                truth = true_params(rng)
+                player = SimPlayer(
+                    id=f"{team.side[0].upper()}{number:02d}",
+                    name=_player_name(rng, used),
+                    shirt=number,
+                    position=off.position,
+                    slot=off.slot,
+                    params=truth,
+                    test_values=club_test_values(rng, truth),
+                    starter=False,
+                )
+                plans.append(SubPlan(k, 11 * k + j, clock, player))
+                number += 1
+    return sorted(plans, key=lambda s: (s.clock_s, s.slot))

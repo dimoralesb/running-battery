@@ -16,6 +16,12 @@ hidden physiology (``physiology.py``) is updated from their speed after every st
 their capacity (S0, A0), and ``roles.py`` reads it to skip, shorten and slow runs; carries are
 slower too. A shared match tempo, if given, scales both teams' work rate in play.
 
+Substitutions (``rosters.plan_substitutions``) are made at the first stoppage from their planned
+time, half-time ones at the second-half kick-off [IFAB2025, Law 3]: the substitute takes over the
+engine slot (its index 0–21 stays the same, its player id changes), fresh, with their own hidden
+values (``Physiology.substitute``). ``ids`` is the player in each slot now; events keep the ids
+of the moment, and ``sub_log`` says who was where when.
+
 Conventions (our choices, needed by the estimator and the agents later):
 
 - ``possession_id`` goes up by one whenever the team in control changes, and at each kick-off
@@ -37,7 +43,7 @@ assumption.
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 
@@ -46,7 +52,7 @@ from secondwind.sim import movement
 from secondwind.sim import params as P
 from secondwind.sim.physiology import Physiology
 from secondwind.sim.roles import Roles
-from secondwind.sim.rosters import SimTeam
+from secondwind.sim.rosters import SimTeam, SubPlan
 
 GRAVITY = 9.81
 GOAL_U = P.HALF_LENGTH
@@ -113,6 +119,7 @@ class PeriodFrames:
     alive: np.ndarray  # (n,) bool
     possession: np.ndarray  # (n,) int8 team index, -1 when contested
     purpose: np.ndarray  # (n, 22) int8 code of the movement's purpose (roles.PURPOSES), -1 none
+    subs: list[tuple[int, int, str]] = field(default_factory=list)  # (frame, slot, id coming on)
 
 
 class MatchEngine:
@@ -123,10 +130,12 @@ class MatchEngine:
         physiology: Physiology | None = None,
         tempo: float | None = None,
         pre_fatigue: bool = False,
+        subs: list[SubPlan] | None = None,
     ):
         """``physiology`` None is fatigue off; ``tempo`` None is no shared tempo.
         ``pre_fatigue`` uses the fatigue-off calibration (``params.PRE_FATIGUE``); with both off
-        too, the engine is the generator as it was before fatigue and tempo existed."""
+        and no ``subs`` too, the engine is the generator as it was before fatigue and tempo
+        existed."""
         self.rng = rng
         self.teams = teams
         self.physiology = physiology
@@ -147,6 +156,8 @@ class MatchEngine:
         self.score = [0, 0]
         self.poss_id = 0
         self.transition_spans: list[float] = []  # realised length of each transition, s
+        self.pending = sorted(subs or [], key=lambda s: (s.clock_s, s.slot))
+        self.sub_log: list[tuple[int, float, int, str, str]] = []  # period, t, slot, off, on
         self.roles = Roles(self)
 
     # --- Geometry ----------------------------------------------------------------------------
@@ -199,6 +210,7 @@ class MatchEngine:
             "t": round(t, 1),
             "type": type_,
             "player": player,
+            "player_id": self.ids[player] if player >= 0 else None,
             "team": team,
             "score": tuple(self.score),
             "seq": len(self.events),
@@ -207,6 +219,8 @@ class MatchEngine:
             if fields.get(key) is not None:
                 fields[key] = self.event_point(fields[key])
         ev.update(fields)
+        if isinstance(fields.get("related_player_id"), int | np.integer):
+            ev["related_player_id"] = self.ids[fields["related_player_id"]]
         if team is not None:
             ev["possession_id"] = self.poss_id
             where = fields.get("start", (self.ball_xy[0], self.ball_xy[1]))
@@ -968,9 +982,14 @@ class MatchEngine:
         possession = np.empty(n_frames, dtype=np.int8)
         purpose = np.empty((n_frames, 22), dtype=np.int8)
         self.log(EventType.PERIOD_START, 0.0)
+        subs: list[tuple[int, int, str]] = []
+        if self.pending:  # half-time substitutions, before the kick-off
+            subs += self.substitute_due(0.0, 0)
         for k in range(n_frames):
             t = round(k / P.FRAME_RATE_HZ, 1)
             self.update(t)
+            if self.pending and self.mode == "dead":
+                subs += self.substitute_due(t, k)
             self.follow_ball(t)
             pos[k] = self.pos
             ball[k] = self.ball_xy
@@ -984,4 +1003,23 @@ class MatchEngine:
         t_end = round((n_frames - 1) / P.FRAME_RATE_HZ, 1)
         self.end_transition(t_end)
         self.log(EventType.PERIOD_END, t_end)
-        return PeriodFrames(period, pos, ball, alive, possession, purpose)
+        return PeriodFrames(period, pos, ball, alive, possession, purpose, subs)
+
+    def substitute_due(self, t: float, k: int) -> list[tuple[int, int, str]]:
+        """Make the substitutions due by now (the ball is dead); returns (frame, slot, id)."""
+        clock = t + (45.0 * 60.0 if self.period == 2 else 0.0)
+        due = [s for s in self.pending if s.clock_s <= clock]
+        made = []
+        for sub in due:
+            self.pending.remove(sub)
+            i, new = sub.slot, sub.player
+            self.log(EventType.SUBSTITUTION, t, i, related_player_id=new.id)
+            self.sub_log.append((self.period, t, i, self.ids[i], new.id))
+            self.ids[i] = new.id
+            self.a0[i], self.s0[i] = new.params.a0, new.params.s0
+            self.roles.runs.pop(i, None)
+            self.roles.declined.pop(i, None)
+            if self.physiology is not None:
+                self.physiology.substitute(i, new.params)
+            made.append((k, i, new.id))
+        return made

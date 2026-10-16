@@ -27,7 +27,9 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 # 0.1.4: ``tired`` is short-term tiredness only (late-match fatigue is the ``tank`` below
 # ``settings["late_tank_below"]``); skipped runs are one per situation and only those forecast to
 # have been high-intensity runs.
-SCHEMA_VERSION = "0.1.4"
+# 0.1.5: substitutions: substitutes in ``players`` (``starter`` false) and in ``substitutions``;
+# a player's truth series covers only their time on the pitch.
+SCHEMA_VERSION = "0.1.5"
 
 # A little beyond the 52.5 x 34 m half-pitch, for players and the ball just outside the lines.
 X_LIMIT = 60.0
@@ -303,6 +305,15 @@ class MatchMetadata(_Model):
     teams: list[TeamInfo] = Field(min_length=2, max_length=2)
     substitutions: list[Substitution] = []
 
+    def slot_of(self) -> dict[str, int]:
+        """Each player's slot 0–21 (home starters in order, then away): a substitute takes the
+        slot of the player replaced."""
+        starters = [p for team in self.teams for p in team.players if p.starter]
+        slot = {p.id: k for k, p in enumerate(starters)}
+        for sub in sorted(self.substitutions, key=lambda s: (s.period, s.t)):
+            slot[sub.player_in] = slot[sub.player_out]
+        return slot
+
     @model_validator(mode="after")
     def _unique_ids(self) -> MatchMetadata:
         ids = [p.id for team in self.teams for p in team.players]
@@ -310,6 +321,14 @@ class MatchMetadata(_Model):
             raise ValueError("player ids must be unique across both teams")
         if {team.side for team in self.teams} != {"home", "away"}:
             raise ValueError("need one home team and one away team")
+        team_of = {p.id: team.id for team in self.teams for p in team.players}
+        starter = {p.id: p.starter for team in self.teams for p in team.players}
+        if any(sum(p.starter for p in team.players) != 11 for team in self.teams):
+            raise ValueError("each team needs 11 starters")
+        for sub in self.substitutions:
+            out_team, in_team = team_of.get(sub.player_out), team_of.get(sub.player_in)
+            if not out_team == in_team == sub.team_id or starter[sub.player_in]:
+                raise ValueError(f"bad substitution {sub.player_out} -> {sub.player_in}")
         return self
 
 

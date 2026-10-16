@@ -140,13 +140,14 @@ SPRINT_RUN_S = (3.0, 6.0)  # how long a sprint run may last, s. Our assumption.
 # Centre-forwards came close to the same trade-off once they defended the near post at corners
 # (CORNER_ZONAL): HID +9%, sprint +11% before the re-fit. Re-fitted on 2026-10-16 with fatigue
 # on (the totals of real matches include fatigue): tired players skip, shorten and slow runs,
-# so every position needs a higher work rate than with fatigue off.
+# so every position needs a higher work rate than with fatigue off. DM and CM trimmed 0.5% with
+# substitutions on (2026-10-16): their sprint was +7% (240 seeds; fresh substitutes add sprinting).
 POSITION_EFFORT = {
     Position.GK: 0.990,
     Position.CB: 0.962,
     Position.FB: 1.028,
-    Position.DM: 1.060,
-    Position.CM: 1.057,
+    Position.DM: 1.055,
+    Position.CM: 1.052,
     Position.AM: 1.055,
     Position.WM: 1.063,
     Position.CF: 0.978,
@@ -248,6 +249,41 @@ PRE_FATIGUE = {
 # team totals [Allen2025, Figs 2–3].
 TEMPO_SD = 0.03
 TEMPO_CLIP_SD = 3.0
+
+# --- Substitutions (match.py, rosters.py) ------------------------------------------------------
+
+# Up to five substitutes, in at most three stoppages in play plus half-time [IFAB2025, Law 3].
+# How many a team uses: our assumption (no five-substitute-era data, synthesis §8.2, point 8).
+SUBS_CHOICES = (3, 4, 5)
+SUBS_WEIGHTS = (0.2, 0.35, 0.45)
+# Substitution windows on the match clock, min: entry times 57, 71 and 81 min in the
+# three-substitute era, the first at 58 min in the EPL, and most substitutions at half-time or
+# in the 60th–85th min [Myers 2012 and Bradley 2014 via Hills2018, Table 1]. A window
+# drawn before HALF_TIME_SUB_BEFORE is made at half-time. SUB_WINDOW_SD, the clip and the subs
+# per window (for 3, 4 and 5 substitutes) are our assumption.
+SUB_WINDOWS_MIN = (58.0, 71.0, 81.0)
+SUB_WINDOW_SD = (8.0, 6.0, 5.0)
+SUB_WINDOW_CLIP = (40.0, 90.0)
+HALF_TIME_SUB_BEFORE = 47.0
+SUBS_PER_WINDOW = {3: (1, 1, 1), 4: (2, 1, 1), 5: (2, 2, 1)}
+# Who goes off: like for like, never the goalkeeper; attackers, wide and central midfielders
+# more often than defenders [Bradley 2014 via Hills2018, Table 1]. The weights are our
+# assumption. Drawn before kick-off, so the no-fatigue control makes the same substitutions.
+SUB_WEIGHT = {
+    Position.GK: 0.0,
+    Position.CB: 0.5,
+    Position.FB: 0.8,
+    Position.DM: 1.0,
+    Position.CM: 1.5,
+    Position.AM: 2.0,
+    Position.WM: 2.5,
+    Position.CF: 2.5,
+}
+# A substitution waits for the next stoppage [IFAB2025, Law 3]; the substitute takes over the slot
+# where the player stood (our simplification: no walk off and on), fresh, with their own hidden
+# values. Substitutes do more high-intensity running per minute than whole-match players (+15 to
+# +27% [Bradley2013, Table IV; Bradley 2014 via Hills2018]); here that comes only from their
+# fresh state, no extra work rate (our assumption, checked in sim.fatigue_checks).
 
 # --- Hidden physiology and fatigue (physiology.py; PLAN §2.3, layer 3) ---------------------------
 

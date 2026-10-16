@@ -134,11 +134,11 @@ def measure(periods: list[tuple[np.ndarray, np.ndarray]], team: np.ndarray, half
 def restarts(match) -> dict[str, list[float]]:
     """Nearest opponent (m) to the spot at each free kick, corner and throw-in pass of a
     ``SimMatch`` (noise-free positions)."""
-    ids = [p.id for team in match.metadata.teams for p in team.players]
+    slot = {s.player.id: s.slot for s in match.spells}
     out: dict[str, list[float]] = {kind: [] for kind in LEGAL_M}
     for e in match.events:
         if e.type == EventType.PASS and e.subtype in out:
-            taker = ids.index(e.player_id)
+            taker = slot[e.player_id]
             frame = match.periods[e.period - 1].pos[round(e.t * P.FRAME_RATE_HZ)]
             opponents = frame[11:] if taker < 11 else frame[:11]
             spot = np.array([e.start.x, e.start.y])

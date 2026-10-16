@@ -38,9 +38,14 @@ def main(argv: list[str] | None = None) -> None:
     )
     tempo = parser.add_mutually_exclusive_group()
     tempo.add_argument(
-        "--tempo", type=float, help="fix the shared match tempo (default: drawn, about 1 ± 0.02)"
+        "--tempo", type=float, help="fix the shared match tempo (default: drawn, 1 ± 0.03)"
     )
     tempo.add_argument("--no-tempo", action="store_true", help="no shared match tempo")
+    parser.add_argument(
+        "--no-subs",
+        action="store_true",
+        help="no substitutions (with --no-fatigue --no-tempo there are none anyway)",
+    )
     parser.add_argument(
         "--clean-copy",
         action="store_true",
@@ -59,6 +64,7 @@ def main(argv: list[str] | None = None) -> None:
         args.clean_copy,
         fatigue=not args.no_fatigue,
         tempo=tempo,
+        subs=not args.no_subs,
     )
     frames = sum(len(p.alive) for p in match.periods)
     print(

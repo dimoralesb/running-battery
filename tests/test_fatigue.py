@@ -328,3 +328,54 @@ def test_legacy_engine_uses_the_fatigue_off_calibration():
     assert legacy.roles.overlap_chance == pre["OVERLAP_CHANCE"]
     assert control.roles.effort.tolist() == [P.POSITION_EFFORT[p] for p in control.positions]
     assert control.roles.mid_support_chance == P.MID_SUPPORT_CHANCE
+
+
+# --- Substitutions ------------------------------------------------------------------------------
+
+
+def test_substitution_plans():
+    """3–5 per team, like for like, never the goalkeeper, each slot once, in the windows (a
+    window before HALF_TIME_SUB_BEFORE is made at half-time), ids 12 and up."""
+    from secondwind.sim.rosters import plan_substitutions
+
+    counts = []
+    for seed in range(200):
+        rng = np.random.default_rng(seed)
+        teams = make_teams(rng)
+        plans = plan_substitutions(rng, teams)
+        for k, team in enumerate(teams):
+            mine = [s for s in plans if s.team == k]
+            counts.append(len(mine))
+            slots = [s.slot for s in mine]
+            assert len(set(slots)) == len(slots) and all(11 * k < j < 11 * k + 11 for j in slots)
+            for s in mine:
+                off = team.players[s.slot - 11 * k]
+                assert s.player.position == off.position and not s.player.starter
+                assert s.clock_s == 2700.0 or P.HALF_TIME_SUB_BEFORE * 60 <= s.clock_s <= 5400.0
+            assert sorted(int(s.player.id[1:]) for s in mine) == list(range(12, 12 + len(mine)))
+    assert set(counts) == set(P.SUBS_CHOICES)
+
+
+def test_substitution_at_a_stoppage():
+    """A substitution due at a dead ball: the slot gets the substitute's id, A0, S0 and full
+    pools and tank; the event names both players; the frames record the change."""
+    from secondwind.schema import EventType
+    from secondwind.sim.rosters import SimPlayer, SubPlan
+
+    rng = np.random.default_rng(0)
+    teams = make_teams(rng)
+    params = [p.params for team in teams for p in team.players]
+    body = Physiology(params, np.random.default_rng(1))
+    body.tank[:], body.fast_m[:] = 0.6, 0.0
+    old = teams[0].players[9]
+    new = SimPlayer(
+        "H12", "Sub Stitute", 12, old.position, old.slot, _params(cs=3.5)[0], None, False
+    )
+    engine = MatchEngine(rng, teams, body, subs=[SubPlan(0, 9, 0.0, new)])
+    frames = engine.run_period(1, 20, 0)  # the kick-off is a dead ball
+    assert engine.ids[9] == "H12" and engine.s0[9] == new.params.s0 and not engine.pending
+    assert body.cs[9] == 3.5 and body.tank[9] > 0.99 and body.tank[8] <= 0.6  # 2 s of play
+    assert frames.subs == [(0, 9, "H12")]
+    assert engine.sub_log == [(1, 0.0, 9, old.id, "H12")]
+    sub = [e for e in engine.events if e["type"] == EventType.SUBSTITUTION]
+    assert len(sub) == 1 and (sub[0]["player_id"], sub[0]["related_player_id"]) == (old.id, "H12")

@@ -143,6 +143,16 @@ class Physiology:
         self.set_dip(0.0)
         self.update_multipliers()
 
+    def substitute(self, i: int, params: TrueParams) -> None:
+        """A substitute takes over slot ``i``: their own values, both pools full, a full tank
+        (they share the second-half dip, as the start of a half)."""
+        self.cs[i], self.d_prime[i] = params.cs, params.d_prime
+        self.fast_full[i] = params.fast_fraction * params.d_prime
+        self.slow_full[i] = params.d_prime - self.fast_full[i]
+        self.tau_fast[i], self.tau_slow[i] = params.tau_fast, params.tau_slow
+        self.fast_m[i], self.slow_m[i], self.tank[i] = self.fast_full[i], self.slow_full[i], 1.0
+        self.update_multipliers()
+
     def set_dip(self, t: float) -> None:
         on = self.period == 2
         self.dip = self.s["dip"] * max(0.0, 1.0 - t / self.s["dip_s"]) if on else 0.0
@@ -249,13 +259,19 @@ class Physiology:
             )
         )
 
-    def series(self, player: int) -> TruthSeries:
-        """One player's 1 Hz series, rounded to 0.001."""
+    def series(self, player: int, keep: np.ndarray | None = None) -> TruthSeries:
+        """The 1 Hz series of slot ``player``, rounded to 0.001; ``keep`` (bool per recorded
+        second) picks the seconds of one player when the slot had a substitution."""
         rows = np.round(np.stack(self.rows)[:, :, player], 3) + 0.0
         period: list[Period] = self.periods  # type: ignore[assignment]
+        times = self.times
+        if keep is not None:
+            rows = rows[keep]
+            period = [h for h, k in zip(period, keep, strict=True) if k]
+            times = [t for t, k in zip(times, keep, strict=True) if k]
         return TruthSeries.model_construct(
             period=period,
-            t=self.times,
+            t=times,
             fast_pool=rows[:, 0].tolist(),
             slow_pool=rows[:, 1].tolist(),
             tank=rows[:, 2].tolist(),

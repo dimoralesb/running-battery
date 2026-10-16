@@ -6,8 +6,9 @@ table to its report. Picking each player's most intense window guarantees lower 
 even with no fatigue at all, so the gap between the two columns is the part that is really
 fatigue (PLAN §2.5, "No-fatigue control").
 
-Per match (``sim_measure``), on the noise-free positions, outfield players only, kept as sums so
-that matches pool by adding (``summarise`` then gives % changes of the pooled sums):
+Per match (``sim_measure``), on the noise-free positions, outfield players who played the whole
+match (as in the papers; substitutes have their own check), kept as sums so that matches pool by
+adding (``summarise`` then gives % changes of the pooled sums):
 
 - **Recovery after peaks** [Leifsson2024, Table 1]: each player's most intense 1-, 2- and 5-min
   window (rolling in 1 s steps, inside a half, with 5 min of the half left after it) of distance
@@ -37,6 +38,10 @@ that matches pool by adding (``summarise`` then gives % changes of the pooled su
   tired) and while neither, in total and for covering, recovery runs and closing down. Ju2022's
   drops after peak periods [p.975] are the reference for the size. (Distance run while tired is
   no measure of this: players get tired in the busiest spells, when everyone runs more.)
+- **Substitutes** [Bradley2013, Table IV; Bradley 2014 via Hills2018; synthesis §4.7]:
+  distance above 5.5 m/s per minute on the pitch against whole-match outfield players over the
+  same minutes and over the whole match, and against the player each one replaced (before the
+  substitution).
 - **Runs** measured and skipped by purpose (truth.json: skipped runs one per situation, only
   those forecast to be high-intensity runs), the share of player-seconds with a tired moment and
   with late-match fatigue, and the tank at the final whistle.
@@ -54,6 +59,7 @@ import numpy as np
 
 from secondwind.schema import EventType, Position, RunPurpose
 from secondwind.sim import params as P
+from secondwind.sim.output import owner
 from secondwind.sim.roles import CODE
 from secondwind.sim.runs import speeds, spells
 
@@ -188,9 +194,13 @@ def _efforts(v: np.ndarray) -> list[list[tuple[int, float, float]]]:
 
 def sim_measure(match) -> dict:
     """The fatigue checks for one ``SimMatch`` (module docstring)."""
-    ids = [p.id for team in match.metadata.teams for p in team.players]
-    outfield = [p.position != Position.GK for team in match.metadata.teams for p in team.players]
-    cols = np.flatnonzero(outfield)
+    meta = match.metadata
+    starters = [p for team in meta.teams for p in team.players if p.starter]
+    ids = [p.id for p in starters]  # engine slots
+    went_off = {s.player_out for s in meta.substitutions}
+    cols = np.flatnonzero(
+        [p.position != Position.GK and p.id not in went_off for p in starters]
+    )  # outfield players who played the whole match
     halves: dict[str, list[np.ndarray]] = {}
     v_by_half, alive_by_half, efforts, accdec = [], [], [], []
     for pf in match.periods:
@@ -234,18 +244,23 @@ def sim_measure(match) -> dict:
         "end": _end(halves, efforts, accdec),
         "runs": dict(Counter(f"{r.purpose.value}:{int(r.executed)}" for r in match.truth.runs)),
     }
+    res["subs"] = _subs(match, cols)
     series = {p.player_id: p.series for p in match.truth.players}
     res["skips"] = _skips(match, series)
-    flags = {"tired": [np.array(series[ids[c]].tired) for c in cols]}
-    flags["late"] = [np.array(series[ids[c]].tank) < P.LATE_TANK_BELOW for c in cols]
+    # Tired and late-match shares: every outfield player, substitutes included, per second on
+    # the pitch.
+    gk = {p.id for team in meta.teams for p in team.players if p.position == Position.GK}
+    everyone = [pid for pid in series if pid not in gk]
+    flags = {"tired": [np.array(series[pid].tired) for pid in everyone]}
+    flags["late"] = [np.array(series[pid].tank) < P.LATE_TANK_BELOW for pid in everyone]
     for name, per_player in flags.items():
         res[name] = {
             "seconds": sum(len(f) for f in per_player),
             name: int(sum(f.sum() for f in per_player)),
         }
         blocks = np.zeros((2, len(TIRED_BLOCKS), 2))  # half, block, (flagged, seconds)
-        for c, flag in zip(cols, per_player, strict=True):
-            s = series[ids[c]]
+        for pid, flag in zip(everyone, per_player, strict=True):
+            s = series[pid]
             period, t = np.array(s.period), np.array(s.t)
             block = np.digitize(t, TIRED_BLOCKS[1:])
             for h in (0, 1):
@@ -257,6 +272,35 @@ def sim_measure(match) -> dict:
     return res
 
 
+def _subs(match, cols: np.ndarray) -> dict:
+    """Substitutes' distance above 5.5 m/s and minutes on the pitch, and the same for the
+    whole-match outfield players (``cols``) over the same minutes and over the whole match,
+    and for the players replaced before they went off: [metres, player-minutes] each."""
+    v_all = [speeds(pf.pos) for pf in match.periods]
+    hsr = [_per_second(np.where(v > P.HI_SPEED, v, 0.0) / HZ) for v in v_all]
+    seconds = [len(x) for x in hsr]
+    out = {
+        "sub": [0.0, 0.0],
+        "same": [0.0, 0.0],
+        "replaced": [0.0, 0.0],
+        "whole": [float(sum(x[:, cols].sum() for x in hsr)), sum(seconds) / 60.0 * len(cols)],
+    }
+    for spell in match.spells or []:
+        if spell.player.starter:
+            continue
+        h, t0 = spell.on
+        j, k = spell.slot, int(t0)
+        after = hsr[h - 1][k:]
+        out["sub"][0] += float(after[:, j].sum())
+        out["sub"][1] += len(after) / 60.0
+        out["same"][0] += float(after[:, cols].sum())
+        out["same"][1] += len(after) / 60.0 * len(cols)
+        before = sum(float(hsr[q][:, j].sum()) for q in range(h - 1)) + hsr[h - 1][:k, j].sum()
+        out["replaced"][0] += float(before)
+        out["replaced"][1] += (sum(seconds[: h - 1]) + k) / 60.0
+    return out
+
+
 def _skips(match, series: dict) -> dict:
     """Hard-run decisions wanted above 5.5 m/s, made and skipped, in total and by purpose, split
     by the player's state at that second: tired, late-match fatigued (not tired) or fresh."""
@@ -265,16 +309,17 @@ def _skips(match, series: dict) -> dict:
     body = match.physiology
     if body is None:
         return out
-    ids = [p.id for team in match.metadata.teams for p in team.players]
-    state_of = {}
-    for pid in ids:
-        s = series[pid]
-        period = np.array(s.period)
+    state_of = {}  # player: {period: (first second, state codes)}
+    for pid, s in series.items():
+        period, t = np.array(s.period), np.array(s.t)
         code = np.where(np.array(s.tired), 0, np.where(np.array(s.tank) < P.LATE_TANK_BELOW, 1, 2))
-        state_of[pid] = {h: code[period == h] for h in (1, 2)}
+        state_of[pid] = {
+            h: (int(t[period == h][0]), code[period == h]) for h in (1, 2) if (period == h).any()
+        }
     for d in body.decisions:
-        codes = state_of[ids[d.player]][d.period]
-        state = states[codes[min(int(d.t_start), len(codes) - 1)]]
+        pid = owner(match.spells, d.player, d.period, d.t_start).player.id
+        t0, codes = state_of[pid][d.period]
+        state = states[codes[min(max(int(d.t_start) - t0, 0), len(codes) - 1)]]
         for name in ("all", d.purpose.value):
             if name in out:
                 out[name][state][0 if d.made else 1] += 1
@@ -460,6 +505,14 @@ def summarise(per_match: list[dict]) -> dict:
         }
         for p in RunPurpose
     }
+    rate = {k: m / max(minutes, 1e-9) for k, (m, minutes) in pooled["subs"].items()}
+    out["subs"] = {
+        "rate": rate,
+        "minutes": pooled["subs"]["sub"][1] / len(per_match),
+        "vs_same": _pct(rate["sub"], rate["same"]),
+        "vs_whole": _pct(rate["sub"], rate["whole"]),
+        "vs_replaced": _pct(rate["sub"], rate["replaced"]),
+    }
     for name in ("tired", "late"):
         out[f"{name}_pct"] = 100.0 * pooled[name][name] / max(pooled[name]["seconds"], 1)
         b = np.array(pooled[f"{name}_blocks"]).reshape(2, len(TIRED_BLOCKS), 2)
@@ -538,6 +591,23 @@ def format_table(on: dict, off: dict | None = None) -> str:
     lines.append(
         f"  Mean time between efforts >5.5 m/s, first 15 min: {on['end']['gap_first15_s']:.0f} s "
         "(published 65 s [Bradley2009, p.163])"
+    )
+    lines.append(
+        "  Substitutes, >5.5 m/s per minute on the pitch [Bradley2013, T IV; Bradley 2014 via "
+        "Hills2018]"
+    )
+    for key, pub, label in (
+        ("vs_same", 15, "vs whole-match players, same minutes"),
+        ("vs_whole", 27, "vs whole-match players, whole match"),
+        ("vs_replaced", 10, "vs the player replaced, before"),
+    ):
+        lines.append(_row(label, pub, [r["subs"][key] for r in runs]))
+    sub = on["subs"]
+    lines.append(
+        f"  Substitute minutes per match {sub['minutes']:.0f}; m/min sub {sub['rate']['sub']:.1f}, "
+        f"whole-match same minutes {sub['rate']['same']:.1f}, whole match "
+        f"{sub['rate']['whole']:.1f}, replaced {sub['rate']['replaced']:.1f} "
+        "(published 12.4 vs 9.8 whole match)"
     )
     lines.append("  Runs per match (truth.json): measured / skipped")
     for p, d in on["runs"].items():

@@ -112,11 +112,13 @@ def observed_kinematics(m) -> tuple[list[np.ndarray], list[np.ndarray]]:
     return out_v, out_a
 
 
-def match_stats(seed: int, fatigue: bool = True, tempo: bool = True) -> dict:
-    """Everything the report needs from one match, as plain numbers."""
-    m = simulate(seed, f"batch{seed:04d}", fatigue=fatigue, tempo=tempo)
-    ids = [p.id for team in m.metadata.teams for p in team.players]
-    positions = [p.position.value for team in m.metadata.teams for p in team.players]
+def match_stats(seed: int, fatigue: bool = True, tempo: bool = True, subs: bool = True) -> dict:
+    """Everything the report needs from one match, as plain numbers. Movement is per slot
+    (starter plus substitute), like the position targets (synthesis §4.2)."""
+    m = simulate(seed, f"batch{seed:04d}", fatigue=fatigue, tempo=tempo, subs=subs)
+    starters = [p for team in m.metadata.teams for p in team.players if p.starter]
+    ids = [p.id for p in starters]
+    positions = [p.position.value for p in starters]
     is_gk = np.array([p == "GK" for p in positions])
     alive = np.concatenate([pf.alive for pf in m.periods])
     holder = np.concatenate([pf.possession for pf in m.periods])
@@ -200,11 +202,16 @@ def parse_seeds(text: str) -> list[int]:
 
 
 def run_batch(
-    seeds: list[int], jobs: int | None = None, fatigue: bool = True, tempo: bool = True
+    seeds: list[int],
+    jobs: int | None = None,
+    fatigue: bool = True,
+    tempo: bool = True,
+    subs: bool = True,
 ) -> list[dict]:
     jobs = jobs or min(len(seeds), os.cpu_count() or 1)
     with ProcessPoolExecutor(max_workers=jobs) as pool:
-        return list(pool.map(partial(match_stats, fatigue=fatigue, tempo=tempo), seeds))
+        job = partial(match_stats, fatigue=fatigue, tempo=tempo, subs=subs)
+        return list(pool.map(job, seeds))
 
 
 def describe(values, target=None) -> dict:
@@ -443,6 +450,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--json", type=Path, help="also write the report to this JSON file")
     parser.add_argument("--no-fatigue", action="store_true", help="the no-fatigue control")
     parser.add_argument("--no-tempo", action="store_true", help="no shared match tempo")
+    parser.add_argument("--no-subs", action="store_true", help="no substitutions")
     parser.add_argument(
         "--idsse", action="store_true", help="compare bands with IDSSE (needs sim.idsse first)"
     )
@@ -454,7 +462,9 @@ def main(argv: list[str] | None = None) -> None:
         idsse = load_derived() or None
         if idsse is None:
             print("No derived IDSSE files: run python -m secondwind.sim.idsse first.\n")
-    stats = run_batch(parse_seeds(args.seeds), args.jobs, not args.no_fatigue, not args.no_tempo)
+    stats = run_batch(
+        parse_seeds(args.seeds), args.jobs, not args.no_fatigue, not args.no_tempo, not args.no_subs
+    )
     rep = build_report(stats, idsse)
     print(format_report(rep))
     if args.json:

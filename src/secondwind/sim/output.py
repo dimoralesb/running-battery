@@ -4,7 +4,12 @@ Fatigue is on by default; ``fatigue=False`` gives the no-fatigue control (PLAN Â
 seed, teams, physiology settings, tempo and work rates, with every player fresh all match. The
 tempo is drawn from its own generator, so with ``tempo=False`` as well (and the fatigue-off
 calibration, ``params.PRE_FATIGUE``) the match is the one the generator made before fatigue and
-tempo existed (81f023d), file for file.
+tempo existed (81f023d), file for file, apart from ``schema_version``; that mode also makes no
+substitutions (81f023d had none).
+
+Substitutions (``subs``, on by default) are planned from their own generator before kick-off, so
+the no-fatigue control makes the same ones. A substitute takes over the engine slot of the player
+replaced; the files use player ids throughout (``Spell``: who was in which slot when).
 
 ``tracking.jsonl`` carries position noise and dropouts (``observe``); the engine's noise-free
 positions can be saved next to the four files for debugging (``CLEAN_COPY``). That copy is never
@@ -36,13 +41,14 @@ from secondwind.schema import (
     Point,
     RunTruth,
     Score,
+    Substitution,
     TrackingFrame,
     TruthSeries,
 )
 from secondwind.sim import params as P
 from secondwind.sim.match import MatchEngine, PeriodFrames
 from secondwind.sim.physiology import Physiology
-from secondwind.sim.rosters import SimTeam, make_teams
+from secondwind.sim.rosters import SimPlayer, SimTeam, make_teams, plan_substitutions
 from secondwind.sim.runs import hi_runs
 
 PERIOD_2_CLOCK = 2700.0  # schema: period 2 starts at 45:00 on the match clock
@@ -58,6 +64,36 @@ class Observed:
 
 
 @dataclass(frozen=True)
+class Spell:
+    """A player's time on the pitch in one engine slot, from ``on`` up to (not including)
+    ``off``, each (period, s since the period's kick-off); ``off`` None: to the final whistle."""
+
+    player: SimPlayer
+    slot: int
+    on: tuple[int, float] = (1, 0.0)
+    off: tuple[int, float] | None = None
+
+    def holds(self, period: int, t: float) -> bool:
+        return self.on <= (period, t) and (self.off is None or (period, t) < self.off)
+
+
+def spells(teams: list[SimTeam], sub_log: list, bench: dict[str, SimPlayer]) -> list[Spell]:
+    """Every player's spell: starters in slot order, then substitutes in the order they came
+    on. ``sub_log`` is ``MatchEngine.sub_log``."""
+    out = [Spell(p, 11 * k + j) for k, team in enumerate(teams) for j, p in enumerate(team.players)]
+    for period, t, slot, off_id, on_id in sub_log:
+        k = next(n for n, s in enumerate(out) if s.player.id == off_id)
+        out[k] = Spell(out[k].player, slot, out[k].on, (period, t))
+        out.append(Spell(bench[on_id], slot, (period, t)))
+    return out
+
+
+def owner(all_spells: list[Spell], slot: int, period: int, t: float) -> Spell:
+    """The spell of the player in ``slot`` at that moment."""
+    return next(s for s in all_spells if s.slot == slot and s.holds(period, t))
+
+
+@dataclass(frozen=True)
 class SimMatch:
     metadata: MatchMetadata
     periods: list[PeriodFrames]  # noise-free
@@ -65,6 +101,7 @@ class SimMatch:
     events: list[Event]
     truth: MatchTruth
     physiology: Physiology | None = None  # in memory only, for the fatigue checks
+    spells: list[Spell] | None = None  # in memory only: who was in which slot when
 
 
 def period_lengths(rng: np.random.Generator) -> list[int]:
@@ -113,15 +150,17 @@ def simulate(
     noise_sigma: float = P.NOISE_SIGMA,
     fatigue: bool = True,
     tempo: bool | float = True,
+    subs: bool = True,
 ) -> SimMatch:
     """One match. Club test values go into the metadata only if ``club_tests`` is set; the
     match itself is the same either way. Noise is drawn after the match, so ``noise_sigma``
     changes only the tracking positions. ``tempo``: True draws the shared tempo, a number fixes
-    it (a story control), False leaves it out. The tempo and the fatigue skips have their own
+    it (a story control), False leaves it out. ``subs``: substitutions (never with fatigue and
+    tempo both off). The tempo, the fatigue skips and the substitutions have their own
     generators (spawned from the seed), so they never shift the match flow's draws."""
     rng = np.random.default_rng(seed)
-    tempo_rng, fatigue_rng = (
-        np.random.default_rng(s) for s in np.random.SeedSequence(seed).spawn(2)
+    tempo_rng, fatigue_rng, subs_rng = (
+        np.random.default_rng(s) for s in np.random.SeedSequence(seed).spawn(3)
     )
     teams = make_teams(rng)
     lengths = period_lengths(rng)
@@ -131,7 +170,8 @@ def simulate(
     players = [p.params for team in teams for p in team.players]
     body = Physiology(players, fatigue_rng) if fatigue else None
     legacy = body is None and match_tempo is None  # params.PRE_FATIGUE calibration
-    engine = MatchEngine(rng, teams, body, match_tempo, pre_fatigue=legacy)
+    plans = plan_substitutions(subs_rng, teams) if subs and not legacy else []
+    engine = MatchEngine(rng, teams, body, match_tempo, pre_fatigue=legacy, subs=plans)
     periods = [
         engine.run_period(1, lengths[0], first_kick),
         engine.run_period(2, lengths[1], 1 - first_kick),
@@ -149,30 +189,45 @@ def simulate(
             )
         )
         start += n
+    bench = {plan.player.id: plan.player for plan in plans}
+    played = spells(teams, engine.sub_log, bench)
+    came_on = [s.player for s in played if not s.player.starter]
     metadata = MatchMetadata(
         match_id=match_id,
         generator=Generator(version=__version__, seed=seed),
         frame_rate_hz=P.FRAME_RATE_HZ,
         periods=infos,
-        teams=[team.info(club_tests) for team in teams],
+        teams=[
+            team.info(club_tests, tuple(p for p in came_on if p.id[0] == team.side[0].upper()))
+            for team in teams
+        ],
+        substitutions=[
+            Substitution(
+                period=period,
+                t=t,
+                team_id=teams[slot // 11].id,
+                player_out=off_id,
+                player_in=on_id,
+            )
+            for period, t, slot, off_id, on_id in engine.sub_log
+        ],
     )
     settings: dict[str, float] = noise_settings(noise_sigma)
     if match_tempo is not None:
         settings["tempo"] = match_tempo
     if body is None:
-        truth = neutral_truth(match_id, teams, periods, settings)
+        truth = neutral_truth(match_id, played, periods, settings)
     else:
-        truth = fatigue_truth(match_id, teams, periods, body, settings | body.settings())
-    return SimMatch(metadata, periods, observed, to_events(engine), truth, body)
+        truth = fatigue_truth(match_id, played, periods, body, settings | body.settings())
+    return SimMatch(metadata, periods, observed, to_events(engine), truth, body, played)
 
 
 def to_events(engine: MatchEngine) -> list[Event]:
-    ids, team_ids = engine.ids, [team.id for team in engine.teams]
+    team_ids = [team.id for team in engine.teams]
     rows = sorted(engine.events, key=lambda e: (e["period"], e["t"], e["seq"]))
     events = []
     for n, e in enumerate(rows):
         clock = e["t"] + (PERIOD_2_CLOCK if e["period"] == 2 else 0.0)
-        related = e.get("related_player_id")
         events.append(
             Event(
                 id=n,
@@ -181,9 +236,9 @@ def to_events(engine: MatchEngine) -> list[Event]:
                 clock=round(clock, 1),
                 type=e["type"],
                 subtype=None if e.get("subtype") is None else str(e["subtype"]),
-                player_id=ids[e["player"]] if e["player"] >= 0 else None,
+                player_id=e["player_id"],
                 team_id=None if e["team"] is None else team_ids[e["team"]],
-                related_player_id=None if related is None else ids[related],
+                related_player_id=e.get("related_player_id"),
                 start=Point(x=e["start"][0], y=e["start"][1]) if "start" in e else None,
                 end=Point(x=e["end"][0], y=e["end"][1]) if "end" in e else None,
                 end_t=e.get("end_t"),
@@ -200,13 +255,12 @@ def to_events(engine: MatchEngine) -> list[Event]:
 
 
 def run_truth(
-    teams: list[SimTeam], periods: list[PeriodFrames], body: Physiology | None = None
+    played: list[Spell], periods: list[PeriodFrames], body: Physiology | None = None
 ) -> list[RunTruth]:
     """Every high-intensity run with its purpose (``runs.py``), and, with fatigue on, the hard
     runs tired players skipped (``executed=False``; one per situation, only those forecast to
     have been high-intensity runs, ``Physiology.skipped_runs``; ``t_end`` is the planned end,
     cut at the end of the period). Ordered by period, start time and player."""
-    ids = [p.id for team in teams for p in team.players]
     rows = []
     for pf in periods:
         length = (len(pf.alive) - 1) / P.FRAME_RATE_HZ
@@ -224,7 +278,7 @@ def run_truth(
             rows.append(
                 RunTruth(
                     run_id=len(rows),
-                    player_id=ids[player],
+                    player_id=owner(played, player, pf.period, t_start).player.id,
                     period=pf.period,
                     t_start=round(t_start, 1),
                     t_end=round(max(t_end, t_start), 1),
@@ -245,78 +299,99 @@ def noise_settings(sigma: float) -> dict[str, float]:
     }
 
 
+def _by_team(played: list[Spell]) -> list[Spell]:
+    """Home players (starters, then substitutes), then away: the metadata order."""
+    return sorted(played, key=lambda s: (s.slot // 11, not s.player.starter))
+
+
 def neutral_truth(
     match_id: str,
-    teams: list[SimTeam],
+    played: list[Spell],
     periods: list[PeriodFrames],
     settings: dict[str, float] | None = None,
 ) -> MatchTruth:
-    """Truth with fatigue off (the no-fatigue control): full pools and tank, all multipliers 1.
-    The runs and their purposes are real."""
+    """Truth with fatigue off (the no-fatigue control): full pools and tank, all multipliers 1,
+    for each player's seconds on the pitch. The runs and their purposes are real."""
     period, t = [], []
     for pf in periods:
         seconds = (len(pf.alive) - 1) // round(P.FRAME_RATE_HZ) + 1
         period += [pf.period] * seconds
         t += [float(s) for s in range(seconds)]
-    n = len(t)
-    series = TruthSeries(
-        period=period,
-        t=t,
-        fast_pool=[1.0] * n,
-        slow_pool=[1.0] * n,
-        tank=[1.0] * n,
-        speed_mult=[1.0] * n,
-        accel_mult=[1.0] * n,
-        run_choice_mult=[1.0] * n,
-        tired=[False] * n,
-    )
-    players = [
-        PlayerTruth(player_id=p.id, params=p.params, series=series)
-        for team in teams
-        for p in team.players
-    ]
+    players = []
+    for spell in _by_team(played):
+        keep = [spell.holds(h, s) for h, s in zip(period, t, strict=True)]
+        n = sum(keep)
+        series = TruthSeries(
+            period=[h for h, k in zip(period, keep, strict=True) if k],
+            t=[s for s, k in zip(t, keep, strict=True) if k],
+            fast_pool=[1.0] * n,
+            slow_pool=[1.0] * n,
+            tank=[1.0] * n,
+            speed_mult=[1.0] * n,
+            accel_mult=[1.0] * n,
+            run_choice_mult=[1.0] * n,
+            tired=[False] * n,
+        )
+        players.append(
+            PlayerTruth(player_id=spell.player.id, params=spell.player.params, series=series)
+        )
     return MatchTruth(
         match_id=match_id,
         fatigue_enabled=False,
         settings=settings or {},
         players=players,
-        runs=run_truth(teams, periods),
+        runs=run_truth(played, periods),
     )
 
 
 def fatigue_truth(
     match_id: str,
-    teams: list[SimTeam],
+    played: list[Spell],
     periods: list[PeriodFrames],
     body: Physiology,
     settings: dict[str, float],
 ) -> MatchTruth:
     """Truth with fatigue on: each player's pools, tank, multipliers and tired moments, one
-    value per second (``Physiology.series``), and the runs made and skipped."""
-    players = [p for team in teams for p in team.players]
+    value per second on the pitch (``Physiology.series``), and the runs made and skipped."""
+    players = []
+    for spell in _by_team(played):
+        whole = spell.on == (1, 0.0) and spell.off is None
+        keep = (
+            None
+            if whole
+            else np.array(
+                [spell.holds(h, t) for h, t in zip(body.periods, body.times, strict=True)]
+            )
+        )
+        series = body.series(spell.slot, keep)
+        players.append(
+            PlayerTruth(player_id=spell.player.id, params=spell.player.params, series=series)
+        )
     return MatchTruth(
         match_id=match_id,
         fatigue_enabled=True,
         settings=settings,
-        players=[
-            PlayerTruth(player_id=p.id, params=p.params, series=body.series(j))
-            for j, p in enumerate(players)
-        ],
-        runs=run_truth(teams, periods, body),
+        players=players,
+        runs=run_truth(played, periods, body),
     )
 
 
 def tracking_frames(match: SimMatch) -> Iterator[TrackingFrame]:
     """Frames built without per-row validation (fast); tests validate them on read."""
-    ids = [p.id for team in match.metadata.teams for p in team.players]
+    ids = [p.id for team in match.metadata.teams for p in team.players if p.starter]
     team_ids = [team.id for team in match.metadata.teams]
     frame = 0
     for pf, obs in zip(match.periods, match.observed, strict=True):
+        changes: dict[int, list[tuple[int, str]]] = {}
+        for k, slot, pid in pf.subs:
+            changes.setdefault(k, []).append((slot, pid))
         clock0 = PERIOD_2_CLOCK if pf.period == 2 else 0.0
         pos = (np.round(obs.pos, 2) + 0.0).tolist()
         seen = obs.seen.tolist()
         ball = (np.round(pf.ball, 2) + 0.0).tolist()
         for k in range(len(pf.alive)):
+            for slot, pid in changes.get(k, ()):
+                ids[slot] = pid
             t = round(k / P.FRAME_RATE_HZ, 1)
             holder = int(pf.possession[k])
             yield TrackingFrame.model_construct(
@@ -368,8 +443,9 @@ def generate(
     clean_copy: bool = False,
     fatigue: bool = True,
     tempo: bool | float = True,
+    subs: bool = True,
 ) -> SimMatch:
     """Simulate one match and write its four files to ``folder`` (match id: folder name)."""
-    match = simulate(seed, match_id or folder.name, club_tests, noise_sigma, fatigue, tempo)
+    match = simulate(seed, match_id or folder.name, club_tests, noise_sigma, fatigue, tempo, subs)
     write(match, folder, clean_copy)
     return match

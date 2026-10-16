@@ -32,6 +32,24 @@ SEEDS = [1, 2, 3, 4, 5]
 MAX_SPEED = 12.0  # m/s (43.2 km/h): nobody is faster between two frames
 
 
+def _holds(spell, period: int, t: np.ndarray) -> np.ndarray:
+    """Frames (times ``t`` of ``period``) when ``spell``'s player was in their slot."""
+    on = np.full(len(t), period > spell.on[0]) | ((period == spell.on[0]) & (t >= spell.on[1]))
+    if spell.off is not None:
+        on &= (period < spell.off[0]) | ((period == spell.off[0]) & (t < spell.off[1]))
+    return on
+
+
+def _per_frame(match, pf, value) -> np.ndarray:
+    """(frames, 22): ``value(spell)`` for whoever was in each slot at each frame of ``pf``."""
+    t = np.arange(len(pf.alive)) / P.FRAME_RATE_HZ
+    out = np.full((len(t), 22), np.nan)
+    for spell in match.spells:
+        on = _holds(spell, pf.period, t)
+        out[on, spell.slot] = value(spell)
+    return out
+
+
 def generate(jobs: list[tuple[int, Path, list[str]]]) -> list[subprocess.Popen]:
     """Start the CLI for several matches at once, as a user would. Wait with ``finish``."""
     return [
@@ -114,6 +132,9 @@ def _check_match(match) -> dict:
         "truth_seconds": sum((p.end_frame - p.start_frame) // 10 + 1 for p in meta.periods),
         "final_score": match.events[-1].score,
         "no_test_values": all(p.test_values is None for team in meta.teams for p in team.players),
+        "subs": len(meta.substitutions),
+        "on_pitch": [{p.id for p in f.players} for f in frames[:: 10 * 60]],  # once a minute
+        "slot_of": meta.slot_of(),
     }
 
 
@@ -129,14 +150,21 @@ def test_different_seeds_differ(folders):
 def test_files_validate(folders, summaries):
     for seed in SEEDS:
         truth = read_truth(folders[seed])
+        checks = summaries[seed][1]
         assert truth.fatigue_enabled is True
-        assert len(truth.players) == 22
+        # 3–5 substitutes per team; a late one may not happen if no stoppage comes in time.
+        assert 4 <= checks["subs"] <= 10 and len(truth.players) == 22 + checks["subs"]
+        seconds = {}  # a slot's players together cover the whole match, second by second
+        for p in truth.players:
+            slot = checks["slot_of"][p.player_id]
+            seconds[slot] = seconds.get(slot, 0) + len(p.series.t)
+        assert set(seconds.values()) == {checks["truth_seconds"]}
+        assert all(len(ids) <= 22 for ids in checks["on_pitch"])
         assert truth.runs
         assert truth.settings["noise_sigma_m"] == P.NOISE_SIGMA
         assert truth.settings["tired_below"] == P.TIRED_BELOW
         assert abs(truth.settings["tempo"] - 1) <= P.TEMPO_CLIP_SD * P.TEMPO_SD + 1e-9
-        series = truth.players[0].series
-        checks = summaries[seed][1]
+        series = truth.players[0].series  # the home goalkeeper plays the whole match
         assert len(series.t) == checks["truth_seconds"]
         assert checks["frame_numbers_ok"] and checks["period_frames_ok"]
         assert checks["period_2_clock_ok"]
@@ -222,10 +250,12 @@ def test_summary_cli_runs(folders):
 
 
 def test_no_fatigue_control(folders):
-    """``--no-fatigue``: the same seed, teams, physiology settings and tempo, every player fresh
-    (neutral series, no skipped runs), and the match plays out differently. ``--no-tempo`` as
-    well leaves the tempo out (the generator as it was before fatigue and tempo, 81f023d; checked
-    file for file on one machine, since matches differ between machines)."""
+    """``--no-fatigue``: the same seed, teams, physiology settings, tempo and planned
+    substitutions, every player fresh (neutral series, no skipped runs), and the match plays out
+    differently (so a substitution may wait for a different stoppage). ``--no-tempo`` as well
+    leaves the tempo and the substitutions out (the generator as it was before fatigue and
+    tempo, 81f023d; checked file for file on one machine apart from schema_version, since
+    matches differ between machines)."""
     on, off, legacy = (read_truth(folders[k]) for k in (1, "off", "legacy"))
     assert off.fatigue_enabled is False and legacy.fatigue_enabled is False
     assert off.settings["tempo"] == on.settings["tempo"] and "tempo" not in legacy.settings
@@ -235,8 +265,18 @@ def test_no_fatigue_control(folders):
         for p in truth.players:
             assert set(p.series.fast_pool) == {1.0} and set(p.series.run_choice_mult) == {1.0}
             assert not any(p.series.tired)
-    assert [p.params for p in on.players] == [p.params for p in off.players]
-    assert (folders[1] / METADATA).read_bytes() == (folders["off"] / METADATA).read_bytes()
+    meta = {
+        k: MatchMetadata.model_validate_json((folders[k] / METADATA).read_text())
+        for k in (1, "off", "legacy")
+    }
+    starters = {k: [p for t in m.teams for p in t.players if p.starter] for k, m in meta.items()}
+    assert starters[1] == starters["off"] == starters["legacy"]
+    pairs = {k: {s.player_out: s.player_in for s in meta[k].substitutions} for k in (1, "off")}
+    shared = pairs[1].keys() & pairs["off"].keys()
+    assert len(shared) >= 4 and all(pairs[1][k] == pairs["off"][k] for k in shared)
+    assert not meta["legacy"].substitutions and len(legacy.players) == 22
+    params = {k: {p.player_id: p.params for p in t.players} for k, t in (("on", on), ("off", off))}
+    assert all(params["off"][k] == v for k, v in params["on"].items() if k in params["off"])
     assert (folders[1] / TRACKING).read_bytes() != (folders["off"] / TRACKING).read_bytes()
 
 
@@ -253,7 +293,10 @@ def test_truth_series_with_fatigue(sim1):
         tank = np.array(s.tank)
         for h in (1, 2):
             assert np.all(np.diff(tank[period == h]) <= 0)
-        assert tank[period == 2][0] >= tank[period == 1][-1]
+        if (period == 1).any():
+            assert tank[period == 2][0] >= tank[period == 1][-1]
+        else:  # a substitute comes on fresh
+            assert tank[0] == 1.0 and s.fast_pool[0] == 1.0
         assert min(s.speed_mult) >= 1 - P.CAPACITY_MAX_LOSS - 1e-9
         ff = p.params.fast_fraction
         left = ff * np.array(s.fast_pool) + (1 - ff) * np.array(s.slow_pool)
@@ -269,25 +312,23 @@ def test_truth_series_with_fatigue(sim1):
 
 
 def test_capacity_holds_every_frame(sim1):
-    """Nobody runs faster than S0 × speed_mult, frame by frame (noise-free positions). The
-    multiplier only falls within a half, so the value recorded a second earlier bounds it."""
-    ids = [p.id for team in sim1.metadata.teams for p in team.players]
-    truth = {p.player_id: p for p in sim1.truth.players}
-    s0 = np.array([truth[i].params.s0 for i in ids])
+    """Nobody runs faster than S0 × speed_mult, frame by frame (noise-free positions), whoever
+    is in the slot. The multiplier only falls within a half, so the value recorded a second
+    earlier bounds it."""
+    truth = {p.player_id: p.series for p in sim1.truth.players}
     for pf in sim1.periods:
-        mult = np.array(
-            [
-                [
-                    m
-                    for m, h in zip(truth[i].series.speed_mult, truth[i].series.period, strict=True)
-                    if h == pf.period
-                ]
-                for i in ids
-            ]
-        ).T
         v = speeds(pf.pos)
-        second = np.maximum(np.arange(len(v)) // round(P.FRAME_RATE_HZ) - 1, 0)
-        assert np.all(v <= s0 * mult[np.minimum(second, len(mult) - 1)] + 0.01)  # rounding
+        t = np.arange(len(v)) / P.FRAME_RATE_HZ
+        for spell in sim1.spells:
+            s = truth[spell.player.id]
+            here = np.array(s.period) == pf.period
+            if not here.any():
+                continue
+            seconds, mult = np.array(s.t)[here], np.array(s.speed_mult)[here]
+            on = _holds(spell, pf.period, t)
+            k = np.clip(np.searchsorted(seconds, t[on], side="right") - 2, 0, len(mult) - 1)
+            cap = spell.player.params.s0 * mult[k] + 0.01  # rounding
+            assert np.all(v[on, spell.slot] <= cap), spell.player.id
 
 
 def test_fatigue_checks_on_a_match(sim1):
@@ -302,6 +343,7 @@ def test_fatigue_checks_on_a_match(sim1):
     skips = out["skips"]["all"]
     assert skips["tired"] < skips["fresh"] <= 0  # % skipped, as a negative change
     assert 0 < out["tired_pct"] < 100 and 0 < out["late_pct"] < 100
+    assert out["subs"]["minutes"] > 0 and np.isfinite(out["subs"]["vs_whole"])
     assert "Leifsson2024" in fatigue_checks.format_table(out, out)
 
 
@@ -576,11 +618,11 @@ def test_free_kicks_keep_distance_over_a_match(sim1):
     """A whole match: the median nearest opponent at a free kick is outside 9.15 m (5.8 m before
     the rule), and nobody is inside the corner circle. Quick free kicks may be taken with
     opponents closer [IFAB2025, Law 13], so single kicks are not judged here."""
-    ids = [p.id for team in sim1.metadata.teams for p in team.players]
+    slot = sim1.metadata.slot_of()
     nearest = {"free_kick": [], "corner": []}
     for e in sim1.events:
         if e.type == EventType.PASS and e.subtype in nearest:
-            taker = ids.index(e.player_id)
+            taker = slot[e.player_id]
             pos = sim1.periods[e.period - 1].pos[round(e.t * P.FRAME_RATE_HZ)]
             opponents = pos[11:] if taker < 11 else pos[:11]
             spot = np.array([e.start.x, e.start.y])
@@ -619,14 +661,13 @@ def test_motion_model_matches_narizuka_at_full_effort():
 
 
 def test_match_motion_within_limits(sim1):
-    """Every player, every frame of a whole match (noise-free positions)."""
-    params = {p.player_id: p.params for p in sim1.truth.players}
-    ids = [p.id for team in sim1.metadata.teams for p in team.players]
-    a0 = np.array([params[i].a0 for i in ids])
-    s0 = np.array([params[i].s0 for i in ids])
+    """Every player, every frame of a whole match (noise-free positions), with the values of
+    whoever is in the slot."""
     for pf in sim1.periods:
         v = speeds(pf.pos)
-        _limits_hold(v[:-1], v[1:], a0[None], s0[None])
+        a0 = _per_frame(sim1, pf, lambda s: s.player.params.a0)[1:-1]
+        s0 = _per_frame(sim1, pf, lambda s: s.player.params.s0)[1:-1]
+        _limits_hold(v[:-1], v[1:], a0, s0)
 
 
 # --- Run purposes ---------------------------------------------------------------------------------
@@ -656,14 +697,14 @@ def test_runs_have_valid_purposes_and_times(folders, sim1):
 def test_runs_are_high_intensity(sim1):
     """Each run made is above 5.5 m/s for its whole span [Ju2022, p.974], and only those
     spells."""
-    ids = [p.id for team in sim1.metadata.teams for p in team.players]
+    slot = sim1.metadata.slot_of()
     v = {pf.period: speeds(pf.pos) for pf in sim1.periods}
     rate = P.FRAME_RATE_HZ
     for r in sim1.truth.runs:
         if not r.executed:
             continue
         a, b = round(r.t_start * rate), round(r.t_end * rate)
-        j = ids.index(r.player_id)
+        j = slot[r.player_id]
         assert np.all(v[r.period][a:b, j] > P.HI_SPEED)
         assert a == 0 or v[r.period][a - 1, j] <= P.HI_SPEED
         assert b == len(v[r.period]) or v[r.period][b, j] <= P.HI_SPEED
@@ -686,13 +727,13 @@ def test_clean_copy_matches_simulation_and_changes_no_file(folders, sim1):
 def test_noise_size_and_dropouts(folders, sim1):
     """tracking.jsonl = noise-free positions + N(0, σ) per axis, rounded to 1 cm."""
     match = read_match(folders[1])
-    ids = [p.id for team in match.metadata.teams for p in team.players]
+    slot = match.metadata.slot_of()
     clean = np.concatenate([pf.pos for pf in sim1.periods])
     errors, missing = [], 0
     for k, frame in enumerate(match.frames):
         got = {p.id: (p.x, p.y) for p in frame.players}
         missing += 22 - len(got)
-        errors += [np.subtract(got[pid], clean[k, j]) for j, pid in enumerate(ids) if pid in got]
+        errors += [np.subtract(xy, clean[k, slot[pid]]) for pid, xy in got.items()]
     errors = np.array(errors)
     assert abs(errors.mean()) < 0.005
     assert abs(errors.std() - P.NOISE_SIGMA) < 0.01, errors.std()
