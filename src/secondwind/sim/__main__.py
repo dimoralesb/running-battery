@@ -1,4 +1,9 @@
-"""Generate one match: ``python -m secondwind.sim --seed 1 --out data/synthetic/m0001``."""
+"""Generate one match: ``python -m secondwind.sim --seed 1 --out data/synthetic/m0001``.
+
+Fatigue is on and the match tempo drawn by default. ``--no-fatigue`` gives the no-fatigue
+control of the same seed (PLAN §2.5); adding ``--no-tempo`` gives the match as the generator
+made it before fatigue and tempo existed (81f023d), file for file.
+"""
 
 from __future__ import annotations
 
@@ -27,6 +32,16 @@ def main(argv: list[str] | None = None) -> None:
         help=f"position noise per axis, m (default {P.NOISE_SIGMA})",
     )
     parser.add_argument(
+        "--no-fatigue",
+        action="store_true",
+        help="no-fatigue control: every player fresh all match (same seed, same tempo)",
+    )
+    tempo = parser.add_mutually_exclusive_group()
+    tempo.add_argument(
+        "--tempo", type=float, help="fix the shared match tempo (default: drawn, about 1 ± 0.02)"
+    )
+    tempo.add_argument("--no-tempo", action="store_true", help="no shared match tempo")
+    parser.add_argument(
         "--clean-copy",
         action="store_true",
         help=f"also save the noise-free positions to <out>/{CLEAN_COPY} (debugging only)",
@@ -34,8 +49,16 @@ def main(argv: list[str] | None = None) -> None:
     args = parser.parse_args(argv)
 
     started = time.perf_counter()
+    tempo = False if args.no_tempo else (True if args.tempo is None else args.tempo)
     match = generate(
-        args.seed, args.out, args.match_id, args.club_tests, args.noise_sigma, args.clean_copy
+        args.seed,
+        args.out,
+        args.match_id,
+        args.club_tests,
+        args.noise_sigma,
+        args.clean_copy,
+        fatigue=not args.no_fatigue,
+        tempo=tempo,
     )
     frames = sum(len(p.alive) for p in match.periods)
     print(

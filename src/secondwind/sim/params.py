@@ -5,8 +5,10 @@ assumption". Most "our assumption" values are knobs. The movement knobs were cal
 2026-10-15 with fatigue off (``sim.batch``, 90–120 seeds): distance, >5.5 m/s and >7 m/s per
 position against synthesis §4.2, running by phase [Allen2026b, Table 5], and time in speed bands
 against IDSSE (``sim.idsse``). The match-flow knobs are tuned to the interim targets in
-``secondwind.sim.summary.TARGETS``. Saturday's fatigue model will move the totals a little; the
-batch should be re-run then.
+``secondwind.sim.summary.TARGETS``. On 2026-10-16 the fatigue model (``physiology.py``) and the
+shared match tempo were added and calibrated on 120–240 seeds with fatigue on (``sim.batch``,
+``sim.fatigue_checks``), and the work rate and two run chances re-fitted: the totals of real
+matches include fatigue.
 """
 
 from __future__ import annotations
@@ -45,11 +47,13 @@ D_PRIME_MEAN, D_PRIME_SD, D_PRIME_RANGE = 180.0, 54.0, (100.0, 300.0)
 # A0 ~ N(7.4, 0.5) m/s², range 6.6–8.4; S0 ~ N(9.3, 0.45) m/s, range 8.4–10.3 [Morin2021, Table 1].
 A0_MEAN, A0_SD, A0_RANGE = 7.4, 0.5, (6.6, 8.4)
 S0_MEAN, S0_SD, S0_RANGE = 9.3, 0.45, (8.4, 10.3)
-# Two-pool truth model [Chorley2022; Chorley2023, Eq. 6b–6c; synthesis §3.2.4]. Drawn today but
-# not used until Saturday.
+# Two-pool truth model [Chorley2022; Chorley2023, Eq. 6b–6c; synthesis §3.2.4], used by
+# ``physiology.py``: the share of D′ in the fast pool and each pool's recharge time standing
+# still (synthesis §3.2.4 gives the slow pool's when walking; the two differ by about 4%,
+# derived from Chorley2023, Eq. 6c).
 FAST_FRACTION_RANGE = (0.40, 0.50)
 TAU_FAST_RANGE = (15.0, 35.0)  # s
-TAU_SLOW_RANGE = (400.0, 500.0)  # s, when walking
+TAU_SLOW_RANGE = (400.0, 500.0)  # s
 # Club test values = truth × (1 + e), e ~ N(0, SD), clipped at ±3 SD. Written only with
 # --club-tests (PLAN §3.2), but always drawn so a seed gives the same match either way.
 # A0 5.4% and S0 3.3% are the measurement noise of the profile [Morin2021, Table 1]. CS 5% and
@@ -134,16 +138,18 @@ SPRINT_RUN_S = (3.0, 6.0)  # how long a sprint run may last, s. Our assumption.
 # about 5–10% more distance above 7 m/s. One knob cannot fit both for wide midfielders (their
 # HID runs high when their sprint distance is on target), so WM sits where both are about ±5%.
 # Centre-forwards came close to the same trade-off once they defended the near post at corners
-# (CORNER_ZONAL): HID +9%, sprint +11% before the re-fit.
+# (CORNER_ZONAL): HID +9%, sprint +11% before the re-fit. Re-fitted on 2026-10-16 with fatigue
+# on (the totals of real matches include fatigue): tired players skip, shorten and slow runs,
+# so every position needs a higher work rate than with fatigue off.
 POSITION_EFFORT = {
-    Position.GK: 1.004,
-    Position.CB: 0.955,
-    Position.FB: 1.005,
-    Position.DM: 1.053,
-    Position.CM: 1.045,
-    Position.AM: 1.006,
-    Position.WM: 1.017,
-    Position.CF: 0.948,
+    Position.GK: 0.990,
+    Position.CB: 0.962,
+    Position.FB: 1.028,
+    Position.DM: 1.060,
+    Position.CM: 1.057,
+    Position.AM: 1.055,
+    Position.WM: 1.063,
+    Position.CF: 0.978,
 }
 # Defenders (CB, FB) who track an opponent running in behind: the nearest TRACKERS, aiming
 # TRACK_GOAL_SIDE metres goal-side of where the runner is going. Our assumption.
@@ -171,9 +177,10 @@ PRESS_GAP = 1.5
 # assumption.
 COVER_DEPTH = 8.0
 # Chances that a run starts when a team-mate gets the ball (per touch), and how long it lasts.
-# Our assumption.
+# Our assumption. OVERLAP_CHANCE was 0.75 with fatigue off: a tired full-back who skips an
+# overlap does not get it offered again, so with fatigue on more are offered (2026-10-16).
 SHOW_CHANCE = 0.35  # one team-mate comes short to offer a pass
-OVERLAP_CHANCE = 0.75  # full-back overlaps a wide player on the ball, middle or final third
+OVERLAP_CHANCE = 0.9  # full-back overlaps a wide player on the ball, middle or final third
 BOX_RUN_CHANCE = 0.85  # each forward breaks into the box when the ball is wide in the final third
 BEHIND_CHANCE = 0.25  # a forward near the offside line runs in behind as the pass is played
 SUPPORT_RUNNERS = 2  # midfielders (not the DM) who sprint up in support in a positive transition
@@ -194,8 +201,9 @@ EXPLOIT_LENGTH = (12.0, 22.0)
 # Support in settled play: when a team-mate carries the ball in the middle or final third more
 # than MID_SUPPORT_GAP metres ahead of a free midfielder (DM, CM, AM), that midfielder may run
 # up to about MID_SUPPORT_BEHIND metres behind the ball at RUN_SPEED (Support Play [Ju2022,
-# Table 1]). Our assumption, tuned to midfielders' distance (synthesis §4.2).
-MID_SUPPORT_CHANCE = 0.55
+# Table 1]). Our assumption, tuned to midfielders' distance (synthesis §4.2); 0.55 with fatigue
+# off, raised with fatigue on like OVERLAP_CHANCE (2026-10-16).
+MID_SUPPORT_CHANCE = 0.65
 MID_SUPPORT_GAP = 15.0
 MID_SUPPORT_BEHIND = 10.0
 # Pressing high: when an opponent gets the ball in their own half, the nearest free forward
@@ -211,6 +219,111 @@ MID_PRESS_CHANCE = 0.3
 # (u < DANGER_U in the team's frame) or the opponent on a counter-attack. Our assumption, tuned
 # to the purpose mix [Ju2022, p.975] and the HID by phase [Allen2026b, Table 5].
 DANGER_U = 0.0
+
+# The movement calibration with fatigue off, as at 81f023d (2026-10-15): used only when fatigue
+# and the tempo are both off (``--no-fatigue --no-tempo``), which then gives the generator's
+# matches from before either existed, file for file. The no-fatigue control (``--no-fatigue``)
+# keeps the values above, so that it differs from its fatigue-on twin only in fatigue.
+PRE_FATIGUE = {
+    "POSITION_EFFORT": {
+        Position.GK: 1.004,
+        Position.CB: 0.955,
+        Position.FB: 1.005,
+        Position.DM: 1.053,
+        Position.CM: 1.045,
+        Position.AM: 1.006,
+        Position.WM: 1.017,
+        Position.CF: 0.948,
+    },
+    "OVERLAP_CHANCE": 0.75,
+    "MID_SUPPORT_CHANCE": 0.55,
+}
+
+# --- Match tempo --------------------------------------------------------------------------------
+
+# The two teams' running moves together: home and away totals correlate at r = 0.68–0.75 for
+# total, >5.5 m/s and >7 m/s distance [Allen2026a, abstract]. One tempo per match, drawn from
+# N(1, TEMPO_SD) and clipped at ±TEMPO_CLIP_SD SD, multiplies both teams' work rate
+# (POSITION_EFFORT). Our assumption, TEMPO_SD tuned to that correlation and to the spread of
+# team totals [Allen2025, Figs 2–3].
+TEMPO_SD = 0.03
+TEMPO_CLIP_SD = 3.0
+
+# --- Hidden physiology and fatigue (physiology.py; PLAN §2.3, layer 3) ---------------------------
+
+# The pools refill at rest over the half-time interval, at most 15 min [IFAB2025, Law 7].
+HALF_TIME_S = 900.0
+# Tank: whole-match energy, 1 when fresh; the chance of a hard run is multiplied by it. It falls
+# by 1 for every TANK_M metres run above the player's CS (the running that drains the pools), so
+# players who run hard more often fade more, as in the Premier League, where only the players
+# with the most first-half high-intensity running ran less in the second half (−12%)
+# [Bradley2013, p.4]. Fatigue late in a match may come from low glycogen in many muscle fibres
+# [Mohr2005]. At half-time the tank gets back TANK_HALF_TIME_REFILL of what it lost. Our
+# assumption, both calibrated together: high-intensity running about 21% lower in the last
+# 15 min than in the first 15 [Bradley2009, Fig. 2], while running above 5.5 m/s and sprinting
+# are about the same in both halves [Bradley2009, p.162] (PLAN §2.5: within ±10%). A smaller
+# refill puts more of the decline into the second half; a larger one, less into the last 15 min.
+TANK_M = 2000.0
+TANK_HALF_TIME_REFILL = 0.5
+# After repeated hard efforts the slow pool refills 40–85% more slowly [Chorley2022; synthesis
+# §3.2.4]: its time constant is multiplied by 1 + SLOW_TAU_PER_TANK × (1 − tank), +60% at a tank
+# of 0.7. Our assumption (the middle of that range, at about the tank of the final minutes).
+SLOW_TAU_PER_TANK = 2.0
+# Start of the second half: muscle temperature falls about 2 °C over half-time [Mohr2005], and
+# high-intensity running is lower in the first 10 min of the second half than of the first
+# [Bradley2013, p.4]. The chance of a hard run is cut by DIP at the kick-off, fading to 0 over
+# DIP_S. Our assumption.
+DIP = 0.10
+DIP_S = 600.0
+# What the state changes. The chance that a player makes a hard run (run_choice_mult) is
+# pool term × tank × (1 − dip). The pool term is 1 while the two pools hold at least POOL_FREE
+# of D′ (in our matches they hold 0.78 on average, 0.62 at the 10th percentile, with no fatigue
+# effect; our measure, 2026-10-16) and falls in proportion below: 1 − POOL_GAIN × (POOL_FREE −
+# left) / POOL_FREE. A run decision (roles.Roles.start) with a wanted speed above HARD_RUN_SPEED
+# (high-intensity running starts at 4 m/s [14.4 km/h] [Bradley2009, p.160]) is skipped with
+# chance 1 − run_choice_mult: while tired (TIRED_BELOW), players skip about a third of their
+# hard covering, recovery and close-down runs (sim.fatigue_checks, 2026-10-16), within the
+# 22–45% drops after peak periods [Ju2022, p.975]. Our assumption.
+POOL_GAIN = 1.0
+POOL_FREE = 0.75
+HARD_RUN_SPEED = 4.0
+# Short-term tiredness x = 1 − pool term (after intense spells; the tank does not count, since
+# late in a match players make fewer hard runs but top speed barely changes [Bradley2009,
+# p.163]): a run that is made lasts (1 − SHORTEN × x) of its planned time, every run and ball
+# role is (1 − SLOW × x) slower, and carries are (1 − CARRY_SLOW × x) slower, so also shorter.
+# After a peak period efforts are 23% shorter, 32% briefer and 3% slower, and carries fewer,
+# shorter and slower [Fang2024, Table 2, Fig. 1], but most of that is there with no fatigue at all
+# (sim.fatigue_checks, no-fatigue control), so the gains are small. Our assumption. Passing is
+# left alone (PLAN §7, decision 5).
+SHORTEN = 0.3
+SLOW = 0.03
+CARRY_SLOW = 0.3
+# Late in a match players still make their decisive sprints: sprinting is about the same in
+# both halves [Bradley2009, p.162] while high-intensity running falls [Fig. 2], and fatigue shows
+# in the 4–5.5 m/s volume, accelerations and recovery time between efforts (synthesis §3.5). So
+# the tank does not cut runs wanted at DECISIVE_EFFORT of S0 or more (runs in behind, tracking a
+# runner, support on a counter-attack); the pools do (sprinting drops after peak periods
+# [Leifsson2024, Table 1]). Our assumption.
+DECISIVE_EFFORT = 0.95
+# A player who skipped a shape run (recovery run, covering, pushing up, support) is asked again
+# SHAPE_DECLINE_S later if still out of position; a skipped triggered run is not offered again.
+# A shape run lasts until the gap has closed, usually a few seconds, not its SHAPE_RUN_MAX_S cap.
+# Our assumption.
+SHAPE_DECLINE_S = 5.0
+# Capacity: top speed (S0) falls by TOP_SPEED_PER_TANK × (1 − tank) and acceleration (A0) by
+# ACCEL_PER_TANK × (1 − tank), each at most CAPACITY_MAX_LOSS. Match top speed barely changes
+# (7.65 vs 7.59 m/s [27.5 vs 27.3 km/h], −0.8%, not significant) [Bradley2009, p.163]; 10 m
+# sprint times, mostly acceleration, are about 3.5% slower after a match [SilvaJR2018, Table 5].
+# Our assumption: at a tank of 0.7, about the median at the final whistle (sim.batch,
+# 2026-10-16), top speed is 0.9% and acceleration 3.75% lower.
+TOP_SPEED_PER_TANK = 0.03
+ACCEL_PER_TANK = 0.125
+CAPACITY_MAX_LOSS = 0.05
+# Tired moment (truth.json ``tired``): the hidden state cuts the chance of a hard run by at
+# least a quarter, run_choice_mult < TIRED_BELOW. Our assumption, at the low end of the drops in
+# covering, recovery runs and pressing after peak periods, 22–45% [Ju2022, p.975]. Decided
+# 2026-10-16.
+TIRED_BELOW = 0.75
 
 # --- Position noise (synthesis §3.1) -------------------------------------------------------------
 
@@ -444,7 +557,8 @@ WALL_SIZE = (3, 4)
 WALL_GAP = 0.6
 # Wall players, and the attackers and markers of a set piece, jog into place at this share of
 # S0, below HI_SPEED for every player (at most
-# 0.5 × 1.053 × 10.3 = 5.4 m/s [19.6 km/h], derived from POSITION_EFFORT and S0_RANGE). Our
+# 0.5 × 1.063 × 10.3 = 5.47 m/s [19.7 km/h], derived from POSITION_EFFORT and S0_RANGE; the
+# match tempo applies in play only, and fatigue only slows). Our
 # assumption.
 WALL_SPEED = 0.5
 # Attackers stay at least 1 m from a wall of three or more [IFAB2025, Law 13]: their targets and

@@ -65,6 +65,15 @@ The simulator has three layers:
    - **Passing: no accuracy penalty.** Pass completion was 80.3% before a peak and 80.5% after [Fang2024, Fig. 1], and 66–71% in every 15-min block [Carling2011, Table I]. No ball-speed penalty in v1: the only evidence is a lab test with youth players [Russell2011, Table 1].
    - **Recovery after intense spells** is calibrated to Leifsson2024: high-speed running after a 5-min peak is −45, −29, −13, −8 and −4% vs the match average in minutes 1–5 [Leifsson2024, Table 1].
    - **Every run gets an intended purpose** (Recovery Run, Covering, Close Down… the 11 classes in [Ju2022]). Runs a fresh player would have made but a tired one skipped are logged too.
+   - **As built (2026-10-16; `sim/physiology.py`, values and sources in `sim/params.py`).**
+     - Pools: drain above CS in proportion to what each holds; refill below CS with Chorley2023's τ curves (Eq. 6b–6c, speed for power: our adaptation), scaled to each player's τ at rest; the slow pool refills up to +60% slower as the tank empties [Chorley2022]. The pools refill over the 15-min half-time [IFAB2025, Law 7].
+     - Tank: falls with metres run above CS and gets back half its loss at half-time (our assumption, calibrated to the end-of-match decline). Dip: 10% fewer hard runs at the second-half kick-off, gone after 10 min (our assumption) [Bradley2013; Mohr2005].
+     - Behaviour: a hard run (wanted above 4 m/s) is skipped with chance 1 − run choice, where run choice = pool term × tank × (1 − dip). The pools only count below 75% of D′. The tank does not cut decisive sprints (runs in behind, tracking, counter support), so sprinting stays about level between halves [Bradley2009, p.162]. Short-term tiredness also shortens and slows runs and carries a little [Fang2024]. Capacity: top speed and acceleration fall with the tank, at most 5%. No passing or ball-speed penalty (decision 5).
+     - **Tired moment** (`truth.json` `tired`; decided 2026-10-16): run choice below 0.75, i.e. the hidden state cuts the chance of a hard run by at least a quarter (our assumption, at the low end of Ju2022's 22–45%). Late in each half many players are tired, and the most often those with the lowest CS and D′, since all positions share one work rate.
+     - **Fatigue switch** (decided 2026-10-16): fatigue on by default; `--no-fatigue` is the no-fatigue control (same seed, teams, physiology, tempo and work rates); `--no-fatigue --no-tempo` also switches back to the fatigue-off calibration (`params.PRE_FATIGUE`) and reproduces the generator before this change (81f023d) file for file on one machine.
+     - **Work rate re-fitted with fatigue on** (the totals of real matches include fatigue), and two run chances raised (overlaps, midfield support), since a skipped one-off run is not offered again.
+     - **Shared tempo**: one per match, N(1, 0.03), scales both teams' work rate in play [Allen2026a].
+     - The no-fatigue control already shows most of the published post-peak drops (selection and stoppages, section 2.5), so the effect sizes are calibrated on the end-of-match decline and on what tired players skip, and the post-peak curves are reported with and without fatigue (`sim.fatigue_checks`).
 
 **Story controls.** Seeded parameters to create interesting matches on demand: "Team A presses high for 60 min then fades," "the left-back is exposed by repeated counterattacks," "a fresh substitute makes the difference."
 
@@ -118,6 +127,8 @@ We compare synthetic matches against published numbers and open data, and show t
 4. Calibrate so the with-fatigue curve matches Leifsson2024. The gap between the two synthetic curves is the part that is really fatigue.
 
 No published study controls for this, so it is our strongest rigour slide.
+
+**First result (2026-10-16, `sim.fatigue_checks`, 240 seeds).** In our generator the control *without* fatigue already drops as much as Leifsson2024's published curve, or more: −63% in minute 1 after a 5-min HSR peak (−67% with fatigue) against −45% published. Our peak intensities are a little higher than the published ones (1-min HSR peak 73 vs 62 m/min). So the fatigue part after peaks is small, and step 4 cannot be met: the with-fatigue curve sits beyond the published one. We report all three curves as they are and calibrate the effect sizes on the end-of-match decline instead.
 
 ### 2.6 Making the synthetic data credible (added 2026-10-15)
 

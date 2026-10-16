@@ -11,7 +11,10 @@ The ball is always in one of four modes:
 Each frame the flow is updated first (and may log events), then the frame is recorded, then
 every player takes one movement step towards a target from the team shape, their runs and their
 role (``roles.py``). The purpose behind each player's movement is recorded too, so that every
-high-intensity run can be labelled afterwards (``runs.py``).
+high-intensity run can be labelled afterwards (``runs.py``). With fatigue on, each player's
+hidden physiology (``physiology.py``) is updated from their speed after every step: it lowers
+their capacity (S0, A0), and ``roles.py`` reads it to skip, shorten and slow runs; carries are
+slower too. A shared match tempo, if given, scales both teams' work rate in play.
 
 Conventions (our choices, needed by the estimator and the agents later):
 
@@ -41,6 +44,7 @@ import numpy as np
 from secondwind.schema import BodyPart, EventType, Outcome, PassHeight, Phase, Position
 from secondwind.sim import movement
 from secondwind.sim import params as P
+from secondwind.sim.physiology import Physiology
 from secondwind.sim.roles import Roles
 from secondwind.sim.rosters import SimTeam
 
@@ -112,9 +116,22 @@ class PeriodFrames:
 
 
 class MatchEngine:
-    def __init__(self, rng: np.random.Generator, teams: list[SimTeam]):
+    def __init__(
+        self,
+        rng: np.random.Generator,
+        teams: list[SimTeam],
+        physiology: Physiology | None = None,
+        tempo: float | None = None,
+        pre_fatigue: bool = False,
+    ):
+        """``physiology`` None is fatigue off; ``tempo`` None is no shared tempo.
+        ``pre_fatigue`` uses the fatigue-off calibration (``params.PRE_FATIGUE``); with both off
+        too, the engine is the generator as it was before fatigue and tempo existed."""
         self.rng = rng
         self.teams = teams
+        self.physiology = physiology
+        self.tempo = tempo
+        self.pre_fatigue = pre_fatigue
         players = [p for team in teams for p in team.players]
         self.ids = [p.id for p in players]
         self.positions = [p.position for p in players]
@@ -269,6 +286,8 @@ class MatchEngine:
             speed = rng.uniform(*P.CARRY_SPEED)
         if not is_gk:
             speed = max(speed, P.CARRY_MOMENTUM * float(np.hypot(*self.vel[player])))
+            if self.physiology is not None:
+                speed *= self.physiology.carry(player)  # slower, so shorter [Fang2024, Fig. 1]
         start = self.pos[player].copy()
         # Carry towards the opponent's goal, with a spread of angles and a pull to the middle.
         u, v = self.to_uv(team, start)
@@ -911,9 +930,10 @@ class MatchEngine:
         keep = P.SEPARATION_DEAD if self.mode == "dead" else P.SEPARATION_TEAM
         wall = self.roles.wall_mask()
         push = movement.push_apart(self.pos, self.team_of, anchored, self.vel, keep, wall)
-        self.pos, self.vel = movement.step(
-            self.pos, self.vel, target, cap, self.a0, self.s0, calm, push
-        )
+        a0, s0 = self.a0, self.s0
+        if self.physiology is not None:
+            a0, s0 = a0 * self.physiology.accel_mult, s0 * self.physiology.speed_mult
+        self.pos, self.vel = movement.step(self.pos, self.vel, target, cap, a0, s0, calm, push)
         return purpose
 
     def run_period(self, period: int, n_frames: int, kick_team: int) -> PeriodFrames:
@@ -938,6 +958,9 @@ class MatchEngine:
         self.shape_ball = np.zeros(2)
         self.shape_w = np.full(2, 0.5)
         self.roles.clear()
+        body = self.physiology
+        if body is not None:
+            body.start_period(period)
 
         pos = np.empty((n_frames, 22, 2))
         ball = np.empty((n_frames, 3))
@@ -954,6 +977,10 @@ class MatchEngine:
             alive[k] = self.mode != "dead"
             possession[k] = -1 if self.poss_team is None else self.poss_team
             purpose[k] = self.move(t)
+            if body is not None:
+                body.step(np.hypot(self.vel[:, 0], self.vel[:, 1]), t)
+                if k % round(P.FRAME_RATE_HZ) == 0:
+                    body.record(t)
         t_end = round((n_frames - 1) / P.FRAME_RATE_HZ, 1)
         self.end_transition(t_end)
         self.log(EventType.PERIOD_END, t_end)

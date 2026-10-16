@@ -3,10 +3,12 @@
 Simulates the matches in parallel, in memory (no files), and prints the mean ± SD across matches
 of the match figures against the interim targets (``summary.TARGETS``), movement per position
 and per team against synthesis §4.2, running and high-speed running by phase, the purpose of the
-high-intensity runs, the time in each speed and acceleration band, and the spacing between
-players (``sim.spacing``). ``--json`` also writes the report as JSON, so two runs can be
-compared; ``--idsse`` adds the IDSSE bands (``sim.idsse``) and, once ``sim.spacing --idsse`` has
-cached the IDSSE positions, the IDSSE spacing.
+high-intensity runs, the time in each speed and acceleration band, the spacing between players
+(``sim.spacing``), and the fatigue checks (``sim.fatigue_checks``). Fatigue is on and the tempo
+drawn, as in ``simulate``; ``--no-fatigue`` runs the no-fatigue control of the same seeds.
+``--json`` also writes the report as JSON, so two runs can be compared; ``--idsse`` adds the
+IDSSE bands (``sim.idsse``) and, once ``sim.spacing --idsse`` has cached the IDSSE positions,
+the IDSSE spacing.
 
 Two views of the movement:
 
@@ -28,13 +30,14 @@ import json
 import os
 from collections import Counter
 from concurrent.futures import ProcessPoolExecutor
+from functools import partial
 from pathlib import Path
 
 import numpy as np
 
 from secondwind.schema import Position, RunPurpose
+from secondwind.sim import fatigue_checks, spacing
 from secondwind.sim import params as P
-from secondwind.sim import spacing
 from secondwind.sim.output import simulate
 from secondwind.sim.runs import speeds
 from secondwind.sim.summary import (
@@ -71,6 +74,10 @@ POSITION_TOLERANCE = 0.05  # ±5% (synthesis §4.2; PLAN §2.5)
 GK_SPRINT_TOLERANCE_M = 5.0
 # Team totals per match, mean (SD): total, >5.5 m/s, >7 m/s (m) [Allen2025, Figs 2–3].
 TEAM_TARGETS = {"distance": (113891, 4097), "hid": (9611, 1300), "sprint": (2326, 471)}
+# Home and away team totals correlate at r = 0.68–0.75 (total, 5.5–7 m/s, >5.5 m/s and >7 m/s
+# distance) [Allen2026a, abstract]; pass if r is 0.5–0.85 over 50 or more matches (PLAN §2.5).
+TEAM_R = (0.68, 0.75)
+TEAM_R_PASS = (0.5, 0.85)
 # Efforts per 98 min [Castellano2025, Table 3]: sprints >6.94 m/s and decelerations < -3 m/s²,
 # each ≥ 0.7 s (summary.EFFORTS). Their CD row is used for CB, CM for CM only, WN for WM and FW
 # for CF. Broadcast tracking: compare counts loosely (±30%, PLAN §2.5); deceleration counts
@@ -105,9 +112,9 @@ def observed_kinematics(m) -> tuple[list[np.ndarray], list[np.ndarray]]:
     return out_v, out_a
 
 
-def match_stats(seed: int) -> dict:
+def match_stats(seed: int, fatigue: bool = True, tempo: bool = True) -> dict:
     """Everything the report needs from one match, as plain numbers."""
-    m = simulate(seed, f"batch{seed:04d}")
+    m = simulate(seed, f"batch{seed:04d}", fatigue=fatigue, tempo=tempo)
     ids = [p.id for team in m.metadata.teams for p in team.players]
     positions = [p.position.value for team in m.metadata.teams for p in team.players]
     is_gk = np.array([p == "GK" for p in positions])
@@ -175,9 +182,11 @@ def match_stats(seed: int) -> dict:
         "phase_hid": {name: per_min(phase_hid, name) for name in PHASE_HID_TARGETS},
         "speed_s": {g: s.tolist() for g, s in speed_s.items()},
         "accel_s": {g: s.tolist() for g, s in accel_s.items()},
-        "purposes": dict(Counter(r.purpose.value for r in m.truth.runs)),
-        "runs": len(m.truth.runs),
+        "purposes": dict(Counter(r.purpose.value for r in m.truth.runs if r.executed)),
+        "runs": sum(r.executed for r in m.truth.runs),
         "spacing": spacing.sim_measure(m),
+        "fatigue": fatigue_checks.sim_measure(m),
+        "tempo": m.truth.settings.get("tempo"),
     }
 
 
@@ -190,10 +199,12 @@ def parse_seeds(text: str) -> list[int]:
     return seeds
 
 
-def run_batch(seeds: list[int], jobs: int | None = None) -> list[dict]:
+def run_batch(
+    seeds: list[int], jobs: int | None = None, fatigue: bool = True, tempo: bool = True
+) -> list[dict]:
     jobs = jobs or min(len(seeds), os.cpu_count() or 1)
     with ProcessPoolExecutor(max_workers=jobs) as pool:
-        return list(pool.map(match_stats, seeds))
+        return list(pool.map(partial(match_stats, fatigue=fatigue, tempo=tempo), seeds))
 
 
 def describe(values, target=None) -> dict:
@@ -255,6 +266,15 @@ def build_report(stats: list[dict], idsse: list[dict] | None = None) -> dict:
         rep["team"][name] = describe(totals, target) | {"target_sd": sd}
     totals = [sum(s["observed_distance"][11 * k : 11 * k + 11]) for s in stats for k in (0, 1)]
     rep["team"]["observed_distance"] = describe(totals, TEAM_TARGETS["distance"][0])
+    rep["team_r"] = {}
+    for name in ("distance", "hsr", "hid", "sprint"):
+        if name == "hsr":
+            per = [np.subtract(s["hid"], s["sprint"]) for s in stats]
+        else:
+            per = [np.asarray(s[name]) for s in stats]
+        home, away = [p[:11].sum() for p in per], [p[11:].sum() for p in per]
+        r = float(np.corrcoef(home, away)[0, 1]) if len(stats) > 2 else float("nan")
+        rep["team_r"][name] = r
 
     rep["phase"] = {
         n: describe([s["phase"][n] for s in stats], t) for n, t in PHASE_TARGETS.items()
@@ -285,6 +305,7 @@ def build_report(stats: list[dict], idsse: list[dict] | None = None) -> dict:
                 entry["idsse_pct"] = band_pct(idsse, key, group)
             rep["bands"][f"{key}_{group}"] = entry
     rep["spacing"] = spacing.summarise([s["spacing"] for s in stats])
+    rep["fatigue"] = fatigue_checks.summarise([s["fatigue"] for s in stats])
     if idsse:
         from secondwind.sim.idsse import position_means
 
@@ -362,6 +383,12 @@ def format_report(rep: dict) -> str:
         sd = f" ± {d['target_sd']}" if "target_sd" in d else ""
         lines.append(f"  {name:<20}{_ms(d, '9.0f'):>21}  target {d['target']}{sd}  {_off(d)}")
 
+    lo, hi = TEAM_R_PASS
+    corr = ", ".join(
+        f"{k} {r:.2f}{' ok' if lo <= r <= hi else ' !!'}" for k, r in rep["team_r"].items()
+    )
+    lines.append(f"  Home vs away r: {corr} (published {TEAM_R[0]}–{TEAM_R[1]} [Allen2026a])")
+
     lines.append("")
     lines.append("  Running by phase, m/min per player slot (GK included) [Allen2026b, Table 5].")
     for name, d in rep["phase"].items():
@@ -402,6 +429,10 @@ def format_report(rep: dict) -> str:
     lines.append("")
     lines.append("  Spacing (truth: noise-free; sim.spacing). IDSSE: mean of its matches.")
     lines.append(spacing.format_table(rep["spacing"], rep.get("idsse_spacing")))
+
+    lines.append("")
+    lines.append("  Fatigue checks (truth: noise-free; sim.fatigue_checks).")
+    lines.append(fatigue_checks.format_table(rep["fatigue"]))
     return "\n".join(lines)
 
 
@@ -410,6 +441,8 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--seeds", default="1-10", help="e.g. 1-30 or 1,3,5 (default 1-10)")
     parser.add_argument("--jobs", type=int, help="worker processes (default: one per seed)")
     parser.add_argument("--json", type=Path, help="also write the report to this JSON file")
+    parser.add_argument("--no-fatigue", action="store_true", help="the no-fatigue control")
+    parser.add_argument("--no-tempo", action="store_true", help="no shared match tempo")
     parser.add_argument(
         "--idsse", action="store_true", help="compare bands with IDSSE (needs sim.idsse first)"
     )
@@ -421,7 +454,8 @@ def main(argv: list[str] | None = None) -> None:
         idsse = load_derived() or None
         if idsse is None:
             print("No derived IDSSE files: run python -m secondwind.sim.idsse first.\n")
-    rep = build_report(run_batch(parse_seeds(args.seeds), args.jobs), idsse)
+    stats = run_batch(parse_seeds(args.seeds), args.jobs, not args.no_fatigue, not args.no_tempo)
+    rep = build_report(stats, idsse)
     print(format_report(rep))
     if args.json:
         args.json.write_text(json.dumps(rep, indent=1))

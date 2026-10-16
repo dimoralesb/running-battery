@@ -1,5 +1,11 @@
 """Run one seeded match and turn the engine's arrays and event log into the four files.
 
+Fatigue is on by default; ``fatigue=False`` gives the no-fatigue control (PLAN §2.5): the same
+seed, teams, physiology settings, tempo and work rates, with every player fresh all match. The
+tempo is drawn from its own generator, so with ``tempo=False`` as well (and the fatigue-off
+calibration, ``params.PRE_FATIGUE``) the match is the one the generator made before fatigue and
+tempo existed (81f023d), file for file.
+
 ``tracking.jsonl`` carries position noise and dropouts (``observe``); the engine's noise-free
 positions can be saved next to the four files for debugging (``CLEAN_COPY``). That copy is never
 part of the match data: ``read_match`` ignores it and the estimator must not read it.
@@ -35,6 +41,7 @@ from secondwind.schema import (
 )
 from secondwind.sim import params as P
 from secondwind.sim.match import MatchEngine, PeriodFrames
+from secondwind.sim.physiology import Physiology
 from secondwind.sim.rosters import SimTeam, make_teams
 from secondwind.sim.runs import hi_runs
 
@@ -57,6 +64,7 @@ class SimMatch:
     observed: list[Observed]
     events: list[Event]
     truth: MatchTruth
+    physiology: Physiology | None = None  # in memory only, for the fatigue checks
 
 
 def period_lengths(rng: np.random.Generator) -> list[int]:
@@ -92,17 +100,38 @@ def observe(
     return out
 
 
+def draw_tempo(rng: np.random.Generator) -> float:
+    """One shared tempo per match: N(1, TEMPO_SD), clipped at ±TEMPO_CLIP_SD SD."""
+    lo, hi = 1.0 - P.TEMPO_CLIP_SD * P.TEMPO_SD, 1.0 + P.TEMPO_CLIP_SD * P.TEMPO_SD
+    return round(float(np.clip(rng.normal(1.0, P.TEMPO_SD), lo, hi)), 4)
+
+
 def simulate(
-    seed: int, match_id: str, club_tests: bool = False, noise_sigma: float = P.NOISE_SIGMA
+    seed: int,
+    match_id: str,
+    club_tests: bool = False,
+    noise_sigma: float = P.NOISE_SIGMA,
+    fatigue: bool = True,
+    tempo: bool | float = True,
 ) -> SimMatch:
     """One match. Club test values go into the metadata only if ``club_tests`` is set; the
     match itself is the same either way. Noise is drawn after the match, so ``noise_sigma``
-    changes only the tracking positions."""
+    changes only the tracking positions. ``tempo``: True draws the shared tempo, a number fixes
+    it (a story control), False leaves it out. The tempo and the fatigue skips have their own
+    generators (spawned from the seed), so they never shift the match flow's draws."""
     rng = np.random.default_rng(seed)
+    tempo_rng, fatigue_rng = (
+        np.random.default_rng(s) for s in np.random.SeedSequence(seed).spawn(2)
+    )
     teams = make_teams(rng)
     lengths = period_lengths(rng)
     first_kick = int(rng.integers(2))
-    engine = MatchEngine(rng, teams)
+    drawn = draw_tempo(tempo_rng)
+    match_tempo = None if tempo is False else (drawn if tempo is True else float(tempo))
+    players = [p.params for team in teams for p in team.players]
+    body = Physiology(players, fatigue_rng) if fatigue else None
+    legacy = body is None and match_tempo is None  # params.PRE_FATIGUE calibration
+    engine = MatchEngine(rng, teams, body, match_tempo, pre_fatigue=legacy)
     periods = [
         engine.run_period(1, lengths[0], first_kick),
         engine.run_period(2, lengths[1], 1 - first_kick),
@@ -127,8 +156,14 @@ def simulate(
         periods=infos,
         teams=[team.info(club_tests) for team in teams],
     )
-    truth = neutral_truth(match_id, teams, periods, noise_settings(noise_sigma))
-    return SimMatch(metadata, periods, observed, to_events(engine), truth)
+    settings: dict[str, float] = noise_settings(noise_sigma)
+    if match_tempo is not None:
+        settings["tempo"] = match_tempo
+    if body is None:
+        truth = neutral_truth(match_id, teams, periods, settings)
+    else:
+        truth = fatigue_truth(match_id, teams, periods, body, settings | body.settings())
+    return SimMatch(metadata, periods, observed, to_events(engine), truth, body)
 
 
 def to_events(engine: MatchEngine) -> list[Event]:
@@ -164,22 +199,36 @@ def to_events(engine: MatchEngine) -> list[Event]:
     return events
 
 
-def run_truth(teams: list[SimTeam], periods: list[PeriodFrames]) -> list[RunTruth]:
-    """Every high-intensity run with its purpose (``runs.py``). All executed until Saturday,
-    when tired players start skipping runs."""
+def run_truth(
+    teams: list[SimTeam], periods: list[PeriodFrames], body: Physiology | None = None
+) -> list[RunTruth]:
+    """Every high-intensity run with its purpose (``runs.py``), and, with fatigue on, the hard
+    runs tired players skipped (``executed=False``; ``t_end`` is the planned end, cut at the end
+    of the period). Ordered by period, start time and player."""
     ids = [p.id for team in teams for p in team.players]
     rows = []
     for pf in periods:
-        for run in hi_runs(pf.pos, pf.purpose):
+        length = (len(pf.alive) - 1) / P.FRAME_RATE_HZ
+        found = [
+            (r.t_start, r.player, r.t_end, r.purpose, True) for r in hi_runs(pf.pos, pf.purpose)
+        ]
+        if body is not None:
+            found += [
+                (s.t_start, s.player, min(s.t_end, length), s.purpose, False)
+                for s in body.skipped
+                if s.period == pf.period
+            ]
+            found.sort(key=lambda r: (r[0], r[1], not r[4]))
+        for t_start, player, t_end, purpose, executed in found:
             rows.append(
                 RunTruth(
                     run_id=len(rows),
-                    player_id=ids[run.player],
+                    player_id=ids[player],
                     period=pf.period,
-                    t_start=round(run.t_start, 1),
-                    t_end=round(run.t_end, 1),
-                    purpose=run.purpose,
-                    executed=True,
+                    t_start=round(t_start, 1),
+                    t_end=round(max(t_end, t_start), 1),
+                    purpose=purpose,
+                    executed=executed,
                 )
             )
     return rows
@@ -201,7 +250,7 @@ def neutral_truth(
     periods: list[PeriodFrames],
     settings: dict[str, float] | None = None,
 ) -> MatchTruth:
-    """Truth with fatigue off: full pools and tank, all multipliers 1 (physiology: Saturday).
+    """Truth with fatigue off (the no-fatigue control): full pools and tank, all multipliers 1.
     The runs and their purposes are real."""
     period, t = [], []
     for pf in periods:
@@ -231,6 +280,28 @@ def neutral_truth(
         settings=settings or {},
         players=players,
         runs=run_truth(teams, periods),
+    )
+
+
+def fatigue_truth(
+    match_id: str,
+    teams: list[SimTeam],
+    periods: list[PeriodFrames],
+    body: Physiology,
+    settings: dict[str, float],
+) -> MatchTruth:
+    """Truth with fatigue on: each player's pools, tank, multipliers and tired moments, one
+    value per second (``Physiology.series``), and the runs made and skipped."""
+    players = [p for team in teams for p in team.players]
+    return MatchTruth(
+        match_id=match_id,
+        fatigue_enabled=True,
+        settings=settings,
+        players=[
+            PlayerTruth(player_id=p.id, params=p.params, series=body.series(j))
+            for j, p in enumerate(players)
+        ],
+        runs=run_truth(teams, periods, body),
     )
 
 
@@ -294,8 +365,10 @@ def generate(
     club_tests: bool = False,
     noise_sigma: float = P.NOISE_SIGMA,
     clean_copy: bool = False,
+    fatigue: bool = True,
+    tempo: bool | float = True,
 ) -> SimMatch:
     """Simulate one match and write its four files to ``folder`` (match id: folder name)."""
-    match = simulate(seed, match_id or folder.name, club_tests, noise_sigma)
+    match = simulate(seed, match_id or folder.name, club_tests, noise_sigma, fatigue, tempo)
     write(match, folder, clean_copy)
     return match

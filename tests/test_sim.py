@@ -1,5 +1,6 @@
 """Generator: determinism, valid files, the interim realism targets (summary.TARGETS), the motion
-model, run purposes, position noise and the replay tool."""
+model, run purposes, position noise, the fatigue switch and truth.json, and the replay tool.
+Physiology and fatigue behaviours on constructed states are in test_fatigue.py."""
 
 import itertools
 import subprocess
@@ -56,9 +57,12 @@ def generated(tmp_path_factory) -> tuple[dict, object]:
     folders["again"] = root / "again" / "m0001"
     folders["club"] = root / "club" / "m0001"
     folders["clean"] = root / "clean" / "m0001"
+    folders["off"] = root / "off" / "m0001"
+    folders["legacy"] = root / "legacy" / "m0001"
     jobs = [(seed, folders[seed], []) for seed in SEEDS]
     jobs += [(1, folders["again"], []), (1, folders["club"], ["--club-tests"])]
-    jobs += [(1, folders["clean"], ["--clean-copy"])]
+    jobs += [(1, folders["clean"], ["--clean-copy"]), (1, folders["off"], ["--no-fatigue"])]
+    jobs += [(1, folders["legacy"], ["--no-fatigue", "--no-tempo"])]
     procs = generate(jobs)
     sim1 = simulate(1, "m0001")
     finish(procs)
@@ -125,12 +129,13 @@ def test_different_seeds_differ(folders):
 def test_files_validate(folders, summaries):
     for seed in SEEDS:
         truth = read_truth(folders[seed])
-        assert truth.fatigue_enabled is False
+        assert truth.fatigue_enabled is True
         assert len(truth.players) == 22
         assert truth.runs
         assert truth.settings["noise_sigma_m"] == P.NOISE_SIGMA
+        assert truth.settings["tired_below"] == P.TIRED_BELOW
+        assert abs(truth.settings["tempo"] - 1) <= P.TEMPO_CLIP_SD * P.TEMPO_SD + 1e-9
         series = truth.players[0].series
-        assert set(series.fast_pool) == {1.0} and set(series.speed_mult) == {1.0}
         checks = summaries[seed][1]
         assert len(series.t) == checks["truth_seconds"]
         assert checks["frame_numbers_ok"] and checks["period_frames_ok"]
@@ -211,6 +216,89 @@ def test_summary_cli_runs(folders):
         check=True,
     ).stdout
     assert "ball in play" in out and "H01" in out and "A11" in out
+
+
+# --- Fatigue switch and truth.json ---------------------------------------------------------------
+
+
+def test_no_fatigue_control(folders):
+    """``--no-fatigue``: the same seed, teams, physiology settings and tempo, every player fresh
+    (neutral series, no skipped runs), and the match plays out differently. ``--no-tempo`` as
+    well leaves the tempo out (the generator as it was before fatigue and tempo, 81f023d; checked
+    file for file on one machine, since matches differ between machines)."""
+    on, off, legacy = (read_truth(folders[k]) for k in (1, "off", "legacy"))
+    assert off.fatigue_enabled is False and legacy.fatigue_enabled is False
+    assert off.settings["tempo"] == on.settings["tempo"] and "tempo" not in legacy.settings
+    assert "tank_m" not in off.settings
+    for truth in (off, legacy):
+        assert all(r.executed for r in truth.runs)
+        for p in truth.players:
+            assert set(p.series.fast_pool) == {1.0} and set(p.series.run_choice_mult) == {1.0}
+            assert not any(p.series.tired)
+    assert [p.params for p in on.players] == [p.params for p in off.players]
+    assert (folders[1] / METADATA).read_bytes() == (folders["off"] / METADATA).read_bytes()
+    assert (folders[1] / TRACKING).read_bytes() != (folders["off"] / TRACKING).read_bytes()
+
+
+def test_truth_series_with_fatigue(sim1):
+    """Pools and tank stay fractions; the tank never rises within a half and gets some back at
+    half-time; capacity falls by at most CAPACITY_MAX_LOSS; ``tired`` is run_choice below
+    TIRED_BELOW (values rounded to 0.001); some players get tired and skip runs."""
+    tired_any = False
+    for p in sim1.truth.players:
+        s = p.series
+        period = np.array(s.period)
+        tank = np.array(s.tank)
+        for h in (1, 2):
+            assert np.all(np.diff(tank[period == h]) <= 0)
+        assert tank[period == 2][0] >= tank[period == 1][-1]
+        assert min(s.speed_mult) >= 1 - P.CAPACITY_MAX_LOSS - 1e-9
+        choice, tired = np.array(s.run_choice_mult), np.array(s.tired)
+        assert np.all(choice[tired] <= P.TIRED_BELOW) and np.all(
+            choice[~tired] >= P.TIRED_BELOW - 1e-3
+        )
+        tired_any |= tired.any()
+    assert tired_any
+    skipped = [r for r in sim1.truth.runs if not r.executed]
+    assert skipped and all(r.t_end >= r.t_start for r in skipped)
+    assert {RunPurpose.RECOVERY_RUN, RunPurpose.COVERING} <= {r.purpose for r in skipped}
+
+
+def test_capacity_holds_every_frame(sim1):
+    """Nobody runs faster than S0 × speed_mult, frame by frame (noise-free positions). The
+    multiplier only falls within a half, so the value recorded a second earlier bounds it."""
+    ids = [p.id for team in sim1.metadata.teams for p in team.players]
+    truth = {p.player_id: p for p in sim1.truth.players}
+    s0 = np.array([truth[i].params.s0 for i in ids])
+    for pf in sim1.periods:
+        mult = np.array(
+            [
+                [
+                    m
+                    for m, h in zip(truth[i].series.speed_mult, truth[i].series.period, strict=True)
+                    if h == pf.period
+                ]
+                for i in ids
+            ]
+        ).T
+        v = speeds(pf.pos)
+        second = np.maximum(np.arange(len(v)) // round(P.FRAME_RATE_HZ) - 1, 0)
+        assert np.all(v <= s0 * mult[np.minimum(second, len(mult) - 1)] + 0.01)  # rounding
+
+
+def test_fatigue_checks_on_a_match(sim1):
+    """``sim.fatigue_checks`` on a whole match: every pipeline gives numbers, tired players
+    skip a larger share of hard runs than fresh ones, and the table prints."""
+    from secondwind.sim import fatigue_checks
+
+    out = fatigue_checks.summarise([fatigue_checks.sim_measure(sim1)])
+    assert len(out["leifsson"]) == 9 and all(len(v) == 5 for v in out["leifsson"].values())
+    assert np.isfinite(out["end"]["hir_last15_vs_first15"])
+    assert out["fang"]["efforts"]["peak"] > 0
+    skips = out["skips"]["all"]
+    assert skips["tired"] < skips["fresh"] <= 0  # % skipped, as a negative change
+    assert 0 < out["tired_pct"] < 100
+    assert "Leifsson2024" in fatigue_checks.format_table(out, out)
 
 
 # --- Motion model ---------------------------------------------------------------------------------
@@ -499,11 +587,12 @@ def test_free_kicks_keep_distance_over_a_match(sim1):
 
 def test_teammates_do_not_stack(sim1):
     """Push-apart on a whole match (noise-free positions, ``sim.spacing``). Bounds: the spread
-    over seeds 1–30 plus margin. In play, a team-mate within 1 m in 0.16–0.24% of player-frames
+    over seeds 1–30 plus margin (fatigue on, 2026-10-16; with fatigue off, 2026-10-15, the
+    spread was about the same). In play, a team-mate within 1 m in 0.15–0.22% of player-frames
     (0.45% judged 1 s ahead instead of at closest approach, about 0.9% before the push-apart;
     IDSSE 0.20%) and within 0.5 m in 0.01–0.03%. Dead balls crowd on purpose (corner pack,
-    walls, goal huddle; SEPARATION_DEAD): within 1 m 1.2–3.7%, but within 0.5 m only
-    0.01–0.16%, so nobody stands on a team-mate's spot."""
+    walls, goal huddle; SEPARATION_DEAD): within 1 m 1.4–3.4%, but within 0.5 m only
+    0.01–0.21%, so nobody stands on a team-mate's spot."""
     s = spacing.sim_measure(sim1)
     assert s["mate_1m_play"] < 0.35, s["mate_1m_play"]
     assert s["mate_0.5m_play"] < 0.06, s["mate_0.5m_play"]
@@ -550,21 +639,25 @@ def test_runs_have_valid_purposes_and_times(folders, sim1):
         ids = {p.id for team in meta.teams for p in team.players}
         assert [r.run_id for r in truth.runs] == list(range(len(truth.runs)))
         for r in truth.runs:
-            assert r.purpose in RunPurpose and r.executed and r.player_id in ids
+            assert r.purpose in RunPurpose and r.player_id in ids
             assert 0.0 <= r.t_start and r.t_end <= length[r.period]
-            assert r.t_end - r.t_start >= P.HI_MIN_S - 1e-9
-            seen.add(r.purpose)
+            if r.executed:  # a skipped run keeps its planned end (test_truth_series_with_fatigue)
+                assert r.t_end - r.t_start >= P.HI_MIN_S - 1e-9
+                seen.add(r.purpose)
     # Both phases of play show up: most of Ju2022's classes appear in five matches.
     assert len(seen) >= 9, seen
     assert {RunPurpose.RECOVERY_RUN, RunPurpose.COVERING, RunPurpose.RUN_IN_BEHIND} <= seen
 
 
 def test_runs_are_high_intensity(sim1):
-    """Each run is above 5.5 m/s for its whole span [Ju2022, p.974], and only those spells."""
+    """Each run made is above 5.5 m/s for its whole span [Ju2022, p.974], and only those
+    spells."""
     ids = [p.id for team in sim1.metadata.teams for p in team.players]
     v = {pf.period: speeds(pf.pos) for pf in sim1.periods}
     rate = P.FRAME_RATE_HZ
     for r in sim1.truth.runs:
+        if not r.executed:
+            continue
         a, b = round(r.t_start * rate), round(r.t_end * rate)
         j = ids.index(r.player_id)
         assert np.all(v[r.period][a:b, j] > P.HI_SPEED)

@@ -5,7 +5,8 @@
 writes ``replay.html`` into the match folder: a self-contained page (no libraries) with the pitch,
 22 players, the ball (drawn larger when it is in the air), ball status, possession, score and
 the latest event, with play, pause, speed and a time slider. ``--purposes`` also labels each
-high-intensity run with its purpose from ``truth.json`` (validation data: for debugging only).
+high-intensity run with its purpose from ``truth.json`` (validation data: for debugging only),
+and each run a tired player skipped, with "skipped".
 
 ``--gif`` and ``--stills`` draw with matplotlib instead (``uv sync --extra replay``): an animated
 GIF of the window, or one PNG of evenly spaced frames.
@@ -100,9 +101,9 @@ def load_window(folder: Path, start: float, seconds: float, purposes: bool = Fal
             clock0 = 0.0 if r["period"] == 1 else 2700.0
             a, b = clock0 + r["t_start"], clock0 + r["t_end"]
             if b >= lo and a <= hi:
-                runs.append(
-                    {"a": a, "b": b, "who": ids.index(r["player_id"]), "what": r["purpose"]}
-                )
+                who, what = ids.index(r["player_id"]), r["purpose"]
+                short = PURPOSE_SHORT[what] + ("" if r.get("executed", True) else " skipped")
+                runs.append({"a": a, "b": b, "who": who, "what": what, "label": short})
     return {
         "match_id": meta["match_id"],
         "teams": [team["name"] for team in meta["teams"]],
@@ -187,7 +188,7 @@ def draw_frame(ax, window: dict, k: int, trail_s: float = 0.0) -> None:
                 ax.text(
                     xy[0],
                     xy[1] + 2.2,
-                    PURPOSE_SHORT[r["what"]],
+                    r["label"],
                     color="black",
                     fontsize=5,
                     ha="center",
@@ -329,7 +330,7 @@ function draw() {
     g.fillStyle = gk ? "black" : "white"; g.fillText(D.shirts[j], X(p[0]), Y(p[1]) + 1);
     const r = D.runs.find(r => r.who === j && r.a <= f.clock && f.clock <= r.b);
     if (r) {
-      const s = D.short[r.what]; g.font = "11px system-ui";
+      const s = r.label; g.font = "11px system-ui";
       const w = g.measureText(s).width + 6;
       g.fillStyle = "rgba(255,255,255,0.9)"; g.fillRect(X(p[0]) - w / 2, Y(p[1]) - 30, w, 15);
       g.fillStyle = "black"; g.fillText(s, X(p[0]), Y(p[1]) - 22); g.font = "bold 13px system-ui";

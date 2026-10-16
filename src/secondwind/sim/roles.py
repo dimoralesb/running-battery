@@ -26,11 +26,13 @@ Every frame each player gets a target point, a wanted speed and a run purpose (o
    free kick near goal) send six attackers and their markers forward, a free kick in range gets
    a wall, and after a goal the scorer's team-mates gather round them.
 
-Each position's run and role speeds are scaled by its work rate (``POSITION_EFFORT``).
+Each position's run and role speeds are scaled by its work rate (``POSITION_EFFORT``), and in
+play by the match tempo (``TEMPO_SD``), which both teams share.
 
-Runs are explicit decisions so that Saturday's fatigue model can veto them (a skipped run).
-All the chances, distances and speeds are in ``params.py``; the inline distances (where each
-triggered run aims) are our assumption.
+Runs are explicit decisions so that the fatigue model (``physiology.py``) can veto them: a tired
+player may skip a hard run, and the runs they make are shorter (``start``); their runs and ball
+roles are slower (``targets``). All the chances, distances and speeds are in ``params.py``; the
+inline distances (where each triggered run aims) are our assumption.
 """
 
 from __future__ import annotations
@@ -90,18 +92,45 @@ class Roles:
         self.wander = np.zeros((22, 2))
         self.wander_left = np.zeros(22)
         self.wander_sd = np.array([P.WANDER_SD[p] for p in pos])
-        self.effort = np.array([P.POSITION_EFFORT[p] for p in pos])
+        knobs = P.PRE_FATIGUE if engine.pre_fatigue else vars(P)
+        self.effort = np.array([knobs["POSITION_EFFORT"][p] for p in pos])
+        self.overlap_chance = knobs["OVERLAP_CHANCE"]
+        self.mid_support_chance = knobs["MID_SUPPORT_CHANCE"]
+        self.tempo = engine.tempo  # None: no shared tempo
         self.is_central_mid = np.array([p in (Position.DM, Position.CM, Position.AM) for p in pos])
+        # Players who skipped a run, and until when they are not asked again (``start``).
+        self.declined: dict[int, float] = {}
 
     def clear(self) -> None:
         self.runs.clear()
+        self.declined.clear()
 
-    def start(self, i: int, run: Run) -> None:
-        """Every run decision goes through here (Saturday: tired players may skip it)."""
+    def start(self, i: int, run: Run, t: float) -> None:
+        """Every run decision goes through here. With fatigue on, a hard run (wanted speed above
+        ``HARD_RUN_SPEED``) is skipped with chance 1 − ``Physiology.run_choice``; the player
+        then keeps to their calm movement (a tired player jogs back instead of sprinting) and is
+        not asked again until the run's planned end, or for a shape run ``SHAPE_DECLINE_S``.
+        Decisions on runs that would have been high-intensity runs (above ``HI_SPEED``) are kept,
+        the skipped ones for ``truth.json``. A run that is made lasts ``Physiology.shorten`` of
+        its planned time."""
+        body = self.e.physiology
+        if body is not None:
+            rate = self.effort[i] * (1.0 if self.tempo is None else self.tempo)
+            want = min(run.speed * rate, 1.0) * self.e.s0[i]
+            if want > P.HARD_RUN_SPEED:
+                made = body.makes_run(i, run.speed >= P.DECISIVE_EFFORT)
+                if want > P.HI_SPEED:
+                    body.decide(i, t, run.t_end, run.purpose, made)
+                if not made:
+                    self.declined[i] = (
+                        min(run.t_end, t + P.SHAPE_DECLINE_S) if run.shape else run.t_end
+                    )
+                    return
+                run.t_end = t + (run.t_end - t) * body.shorten(i)
         self.runs[i] = run
 
     def free(self, i: int) -> bool:
-        return i not in self.runs and not self.is_gk[i]
+        return i not in self.runs and i not in self.declined and not self.is_gk[i]
 
     # --- Triggers ----------------------------------------------------------------------------
 
@@ -124,7 +153,7 @@ class Roles:
             t_end = min(e.transition[1], t + rng.uniform(*P.SPRINT_RUN_S))
             run = Run(RunPurpose.SUPPORT_PLAY, t_end, P.COUNTER_SUPPORT_EFFORT, offset_uv=offset)
             run.onside = True
-            self.start(i, run)
+            self.start(i, run, t)
         # Forwards ahead of the ball break towards goal.
         for j, i in enumerate(idx):
             i = int(i)
@@ -135,7 +164,7 @@ class Roles:
                     t_end = min(e.transition[1], t + rng.uniform(*P.SPRINT_RUN_S))
                     run = Run(RunPurpose.RUN_IN_BEHIND, t_end, P.BEHIND_EFFORT)
                     run.target = e.inside(e.to_uv(team, target))
-                    self.start(i, run)
+                    self.start(i, run, t)
 
     def on_touch(self, carrier: int, t: float) -> None:
         """A team-mate has the ball: someone may come short, overlap, or break into the box."""
@@ -160,7 +189,7 @@ class Roles:
             target = e.inside(e.to_uv(team, np.array([i_u, i_v]) + step))
             run = Run(RunPurpose.MOVE_TO_RECEIVE, t + rng.uniform(*P.RUN_S), P.RUN_SPEED)
             run.target, run.onside = target, True
-            self.start(i, run)
+            self.start(i, run, t)
 
         # Support: a central midfielder well behind the ball runs up behind it.
         if c_u > -P.THIRD:
@@ -168,11 +197,11 @@ class Roles:
                 if not (self.is_central_mid[i] and self.free(i)):
                     continue
                 if c_u - e.to_uv(team, e.pos[i])[0] > P.MID_SUPPORT_GAP:
-                    if rng.random() < P.MID_SUPPORT_CHANCE:
+                    if rng.random() < self.mid_support_chance:
                         offset = np.array([-P.MID_SUPPORT_BEHIND, rng.normal(0.0, 6.0)])
                         run = Run(RunPurpose.SUPPORT_PLAY, t + rng.uniform(*P.RUN_S), P.RUN_SPEED)
                         run.offset_uv, run.onside = offset, True
-                        self.start(i, run)
+                        self.start(i, run, t)
 
         # Come short: the nearest free team-mate moves to about 10 m from the carrier.
         if rng.random() < P.SHOW_CHANCE:
@@ -185,12 +214,12 @@ class Roles:
                 target = c_xy + away / d * rng.uniform(8.0, 12.0) + perp * rng.normal(0.0, 4.0)
                 run = Run(RunPurpose.MOVE_TO_RECEIVE, t + rng.uniform(*P.RUN_S), P.SHOW_SPEED)
                 run.target, run.onside = e.inside(target), True
-                self.start(i, run)
+                self.start(i, run, t)
 
         wide = abs(c_v) > P.BOX_HALF_WIDTH - 6.0
         side = np.sign(c_v) or 1.0
         # Overlap: the full-back on the ball's side, behind it, runs past the wide player.
-        if wide and c_u > -P.THIRD and rng.random() < P.OVERLAP_CHANCE:
+        if wide and c_u > -P.THIRD and rng.random() < self.overlap_chance:
             for i in idx:
                 i_u, i_v = e.to_uv(team, e.pos[i])
                 if e.positions[i] == Position.FB and np.sign(i_v) == side and i_u < c_u:
@@ -199,7 +228,7 @@ class Roles:
                         t_end = t + rng.uniform(*P.SPRINT_RUN_S)
                         run = Run(RunPurpose.OVER_UNDERLAP, t_end, P.OVERLAP_EFFORT)
                         run.offset_uv, run.onside = np.array([12.0, side * out]), True
-                        self.start(i, run)
+                        self.start(i, run, t)
                     break
 
         # Break into the box: the ball is wide in the final third, ready for a cross.
@@ -219,7 +248,7 @@ class Roles:
                     target = e.to_uv(team, np.array(spots[pos]) + rng.normal(0.0, 1.0, 2))
                     run = Run(RunPurpose.BREAK_INTO_BOX, t + rng.uniform(*P.RUN_S), P.RUN_SPEED)
                     run.target, run.onside = target, True
-                    self.start(i, run)
+                    self.start(i, run, t)
 
     def press_carrier(self, carrier: int, t: float) -> None:
         """The nearest free forward (carrier in their own half) or central midfielder (DM, CM;
@@ -241,7 +270,7 @@ class Roles:
         if np.hypot(*(e.pos[i] - e.pos[carrier])) <= P.PRESS_REACH:
             run = Run(RunPurpose.CLOSE_DOWN, t + e.rng.uniform(*P.RUN_S), P.CHASE_SPEED)
             run.offset_uv = np.array([-P.PRESS_GAP, 0.0])
-            self.start(i, run)
+            self.start(i, run, t)
 
     def on_pass(
         self,
@@ -280,7 +309,7 @@ class Roles:
                 t_end = t + rng.uniform(*P.SPRINT_RUN_S)
                 run = Run(RunPurpose.RUN_IN_BEHIND, t_end, P.BEHIND_EFFORT)
                 run.target = e.inside(e.to_uv(team, target_uv))
-                self.start(i, run)
+                self.start(i, run, t)
                 self.track(t, i, run.target)
 
     def track(self, t: float, runner: int, aim: np.ndarray) -> None:
@@ -293,7 +322,7 @@ class Roles:
         for i in idx[: P.TRACKERS]:
             run = Run(RunPurpose.RECOVERY_RUN, t + e.rng.uniform(*P.SPRINT_RUN_S), P.TRACK_EFFORT)
             run.target = e.inside(self.goal_side(team, aim, P.TRACK_GOAL_SIDE))
-            self.start(i, run)
+            self.start(i, run, t)
 
     # --- Targets -----------------------------------------------------------------------------
 
@@ -350,7 +379,7 @@ class Roles:
                 counter = e.transition is not None and e.transition[0] != team
                 if not_goal_side and (ball_u < P.DANGER_U or counter):
                     speed = P.SHAPE_RUN_SPEED + (P.RECOVERY_EFFORT - P.SHAPE_RUN_SPEED) * urgency
-            self.start(i, Run(purpose, t + P.SHAPE_RUN_MAX_S, speed, shape=True))
+            self.start(i, Run(purpose, t + P.SHAPE_RUN_MAX_S, speed, shape=True), t)
 
     def step_wander(self) -> np.ndarray:
         """This frame's repositioning offsets: a new spot for each player whose time is up."""
@@ -515,6 +544,8 @@ class Roles:
         dead."""
         e = self.e
         mode = e.mode
+        if self.declined:
+            self.declined = {i: until for i, until in self.declined.items() if until > t}
         shape, holder = self.shape()
         tgt = movement.clip_to_pitch(shape + self.step_wander())
         frac = np.full(22, P.DEAD_SPEED if mode == "dead" else P.DRIFT_SPEED)
@@ -635,5 +666,10 @@ class Roles:
         tgt = movement.spread_targets(tgt, e.team_of, anchored, keep)
         if mode == "dead":
             self.keep_distance(tgt)  # last, so that spreading cannot undo it
-        frac = np.where(calm, frac, np.minimum(frac * self.effort, 1.0))
+        effort = self.effort
+        if self.tempo is not None and mode != "dead":
+            effort = effort * self.tempo  # in play only: the set-piece jog stays below HI_SPEED
+        frac = np.where(calm, frac, np.minimum(frac * effort, 1.0))
+        if e.physiology is not None:
+            frac = np.where(calm, frac, frac * e.physiology.speed_factor())
         return tgt, frac * e.s0, purpose, calm, anchored
