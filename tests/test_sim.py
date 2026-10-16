@@ -404,29 +404,38 @@ def test_free_kick_in_range_gets_a_wall():
 
 def test_corner_crowds_the_box():
     """A held corner: the pack (CORNER_PACK) stands side by side, each with a team-mate within
-    1 m but never on one spot (SEPARATION_DEAD), and each has a marker within 1.5 m."""
+    1 m but never on one spot (SEPARATION_DEAD), and each has a marker within 1.5 m; two
+    defenders stand at their zonal spots (CORNER_ZONAL)."""
     engine, _ = _held_restart("corner", (P.HALF_LENGTH, -P.HALF_WIDTH))
     attack, defend = _team_mate_gaps(engine.pos)
-    pack = [a for a, _, _, _ in engine.roles.plan if a % 11 in P.CORNER_PACK]
+    plan = engine.roles.plan
+    pack = [i for i, _, holds in plan if holds and i % 11 in P.CORNER_PACK]
     assert len(pack) == len(P.CORNER_PACK)
     assert np.all(attack[pack] < 1.0), attack.round(2)
     assert min(attack.min(), defend.min()) > P.SEPARATION_DEAD - 0.15
     marked = np.hypot(*(engine.pos[pack][:, None] - engine.pos[None, 11:]).transpose(2, 0, 1))
     assert np.all(marked.min(axis=1) < 1.5), marked.min(axis=1)
+    zonal = [(i, spot) for i, spot, _ in plan if i - 11 in [s for s, _, _ in P.CORNER_ZONAL]]
+    assert len(zonal) == len(P.CORNER_ZONAL)
+    assert all(np.hypot(*(engine.pos[i] - spot)) < 1.0 for i, spot in zonal)
 
 
 def test_free_kick_near_goal_drops_the_defence():
     """A free kick 28 m out (in wall range, not SET_PIECE_U upfield): besides the wall, the
     markers hold a line FREE_KICK_LINE_GAP goal-side of the ball and the attackers stand level
-    with it, onside [IFAB2025, Law 11]."""
+    with it, onside [IFAB2025, Law 11], give or take FREE_KICK_LINE_JITTER (not ruler-straight).
+    """
     depth = 28.0
     engine, _ = _held_restart("free_kick", (P.HALF_LENGTH - depth, 3.0))
     line = np.clip(depth - P.FREE_KICK_LINE_GAP, *P.FREE_KICK_LINE)
     u = engine.to_uv(0, engine.pos)[:, 0]  # team 0 attacks towards u = +52.5
+    near = P.FREE_KICK_LINE_JITTER + 0.5
     markers = [11 + s for s in P.BOX_MARKERS]
-    assert np.all(np.abs(P.HALF_LENGTH - u[markers] - line) < 1.5), (P.HALF_LENGTH - u).round(1)
-    forward = [row[0] for row in engine.roles.plan]
-    assert np.all(np.abs(P.HALF_LENGTH - u[forward] - line - 1.0) < 1.5)
+    assert np.all(np.abs(P.HALF_LENGTH - u[markers] - line) < near), (P.HALF_LENGTH - u).round(1)
+    forward = [i for i, _, holds in engine.roles.plan if holds]
+    assert len(forward) == len(P.BOX_MARKERS)
+    assert np.all(np.abs(P.HALF_LENGTH - u[forward] - line - 1.0) < near)
+    assert np.std(u[forward]) > 0.2  # staggered
     second_last = np.sort(u[11:])[-2]
     assert u[forward].max() < second_last  # onside
 
@@ -449,15 +458,23 @@ def test_attackers_keep_clear_of_the_wall():
 
 def test_goal_huddle():
     """After a goal the HUDDLE_N nearest team-mates gather round the scorer (within 1 m, never
-    on one spot); after HUDDLE_S everyone walks back for the kick-off."""
+    on one spot) and hold for HUDDLE_HOLD_S; then everyone walks back for the kick-off."""
     engine = _engine()
     scorer = 10  # team 0's centre-forward
     engine.goal(5.0, scorer, engine.pos[scorer].copy())
-    mates = engine.restart.huddle.mates
+    huddle = engine.restart.huddle
+    mates = huddle.mates
     assert len(mates) == P.HUDDLE_N
     frames = _hold(engine, 60.0)
-    at = frames[round((P.HUDDLE_S - 1.0) * P.FRAME_RATE_HZ)]
-    assert np.all(np.hypot(*(at[mates] - at[scorer]).T) < 1.0)
+    assert huddle.formed
+    close = np.all(
+        np.hypot(*(frames[:, mates] - frames[:, None, scorer]).transpose(2, 0, 1)) < 1.0, 1
+    )
+    held = close[round((huddle.t_end - P.HUDDLE_HOLD_S - 5.0) * P.FRAME_RATE_HZ) :][
+        : round(P.HUDDLE_HOLD_S * P.FRAME_RATE_HZ)
+    ]
+    assert held.mean() > 0.8, held.mean()  # together for most of the hold
+    at = frames[round((huddle.t_end - 5.0 - 1.0) * P.FRAME_RATE_HZ)]
     assert _team_mate_gaps(at)[0].min() > P.SEPARATION_DEAD - 0.15
     u = engine.to_uv(0, frames[-1][:11])[:, 0]
     assert np.all(u < 0.0)  # back in their own half, the opponents kick off

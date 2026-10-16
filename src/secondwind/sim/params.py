@@ -133,15 +133,17 @@ SPRINT_RUN_S = (3.0, 6.0)  # how long a sprint run may last, s. Our assumption.
 # structures (set pieces, goal huddle). Sprint distance is sensitive: 1% more effort gives
 # about 5–10% more distance above 7 m/s. One knob cannot fit both for wide midfielders (their
 # HID runs high when their sprint distance is on target), so WM sits where both are about ±5%.
+# Centre-forwards came close to the same trade-off once they defended the near post at corners
+# (CORNER_ZONAL): HID +9%, sprint +11% before the re-fit.
 POSITION_EFFORT = {
-    Position.GK: 0.997,
+    Position.GK: 1.004,
     Position.CB: 0.955,
-    Position.FB: 1.006,
-    Position.DM: 1.05,
-    Position.CM: 1.042,
-    Position.AM: 1.01,
+    Position.FB: 1.005,
+    Position.DM: 1.053,
+    Position.CM: 1.045,
+    Position.AM: 1.006,
     Position.WM: 1.017,
-    Position.CF: 0.971,
+    Position.CF: 0.948,
 }
 # Defenders (CB, FB) who track an opponent running in behind: the nearest TRACKERS, aiming
 # TRACK_GOAL_SIDE metres goal-side of where the runner is going. Our assumption.
@@ -362,7 +364,7 @@ PRESSURE_RADIUS = 5.0  # m; the nearest opponent within this distance logs a pre
 # Shots. xG per shot 0.11 ± 0.15 [Bassek2025, p.6]. The logistic xG curve and the shot rate
 # are our assumption, tuned to about 24 shots per match [Bassek2025, p.6].
 SHOT_RANGE = 30.0  # m from the goal centre
-SHOT_RATE = 0.85  # chance of shooting on release, at the goal line; falls with distance
+SHOT_RATE = 0.78  # chance of shooting on release, at the goal line; falls with distance
 SHOT_RATE_SCALE = 16.0  # m
 XG_COEF = (-1.1, -0.11, 1.6)  # intercept, per m of distance, per rad of goal-mouth angle
 SHOT_SPLIT = dict(saved=0.30, wide=0.45, blocked=0.25)  # non-goals [Bassek2025, Fig. 3; approx.]
@@ -387,6 +389,11 @@ CORNER_PACK = [1, 10]
 CORNER_PACK_AT = (45.5, -1.0)
 CORNER_PACK_GAP = 0.9
 CORNER_PACK_SHOULDER = 0.5
+# Two of the defending team's front players drop to zonal spots, (defending slot index, u, v) in
+# the attackers' frame as above: the centre-forward in front of the near post, the attacking
+# midfielder at the edge of the box (second balls). The wide midfielders stay up for the
+# counter. Our assumption.
+CORNER_ZONAL = [(10, 47.0, 5.5), (7, 37.0, 2.0)]
 # Free kick near goal: the markers hold a line FREE_KICK_LINE_GAP metres goal-side of the ball
 # (a few metres behind the wall, which stands 9.65 m from it), FREE_KICK_LINE[0] to [1] metres
 # off the goal line (the goal area is 5.5 m deep, the penalty area 16.5 m [IFAB2025, Law 1]),
@@ -395,6 +402,10 @@ CORNER_PACK_SHOULDER = 0.5
 FREE_KICK_LINE = (6.0, 18.0)
 FREE_KICK_LINE_GAP = 12.0
 FREE_KICK_LINE_V = (-10.0, -6.0, -2.0, 2.0, 6.0, 10.0)
+# Each attacker's spot in the line is moved by up to this much (uniform, m) in depth and across,
+# so the line is not ruler-straight; markers stay 1 m goal-side, so all remain onside. Our
+# assumption.
+FREE_KICK_LINE_JITTER = 1.0
 
 # Clearances when a pass into the box is intercepted.
 CLEAR_IN_BOX = 0.6
@@ -440,13 +451,16 @@ WALL_SPEED = 0.5
 # the push keep them WALL_CLEAR from it (1 m plus a margin, our assumption).
 WALL_CLEAR = 1.5
 # After a goal the scorer jogs towards the nearer touchline (at most HUDDLE_RUN metres) and the
-# HUDDLE_N nearest outfield team-mates gather round them, HUDDLE_RING metres away, for HUDDLE_S
-# seconds; then everyone walks back for the kick-off. At WALL_SPEED, below HI_SPEED. Our
-# assumption.
+# HUDDLE_N nearest outfield team-mates gather round them, HUDDLE_RING metres away. The huddle
+# holds HUDDLE_HOLD_S seconds once they have all arrived, ends at the latest HUDDLE_MAX_S after
+# the goal, and at least HUDDLE_BACK_S before the kick-off can be taken (time to walk back to
+# their own half). At WALL_SPEED, below HI_SPEED. Our assumption.
 HUDDLE_N = 4
 HUDDLE_RING = 0.85
-HUDDLE_S = 20.0
 HUDDLE_RUN = 20.0
+HUDDLE_HOLD_S = 10.0
+HUDDLE_MAX_S = 40.0
+HUDDLE_BACK_S = 20.0
 LONG_STOPPAGE = 0.10  # chance of an extra stoppage (injury, VAR, substitution) at a dead ball
 LONG_STOPPAGE_S = (30.0, 90.0)
 

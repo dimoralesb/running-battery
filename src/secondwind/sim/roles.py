@@ -74,7 +74,7 @@ class Roles:
         self.wall_for = None  # the restart the wall below belongs to
         self.wall_members: list[int] = []
         self.plan_for = None  # the set piece the plan below belongs to
-        self.plan: list[tuple[int, int, np.ndarray, np.ndarray]] = []
+        self.plan: list[tuple[int, np.ndarray, bool]] = []
         self.receiver_purpose = RunPurpose.MOVE_TO_RECEIVE
         pos = engine.positions
         self.is_gk = np.array([p == Position.GK for p in pos])
@@ -468,11 +468,16 @@ class Roles:
         away = np.where(d[:, None] > 1e-6, off / np.maximum(d, 1e-6)[:, None], to_ball)
         tgt[idx] = np.where(d[:, None] < P.WALL_CLEAR, near + away * P.WALL_CLEAR, p)
 
-    def huddle(self, h, role, anchored: np.ndarray) -> None:
+    def huddle(self, h, t: float, role, anchored: np.ndarray) -> None:
         """After a goal: the scorer jogs to their spot; the team-mates gather round them, at
         spots spread evenly round a ring, centred on the side they come from and taken in the
-        order they come, so that nobody has to cross."""
+        order they come, so that nobody has to cross. Once they have all arrived, the huddle
+        holds ``HUDDLE_HOLD_S``."""
         e = self.e
+        near = np.hypot(*(e.pos[h.mates] - e.pos[h.scorer]).T) < P.HUDDLE_RING + 0.3
+        if not h.formed and near.all():
+            h.formed = True
+            h.t_end = min(h.t_end, t + P.HUDDLE_HOLD_S)
         role(h.scorer, h.spot, P.WALL_SPEED, None)
         anchored[h.scorer] = True
         at = e.pos[h.scorer]
@@ -608,14 +613,12 @@ class Roles:
             set_piece = e.set_piece()
             if set_piece:
                 if self.plan_for is not r:
-                    self.plan_for, self.plan = r, e.set_piece_plan()
-                e.set_piece_targets(tgt, self.plan)
-                # Both jog up, like the wall; attackers hold their spots, the markers settle
+                    self.plan_for, self.plan = r, e.set_piece_plan(self.wander_rng)
+                # Everyone jogs up, like the wall; attackers hold their spots, the markers settle
                 # round them.
-                for attacker, marker, _, _ in self.plan:
-                    for i in (attacker, marker):
-                        role(i, tgt[i], P.WALL_SPEED, None)
-                    anchored[attacker] = True
+                for i, spot, holds in self.plan:
+                    role(i, spot, P.WALL_SPEED, None)
+                    anchored[i] = holds
             if r.kind == "free_kick":
                 # The wall jogs into place; anchored, so the push-apart leaves its spacing alone.
                 wall = self.wall(set_piece)
@@ -625,7 +628,7 @@ class Roles:
                 if wall:
                     self.keep_off_wall(tgt, [spot for _, spot in wall])
             if r.huddle is not None and t < r.huddle.t_end:
-                self.huddle(r.huddle, role, anchored)
+                self.huddle(r.huddle, t, role, anchored)
             role(r.taker, r.spot + self.behind_ball() * P.TAKER_BEHIND, 0.7 * P.CHASE_SPEED, None)
             anchored[r.taker] = True
         keep = P.SEPARATION_DEAD if mode == "dead" else P.SEPARATION_TEAM
