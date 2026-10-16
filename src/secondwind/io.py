@@ -8,12 +8,13 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from secondwind.schema import Event, MatchMetadata, MatchTruth, TrackingFrame
+from secondwind.schema import Event, MatchMetadata, MatchSignals, MatchTruth, TrackingFrame
 
 TRACKING = "tracking.jsonl"
 EVENTS = "events.jsonl"
 METADATA = "metadata.json"
 TRUTH = "truth.json"
+SIGNALS = "signals.json"  # written by secondwind.engine
 
 
 @dataclass(frozen=True)
@@ -66,3 +67,11 @@ def read_match(folder: Path) -> Match:
 def read_truth(folder: Path) -> MatchTruth:
     """Validation only. Never call this from ``secondwind.engine``."""
     return MatchTruth.model_validate_json((folder / TRUTH).read_text())
+
+
+def write_signals(path: Path, signals: MatchSignals) -> None:
+    path.write_text(signals.model_dump_json(exclude_none=True))
+
+
+def read_signals(path: Path) -> MatchSignals:
+    return MatchSignals.model_validate_json(path.read_text())

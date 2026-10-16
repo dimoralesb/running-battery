@@ -1,0 +1,493 @@
+{
+  "$defs": {
+    "Capacity": {
+      "additionalProperties": false,
+      "description": "Estimated CS (m/s) and D′ (m) at the end of the player's match: weighted over the draws\nin broadcast mode, after the one-way correction.",
+      "properties": {
+        "cs": {
+          "$ref": "#/$defs/Range"
+        },
+        "d_prime": {
+          "$ref": "#/$defs/Range"
+        }
+      },
+      "required": [
+        "cs",
+        "d_prime"
+      ],
+      "title": "Capacity",
+      "type": "object"
+    },
+    "EngineSettings": {
+      "additionalProperties": false,
+      "description": "How the signals were made (PLAN §3.2–3.3; values and sources in ``engine/params.py``).",
+      "properties": {
+        "mode": {
+          "description": "broadcast: shared prior only; club: club test values (validation only)",
+          "enum": [
+            "broadcast",
+            "club"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "update": {
+          "description": "draws: per-player update of CS and D′ from prior draws (decision 9); correction: one value with the one-way D′ correction only (club mode, fallback)",
+          "enum": [
+            "draws",
+            "correction"
+          ],
+          "title": "Update",
+          "type": "string"
+        },
+        "k": {
+          "description": "Battery recharge factor, τ = k·D′/(CS − v)",
+          "exclusiveMinimum": 0,
+          "title": "K",
+          "type": "number"
+        },
+        "n_draws": {
+          "minimum": 1,
+          "title": "N Draws",
+          "type": "integer"
+        },
+        "penalty_width": {
+          "exclusiveMinimum": 0,
+          "title": "Penalty Width",
+          "type": "number"
+        },
+        "low_battery": {
+          "description": "Tired: median battery below this share of D′",
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Low Battery",
+          "type": "number"
+        },
+        "peak_share": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Peak Share",
+          "type": "number"
+        },
+        "peak_floor": {
+          "minimum": 0,
+          "title": "Peak Floor",
+          "type": "number"
+        },
+        "hi_speed": {
+          "description": "High-speed running threshold, m/s",
+          "exclusiveMinimum": 0,
+          "title": "Hi Speed",
+          "type": "number"
+        }
+      },
+      "required": [
+        "mode",
+        "update",
+        "k",
+        "n_draws",
+        "penalty_width",
+        "low_battery",
+        "peak_share",
+        "peak_floor",
+        "hi_speed"
+      ],
+      "title": "EngineSettings",
+      "type": "object"
+    },
+    "PlayerSignals": {
+      "additionalProperties": false,
+      "properties": {
+        "player_id": {
+          "title": "Player Id",
+          "type": "string"
+        },
+        "team_id": {
+          "title": "Team Id",
+          "type": "string"
+        },
+        "position": {
+          "$ref": "#/$defs/Position"
+        },
+        "starter": {
+          "title": "Starter",
+          "type": "boolean"
+        },
+        "capacity": {
+          "$ref": "#/$defs/Capacity"
+        },
+        "series": {
+          "$ref": "#/$defs/SignalSeries"
+        }
+      },
+      "required": [
+        "player_id",
+        "team_id",
+        "position",
+        "starter",
+        "capacity",
+        "series"
+      ],
+      "title": "PlayerSignals",
+      "type": "object"
+    },
+    "Position": {
+      "description": "Position codes as in Allen2024 (synthesis §4.2).",
+      "enum": [
+        "GK",
+        "CB",
+        "FB",
+        "DM",
+        "CM",
+        "AM",
+        "WM",
+        "CF"
+      ],
+      "title": "Position",
+      "type": "string"
+    },
+    "Range": {
+      "additionalProperties": false,
+      "description": "An estimate with its 10–90% band (lo = hi = value when there is no band).",
+      "properties": {
+        "value": {
+          "title": "Value",
+          "type": "number"
+        },
+        "lo": {
+          "title": "Lo",
+          "type": "number"
+        },
+        "hi": {
+          "title": "Hi",
+          "type": "number"
+        }
+      },
+      "required": [
+        "value",
+        "lo",
+        "hi"
+      ],
+      "title": "Range",
+      "type": "object"
+    },
+    "SignalSeries": {
+      "additionalProperties": false,
+      "description": "1 Hz series over the player's time on the pitch; all lists have the same length.\n\nBattery: share of the player's estimated D′ left, a relative gauge only (never \"empty\").\nLoad: metabolic power, W/kg; energy since kick-off, kJ/kg. Recent intensity: metres above\n``hi_speed`` in the last 1, 2 and 5 min, and the same as a share of the player's reference\npeak; windows stay inside a period. ``in_play_*``: share of that window with the ball in play.",
+      "properties": {
+        "period": {
+          "items": {
+            "enum": [
+              1,
+              2
+            ],
+            "type": "integer"
+          },
+          "title": "Period",
+          "type": "array"
+        },
+        "t": {
+          "items": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "title": "T",
+          "type": "array"
+        },
+        "speed": {
+          "description": "Mean over the last second",
+          "items": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "title": "Speed",
+          "type": "array"
+        },
+        "battery": {
+          "items": {
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "title": "Battery",
+          "type": "array"
+        },
+        "battery_lo": {
+          "anyOf": [
+            {
+              "items": {
+                "maximum": 1,
+                "minimum": 0,
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "10% band; broadcast mode",
+          "title": "Battery Lo"
+        },
+        "battery_hi": {
+          "anyOf": [
+            {
+              "items": {
+                "maximum": 1,
+                "minimum": 0,
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Battery Hi"
+        },
+        "power": {
+          "description": "Mean over the last second",
+          "items": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "title": "Power",
+          "type": "array"
+        },
+        "power_1min": {
+          "items": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "title": "Power 1Min",
+          "type": "array"
+        },
+        "power_5min": {
+          "items": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "title": "Power 5Min",
+          "type": "array"
+        },
+        "energy": {
+          "items": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "title": "Energy",
+          "type": "array"
+        },
+        "hsr_1min": {
+          "items": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "title": "Hsr 1Min",
+          "type": "array"
+        },
+        "hsr_2min": {
+          "items": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "title": "Hsr 2Min",
+          "type": "array"
+        },
+        "hsr_5min": {
+          "items": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "title": "Hsr 5Min",
+          "type": "array"
+        },
+        "hsr_1min_vs_peak": {
+          "items": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "title": "Hsr 1Min Vs Peak",
+          "type": "array"
+        },
+        "hsr_2min_vs_peak": {
+          "items": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "title": "Hsr 2Min Vs Peak",
+          "type": "array"
+        },
+        "hsr_5min_vs_peak": {
+          "items": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "title": "Hsr 5Min Vs Peak",
+          "type": "array"
+        },
+        "in_play_1min": {
+          "items": {
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "title": "In Play 1Min",
+          "type": "array"
+        },
+        "in_play_5min": {
+          "items": {
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "title": "In Play 5Min",
+          "type": "array"
+        },
+        "red_zone": {
+          "description": "In a 1-, 2- or 5-min red-zone (peak) spell",
+          "items": {
+            "type": "boolean"
+          },
+          "title": "Red Zone",
+          "type": "array"
+        },
+        "post_peak": {
+          "description": "In a red-zone spell or the minutes after one; neutral wording only (\"catching breath\"), never \"tired\" (PLAN §7, decision 12)",
+          "items": {
+            "type": "boolean"
+          },
+          "title": "Post Peak",
+          "type": "array"
+        },
+        "tired": {
+          "description": "Tired moment: battery below low_battery",
+          "items": {
+            "type": "boolean"
+          },
+          "title": "Tired",
+          "type": "array"
+        }
+      },
+      "required": [
+        "period",
+        "t",
+        "speed",
+        "battery",
+        "power",
+        "power_1min",
+        "power_5min",
+        "energy",
+        "hsr_1min",
+        "hsr_2min",
+        "hsr_5min",
+        "hsr_1min_vs_peak",
+        "hsr_2min_vs_peak",
+        "hsr_5min_vs_peak",
+        "in_play_1min",
+        "in_play_5min",
+        "red_zone",
+        "post_peak",
+        "tired"
+      ],
+      "title": "SignalSeries",
+      "type": "object"
+    },
+    "TiredSpell": {
+      "additionalProperties": false,
+      "description": "A run of tired seconds for one player, with the events that fall inside it: the\nplayer's defensive actions and ball losses (PLAN §3.3).",
+      "properties": {
+        "player_id": {
+          "title": "Player Id",
+          "type": "string"
+        },
+        "period": {
+          "enum": [
+            1,
+            2
+          ],
+          "title": "Period",
+          "type": "integer"
+        },
+        "t_start": {
+          "minimum": 0,
+          "title": "T Start",
+          "type": "number"
+        },
+        "t_end": {
+          "minimum": 0,
+          "title": "T End",
+          "type": "number"
+        },
+        "post_peak": {
+          "description": "The spell overlaps a post-peak window (context only)",
+          "title": "Post Peak",
+          "type": "boolean"
+        },
+        "battery_min": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Battery Min",
+          "type": "number"
+        },
+        "event_ids": {
+          "default": [],
+          "items": {
+            "type": "integer"
+          },
+          "title": "Event Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "player_id",
+        "period",
+        "t_start",
+        "t_end",
+        "post_peak",
+        "battery_min"
+      ],
+      "title": "TiredSpell",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "0.1.6",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "match_id": {
+      "title": "Match Id",
+      "type": "string"
+    },
+    "engine": {
+      "$ref": "#/$defs/EngineSettings"
+    },
+    "players": {
+      "items": {
+        "$ref": "#/$defs/PlayerSignals"
+      },
+      "title": "Players",
+      "type": "array"
+    },
+    "tired_spells": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/TiredSpell"
+      },
+      "title": "Tired Spells",
+      "type": "array"
+    }
+  },
+  "required": [
+    "match_id",
+    "engine",
+    "players"
+  ],
+  "title": "MatchSignals",
+  "type": "object"
+}

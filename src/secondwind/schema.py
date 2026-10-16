@@ -7,6 +7,9 @@ A match is four files in one folder:
 - ``metadata.json``: :class:`MatchMetadata`.
 - ``truth.json``: :class:`MatchTruth`. Validation only; the estimator never reads it.
 
+The estimator (``secondwind.engine``) writes a fifth file, ``signals.json``
+(:class:`MatchSignals`), for the agents and the app.
+
 Units: metres, seconds, m/s, m/s². Coordinates have their origin at the centre spot, x along the
 length (±52.5 m) and y along the width (±34 m). Which team attacks +x is in the metadata.
 
@@ -29,7 +32,8 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 # have been high-intensity runs.
 # 0.1.5: substitutions: substitutes in ``players`` (``starter`` false) and in ``substitutions``;
 # a player's truth series covers only their time on the pitch.
-SCHEMA_VERSION = "0.1.5"
+# 0.1.6: ``signals.json``, the estimator's output (per player, per second on the pitch).
+SCHEMA_VERSION = "0.1.6"
 
 # A little beyond the 52.5 x 34 m half-pitch, for players and the ball just outside the lines.
 X_LIMIT = 60.0
@@ -412,6 +416,122 @@ class MatchTruth(_Model):
     runs: list[RunTruth] = []
 
 
+# --- signals.json (the estimator's output) ------------------------------------------------------
+
+Share = Annotated[float, Field(ge=0, le=1)]
+
+
+class EngineSettings(_Model):
+    """How the signals were made (PLAN §3.2–3.3; values and sources in ``engine/params.py``)."""
+
+    mode: Literal["broadcast", "club"] = Field(
+        description="broadcast: shared prior only; club: club test values (validation only)"
+    )
+    update: Literal["draws", "correction"] = Field(
+        description="draws: per-player update of CS and D′ from prior draws (decision 9); "
+        "correction: one value with the one-way D′ correction only (club mode, fallback)"
+    )
+    k: Annotated[float, Field(gt=0, description="Battery recharge factor, τ = k·D′/(CS − v)")]
+    n_draws: Annotated[int, Field(ge=1)]
+    penalty_width: Annotated[float, Field(gt=0)]
+    low_battery: Share = Field(description="Tired: median battery below this share of D′")
+    peak_share: Share
+    peak_floor: Annotated[float, Field(ge=0)]
+    hi_speed: Annotated[float, Field(gt=0, description="High-speed running threshold, m/s")]
+
+
+class Range(_Model):
+    """An estimate with its 10–90% band (lo = hi = value when there is no band)."""
+
+    value: float
+    lo: float
+    hi: float
+
+
+class Capacity(_Model):
+    """Estimated CS (m/s) and D′ (m) at the end of the player's match: weighted over the draws
+    in broadcast mode, after the one-way correction."""
+
+    cs: Range
+    d_prime: Range
+
+
+class SignalSeries(_Model):
+    """1 Hz series over the player's time on the pitch; all lists have the same length.
+
+    Battery: share of the player's estimated D′ left, a relative gauge only (never "empty").
+    Load: metabolic power, W/kg; energy since kick-off, kJ/kg. Recent intensity: metres above
+    ``hi_speed`` in the last 1, 2 and 5 min, and the same as a share of the player's reference
+    peak; windows stay inside a period. ``in_play_*``: share of that window with the ball in play.
+    """
+
+    period: list[Period]
+    t: list[Seconds]
+    speed: list[Annotated[float, Field(ge=0)]] = Field(description="Mean over the last second")
+    battery: list[Share]
+    battery_lo: list[Share] | None = Field(default=None, description="10% band; broadcast mode")
+    battery_hi: list[Share] | None = None
+    power: list[Annotated[float, Field(ge=0)]] = Field(description="Mean over the last second")
+    power_1min: list[Annotated[float, Field(ge=0)]]
+    power_5min: list[Annotated[float, Field(ge=0)]]
+    energy: list[Annotated[float, Field(ge=0)]]
+    hsr_1min: list[Annotated[float, Field(ge=0)]]
+    hsr_2min: list[Annotated[float, Field(ge=0)]]
+    hsr_5min: list[Annotated[float, Field(ge=0)]]
+    hsr_1min_vs_peak: list[Annotated[float, Field(ge=0)]]
+    hsr_2min_vs_peak: list[Annotated[float, Field(ge=0)]]
+    hsr_5min_vs_peak: list[Annotated[float, Field(ge=0)]]
+    in_play_1min: list[Share]
+    in_play_5min: list[Share]
+    red_zone: list[bool] = Field(description="In a 1-, 2- or 5-min red-zone (peak) spell")
+    post_peak: list[bool] = Field(
+        description="In a red-zone spell or the minutes after one; neutral wording only "
+        '("catching breath"), never "tired" (PLAN §7, decision 12)'
+    )
+    tired: list[bool] = Field(description="Tired moment: battery below low_battery")
+
+    @model_validator(mode="after")
+    def _same_length(self) -> SignalSeries:
+        lengths = {
+            name: len(v)
+            for name in type(self).model_fields
+            if (v := getattr(self, name)) is not None
+        }
+        if len(set(lengths.values())) > 1:
+            raise ValueError(f"signal series lengths differ: {lengths}")
+        return self
+
+
+class PlayerSignals(_Model):
+    player_id: str
+    team_id: str
+    position: Position
+    starter: bool
+    capacity: Capacity
+    series: SignalSeries
+
+
+class TiredSpell(_Model):
+    """A run of tired seconds for one player, with the events that fall inside it: the
+    player's defensive actions and ball losses (PLAN §3.3)."""
+
+    player_id: str
+    period: Period
+    t_start: Seconds
+    t_end: Seconds
+    post_peak: bool = Field(description="The spell overlaps a post-peak window (context only)")
+    battery_min: Share
+    event_ids: list[int] = []
+
+
+class MatchSignals(_Model):
+    schema_version: str = SCHEMA_VERSION
+    match_id: str
+    engine: EngineSettings
+    players: list[PlayerSignals]
+    tired_spells: list[TiredSpell] = []
+
+
 # --- JSON Schema export -------------------------------------------------------------------------
 
 EXPORTS: dict[str, type[BaseModel]] = {
@@ -419,6 +539,7 @@ EXPORTS: dict[str, type[BaseModel]] = {
     "event": Event,
     "metadata": MatchMetadata,
     "truth": MatchTruth,
+    "signals": MatchSignals,
 }
 
 

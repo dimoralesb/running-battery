@@ -6,7 +6,7 @@ Citations like `[Leifsson2024]` refer to keys in [READING_LIST.md](READING_LIST.
 
 **Deadline:** October 27, 2026, 11:59 pm Pacific Time.
 
-**Updated 2026-10-14.** The research phase is finished (64 papers) and the open decisions are settled (section 7). The build plan is in [BUILD_PLAN.md](BUILD_PLAN.md).
+**Updated 2026-10-16** (estimator built: §3.3 "As built", decision 12). The research phase finished on 2026-10-14 (64 papers) and the open decisions are settled (section 7). The build plan is in [BUILD_PLAN.md](BUILD_PLAN.md).
 
 ---
 
@@ -183,6 +183,7 @@ Input: tracking data only (positions over time), plus ball status and possession
   - Validation reports the band's coverage against the hidden truth (synthesis §6.3, 80% target). The validation batch must draw some true values outside this prior (section 2.6, point 3); otherwise the test flatters the estimator.
   - The one-way correction stays in the code as the fallback if this slips.
   - Roadmap, not built: carry each player's updated values into their next match as the new prior, so the band narrows over a season.
+  - **As built (2026-10-16; `engine/battery.py`, values in `engine/params.py`).** Every draw runs its own battery with the one-way correction; a draw whose D′ had to be raised keeps exp(−½ (raise / (0.1·D′))²) of its weight (width our assumption). Weights use the running so far only, so the battery works live. On default matches (seeds 1–60) the update learns almost nothing, as expected: estimated vs true D′ r = 0.03, CS r = 0.05; widths 0.05–0.4 move the battery by less than 0.001.
 
 ### 3.3 Signals
 
@@ -196,7 +197,13 @@ Input: tracking data only (positions over time), plus ball status and possession
 
 **Not built: capacity check (acceleration–speed profile).** One match doesn't give a reliable profile: match-only A0 vs a sprint test ICC 0.23 [AlonsoCallejo2024, Table 2]. Its noise (A0 5.4% [Morin2021, Table 1]) is larger than the 2–4% loss we would be looking for [SilvaJR2018, Table 5; Krustrup2006, p.1171]. A0 and S0 stay as simulator limits and metadata values. If time is left over: a post-match, half-vs-half analyst view labelled "low confidence".
 
-**Tired moment detection.** A defensive action (duel, recovery run, pressure) by a player whose battery is low **for them**, or who is inside a post-peak window. Scored against the short-term truth label (`tired`); late-match fatigue (the tank) is a separate trend, compared with the load signal (section 2.3, "Two truth labels"). Losing the ball (negative transition) gives the hardest running of the game for total distance [Bortnik2022, Fig. 3; one Polish team, GPS], so it is the first place to look. The main pattern the agents explain: in the Premier League, after a peak spell, players do 22–44% less Covering and 34–43% less Recovery Running than their match average [Ju2022, p.975].
+**Tired moment detection.** *(Revised 2026-10-16, decision 12: battery only; the post-peak flag is a separate signal.)* A defensive action (duel, recovery run, pressure) by a player whose battery is low **for them**, or who is inside a post-peak window. Scored against the short-term truth label (`tired`); late-match fatigue (the tank) is a separate trend, compared with the load signal (section 2.3, "Two truth labels"). Losing the ball (negative transition) gives the hardest running of the game for total distance [Bortnik2022, Fig. 3; one Polish team, GPS], so it is the first place to look. The main pattern the agents explain: in the Premier League, after a peak spell, players do 22–44% less Covering and 34–43% less Recovery Running than their match average [Ju2022, p.975].
+
+**As built (2026-10-16; `secondwind.engine`, output `signals.json`, schema 0.1.6).** `uv run python -m secondwind.engine <match folder>`; estimator vs truth for one match: `uv run python -m secondwind.validate.estimator <match folder> --plot chart.png`.
+- Per player, per second on the pitch: battery with 10–90% band; metabolic power (1-s, 1-min and 5-min means) and energy since kick-off; high-speed distance (>5.5 m/s [19.8 km/h]) in the last 1, 2 and 5 min, also as a share of the player's reference peak; share of each window with the ball in play; red-zone and post-peak flags; tired flag. Tired spells list the player's defensive actions and ball losses inside them.
+- Red-zone spell: a full window at ≥ 90% of the player's best so far and of the published mean peak (62 / 38 / 22 m/min for 1 / 2 / 5 min [Leifsson2024, Table 1]); post-peak lasts 2 min after a 1- or 2-min spell, 5 min after a 5-min spell, and ends at half-time.
+- **Tired moment = battery below 50% of the player's estimated D′.** Dev seeds 1–60, outfield player-seconds, against `tired`: precision 0.30, recall 0.10; as spells (matched within 30 s) precision 0.44, recall 0.15, about 42 spells per match. The target (precision ≥ 0.7 at recall ≥ 0.5, synthesis §6.3) is out of reach from positions: the same battery with the true CS and D′ gives 0.57 / 0.45, with club test values 0.38 / 0.45. Tiredness is concentrated in low-capacity players (the top 10% of players hold 65% of tired seconds; tired share vs true D′ r = −0.45, vs CS r = −0.36), and positions cannot tell who they are. Battery vs hidden pools: mean absolute error 0.069, r 0.70, band coverage 73% (target 80%).
+- Load sanity check (validation match v1001, whole-match outfield players): energy 60.8 kJ/kg (published 61.1 ± 6.6 [Osgnach2010, p.174]), mean 10.0 W/kg (about 10.7, synthesis §2.3).
 
 ### 3.4 What the agents may claim: the Verifier's rulebook
 
@@ -271,3 +278,4 @@ Answered 2026-10-14: solo developer; Python for simulator, engine and agents; Re
 | 9 | Updating CS and D′ during a match (added 2026-10-15) | Light Bayesian update per player: ~200 draws from the prior, weighted by how well each fits the player's running; median battery with a 10–90% band. One-way D′ correction kept as fallback. k fixed per run | Section 3.2; synthesis §3.2.3, §3.2.5, §3.7; [Sutcliffe2025; Mizelman2024] |
 | 10 | Skipped runs (added 2026-10-16) | The estimator does not try to detect skipped runs or intentions: real tracking shows only what players did. It scores tired moments (`tired`) and late-match wear (tank trend). The hidden skipped runs are used to check the generator against Ju2022 and to pick demo moments, worded as what happened ("ran back slower than usual"), never what the player meant to do. A positions-only "slow response" detector scored against them is a stretch goal | Section 3.3; [Ju2022] |
 | 11 | Known generator gaps accepted (added 2026-10-16) | Team and full-back sprint distance 7–9% above target, recovery time between efforts +12% (pass +15 to +40), post-peak drop too steep even without fatigue, home/away total-distance r 0.96: documented, not tuned further before the estimator | Commits 6ca789f, 7c387c7, bc51565 |
+| 12 | Tired moments (added 2026-10-16) | Tired = battery below 50% of the player's estimated D′, nothing else: precision about 0.3 from positions, so the agents say "likely tiring" sparingly and quote the measured precision. The post-peak flag is a separate signal with neutral words ("catching breath after a red-zone spell"), never "tired": adding it to the tired flag gave precision 0.13–0.16, and post-peak drops appear even with fatigue off (§2.5) | Section 3.3 "As built"; `engine/params.py` |
