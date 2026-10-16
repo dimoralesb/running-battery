@@ -30,6 +30,13 @@ def main(argv: list[str] | None = None) -> None:
         "D′ correction only (fallback)",
     )
     parser.add_argument("--k", type=float, default=P.K, help=f"battery recharge factor ({P.K:g})")
+    parser.add_argument(
+        "--prior",
+        choices=sorted(P.PRIORS),
+        default=P.DEFAULT_PRIOR,
+        help="typical player: 'university' (the generator's population, for synthetic matches) "
+        "or 'pro' (professional players, for real tracking); engine/params.py",
+    )
     args = parser.parse_args(argv)
     start = time.perf_counter()
     match = read_match(args.folder)
@@ -37,7 +44,7 @@ def main(argv: list[str] | None = None) -> None:
         p.test_values for team in match.metadata.teams for p in team.players
     ):
         parser.error("club mode needs club test values (generate the match with --club-tests)")
-    signals = estimate(match, mode=args.mode, update=args.update, k=args.k)
+    signals = estimate(match, mode=args.mode, update=args.update, k=args.k, prior=args.prior)
     out = args.out or args.folder / SIGNALS
     write_signals(out, signals)
     spells = len(signals.tired_spells)

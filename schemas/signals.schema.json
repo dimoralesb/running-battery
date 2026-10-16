@@ -31,6 +31,11 @@
           "title": "Mode",
           "type": "string"
         },
+        "prior": {
+          "description": "Typical player: university (the generator's population) or pro (professional players); engine/params.py PRIORS",
+          "title": "Prior",
+          "type": "string"
+        },
         "update": {
           "description": "draws: per-player update of CS and D′ from prior draws (decision 9); correction: one value with the one-way D′ correction only (club mode, fallback)",
           "enum": [
@@ -83,6 +88,7 @@
       },
       "required": [
         "mode",
+        "prior",
         "update",
         "k",
         "n_draws",
@@ -456,7 +462,7 @@
   "additionalProperties": false,
   "properties": {
     "schema_version": {
-      "default": "0.1.6",
+      "default": "0.1.7",
       "title": "Schema Version",
       "type": "string"
     },

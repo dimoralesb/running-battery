@@ -106,9 +106,24 @@ def test_prior_draws_seeded_per_player_and_in_range():
     a, b = prior_draws("H08"), prior_draws("H08")
     assert np.array_equal(a, b) and a.shape == (P.N_DRAWS, 2)
     assert not np.array_equal(a, prior_draws("H09"))
-    assert a[:, 0].min() >= P.CS_RANGE[0] and a[:, 0].max() <= P.CS_RANGE[1]
-    assert a[:, 1].min() >= P.D_PRIME_RANGE[0] and a[:, 1].max() <= P.D_PRIME_RANGE[1]
-    assert np.mean(a[:, 1]) == pytest.approx(P.D_PRIME_MEAN, rel=0.1)
+    for name, prior in P.PRIORS.items():
+        d = prior_draws("H08", prior=prior)
+        assert prior.cs_range[0] <= d[:, 0].min() and d[:, 0].max() <= prior.cs_range[1], name
+        assert prior.d_prime_range[0] <= d[:, 1].min() and d[:, 1].max() <= prior.d_prime_range[1]
+        assert np.mean(d[:, 0]) == pytest.approx(prior.cs_mean, abs=0.05), name
+        assert np.mean(d[:, 1]) == pytest.approx(prior.d_prime_mean, rel=0.1), name
+
+
+def test_pro_prior_drains_less_than_university():
+    """A professional's typical CS (4.4 m/s) is above the university one (3.7 m/s): the same
+    running at 4 m/s drains the university battery and leaves the pro battery full."""
+    speed = np.full(60 * HZ, 4.0)
+    period, record = np.ones(len(speed), dtype=int), np.arange(len(speed)) % HZ == HZ - 1
+    level = {}
+    for name, prior in P.PRIORS.items():
+        d = prior_draws("H08", prior=prior)
+        level[name] = run(speed[:, None], period, record, d[None, :, 0], d[None, :, 1]).median
+    assert level["pro"][-1, 0] == 1.0 and level["university"][-1, 0] < 0.95
 
 
 def test_weighted_quantiles_equal_weights_match_numpy():

@@ -33,7 +33,8 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 # 0.1.5: substitutions: substitutes in ``players`` (``starter`` false) and in ``substitutions``;
 # a player's truth series covers only their time on the pitch.
 # 0.1.6: ``signals.json``, the estimator's output (per player, per second on the pitch).
-SCHEMA_VERSION = "0.1.6"
+# 0.1.7: ``signals.json`` records the typical-player prior (``engine.prior``).
+SCHEMA_VERSION = "0.1.7"
 
 # A little beyond the 52.5 x 34 m half-pitch, for players and the ball just outside the lines.
 X_LIMIT = 60.0
@@ -426,6 +427,10 @@ class EngineSettings(_Model):
 
     mode: Literal["broadcast", "club"] = Field(
         description="broadcast: shared prior only; club: club test values (validation only)"
+    )
+    prior: str = Field(
+        description="Typical player: university (the generator's population) or pro "
+        "(professional players); engine/params.py PRIORS"
     )
     update: Literal["draws", "correction"] = Field(
         description="draws: per-player update of CS and D′ from prior draws (decision 9); "

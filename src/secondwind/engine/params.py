@@ -8,6 +8,8 @@ are published values (synthesis §3.1, §3.2.3); it never sees the generator's h
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from secondwind.sim import params as SP
 
 FRAME_RATE_HZ = SP.FRAME_RATE_HZ
@@ -24,12 +26,44 @@ TAU_RANGE = (30.0, 900.0)  # s (PLAN §3.3)
 # The battery refills standing still over the half-time interval, at most 15 min [IFAB2025, Law 7].
 HALF_TIME_S = SP.HALF_TIME_S
 
-# Broadcast mode: one prior for all outfield players, CS 3.7 ± 0.25 m/s clipped to 3.2–4.2 and
-# D′ 180 ± 54 m clipped to 100–300 [Sutcliffe2025, Fig. 2; Liu2021, Table 4; synthesis §3.2.3]
-# (the SDs as in ``sim/params.py``). Goalkeepers get the same prior (none is published for them);
-# their signals are written but they are left out of tired-moment scoring.
-CS_MEAN, CS_SD, CS_RANGE = SP.CS_MEAN, SP.CS_SD, SP.CS_RANGE
-D_PRIME_MEAN, D_PRIME_SD, D_PRIME_RANGE = SP.D_PRIME_MEAN, SP.D_PRIME_SD, SP.D_PRIME_RANGE
+
+@dataclass(frozen=True)
+class Prior:
+    """The "typical player" of broadcast mode: one prior for all outfield players (decision 3).
+    Goalkeepers get the same prior (none is published for them); their signals are written but
+    they are left out of tired-moment scoring."""
+
+    cs_mean: float  # m/s
+    cs_sd: float
+    cs_range: tuple[float, float]
+    d_prime_mean: float  # m
+    d_prime_sd: float
+    d_prime_range: tuple[float, float]
+
+
+# "university": the generator's population. CS 3.7 ± 0.25 m/s (13.3 km/h) clipped to 3.2–4.2, from
+# university players' 3-min all-out tests, under-16s and field-sport norms [Sutcliffe2025, Fig. 2;
+# Liu2021, Table 4; synthesis §3.2.3]; the SD (range / 4) is our assumption. Use it to score the
+# estimator on synthetic matches, whose players are drawn from it (``sim/params.py``).
+#
+# "pro": a typical professional. CS is close to the maximal lactate steady state, above the
+# lactate threshold, at 70–90% of VO₂max [Jones2017, p.S67]. Croatian first-division players
+# (n = 16, treadmill at 2% incline, tested after the off-season break) reached their anaerobic
+# threshold at 4.29–4.57 m/s (15.5–16.5 km/h; forwards to midfielders), at 90–93% of VO₂max, with
+# SDs of 0.21–0.26 m/s [Modric2020, Table 1]. CS 4.4 ± 0.25 m/s (15.8 km/h) clipped to 3.9–4.9
+# (our assumption: CS taken as that threshold speed, the SD as in Modric2020, the clip at ±2 SD as
+# above). Their aerobic threshold, 3.38–3.98 m/s (12.2–14.3 km/h), brackets the university CS of
+# 3.7 and lies below CS by definition [Jones2017, p.S67]. VO₂max does not differ between outfield
+# positions [Slimani2019, p.241; Modric2020, Table 1], so one prior for all positions (decision 3).
+# No D′ data for professionals: D′ 180 ± 54 m clipped to 100–300 for both [Sutcliffe2025, Fig. 2;
+# synthesis §3.2.3].
+PRIORS = {
+    "university": Prior(
+        SP.CS_MEAN, SP.CS_SD, SP.CS_RANGE, SP.D_PRIME_MEAN, SP.D_PRIME_SD, SP.D_PRIME_RANGE
+    ),
+    "pro": Prior(4.4, 0.25, (3.9, 4.9), SP.D_PRIME_MEAN, SP.D_PRIME_SD, SP.D_PRIME_RANGE),
+}
+DEFAULT_PRIOR = "university"
 # Per-player update (decision 9): about 200 draws from the prior per player.
 N_DRAWS = 200
 # Soft down-weighting of draws the running contradicts. A draw whose balance would go below zero

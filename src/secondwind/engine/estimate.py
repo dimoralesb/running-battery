@@ -53,19 +53,19 @@ def broadcast_view(match: Match) -> Match:
 
 
 def capacities(
-    match: Match, ids: list[str], mode: Mode, update: Update, n_draws: int
+    match: Match, ids: list[str], mode: Mode, update: Update, n_draws: int, prior: P.Prior
 ) -> tuple[np.ndarray, np.ndarray]:
     """(players, draws) starting CS and D′ for each player."""
     if mode == "club":
         tests = {p.id: p.test_values for team in match.metadata.teams for p in team.players}
         # Goalkeepers have no test values: the shared prior's mean.
-        cs = [tests[i].cs if tests[i] else P.CS_MEAN for i in ids]
-        dp = [tests[i].d_prime if tests[i] else P.D_PRIME_MEAN for i in ids]
+        cs = [tests[i].cs if tests[i] else prior.cs_mean for i in ids]
+        dp = [tests[i].d_prime if tests[i] else prior.d_prime_mean for i in ids]
         return np.array(cs)[:, None], np.array(dp)[:, None]
     if update == "correction":
         n = len(ids)
-        return np.full((n, 1), P.CS_MEAN), np.full((n, 1), P.D_PRIME_MEAN)
-    draws = np.stack([prior_draws(i, n_draws) for i in ids])
+        return np.full((n, 1), prior.cs_mean), np.full((n, 1), prior.d_prime_mean)
+    draws = np.stack([prior_draws(i, n_draws, prior=prior) for i in ids])
     return draws[..., 0], draws[..., 1]
 
 
@@ -76,6 +76,7 @@ def compute(
     k: float = P.K,
     n_draws: int = P.N_DRAWS,
     penalty_width: float = P.PENALTY_WIDTH,
+    prior: str = P.DEFAULT_PRIOR,
 ) -> Estimate:
     if mode == "broadcast":
         match = broadcast_view(match)
@@ -84,6 +85,7 @@ def compute(
     settings = EngineSettings(
         mode=mode,
         update=update,
+        prior=prior,
         k=k,
         n_draws=n_draws if update == "draws" else 1,
         penalty_width=penalty_width,
@@ -93,7 +95,7 @@ def compute(
         hi_speed=P.HI_SPEED,
     )
     tr = tracks(match)
-    cs, dp = capacities(match, tr.ids, mode, update, n_draws)
+    cs, dp = capacities(match, tr.ids, mode, update, n_draws, P.PRIORS[prior])
     bat = run(tr.speed, tr.period, tr.whole_second, cs, dp, k, penalty_width)
     return Estimate(settings, tr, bat, per_second(tr, bat))
 

@@ -43,12 +43,17 @@ class BatteryResult:
     d_prime: np.ndarray  # (players, 3) the same for D′ after the correction
 
 
-def prior_draws(player_id: str, n: int = P.N_DRAWS, seed: int = P.DRAW_SEED) -> np.ndarray:
+def prior_draws(
+    player_id: str,
+    n: int = P.N_DRAWS,
+    seed: int = P.DRAW_SEED,
+    prior: P.Prior = P.PRIORS[P.DEFAULT_PRIOR],
+) -> np.ndarray:
     """(n, 2) draws of (CS, D′) from the shared prior, clipped as in the generator. Seeded by the
     player's id, so a player's draws do not depend on who else played."""
     rng = np.random.default_rng([seed, zlib.crc32(player_id.encode())])
-    cs = np.clip(rng.normal(P.CS_MEAN, P.CS_SD, n), *P.CS_RANGE)
-    dp = np.clip(rng.normal(P.D_PRIME_MEAN, P.D_PRIME_SD, n), *P.D_PRIME_RANGE)
+    cs = np.clip(rng.normal(prior.cs_mean, prior.cs_sd, n), *prior.cs_range)
+    dp = np.clip(rng.normal(prior.d_prime_mean, prior.d_prime_sd, n), *prior.d_prime_range)
     return np.stack([cs, dp], axis=1)
 
 

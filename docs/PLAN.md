@@ -184,6 +184,7 @@ Input: tracking data only (positions over time), plus ball status and possession
   - The one-way correction stays in the code as the fallback if this slips.
   - Roadmap, not built: carry each player's updated values into their next match as the new prior, so the band narrows over a season.
   - **As built (2026-10-16; `engine/battery.py`, values in `engine/params.py`).** Every draw runs its own battery with the one-way correction; a draw whose D′ had to be raised keeps exp(−½ (raise / (0.1·D′))²) of its weight (width our assumption). Weights use the running so far only, so the battery works live. On default matches (seeds 1–60) the update learns almost nothing, as expected: estimated vs true D′ r = 0.03, CS r = 0.05; widths 0.05–0.4 move the battery by less than 0.001.
+  - **Two typical players (2026-10-16).** `--prior university` (default; the generator's population, CS 3.7 m/s) for synthetic matches, and `--prior pro` (CS 4.4 m/s [15.8 km/h], from professionals' anaerobic-threshold speed [Modric2020, Table 1; Jones2017, p.S67]) for real tracking such as IDSSE. The university CS sits at professionals' aerobic threshold, so it is likely too low for them (synthesis §3.2.3). On a synthetic match the pro prior reads the battery 0.135 too high (dev seed 1), as expected for a population mismatch.
 
 ### 3.3 Signals
 
