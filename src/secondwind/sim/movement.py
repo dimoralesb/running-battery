@@ -84,6 +84,31 @@ def a_max(speed: np.ndarray, a0: np.ndarray, s0: np.ndarray) -> np.ndarray:
     return np.maximum(a0 * (1.0 - speed / s0), 0.0)
 
 
+def forecast_hi_run(
+    gap: float, want: float, v0: float, a0: float, s0: float, seconds: float, stop: float = 0.0
+) -> bool:
+    """Whether a run would be a high-intensity run, above ``HI_SPEED`` for at least ``HI_MIN_S``
+    (as ``runs.hi_runs`` measures it): ``step`` in one dimension, from ``v0`` m/s towards a
+    target ``gap`` metres away that stays put, at wanted speed ``want``, for at most ``seconds``
+    or until within ``stop`` metres. For the runs tired players skip, which are never run
+    (``Physiology.skipped_runs``). Real targets move, so it is rough: on runs that were made it
+    agrees with the measured runs for about 3 decisions in 4 and forecasts as many runs as were
+    measured (37% of decisions; our measure, 30 seeds, 2026-10-16)."""
+    need = round(P.HI_MIN_S / P.DT)
+    x, v, above = 0.0, v0, 0
+    for _ in range(round(seconds / P.DT)):
+        if gap - x <= stop:
+            break
+        a = a0 / s0 * (min(want, s0, (gap - x) / P.ARRIVE_TAU) - v)
+        a = min(a, a0 * (1.0 - v / s0)) if a > 0 else max(a, -P.BRAKE_MAX)
+        v = max(v + a * P.DT, 0.0)
+        x += v * P.DT
+        above = above + 1 if v > P.HI_SPEED else 0
+        if above >= need:
+            return True
+    return False
+
+
 def _too_close(
     points: np.ndarray, team_of: np.ndarray, team_keep: float, opp_keep: float
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:

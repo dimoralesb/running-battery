@@ -43,7 +43,7 @@
     },
     "RunTruth": {
       "additionalProperties": false,
-      "description": "A high-intensity run the player intended. ``executed=False`` marks a skipped run.",
+      "description": "A high-intensity run with its intended purpose. ``executed=True``: measured in the\ntracking (above 5.5 m/s for at least 1 s). ``executed=False``: a run a tired player skipped,\none per situation, forecast to have been a high-intensity run had it been made.",
       "properties": {
         "run_id": {
           "minimum": 0,
@@ -228,6 +228,7 @@
           "type": "array"
         },
         "tired": {
+          "description": "Tired moment: the two pools alone cut the chance of a hard run by at least a quarter (settings tired_below). Late-match fatigue is tank below settings late_tank_below",
           "items": {
             "type": "boolean"
           },
@@ -253,7 +254,7 @@
   "additionalProperties": false,
   "properties": {
     "schema_version": {
-      "default": "0.1.3",
+      "default": "0.1.4",
       "title": "Schema Version",
       "type": "string"
     },
@@ -305,7 +306,7 @@
         ]
       },
       "default": {},
-      "description": "Generator assumptions used for this match (position noise now; fatigue effect sizes later), so validation can report results across them (PLAN §2.6)",
+      "description": "Generator assumptions used for this match (position noise, tempo, fatigue effect sizes), so validation can report results across them (PLAN §2.6)",
       "title": "Settings",
       "type": "object"
     },

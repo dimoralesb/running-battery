@@ -203,8 +203,9 @@ def run_truth(
     teams: list[SimTeam], periods: list[PeriodFrames], body: Physiology | None = None
 ) -> list[RunTruth]:
     """Every high-intensity run with its purpose (``runs.py``), and, with fatigue on, the hard
-    runs tired players skipped (``executed=False``; ``t_end`` is the planned end, cut at the end
-    of the period). Ordered by period, start time and player."""
+    runs tired players skipped (``executed=False``; one per situation, only those forecast to
+    have been high-intensity runs, ``Physiology.skipped_runs``; ``t_end`` is the planned end,
+    cut at the end of the period). Ordered by period, start time and player."""
     ids = [p.id for team in teams for p in team.players]
     rows = []
     for pf in periods:
@@ -215,7 +216,7 @@ def run_truth(
         if body is not None:
             found += [
                 (s.t_start, s.player, min(s.t_end, length), s.purpose, False)
-                for s in body.skipped
+                for s in body.skipped_runs()
                 if s.period == pf.period
             ]
             found.sort(key=lambda r: (r[0], r[1], not r[4]))

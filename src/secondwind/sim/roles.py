@@ -105,14 +105,15 @@ class Roles:
         self.runs.clear()
         self.declined.clear()
 
-    def start(self, i: int, run: Run, t: float) -> None:
+    def start(self, i: int, run: Run, t: float, toward: np.ndarray | None = None) -> None:
         """Every run decision goes through here. With fatigue on, a hard run (wanted speed above
         ``HARD_RUN_SPEED``) is skipped with chance 1 − ``Physiology.run_choice``; the player
         then keeps to their calm movement (a tired player jogs back instead of sprinting) and is
         not asked again until the run's planned end, or for a shape run ``SHAPE_DECLINE_S``.
-        Decisions on runs that would have been high-intensity runs (above ``HI_SPEED``) are kept,
-        the skipped ones for ``truth.json``. A run that is made lasts ``Physiology.shorten`` of
-        its planned time."""
+        Decisions on runs wanted above ``HI_SPEED`` are kept, with a forecast of whether the run
+        would be a high-intensity run (``hi_forecast``); the skipped ones go to ``truth.json``.
+        A run that is made lasts ``Physiology.shorten`` of its planned time. ``toward``: the
+        gap to the target (m, x/y) for a shape run, whose target is not in ``run``."""
         body = self.e.physiology
         if body is not None:
             rate = self.effort[i] * (1.0 if self.tempo is None else self.tempo)
@@ -120,7 +121,8 @@ class Roles:
             if want > P.HARD_RUN_SPEED:
                 made = body.makes_run(i, run.speed >= P.DECISIVE_EFFORT)
                 if want > P.HI_SPEED:
-                    body.decide(i, t, run.t_end, run.purpose, made)
+                    hi = self.hi_forecast(i, run, t, want, toward)
+                    body.decide(i, t, run.t_end, run.purpose, made, hi)
                 if not made:
                     self.declined[i] = (
                         min(run.t_end, t + P.SHAPE_DECLINE_S) if run.shape else run.t_end
@@ -128,6 +130,33 @@ class Roles:
                     return
                 run.t_end = t + (run.t_end - t) * body.shorten(i)
         self.runs[i] = run
+
+    def hi_forecast(
+        self, i: int, run: Run, t: float, want: float, toward: np.ndarray | None
+    ) -> bool:
+        """Whether the run, made fresh, would be a high-intensity run: ``forecast_hi_run`` with
+        the target where it is now and the player's speed towards it (a run with no target
+        yet: open space, at the player's speed)."""
+        e = self.e
+        if toward is None and run.target is not None:
+            toward = np.asarray(run.target) - e.pos[i]
+        elif toward is None and run.offset_uv is not None:
+            toward = e.ball_xy[:2] + e.to_uv(int(e.team_of[i]), run.offset_uv) - e.pos[i]
+        if toward is None:
+            gap, v0 = np.inf, float(np.hypot(*e.vel[i]))
+        else:
+            gap = float(np.hypot(*toward))
+            v0 = max(float(e.vel[i] @ toward) / gap, 0.0) if gap > 1e-6 else 0.0
+        body = e.physiology
+        return movement.forecast_hi_run(
+            gap,
+            want,
+            v0,
+            float(e.a0[i] * body.accel_mult[i]),
+            float(e.s0[i] * body.speed_mult[i]),
+            run.t_end - t,
+            P.SHAPE_RUN_END if run.shape else 0.0,
+        )
 
     def free(self, i: int) -> bool:
         return i not in self.runs and i not in self.declined and not self.is_gk[i]
@@ -379,7 +408,8 @@ class Roles:
                 counter = e.transition is not None and e.transition[0] != team
                 if not_goal_side and (ball_u < P.DANGER_U or counter):
                     speed = P.SHAPE_RUN_SPEED + (P.RECOVERY_EFFORT - P.SHAPE_RUN_SPEED) * urgency
-            self.start(i, Run(purpose, t + P.SHAPE_RUN_MAX_S, speed, shape=True), t)
+            run = Run(purpose, t + P.SHAPE_RUN_MAX_S, speed, shape=True)
+            self.start(i, run, t, gap_xy[i])
 
     def step_wander(self) -> np.ndarray:
         """This frame's repositioning offsets: a new spot for each player whose time is up."""

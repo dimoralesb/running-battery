@@ -31,13 +31,15 @@ that matches pool by adding (``summarise`` then gives % changes of the pooled su
   decelerations beyond 2 m/s² lasting 0.5 s or more (our definition); the first 10 min of each
   half; and the second half against the first by first-half load (players split into thirds by
   their distance above 4 m/s per minute in the first half).
-- **Runs skipped while tired** (fatigue on only): of the hard-run decisions that would have
-  been high-intensity runs (``Physiology.decisions``), the share skipped while the player was
-  ``tired`` and while not, in total and for covering, recovery runs and closing down. Ju2022's
+- **Runs skipped while tired** (fatigue on only): of the hard-run decisions wanted above
+  5.5 m/s (``Physiology.decisions``, every ask), the share skipped while the player was
+  ``tired`` (a tired moment), while late-match fatigued (tank below ``LATE_TANK_BELOW``, not
+  tired) and while neither, in total and for covering, recovery runs and closing down. Ju2022's
   drops after peak periods [p.975] are the reference for the size. (Distance run while tired is
   no measure of this: players get tired in the busiest spells, when everyone runs more.)
-- **Runs** made and skipped by purpose, the share of tired player-seconds and the tank at the
-  final whistle (truth.json).
+- **Runs** measured and skipped by purpose (truth.json: skipped runs one per situation, only
+  those forecast to be high-intensity runs), the share of player-seconds with a tired moment and
+  with late-match fatigue, and the tank at the final whistle.
 """
 
 from __future__ import annotations
@@ -234,37 +236,45 @@ def sim_measure(match) -> dict:
     }
     series = {p.player_id: p.series for p in match.truth.players}
     res["skips"] = _skips(match, series)
-    tired = [series[ids[c]].tired for c in cols]
-    res["tired"] = {"seconds": sum(len(t) for t in tired), "tired": sum(sum(t) for t in tired)}
-    blocks = np.zeros((2, len(TIRED_BLOCKS), 2))  # half, block, (tired, seconds)
-    for c in cols:
-        s = series[ids[c]]
-        period, t, flag = np.array(s.period), np.array(s.t), np.array(s.tired)
-        block = np.digitize(t, TIRED_BLOCKS[1:])
-        for h in (0, 1):
-            on = period == h + 1
-            blocks[h, :, 0] += np.bincount(block[on], flag[on], len(TIRED_BLOCKS))
-            blocks[h, :, 1] += np.bincount(block[on], minlength=len(TIRED_BLOCKS))
-    res["tired_blocks"] = blocks.ravel().tolist()  # flat, so that matches add up
+    flags = {"tired": [np.array(series[ids[c]].tired) for c in cols]}
+    flags["late"] = [np.array(series[ids[c]].tank) < P.LATE_TANK_BELOW for c in cols]
+    for name, per_player in flags.items():
+        res[name] = {
+            "seconds": sum(len(f) for f in per_player),
+            name: int(sum(f.sum() for f in per_player)),
+        }
+        blocks = np.zeros((2, len(TIRED_BLOCKS), 2))  # half, block, (flagged, seconds)
+        for c, flag in zip(cols, per_player, strict=True):
+            s = series[ids[c]]
+            period, t = np.array(s.period), np.array(s.t)
+            block = np.digitize(t, TIRED_BLOCKS[1:])
+            for h in (0, 1):
+                on = period == h + 1
+                blocks[h, :, 0] += np.bincount(block[on], flag[on], len(TIRED_BLOCKS))
+                blocks[h, :, 1] += np.bincount(block[on], minlength=len(TIRED_BLOCKS))
+        res[f"{name}_blocks"] = blocks.ravel().tolist()  # flat, so that matches add up
     res["tank_end"] = [series[ids[c]].tank[-1] for c in cols]
     return res
 
 
 def _skips(match, series: dict) -> dict:
-    """Hard-run decisions that would have been high-intensity runs, made and skipped, in total
-    and by purpose, split by whether the player was tired at that second."""
-    out = {name: {"tired": [0, 0], "fresh": [0, 0]} for name in ("all", *JU_PURPOSES)}
+    """Hard-run decisions wanted above 5.5 m/s, made and skipped, in total and by purpose, split
+    by the player's state at that second: tired, late-match fatigued (not tired) or fresh."""
+    states = ("tired", "late", "fresh")
+    out = {name: {k: [0, 0] for k in states} for name in ("all", *JU_PURPOSES)}
     body = match.physiology
     if body is None:
         return out
     ids = [p.id for team in match.metadata.teams for p in team.players]
-    tired = {}
+    state_of = {}
     for pid in ids:
-        period, flag = np.array(series[pid].period), np.array(series[pid].tired)
-        tired[pid] = {h: flag[period == h] for h in (1, 2)}
+        s = series[pid]
+        period = np.array(s.period)
+        code = np.where(np.array(s.tired), 0, np.where(np.array(s.tank) < P.LATE_TANK_BELOW, 1, 2))
+        state_of[pid] = {h: code[period == h] for h in (1, 2)}
     for d in body.decisions:
-        flags = tired[ids[d.player]][d.period]
-        state = "tired" if flags[min(int(d.t_start), len(flags) - 1)] else "fresh"
+        codes = state_of[ids[d.player]][d.period]
+        state = states[codes[min(int(d.t_start), len(codes) - 1)]]
         for name in ("all", d.purpose.value):
             if name in out:
                 out[name][state][0 if d.made else 1] += 1
@@ -450,9 +460,10 @@ def summarise(per_match: list[dict]) -> dict:
         }
         for p in RunPurpose
     }
-    out["tired_pct"] = 100.0 * pooled["tired"]["tired"] / max(pooled["tired"]["seconds"], 1)
-    b = np.array(pooled["tired_blocks"]).reshape(2, len(TIRED_BLOCKS), 2)
-    out["tired_blocks_pct"] = (100.0 * b[..., 0] / np.maximum(b[..., 1], 1)).tolist()
+    for name in ("tired", "late"):
+        out[f"{name}_pct"] = 100.0 * pooled[name][name] / max(pooled[name]["seconds"], 1)
+        b = np.array(pooled[f"{name}_blocks"]).reshape(2, len(TIRED_BLOCKS), 2)
+        out[f"{name}_blocks_pct"] = (100.0 * b[..., 0] / np.maximum(b[..., 1], 1)).tolist()
     t = np.array(tanks)
     out["tank_end"] = {
         q: float(np.quantile(t, x)) for q, x in (("p10", 0.1), ("p50", 0.5), ("p90", 0.9))
@@ -489,11 +500,14 @@ def format_table(on: dict, off: dict | None = None) -> str:
         for name, (lo, hi) in JU_PURPOSE.items():
             values = [r["ju"][w][name] for r in runs]
             lines.append(_row(f"next {w // 60} min, {name}", f"{lo} to {hi}", values))
-    lines.append("  Hard runs skipped, % of decisions, while tired | not tired; Ju2022 after peaks")
+    lines.append(
+        "  Hard runs skipped, % of asks, while tired | late-match | neither; Ju2022 after peaks"
+    )
     k = on["skips"]
-    lines.append(_row("all purposes", "–", [k["all"]["tired"], k["all"]["fresh"]]))
+    states = ("tired", "late", "fresh")
+    lines.append(_row("all purposes", "–", [k["all"][x] for x in states]))
     for name, (lo, hi) in JU_PURPOSE.items():
-        lines.append(_row(name, f"{lo} to {hi}", [k[name]["tired"], k[name]["fresh"]]))
+        lines.append(_row(name, f"{lo} to {hi}", [k[name][x] for x in states]))
     lines.append("  Next 5 min vs peak 5 min of ball-in-play time [Fang2024, Table 2, Fig. 1]")
     for key in ("hsr", "efforts", "length", "duration", "speed", "carries", "carry_m"):
         pub = FANG.get(key, "–")
@@ -525,19 +539,20 @@ def format_table(on: dict, off: dict | None = None) -> str:
         f"  Mean time between efforts >5.5 m/s, first 15 min: {on['end']['gap_first15_s']:.0f} s "
         "(published 65 s [Bradley2009, p.163])"
     )
-    lines.append("  Runs per match (truth.json): made / skipped")
+    lines.append("  Runs per match (truth.json): measured / skipped")
     for p, d in on["runs"].items():
         if d["made"] or d["skipped"]:
             ref = f"   off {off['runs'][p]['made']:.1f}" if off else ""
             lines.append(f"  {p:<20}{d['made']:>8.1f} / {d['skipped']:<8.1f}{ref}")
-    blocks = " | ".join(" ".join(f"{v:.0f}" for v in half) for half in on["tired_blocks_pct"])
+    for name, label in (("tired", "Tired moments"), ("late", "Late-match fatigue")):
+        blocks = " | ".join(" ".join(f"{v:.0f}" for v in half) for half in on[f"{name}_blocks_pct"])
+        lines.append(
+            f"  {label}: {on[f'{name}_pct']:.1f}% of outfield player-seconds; % by 15-min block "
+            f"(first half | second half, last with added time): {blocks}"
+        )
     lines.append(
-        f"  Tired, % by 15-min block (first half | second half, last with added time): {blocks}"
-    )
-    lines.append(
-        f"  Tired: {on['tired_pct']:.1f}% of outfield player-seconds. Tank at the final whistle: "
-        f"p10 {on['tank_end']['p10']:.3f}, median {on['tank_end']['p50']:.3f}, "
-        f"p90 {on['tank_end']['p90']:.3f}"
+        f"  Tank at the final whistle: p10 {on['tank_end']['p10']:.3f}, "
+        f"median {on['tank_end']['p50']:.3f}, p90 {on['tank_end']['p90']:.3f}"
     )
     return "\n".join(lines)
 

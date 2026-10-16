@@ -319,11 +319,19 @@ SHAPE_DECLINE_S = 5.0
 TOP_SPEED_PER_TANK = 0.03
 ACCEL_PER_TANK = 0.125
 CAPACITY_MAX_LOSS = 0.05
-# Tired moment (truth.json ``tired``): the hidden state cuts the chance of a hard run by at
-# least a quarter, run_choice_mult < TIRED_BELOW. Our assumption, at the low end of the drops in
-# covering, recovery runs and pressing after peak periods, 22–45% [Ju2022, p.975]. Decided
-# 2026-10-16.
+# Two truth labels (decided 2026-10-16), each where its part of the hidden state alone cuts the
+# chance of a hard run by at least a quarter. Our assumption, at the low end of the drops in
+# covering, recovery runs and pressing after peak periods, 22–45% [Ju2022, p.975].
+# - Tired moment (truth.json ``tired``): the pool term below TIRED_BELOW, short-term tiredness
+#   after intense spells. About 5% of outfield player-seconds, 7 spells per player and match,
+#   median 19 s (90 seeds, our measure).
+# - Late-match fatigue: the tank below LATE_TANK_BELOW (from the ``tank`` series): none before
+#   the 30th minute, about half of the last 15 min.
+# One label on run_choice_mult (< 0.75) was tired 32% of the time and two thirds of the last
+# 15 min, so the late minutes swamped the tired moments, which made precision and recall easy to
+# inflate.
 TIRED_BELOW = 0.75
+LATE_TANK_BELOW = 0.75
 
 # --- Position noise (synthesis §3.1) -------------------------------------------------------------
 

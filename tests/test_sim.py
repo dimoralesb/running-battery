@@ -242,8 +242,10 @@ def test_no_fatigue_control(folders):
 
 def test_truth_series_with_fatigue(sim1):
     """Pools and tank stay fractions; the tank never rises within a half and gets some back at
-    half-time; capacity falls by at most CAPACITY_MAX_LOSS; ``tired`` is run_choice below
+    half-time; capacity falls by at most CAPACITY_MAX_LOSS; ``tired`` is the pool term below
     TIRED_BELOW (values rounded to 0.001); some players get tired and skip runs."""
+    from secondwind.sim.physiology import below
+
     tired_any = False
     for p in sim1.truth.players:
         s = p.series
@@ -253,10 +255,12 @@ def test_truth_series_with_fatigue(sim1):
             assert np.all(np.diff(tank[period == h]) <= 0)
         assert tank[period == 2][0] >= tank[period == 1][-1]
         assert min(s.speed_mult) >= 1 - P.CAPACITY_MAX_LOSS - 1e-9
-        choice, tired = np.array(s.run_choice_mult), np.array(s.tired)
-        assert np.all(choice[tired] <= P.TIRED_BELOW) and np.all(
-            choice[~tired] >= P.TIRED_BELOW - 1e-3
-        )
+        ff = p.params.fast_fraction
+        left = ff * np.array(s.fast_pool) + (1 - ff) * np.array(s.slow_pool)
+        pools, tired = below(left, P.POOL_FREE, P.POOL_GAIN), np.array(s.tired)
+        assert np.all(pools[tired] <= P.TIRED_BELOW + 3e-3)
+        assert np.all(pools[~tired] >= P.TIRED_BELOW - 3e-3)
+        assert np.all(np.array(s.run_choice_mult)[tired] <= P.TIRED_BELOW + 1e-3)
         tired_any |= tired.any()
     assert tired_any
     skipped = [r for r in sim1.truth.runs if not r.executed]
@@ -297,7 +301,7 @@ def test_fatigue_checks_on_a_match(sim1):
     assert out["fang"]["efforts"]["peak"] > 0
     skips = out["skips"]["all"]
     assert skips["tired"] < skips["fresh"] <= 0  # % skipped, as a negative change
-    assert 0 < out["tired_pct"] < 100
+    assert 0 < out["tired_pct"] < 100 and 0 < out["late_pct"] < 100
     assert "Leifsson2024" in fatigue_checks.format_table(out, out)
 
 

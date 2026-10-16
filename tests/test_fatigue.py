@@ -119,18 +119,60 @@ def test_capacity_loss_capped():
 
 
 def test_tired_moments_and_series():
-    """``tired`` is run_choice below TIRED_BELOW; the series are fractions, one per second."""
-    body = _body(2)
+    """``tired`` is the pool term below TIRED_BELOW: low pools are a tired moment, a low tank
+    alone is not (late-match fatigue, read from the tank). The series are fractions, one per
+    second."""
+    body = _body(3)
     body.fast_m[1], body.slow_m[1], body.tank[1] = 0.0, 10.0, 0.7
+    body.tank[2] = 0.6  # full pools, low tank
     body.update_multipliers()
     body.record(0.0)
-    body.step(np.array([0.0, 0.0]), 0.1)
+    body.step(np.array([0.0, 0.0, 0.0]), 0.1)
     body.record(1.0)
-    fresh, tired = body.series(0), body.series(1)
+    fresh, tired, late = body.series(0), body.series(1), body.series(2)
     assert fresh.tired == [False, False] and tired.tired == [True, True]
-    assert tired.run_choice_mult[0] < P.TIRED_BELOW <= fresh.run_choice_mult[0]
+    assert late.tired == [False, False] and late.tank[0] < P.LATE_TANK_BELOW
+    assert late.run_choice_mult[0] < P.TIRED_BELOW <= fresh.run_choice_mult[0]
     assert tired.fast_pool[0] == 0.0 and 0.0 < tired.fast_pool[1] < 0.01
     assert fresh.t == [0.0, 1.0] and fresh.period == [1, 1]
+
+
+def test_skipped_runs_one_per_situation():
+    """A shape run skipped, asked again and skipped again is one skipped run, ending at the last
+    ask's planned end; a made run or another purpose in between starts a new one. Only
+    situations forecast to be high-intensity runs go to ``truth.json``."""
+    body = _body(2)
+    reask = P.SHAPE_DECLINE_S
+    rec, cov = RunPurpose.RECOVERY_RUN, RunPurpose.COVERING
+    body.decide(0, 10.0, 18.0, rec, False, False)
+    body.decide(0, 10.0 + reask, 23.0, rec, False, True)  # asked again: same situation
+    body.decide(0, 10.0 + 2 * reask, 28.0, rec, False, False)
+    body.decide(1, 10.0, 18.0, cov, False, True)
+    body.decide(1, 10.0 + reask, 23.0, cov, True, True)  # made on the second ask
+    body.decide(1, 30.0, 38.0, cov, False, True)  # a new situation
+    body.decide(1, 30.0 + reask, 43.0, rec, False, False)  # another purpose: new, not forecast
+    body.decide(0, 60.0, 68.0, rec, False, False)  # too late to join: new, not forecast
+    out = body.skipped_runs()
+    assert [(d.player, d.t_start, d.t_end) for d in out] == [
+        (0, 10.0, 28.0),
+        (1, 10.0, 18.0),
+        (1, 30.0, 38.0),
+    ]
+    assert len(body.decisions) == 8
+
+
+def test_hi_run_forecast():
+    """``forecast_hi_run``: a long run at full speed is a high-intensity run, a short gap or a
+    wanted speed below HI_SPEED is not, and a run already at speed needs only HI_MIN_S."""
+    from secondwind.sim.movement import forecast_hi_run
+
+    a0, s0 = 7.4, 9.3
+    assert forecast_hi_run(30.0, 9.0, 0.0, a0, s0, 8.0)
+    assert not forecast_hi_run(6.0, 9.0, 0.0, a0, s0, 8.0)
+    assert not forecast_hi_run(40.0, P.HI_SPEED - 0.1, 3.0, a0, s0, 8.0)
+    assert not forecast_hi_run(30.0, 9.0, 0.0, a0, s0, 0.5)
+    assert forecast_hi_run(20.0, 7.0, 7.0, a0, s0, P.HI_MIN_S + 0.2)
+    assert not forecast_hi_run(20.0, 7.0, 7.0, a0, s0, 8.0, stop=19.0)
 
 
 # --- What low energy changes --------------------------------------------------------------------

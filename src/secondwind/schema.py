@@ -24,7 +24,10 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 # 0.1.3: truth.json gets ``settings`` (the generator assumptions used for each match, PLAN §2.6
 # point 3); tracking frames document dropouts (a player left out of ``players``).
-SCHEMA_VERSION = "0.1.3"
+# 0.1.4: ``tired`` is short-term tiredness only (late-match fatigue is the ``tank`` below
+# ``settings["late_tank_below"]``); skipped runs are one per situation and only those forecast to
+# have been high-intensity runs.
+SCHEMA_VERSION = "0.1.4"
 
 # A little beyond the 52.5 x 34 m half-pitch, for players and the ball just outside the lines.
 X_LIMIT = 60.0
@@ -336,7 +339,11 @@ class TruthSeries(_Model):
     speed_mult: list[Fraction] = Field(description="Multiplier on top speed (loss capped ~5%)")
     accel_mult: list[Fraction]
     run_choice_mult: list[Fraction] = Field(description="Multiplier on choosing a hard run")
-    tired: list[bool]
+    tired: list[bool] = Field(
+        description="Tired moment: the two pools alone cut the chance of a hard run by at least "
+        "a quarter (settings tired_below). Late-match fatigue is tank below "
+        "settings late_tank_below"
+    )
 
     @model_validator(mode="after")
     def _same_length(self) -> TruthSeries:
@@ -353,7 +360,9 @@ class PlayerTruth(_Model):
 
 
 class RunTruth(_Model):
-    """A high-intensity run the player intended. ``executed=False`` marks a skipped run."""
+    """A high-intensity run with its intended purpose. ``executed=True``: measured in the
+    tracking (above 5.5 m/s for at least 1 s). ``executed=False``: a run a tired player skipped,
+    one per situation, forecast to have been a high-intensity run had it been made."""
 
     run_id: Annotated[int, Field(ge=0)]
     player_id: str
@@ -377,8 +386,8 @@ class MatchTruth(_Model):
     story: dict[str, str | float | int | bool] = {}
     settings: dict[str, str | float | int | bool] = Field(
         default={},
-        description="Generator assumptions used for this match (position noise now; fatigue "
-        "effect sizes later), so validation can report results across them (PLAN §2.6)",
+        description="Generator assumptions used for this match (position noise, tempo, fatigue "
+        "effect sizes), so validation can report results across them (PLAN §2.6)",
     )
     players: list[PlayerTruth]
     runs: list[RunTruth] = []

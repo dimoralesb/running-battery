@@ -28,7 +28,14 @@ What the state changes (params, "Hidden physiology and fatigue"):
   but match top speed barely changes [Bradley2009, p.163].
 - ``speed_mult`` and ``accel_mult``: the player's capacity, S0 and A0, falling with the tank
   (``TOP_SPEED_PER_TANK``, ``ACCEL_PER_TANK``), at most ``CAPACITY_MAX_LOSS``.
-- ``tired``: run_choice below ``TIRED_BELOW``.
+- ``tired`` (a tired moment): the pool term alone below ``TIRED_BELOW``, short-term tiredness
+  that the estimator's battery can see. Late-match fatigue is the tank below ``LATE_TANK_BELOW``,
+  read from the ``tank`` series (decided 2026-10-16: two labels, not one, so that the late minutes,
+  when most players are low, do not swamp the tired moments).
+
+``skipped_runs`` gives ``truth.json`` one entry per skipped situation, and only those forecast to
+have been high-intensity runs, so that the skipped runs count like the runs that were made
+(measured high-intensity runs). ``decisions`` keeps every decision, for the skip-gate checks.
 
 The skip draws come from their own generator, so the match flow's draws do not depend on them
 directly (the match still changes, because tired players move differently).
@@ -36,7 +43,7 @@ directly (the match still changes, because tired players move differently).
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 import numpy as np
 
@@ -44,6 +51,9 @@ from secondwind.schema import Period, RunPurpose, TrueParams, TruthSeries
 from secondwind.sim import params as P
 
 REST = 100.0  # %D standing still
+# A shape run asked again this long after the end of its SHAPE_DECLINE_S wait is the same
+# situation (asked on the first frame the player is free; our assumption, with margin).
+REASK_S = 1.0
 
 
 def tau_fast_curve(pct: np.ndarray) -> np.ndarray:
@@ -72,6 +82,7 @@ class Decision:
     t_end: float  # its planned end
     purpose: RunPurpose
     made: bool
+    hi: bool  # forecast to be a high-intensity run (``movement.forecast_hi_run``)
 
 
 class Physiology:
@@ -107,6 +118,7 @@ class Physiology:
             "accel_per_tank": P.ACCEL_PER_TANK,
             "capacity_max_loss": P.CAPACITY_MAX_LOSS,
             "tired_below": P.TIRED_BELOW,
+            "late_tank_below": P.LATE_TANK_BELOW,
         }
         self.decisions: list[Decision] = []
         self.rows: list[np.ndarray] = []  # one (7, players) row per second, see ``series``
@@ -165,6 +177,7 @@ class Physiology:
         s = self.s
         left = (self.fast_m + self.slow_m) / self.d_prime
         pools = below(left, s["pool_free"], s["pool_gain"])
+        self.pools = pools
         self.run_choice = pools * self.tank * (1.0 - self.dip)
         self.sprint_choice = pools * (1.0 - self.dip)  # decisive sprints: not cut by the tank
         self.tiredness = 1.0 - pools
@@ -189,12 +202,32 @@ class Physiology:
     def carry(self, i: int) -> float:
         return 1.0 - self.s["carry_slow"] * float(self.tiredness[i])
 
-    def decide(self, i: int, t: float, t_end: float, purpose: RunPurpose, made: bool) -> None:
-        self.decisions.append(Decision(i, self.period, t, t_end, purpose, made))
+    def decide(
+        self, i: int, t: float, t_end: float, purpose: RunPurpose, made: bool, hi: bool
+    ) -> None:
+        self.decisions.append(Decision(i, self.period, t, t_end, purpose, made, hi))
 
-    @property
-    def skipped(self) -> list[Decision]:
-        return [d for d in self.decisions if not d.made]
+    def skipped_runs(self) -> list[Decision]:
+        """The skipped runs for ``truth.json``. A skipped shape run asked again and skipped again
+        (same player, period and purpose, within ``SHAPE_DECLINE_S`` + ``REASK_S`` of the last
+        ask) is one situation: the first skip, ending at the last ask's planned end. A situation
+        is kept if any of its asks was forecast to be a high-intensity run (``Decision.hi``)."""
+        merged: list[Decision] = []
+        open_skip: dict[int, tuple[int, float]] = {}  # player: (index in merged, last ask)
+        reask = self.s["shape_decline_s"] + REASK_S
+        for d in self.decisions:
+            if d.made:
+                open_skip.pop(d.player, None)
+                continue
+            k, last = open_skip.get(d.player, (-1, -np.inf))
+            m = merged[k] if k >= 0 else None
+            if m and (m.purpose, m.period) == (d.purpose, d.period) and d.t_start - last <= reask:
+                merged[k] = replace(m, t_end=max(m.t_end, d.t_end), hi=m.hi or d.hi)
+            else:
+                k = len(merged)
+                merged.append(d)
+            open_skip[d.player] = (k, d.t_start)
+        return [d for d in merged if d.hi]
 
     # --- Truth -------------------------------------------------------------------------------
 
@@ -211,7 +244,7 @@ class Physiology:
                     self.speed_mult,
                     self.accel_mult,
                     self.run_choice,
-                    self.run_choice < self.s["tired_below"],
+                    self.pools < self.s["tired_below"],
                 ]
             )
         )
