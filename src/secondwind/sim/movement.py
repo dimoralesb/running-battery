@@ -107,11 +107,15 @@ def _too_close(
 
 
 def spread_targets(
-    target: np.ndarray, team_of: np.ndarray, anchored: np.ndarray | None = None
+    target: np.ndarray,
+    team_of: np.ndarray,
+    anchored: np.ndarray | None = None,
+    keep: float | None = None,
 ) -> np.ndarray:
-    """Team-mates' targets closer than ``SEPARATION_TEAM`` move apart, each by half the
-    shortfall (all of it when the other is ``anchored``, which never moves)."""
-    i, j, short, away = _too_close(target, team_of, P.SEPARATION_TEAM, 0.0)
+    """Team-mates' targets closer than ``keep`` (by default ``SEPARATION_TEAM``) move apart,
+    each by half the shortfall (all of it when the other is ``anchored``, which never moves)."""
+    keep = P.SEPARATION_TEAM if keep is None else keep
+    i, j, short, away = _too_close(target, team_of, keep, 0.0)
     if len(i) == 0:
         return target
     fixed = np.zeros(len(target), dtype=bool) if anchored is None else anchored
@@ -121,29 +125,67 @@ def spread_targets(
     return clip_to_pitch(out)
 
 
+def _closest_approach(
+    pos: np.ndarray, vel: np.ndarray, team_of: np.ndarray, keep: float, horizon: float
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Team-mate pairs (i, j) that will come closer than ``keep`` within ``horizon`` seconds at
+    their current velocities: how much closer at their closest approach (m), and the unit vector
+    from j to i at that moment (sideways for paths that cross). A pair already moving apart is
+    judged where it is now."""
+    r = pos[:, None, :] - pos[None, :, :]
+    w = vel[:, None, :] - vel[None, :, :]
+    ww = np.einsum("ijk,ijk->ij", w, w)
+    t = np.clip(-np.einsum("ijk,ijk->ij", r, w) / np.maximum(ww, 1e-9), 0.0, horizon)
+    miss = r + w * t[..., None]
+    dist = np.hypot(miss[..., 0], miss[..., 1])
+    short = np.where(team_of[:, None] == team_of[None, :], np.maximum(keep - dist, 0.0), 0.0)
+    np.fill_diagonal(short, 0.0)
+    i, j = np.nonzero(short)
+    d = dist[i, j]
+    now = r[i, j]
+    now_d = np.hypot(now[:, 0], now[:, 1])
+    # Head-on (they would meet exactly): step aside, each to their own right.
+    side = np.where(
+        now_d[:, None] > 1e-6,
+        np.stack([-now[:, 1], now[:, 0]], axis=1) / np.maximum(now_d, 1e-6)[:, None],
+        np.sign(i - j)[:, None] * np.array([1.0, 0.0]),
+    )
+    away = np.where(d[:, None] > 1e-6, miss[i, j] / np.maximum(d, 1e-6)[:, None], side)
+    return i, j, short[i, j], away
+
+
 def push_apart(
     pos: np.ndarray,
     team_of: np.ndarray,
     anchored: np.ndarray | None = None,
     vel: np.ndarray | None = None,
+    team_keep: float | None = None,
+    wall: np.ndarray | None = None,
 ) -> np.ndarray:
     """Velocity (m/s) that moves each player away from anyone closer than their separation
-    (``SEPARATION_TEAM`` for team-mates, ``SEPARATION_OPP`` for opponents), at most
-    ``SEPARATION_MAX``. Team-mates are judged where they will be ``SEPARATION_LOOKAHEAD``
-    seconds on at their ``vel``, so that crossing runs move apart in time. ``anchored`` (bool)
-    players are not pushed, but still push others."""
+    (``team_keep``, by default ``SEPARATION_TEAM``, for team-mates; ``SEPARATION_OPP`` for
+    opponents), at most ``SEPARATION_MAX``. Team-mates are judged at their closest approach
+    within ``SEPARATION_LOOKAHEAD`` seconds at their ``vel``, so that crossing runs move apart
+    in time; opponents where they are now. ``anchored`` (bool) players are not pushed, but
+    still push others. Opponents of the ``wall`` (bool) members, anchored or not, are pushed
+    off it to ``WALL_CLEAR`` [IFAB2025, Law 13]."""
+    keep = P.SEPARATION_TEAM if team_keep is None else team_keep
     push = np.zeros_like(pos)
-    ahead = pos if vel is None else pos + vel * P.SEPARATION_LOOKAHEAD
-    for points, team_keep, opp_keep in (
-        (ahead, P.SEPARATION_TEAM, 0.0),
-        (pos, 0.0, P.SEPARATION_OPP),
-    ):
-        i, j, short, away = _too_close(points, team_of, team_keep, opp_keep)
+    if vel is None:
+        i, j, short, away = _too_close(pos, team_of, keep, 0.0)
+    else:
+        i, j, short, away = _closest_approach(pos, vel, team_of, keep, P.SEPARATION_LOOKAHEAD)
+    np.add.at(push, i, short[:, None] * away / P.SEPARATION_TAU)
+    i, j, short, away = _too_close(pos, team_of, 0.0, P.SEPARATION_OPP)
+    np.add.at(push, i, short[:, None] * away / P.SEPARATION_TAU)
+    if anchored is not None:
+        push[anchored] = 0.0
+    if wall is not None:
+        keep_off = np.where(wall[None, :] & ~wall[:, None], P.WALL_CLEAR, 0.0)
+        i, j, short, away = _too_close(pos, team_of, 0.0, keep_off)
         np.add.at(push, i, short[:, None] * away / P.SEPARATION_TAU)
     size = np.hypot(push[:, 0], push[:, 1])
     push *= np.minimum(1.0, P.SEPARATION_MAX / np.maximum(size, 1e-9))[:, None]
-    if anchored is not None:
-        push[anchored] = 0.0
     return push
 
 

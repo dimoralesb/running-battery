@@ -81,6 +81,14 @@ class Touch:
 
 
 @dataclass
+class Huddle:
+    scorer: int
+    spot: np.ndarray  # where the scorer jogs to
+    mates: list[int]  # team-mates who gather round
+    t_end: float
+
+
+@dataclass
 class Restart:
     kind: str
     team: int
@@ -89,6 +97,7 @@ class Restart:
     taker: int
     ball_from: np.ndarray
     t_dead: float
+    huddle: Huddle | None = None  # after a goal
 
 
 @dataclass
@@ -622,10 +631,7 @@ class MatchEngine:
             self.loose_since = t
             self.loose_point = f.end
         elif result == "goal":
-            self.log(EventType.GOAL, t, f.by, start=f.end)
-            team = int(self.team_of[f.by])
-            self.score[team] += 1
-            self.schedule_restart("kick_off", 1 - team, np.zeros(2), t, f.end)
+            self.goal(t, f.by, f.end)
         elif result == "saved":
             if rng.random() < P.SAVE_TO_CORNER:
                 self.ball_out(t, f.to, self.behind_goal_line(int(self.team_of[f.to])))
@@ -638,6 +644,21 @@ class MatchEngine:
                 self.ball_out(t, f.to, self.behind_goal_line(int(self.team_of[f.to])))
             else:
                 self.kick_loose(t, f.end, rng.uniform(3.0, 10.0), f.to)
+
+    def goal(self, t: float, scorer: int, end: np.ndarray) -> None:
+        """Log the goal, schedule the kick-off, and send the scorer's team-mates to them
+        (``HUDDLE_*``)."""
+        self.log(EventType.GOAL, t, scorer, start=end)
+        team = int(self.team_of[scorer])
+        self.score[team] += 1
+        self.schedule_restart("kick_off", 1 - team, np.zeros(2), t, end)
+        at = self.pos[scorer]
+        spot = np.array([at[0], np.sign(at[1] or 1.0) * (P.HALF_WIDTH - 2.0)])
+        gap = spot - at
+        spot = at + gap * min(1.0, P.HUDDLE_RUN / max(float(np.hypot(*gap)), 1e-6))
+        mates = [int(i) for i in self.members(team)[1:] if i != scorer]
+        mates.sort(key=lambda i: float(np.hypot(*(self.pos[i] - at))))
+        self.restart.huddle = Huddle(scorer, spot, mates[: P.HUDDLE_N], t + P.HUDDLE_S)
 
     def behind_goal_line(self, defending: int) -> np.ndarray:
         """A point just past the goal line that ``defending`` defends, off the posts."""
@@ -738,7 +759,7 @@ class MatchEngine:
         r = self.restart
         self.gain_possession(r.team, t, False, r.spot)
         kind = r.kind
-        if kind == "free_kick" and self.to_uv(r.team, r.spot)[0] > 25.0:
+        if kind == "free_kick" and self.set_piece():
             kind = "free_kick_box"
         self.play_pass(t, r.taker, r.spot.copy(), restart=kind)
 
@@ -757,14 +778,74 @@ class MatchEngine:
             uv[push] *= (keep / r[push])[:, None]
         return uv
 
-    def set_piece_targets(self, tgt: np.ndarray, attackers: int) -> None:
-        att = self.members(attackers)
-        dfn = self.members(1 - attackers)
-        goal = self.to_uv(attackers, np.array([GOAL_U, 0.0]))
-        for (slot, u, v), marker in zip(P.BOX_SPOTS, P.BOX_MARKERS, strict=True):
-            spot = self.to_uv(attackers, np.array([u, v]))
-            tgt[att[slot]] = spot
-            tgt[dfn[marker]] = spot + (goal - spot) / np.hypot(*(goal - spot)) * 1.0
+    def set_piece(self) -> bool:
+        """The restart is a corner, or a free kick near goal (``SET_PIECE_U``, ``WALL_RANGE``)."""
+        r = self.restart
+        if r.kind == "corner":
+            return True
+        if r.kind != "free_kick":
+            return False
+        u, v = self.to_uv(r.team, r.spot)
+        return u > P.SET_PIECE_U or math.hypot(GOAL_U - u, v) <= P.WALL_RANGE
+
+    def set_piece_plan(self) -> list[tuple[int, int, np.ndarray, np.ndarray]]:
+        """(attacker, marker, attacker's spot, marker's spot) for the six pairs of a set piece.
+        At a corner the attackers take ``CORNER_SPOTS`` and ``CORNER_PACK``; at a free kick the
+        line (``FREE_KICK_LINE*``), in the order they stand across the pitch. Markers are
+        matched in the same order, so that pairs do not cross, and stand 1 m goal-side of their
+        attacker (the pack's on its outside shoulders, ``CORNER_PACK_SHOULDER``). Made once per
+        set piece."""
+        r = self.restart
+        team = r.team
+        att = self.members(team)
+        dfn = self.members(1 - team)
+        if r.kind == "corner":
+            side = float(np.sign(self.to_uv(team, r.spot)[1]) or 1.0)
+            u0, v0 = P.CORNER_PACK_AT
+            n = len(P.CORNER_PACK)
+            uv = [(slot, u, side * v, 0.0) for slot, u, v in P.CORNER_SPOTS]
+            for k, slot in enumerate(P.CORNER_PACK):
+                out = k - (n - 1) / 2.0
+                v = side * (v0 + out * P.CORNER_PACK_GAP)
+                uv.append((slot, u0, v, side * np.sign(out) * P.CORNER_PACK_SHOULDER))
+        else:
+            depth = GOAL_U - self.to_uv(team, r.spot)[0]
+            line = float(np.clip(depth - P.FREE_KICK_LINE_GAP, *P.FREE_KICK_LINE))
+            slots = [slot for slot, _, _ in P.CORNER_SPOTS] + list(P.CORNER_PACK)
+            slots.sort(key=lambda s: float(self.to_uv(team, self.pos[att[s]])[1]))
+            u = GOAL_U - line - 1.0
+            uv = [(slot, u, v, 0.0) for slot, v in zip(slots, P.FREE_KICK_LINE_V, strict=True)]
+        # The taker takes the kick; the nearest free attacker goes to their spot instead.
+        used = {row[0] for row in uv}
+        free = [s for s in range(1, 11) if s not in used and att[s] != r.taker]
+        for k, (slot, u, v, side_v) in enumerate(uv):
+            if att[slot] == r.taker:
+                spot = self.to_uv(team, np.array([u, v]))
+                sub = min(free, key=lambda s: float(np.hypot(*(self.pos[att[s]] - spot))))
+                uv[k] = (sub, u, v, side_v)
+        uv.sort(key=lambda row: row[2])
+        markers = sorted(P.BOX_MARKERS, key=lambda s: float(self.to_uv(team, self.pos[dfn[s]])[1]))
+        plan = []
+        for (slot, u, v, side_v), m in zip(uv, markers, strict=True):
+            to_goal = np.array([GOAL_U - u, -v])
+            mark = np.array([u, v + side_v]) + to_goal / np.hypot(*to_goal)
+            plan.append(
+                (
+                    int(att[slot]),
+                    int(dfn[m]),
+                    self.to_uv(team, np.array([u, v])),
+                    self.to_uv(team, mark),
+                )
+            )
+        return plan
+
+    def set_piece_targets(
+        self, tgt: np.ndarray, plan: list[tuple[int, int, np.ndarray, np.ndarray]]
+    ) -> None:
+        """Attackers and their markers to their set-piece spots (``set_piece_plan``)."""
+        for attacker, marker, spot, mark in plan:
+            tgt[attacker] = spot
+            tgt[marker] = mark
 
     def ball_at(self, t: float) -> np.ndarray:
         mode = self.mode
@@ -830,7 +911,9 @@ class MatchEngine:
         """Every player takes one movement step (roles, push-apart, motion model); returns the
         purpose codes of this frame."""
         target, cap, purpose, calm, anchored = self.roles.targets(t)
-        push = movement.push_apart(self.pos, self.team_of, anchored, self.vel)
+        keep = P.SEPARATION_DEAD if self.mode == "dead" else P.SEPARATION_TEAM
+        wall = self.roles.wall_mask()
+        push = movement.push_apart(self.pos, self.team_of, anchored, self.vel, keep, wall)
         self.pos, self.vel = movement.step(
             self.pos, self.vel, target, cap, self.a0, self.s0, calm, push
         )

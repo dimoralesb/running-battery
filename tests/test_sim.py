@@ -11,14 +11,14 @@ import pytest
 
 from secondwind.io import EVENTS, METADATA, TRACKING, TRUTH, read_match, read_truth
 from secondwind.schema import X_LIMIT, Y_LIMIT, EventType, MatchMetadata, Position, RunPurpose
-from secondwind.sim import movement
+from secondwind.sim import movement, spacing
 from secondwind.sim import params as P
 from secondwind.sim.batch import parse_seeds
 from secondwind.sim.match import MatchEngine, PeriodFrames
 from secondwind.sim.output import CLEAN_COPY, observe, read_clean_copy, simulate
 from secondwind.sim.replay import load_window, write_html
 from secondwind.sim.rosters import make_teams
-from secondwind.sim.runs import speeds, spells
+from secondwind.sim.runs import speeds
 from secondwind.sim.summary import (
     BALL_IN_PLAY_BAND,
     POSSESSION_BAND,
@@ -292,30 +292,82 @@ def test_push_apart_and_spread_targets():
 
 
 def test_push_apart_looks_ahead_for_team_mates():
-    """Two players 3 m apart running at each other: team-mates move apart before they meet;
-    opponents are judged where they are now (pressing and duels are left alone)."""
+    """Two players 3 m apart running at each other: team-mates step aside, each to their own
+    right, before they meet; opponents are judged where they are now (pressing and duels are
+    left alone)."""
     pos = np.array([[-1.5, 0.0], [1.5, 0.0]])
     vel = np.array([[1.5, 0.0], [-1.5, 0.0]])
     mates = movement.push_apart(pos, np.array([0, 0]), vel=vel)
-    assert mates[0, 0] < 0 < mates[1, 0]
+    assert mates[0, 1] < 0 < mates[1, 1]
+    assert np.allclose(mates[:, 0], 0.0)
     assert np.allclose(movement.push_apart(pos, np.array([0, 0])), 0.0)
     assert np.allclose(movement.push_apart(pos, np.array([0, 1]), vel=vel), 0.0)
+
+
+def test_push_apart_judges_team_mates_at_closest_approach():
+    """Paths that cross half a second from now, 3.06 m apart now and again in 1 s: team-mates
+    step aside now (judged at their positions 1 s on, they would not be); opponents are left
+    alone."""
+    pos = np.array([[-1.5, 0.3], [1.5, -0.3]])
+    vel = np.array([[3.0, 0.0], [-3.0, 0.0]])
+    mates = movement.push_apart(pos, np.array([0, 0]), vel=vel)
+    assert mates[0, 1] > 0 > mates[1, 1]  # sideways, away from where the other will pass
+    assert np.allclose(mates[:, 0], 0.0)
+    assert np.allclose(movement.push_apart(pos + vel, np.array([0, 0])), 0.0)
+    assert np.allclose(movement.push_apart(pos, np.array([0, 1]), vel=vel), 0.0)
+
+
+def test_dead_ball_separation():
+    """While the ball is dead team-mates may stand SEPARATION_DEAD apart, never on one spot."""
+    pos = np.array([[0.0, 0.0], [0.0, 1.0]])
+    team_of = np.array([0, 0])
+    assert np.allclose(movement.push_apart(pos, team_of, team_keep=P.SEPARATION_DEAD), 0.0)
+    assert np.allclose(movement.spread_targets(pos, team_of, keep=P.SEPARATION_DEAD), pos)
+    same = np.zeros((2, 2))
+    spread = movement.spread_targets(same, team_of, keep=P.SEPARATION_DEAD)
+    assert np.hypot(*(spread[0] - spread[1])) == pytest.approx(P.SEPARATION_DEAD)
+    push = movement.push_apart(same, team_of, team_keep=P.SEPARATION_DEAD)
+    assert push[0, 0] < 0 < push[1, 0]
+
+
+def _engine():
+    """An engine a few seconds into a match."""
+    rng = np.random.default_rng(0)
+    engine = MatchEngine(rng, make_teams(rng))
+    engine.run_period(1, 50, 0)
+    return engine
+
+
+def _hold(engine, seconds: float, t0: float = 5.0) -> np.ndarray:
+    """Hold the current dead ball (never taken) for ``seconds``; positions of every frame."""
+    engine.restart.t = np.inf
+    frames = []
+    for k in range(round(seconds * P.FRAME_RATE_HZ)):
+        t = t0 + k / P.FRAME_RATE_HZ
+        engine.follow_ball(t)
+        engine.move(t)
+        frames.append(engine.pos.copy())
+    return np.array(frames)
 
 
 def _held_restart(kind: str, spot_uv: tuple[float, float], seconds: float = 30.0):
     """An engine a few seconds into a match, then a restart for team 0 at ``spot_uv`` (team 0's
     attacking frame), held for ``seconds`` while everyone moves into place."""
-    rng = np.random.default_rng(0)
-    engine = MatchEngine(rng, make_teams(rng))
-    engine.run_period(1, 50, 0)
+    engine = _engine()
     spot = engine.to_uv(0, np.array(spot_uv))
     engine.schedule_restart(kind, 0, spot, 5.0, spot.copy())
-    engine.restart.t = np.inf  # never taken
-    for k in range(round(seconds * P.FRAME_RATE_HZ)):
-        t = 5.0 + k / P.FRAME_RATE_HZ
-        engine.follow_ball(t)
-        engine.move(t)
+    engine.history = _hold(engine, seconds)
     return engine, spot
+
+
+def _team_mate_gaps(pos: np.ndarray) -> list[np.ndarray]:
+    """Distance from each player to their nearest team-mate, per team."""
+    out = []
+    for team in (pos[:11], pos[11:]):
+        d = np.hypot(*(team[:, None] - team[None]).transpose(2, 0, 1))
+        np.fill_diagonal(d, np.inf)
+        out.append(d.min(axis=1))
+    return out
 
 
 @pytest.mark.parametrize(
@@ -342,12 +394,73 @@ def test_free_kick_in_range_gets_a_wall():
     """WALL_SIZE[0] defenders side by side, WALL_GAP apart, at the edge of the 9.15 m circle."""
     engine, spot = _held_restart("free_kick", (P.HALF_LENGTH - 24.0, 4.0))
     edge = P.RESTART_DISTANCE + P.RESTART_MARGIN
-    d = np.hypot(*(engine.pos[11:] - spot).T)
-    wall = engine.pos[11:][np.abs(d - edge) < 0.3]
-    assert len(wall) >= P.WALL_SIZE[0], d.round(1)
+    wall = engine.pos[engine.roles.wall_members]
+    d = np.hypot(*(wall - spot).T)
+    assert len(wall) == P.WALL_SIZE[0] and np.all(np.abs(d - edge) < 0.3), d.round(2)
     gaps = np.hypot(*(wall[:, None] - wall[None]).T)
     np.fill_diagonal(gaps, np.inf)
     assert np.allclose(gaps.min(axis=1), P.WALL_GAP, atol=0.15), gaps.min(axis=1)
+
+
+def test_corner_crowds_the_box():
+    """A held corner: the pack (CORNER_PACK) stands side by side, each with a team-mate within
+    1 m but never on one spot (SEPARATION_DEAD), and each has a marker within 1.5 m."""
+    engine, _ = _held_restart("corner", (P.HALF_LENGTH, -P.HALF_WIDTH))
+    attack, defend = _team_mate_gaps(engine.pos)
+    pack = [a for a, _, _, _ in engine.roles.plan if a % 11 in P.CORNER_PACK]
+    assert len(pack) == len(P.CORNER_PACK)
+    assert np.all(attack[pack] < 1.0), attack.round(2)
+    assert min(attack.min(), defend.min()) > P.SEPARATION_DEAD - 0.15
+    marked = np.hypot(*(engine.pos[pack][:, None] - engine.pos[None, 11:]).transpose(2, 0, 1))
+    assert np.all(marked.min(axis=1) < 1.5), marked.min(axis=1)
+
+
+def test_free_kick_near_goal_drops_the_defence():
+    """A free kick 28 m out (in wall range, not SET_PIECE_U upfield): besides the wall, the
+    markers hold a line FREE_KICK_LINE_GAP goal-side of the ball and the attackers stand level
+    with it, onside [IFAB2025, Law 11]."""
+    depth = 28.0
+    engine, _ = _held_restart("free_kick", (P.HALF_LENGTH - depth, 3.0))
+    line = np.clip(depth - P.FREE_KICK_LINE_GAP, *P.FREE_KICK_LINE)
+    u = engine.to_uv(0, engine.pos)[:, 0]  # team 0 attacks towards u = +52.5
+    markers = [11 + s for s in P.BOX_MARKERS]
+    assert np.all(np.abs(P.HALF_LENGTH - u[markers] - line) < 1.5), (P.HALF_LENGTH - u).round(1)
+    forward = [row[0] for row in engine.roles.plan]
+    assert np.all(np.abs(P.HALF_LENGTH - u[forward] - line - 1.0) < 1.5)
+    second_last = np.sort(u[11:])[-2]
+    assert u[forward].max() < second_last  # onside
+
+
+def test_attackers_keep_clear_of_the_wall():
+    """Attackers stay at least 1 m from a wall of three or more [IFAB2025, Law 13]: from every
+    wall member standing in place (within 0.3 m of its spot), in every frame."""
+    engine, _ = _held_restart("free_kick", (P.HALF_LENGTH - 23.0, 1.0))
+    wall = engine.roles.wall(True)
+    assert len(wall) >= P.WALL_SIZE[0]
+    h = engine.history
+    in_place = np.stack([np.hypot(*(h[:, i] - spot).T) < 0.3 for i, spot in wall], axis=1)
+    assert in_place[-1].all()
+    members = [i for i, _ in wall]
+    gaps = np.hypot(*(h[:, :11, None] - h[:, None, members]).transpose(3, 0, 1, 2))
+    gaps[:, engine.restart.taker] = np.inf
+    gaps = np.where(in_place[:, None, :], gaps, np.inf)
+    assert gaps.min() >= 1.0, gaps.min()
+
+
+def test_goal_huddle():
+    """After a goal the HUDDLE_N nearest team-mates gather round the scorer (within 1 m, never
+    on one spot); after HUDDLE_S everyone walks back for the kick-off."""
+    engine = _engine()
+    scorer = 10  # team 0's centre-forward
+    engine.goal(5.0, scorer, engine.pos[scorer].copy())
+    mates = engine.restart.huddle.mates
+    assert len(mates) == P.HUDDLE_N
+    frames = _hold(engine, 60.0)
+    at = frames[round((P.HUDDLE_S - 1.0) * P.FRAME_RATE_HZ)]
+    assert np.all(np.hypot(*(at[mates] - at[scorer]).T) < 1.0)
+    assert _team_mate_gaps(at)[0].min() > P.SEPARATION_DEAD - 0.15
+    u = engine.to_uv(0, frames[-1][:11])[:, 0]
+    assert np.all(u < 0.0)  # back in their own half, the opponents kick off
 
 
 def test_free_kicks_keep_distance_over_a_match(sim1):
@@ -368,25 +481,18 @@ def test_free_kicks_keep_distance_over_a_match(sim1):
 
 
 def test_teammates_do_not_stack(sim1):
-    """Push-apart on a whole match (noise-free positions). Before it (commit 145bf90), seed 1 had a
-    team-mate within 0.5 m in 0.24% of player-frames and within 1 m in 0.93%."""
-    frames = within_half = within_one = 0
-    longest = 0
-    for pf in sim1.periods:
-        nearest = np.full(pf.pos.shape[:2], np.inf)
-        for team in (range(11), range(11, 22)):
-            for i, j in itertools.combinations(team, 2):
-                d = np.hypot(*(pf.pos[:, i] - pf.pos[:, j]).T)
-                nearest[:, i] = np.minimum(nearest[:, i], d)
-                nearest[:, j] = np.minimum(nearest[:, j], d)
-                close = (d < 1.0) & pf.alive  # walls stand close on purpose at dead balls
-                longest = max([longest] + [b - a for a, b in spells(close, 1)])
-        frames += nearest.size
-        within_half += int((nearest < 0.5).sum())
-        within_one += int((nearest < 1.0).sum())
-    assert within_half / frames < 0.003, within_half / frames  # 0.04–0.20% on seeds 1–30
-    assert within_one / frames < 0.0075, within_one / frames  # 0.26–0.61% on seeds 1–30
-    assert longest / P.FRAME_RATE_HZ < 8.0  # in play, nobody stands on a team-mate's spot
+    """Push-apart on a whole match (noise-free positions, ``sim.spacing``). Bounds: the spread
+    over seeds 1–30 plus margin. In play, a team-mate within 1 m in 0.16–0.24% of player-frames
+    (0.45% judged 1 s ahead instead of at closest approach, about 0.9% before the push-apart;
+    IDSSE 0.20%) and within 0.5 m in 0.01–0.03%. Dead balls crowd on purpose (corner pack,
+    walls, goal huddle; SEPARATION_DEAD): within 1 m 1.2–3.7%, but within 0.5 m only
+    0.01–0.16%, so nobody stands on a team-mate's spot."""
+    s = spacing.sim_measure(sim1)
+    assert s["mate_1m_play"] < 0.35, s["mate_1m_play"]
+    assert s["mate_0.5m_play"] < 0.06, s["mate_0.5m_play"]
+    assert s["ep_mate_max_play"] < 8.0  # in play, nobody stays on a team-mate's spot
+    assert 0.8 < s["mate_1m_dead"] < 5.0, s["mate_1m_dead"]
+    assert s["mate_0.5m_dead"] < 0.3, s["mate_0.5m_dead"]
 
 
 def test_motion_model_matches_narizuka_at_full_effort():

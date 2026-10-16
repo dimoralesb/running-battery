@@ -22,7 +22,9 @@ Every frame each player gets a target point, a wanted speed and a run purpose (o
    receiver (move to receive, or a run in behind onto a through ball, or into the box for a
    cross), the nearest defenders closing down the carrier or the receiver, the cover defender,
    the interceptor, the goalkeeper coming for a ball near goal, loose-ball chasers, and restart
-   takers.
+   takers. While the ball is dead: opponents keep the legal distance, set pieces (a corner, or a
+   free kick near goal) send six attackers and their markers forward, a free kick in range gets
+   a wall, and after a goal the scorer's team-mates gather round them.
 
 Each position's run and role speeds are scaled by its work rate (``POSITION_EFFORT``).
 
@@ -71,6 +73,8 @@ class Roles:
         self.runs: dict[int, Run] = {}
         self.wall_for = None  # the restart the wall below belongs to
         self.wall_members: list[int] = []
+        self.plan_for = None  # the set piece the plan below belongs to
+        self.plan: list[tuple[int, int, np.ndarray, np.ndarray]] = []
         self.receiver_purpose = RunPurpose.MOVE_TO_RECEIVE
         pos = engine.positions
         self.is_gk = np.array([p == Position.GK for p in pos])
@@ -400,8 +404,9 @@ class Roles:
         )
         crosses = np.hypot(*(pos + s[:, None] * path - r.spot).T) < keep
         crosses &= r.kind != "throw_in"  # 2 m circle on the line: stepping out is enough
-        # Clearly inside (not just on the edge, where walking round still works).
-        step_out = (d < keep - 0.1) | (np.hypot(*(goal - r.spot).T) < keep)
+        # Clearly inside (not just on the edge, where walking round still works). A wall spot is
+        # on the edge itself, so targets get the same 0.1 m.
+        step_out = (d < keep - 0.1) | (np.hypot(*(goal - r.spot).T) < keep - 0.1)
         out = r.spot + away * keep
         # Round the edge: a point a little further round, towards the target's side.
         at = np.arctan2(side[:, 1], side[:, 0])
@@ -436,6 +441,49 @@ class Roles:
             self.wall_for, self.wall_members = r, members
         return list(zip(self.wall_members, spots, strict=True))
 
+    def wall_mask(self) -> np.ndarray | None:
+        """The wall members while their free kick is waiting (for ``movement.push_apart``)."""
+        e = self.e
+        if e.mode != "dead" or self.wall_for is not e.restart:
+            return None
+        mask = np.zeros(22, dtype=bool)
+        mask[self.wall_members] = True
+        return mask
+
+    def keep_off_wall(self, tgt: np.ndarray, spots: list[np.ndarray]) -> None:
+        """Attackers' targets at least ``WALL_CLEAR`` from the wall [IFAB2025, Law 13]: a target
+        too close moves straight out from the wall (towards the ball if it is on it)."""
+        e = self.e
+        r = e.restart
+        a, b = spots[0], spots[-1]
+        idx = np.array([i for i in e.members(r.team) if i != r.taker])
+        p = tgt[idx]
+        ab = b - a
+        s = np.clip((p - a) @ ab / max(float(ab @ ab), 1e-9), 0.0, 1.0)
+        near = a + s[:, None] * ab
+        off = p - near
+        d = np.hypot(*off.T)
+        to_ball = r.spot - (a + b) / 2.0
+        to_ball /= max(float(np.hypot(*to_ball)), 1e-6)
+        away = np.where(d[:, None] > 1e-6, off / np.maximum(d, 1e-6)[:, None], to_ball)
+        tgt[idx] = np.where(d[:, None] < P.WALL_CLEAR, near + away * P.WALL_CLEAR, p)
+
+    def huddle(self, h, role, anchored: np.ndarray) -> None:
+        """After a goal: the scorer jogs to their spot; the team-mates gather round them, at
+        spots spread evenly round a ring, centred on the side they come from and taken in the
+        order they come, so that nobody has to cross."""
+        e = self.e
+        role(h.scorer, h.spot, P.WALL_SPEED, None)
+        anchored[h.scorer] = True
+        at = e.pos[h.scorer]
+        off = e.pos[h.mates] - at
+        base = np.arctan2(*off.sum(axis=0)[::-1])
+        rel = np.angle(np.exp(1j * (np.arctan2(off[:, 1], off[:, 0]) - base)))
+        n = len(h.mates)
+        angles = base + (np.arange(n) - (n - 1) / 2.0) * 2.0 * np.pi / n
+        for i, a in zip(np.array(h.mates)[np.argsort(rel)], angles, strict=True):
+            role(int(i), at + P.HUDDLE_RING * np.array([np.cos(a), np.sin(a)]), P.WALL_SPEED, None)
+
     def behind_ball(self) -> np.ndarray:
         """Unit vector from the ball to where the taker stands (``TAKER_BEHIND``)."""
         e = self.e
@@ -455,9 +503,11 @@ class Roles:
         self, t: float
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """Target point, wanted speed (m/s), purpose code, calm flag (no run or ball role, see
-        ``movement.step``) and anchored flag (on the ball, the receiver, the restart taker or in
-        a wall: not pushed apart, see ``movement.push_apart``) for each player this frame.
-        Team-mates' targets are already spread apart (``movement.spread_targets``)."""
+        ``movement.step``) and anchored flag (on the ball, the receiver, the restart taker, in a
+        wall, a set-piece attacker or the scorer of a goal: not pushed apart, see
+        ``movement.push_apart``) for each player this frame. Team-mates' targets are already
+        spread apart (``movement.spread_targets``), ``SEPARATION_DEAD`` apart while the ball is
+        dead."""
         e = self.e
         mode = e.mode
         shape, holder = self.shape()
@@ -516,15 +566,11 @@ class Roles:
             n_press = 2 if e.press is not None and e.press[0] == opp_team else 1
             idx = e.members(opp_team)[1:]
             order = idx[np.argsort(np.hypot(*(e.pos[idx] - e.pos[c]).T))]
+            press = self.goal_side(opp_team, e.pos[c], P.PRESS_GAP)
+            cover = self.goal_side(opp_team, e.pos[c], P.COVER_DEPTH)
             for i in order[:n_press]:
-                role(
-                    int(i),
-                    self.goal_side(opp_team, e.pos[c], P.PRESS_GAP),
-                    P.CHASE_SPEED,
-                    RunPurpose.CLOSE_DOWN,
-                )
-            spot = self.goal_side(opp_team, e.pos[c], P.COVER_DEPTH)
-            role(int(order[n_press]), spot, P.SHAPE_RUN_SPEED, RunPurpose.COVERING)
+                role(int(i), press, P.CHASE_SPEED, RunPurpose.CLOSE_DOWN)
+            role(int(order[n_press]), cover, P.SHAPE_RUN_SPEED, RunPurpose.COVERING)
         elif mode == "flight":
             f = e.flight
             if f.result in ("intercepted", "clear"):
@@ -559,19 +605,31 @@ class Roles:
                     role(int(i), e.loose_point, P.CHASE_SPEED, None)
         else:
             r = e.restart
-            set_piece = r.kind == "corner" or (
-                r.kind == "free_kick" and e.to_uv(r.team, r.spot)[0] > 25.0
-            )
+            set_piece = e.set_piece()
             if set_piece:
-                e.set_piece_targets(tgt, r.team)
+                if self.plan_for is not r:
+                    self.plan_for, self.plan = r, e.set_piece_plan()
+                e.set_piece_targets(tgt, self.plan)
+                # Both jog up, like the wall; attackers hold their spots, the markers settle
+                # round them.
+                for attacker, marker, _, _ in self.plan:
+                    for i in (attacker, marker):
+                        role(i, tgt[i], P.WALL_SPEED, None)
+                    anchored[attacker] = True
             if r.kind == "free_kick":
                 # The wall jogs into place; anchored, so the push-apart leaves its spacing alone.
-                for i, spot in self.wall(set_piece):
+                wall = self.wall(set_piece)
+                for i, spot in wall:
                     role(i, spot, P.WALL_SPEED, None)
                     anchored[i] = True
+                if wall:
+                    self.keep_off_wall(tgt, [spot for _, spot in wall])
+            if r.huddle is not None and t < r.huddle.t_end:
+                self.huddle(r.huddle, role, anchored)
             role(r.taker, r.spot + self.behind_ball() * P.TAKER_BEHIND, 0.7 * P.CHASE_SPEED, None)
             anchored[r.taker] = True
-        tgt = movement.spread_targets(tgt, e.team_of, anchored)
+        keep = P.SEPARATION_DEAD if mode == "dead" else P.SEPARATION_TEAM
+        tgt = movement.spread_targets(tgt, e.team_of, anchored, keep)
         if mode == "dead":
             self.keep_distance(tgt)  # last, so that spreading cannot undo it
         frac = np.where(calm, frac, np.minimum(frac * self.effort, 1.0))

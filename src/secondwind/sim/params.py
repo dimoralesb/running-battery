@@ -86,11 +86,20 @@ SEPARATION_TEAM = 1.8
 SEPARATION_OPP = 0.9
 SEPARATION_TAU = 0.4  # s
 SEPARATION_MAX = 4.0  # m/s (14.4 km/h)
-# Team-mates are judged where they will be this many seconds on, at their current velocity, so
-# that crossing paths move apart before they meet. Our assumption, with SEPARATION_TAU and
-# SEPARATION_MAX tuned towards IDSSE [Bassek2025], where team-mates come within 1 m in about
-# 0.2% of in-play player-frames (our measure, 2026-10-15; ours 0.44%, 0.83% without this).
+# Team-mates are judged at their closest approach within SEPARATION_LOOKAHEAD seconds, at their
+# current velocities, and pushed apart along the line between them at that moment (sideways for
+# paths that cross), so that crossing paths move apart before they meet. Our assumption, with
+# SEPARATION_TAU and SEPARATION_MAX tuned towards IDSSE [Bassek2025], where team-mates come
+# within 1 m in 0.20% of in-play player-frames (our measure, sim.spacing, 2026-10-15). Ours,
+# 120 seeds: 0.83% with no look-ahead, 0.45% judged at their positions 1 s on (which misses
+# paths that cross within the second), 0.17% at closest approach.
 SEPARATION_LOOKAHEAD = 1.0  # s
+# While the ball is dead, team-mates may stand closer: SEPARATION_DEAD for targets and the push
+# (never two on one spot). This lets corner packs, walls and goal huddles form. IDSSE has a
+# team-mate within 1 m in 3.85% of dead-ball player-frames [Bassek2025; our measure, 2026-10-15],
+# but that includes substitutions, injuries and crowds round the referee, which we do not
+# simulate; we aim for about 1–2%. Our assumption.
+SEPARATION_DEAD = 0.8
 
 # --- Role behaviours and run purposes ------------------------------------------------------------
 
@@ -120,18 +129,19 @@ SPRINT_RUN_S = (3.0, 6.0)  # how long a sprint run may last, s. Our assumption.
 # multiplied by this, then capped at S0. Position differences come from role behaviour, not
 # from different physical settings (PLAN §7, decision 3). Our assumption, fitted to HID and
 # sprint distance per position (synthesis §4.2) on 90–240 seeds; re-fitted on 2026-10-15 after
-# the push-apart rule and its look-ahead. Sprint distance is sensitive: 1% more effort gives
+# the push-apart rule, its look-ahead, and the closest-approach look-ahead and dead-ball
+# structures (set pieces, goal huddle). Sprint distance is sensitive: 1% more effort gives
 # about 5–10% more distance above 7 m/s. One knob cannot fit both for wide midfielders (their
 # HID runs high when their sprint distance is on target), so WM sits where both are about ±5%.
 POSITION_EFFORT = {
-    Position.GK: 1.002,
-    Position.CB: 0.947,
-    Position.FB: 1.003,
-    Position.DM: 1.053,
+    Position.GK: 0.997,
+    Position.CB: 0.955,
+    Position.FB: 1.006,
+    Position.DM: 1.05,
     Position.CM: 1.042,
-    Position.AM: 1.007,
-    Position.WM: 1.016,
-    Position.CF: 0.97,
+    Position.AM: 1.01,
+    Position.WM: 1.017,
+    Position.CF: 0.971,
 }
 # Defenders (CB, FB) who track an opponent running in behind: the nearest TRACKERS, aiming
 # TRACK_GOAL_SIDE metres goal-side of where the runner is going. Our assumption.
@@ -360,10 +370,31 @@ SAVE_TO_CORNER = 0.4
 BLOCK_TO_CORNER = 0.4
 CROSS_ZONE_U = 30.0  # m from the centre line, and wider than the box
 
-# Corner and attacking free kick: where six attackers stand, (slot index, u, v). Our assumption.
-BOX_SPOTS = [(1, 46.0, -5.0), (2, 46.0, 5.0), (10, 48.0, 0.0), (7, 44.0, -1.0), (6, 41.0, -8.0)]
-BOX_SPOTS += [(9, 43.0, 8.0)]
-BOX_MARKERS = [1, 2, 3, 4, 5, 6]  # defending slots that mark them
+# Set pieces: a corner, or a free kick within WALL_RANGE metres of the goal centre or more than
+# SET_PIECE_U metres upfield (in the attackers' frame). Six attackers go forward and six
+# defenders (BOX_MARKERS, slot indices) mark them, 1 m goal-side. Our assumption.
+SET_PIECE_U = 25.0
+BOX_MARKERS = [1, 2, 3, 4, 5, 6]
+# Corner, taken from the attackers' left (v > 0; mirrored from the right): (slot index, u, v) of
+# the attackers at the near post, the far post, near the penalty spot and the edge of the box,
+# and a pack of two (CORNER_PACK) side by side, CORNER_PACK_GAP metres apart, round
+# CORNER_PACK_AT near the six-yard line, marked from their outside shoulders
+# (CORNER_PACK_SHOULDER metres out). The pack is the crowd in the box: with a pack of three and
+# its markers, corners alone gave team-mates within 1 m in 2.5% of dead-ball player-frames, more
+# than the 1–2% we aim for in all (SEPARATION_DEAD; sim.spacing, 30 seeds). Our assumption.
+CORNER_SPOTS = [(6, 49.5, 3.5), (9, 48.0, -5.0), (2, 43.5, -6.0), (7, 36.0, -4.0)]
+CORNER_PACK = [1, 10]
+CORNER_PACK_AT = (45.5, -1.0)
+CORNER_PACK_GAP = 0.9
+CORNER_PACK_SHOULDER = 0.5
+# Free kick near goal: the markers hold a line FREE_KICK_LINE_GAP metres goal-side of the ball
+# (a few metres behind the wall, which stands 9.65 m from it), FREE_KICK_LINE[0] to [1] metres
+# off the goal line (the goal area is 5.5 m deep, the penalty area 16.5 m [IFAB2025, Law 1]),
+# and the six attackers stand level, 1 m upfield of them (onside), at FREE_KICK_LINE_V across.
+# Our assumption.
+FREE_KICK_LINE = (6.0, 18.0)
+FREE_KICK_LINE_GAP = 12.0
+FREE_KICK_LINE_V = (-10.0, -6.0, -2.0, 2.0, 6.0, 10.0)
 
 # Clearances when a pass into the box is intercepted.
 CLEAR_IN_BOX = 0.6
@@ -400,10 +431,22 @@ WALL_RANGE = 30.0
 WALL_NEAR = 22.0
 WALL_SIZE = (3, 4)
 WALL_GAP = 0.6
-# Wall players jog into place at this share of S0, below HI_SPEED for every player (at most
+# Wall players, and the attackers and markers of a set piece, jog into place at this share of
+# S0, below HI_SPEED for every player (at most
 # 0.5 × 1.053 × 10.3 = 5.4 m/s [19.6 km/h], derived from POSITION_EFFORT and S0_RANGE). Our
 # assumption.
 WALL_SPEED = 0.5
+# Attackers stay at least 1 m from a wall of three or more [IFAB2025, Law 13]: their targets and
+# the push keep them WALL_CLEAR from it (1 m plus a margin, our assumption).
+WALL_CLEAR = 1.5
+# After a goal the scorer jogs towards the nearer touchline (at most HUDDLE_RUN metres) and the
+# HUDDLE_N nearest outfield team-mates gather round them, HUDDLE_RING metres away, for HUDDLE_S
+# seconds; then everyone walks back for the kick-off. At WALL_SPEED, below HI_SPEED. Our
+# assumption.
+HUDDLE_N = 4
+HUDDLE_RING = 0.85
+HUDDLE_S = 20.0
+HUDDLE_RUN = 20.0
 LONG_STOPPAGE = 0.10  # chance of an extra stoppage (injury, VAR, substitution) at a dead ball
 LONG_STOPPAGE_S = (30.0, 90.0)
 

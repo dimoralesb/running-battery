@@ -3,8 +3,10 @@
 Simulates the matches in parallel, in memory (no files), and prints the mean ± SD across matches
 of the match figures against the interim targets (``summary.TARGETS``), movement per position
 and per team against synthesis §4.2, running and high-speed running by phase, the purpose of the
-high-intensity runs, and the time in each speed and acceleration band. ``--json`` also writes the
-report as JSON, so two runs can be compared; ``--idsse`` adds the IDSSE bands (``sim.idsse``).
+high-intensity runs, the time in each speed and acceleration band, and the spacing between
+players (``sim.spacing``). ``--json`` also writes the report as JSON, so two runs can be
+compared; ``--idsse`` adds the IDSSE bands (``sim.idsse``) and, once ``sim.spacing --idsse`` has
+cached the IDSSE positions, the IDSSE spacing.
 
 Two views of the movement:
 
@@ -32,6 +34,7 @@ import numpy as np
 
 from secondwind.schema import Position, RunPurpose
 from secondwind.sim import params as P
+from secondwind.sim import spacing
 from secondwind.sim.output import simulate
 from secondwind.sim.runs import speeds
 from secondwind.sim.summary import (
@@ -174,6 +177,7 @@ def match_stats(seed: int) -> dict:
         "accel_s": {g: s.tolist() for g, s in accel_s.items()},
         "purposes": dict(Counter(r.purpose.value for r in m.truth.runs)),
         "runs": len(m.truth.runs),
+        "spacing": spacing.sim_measure(m),
     }
 
 
@@ -280,11 +284,15 @@ def build_report(stats: list[dict], idsse: list[dict] | None = None) -> dict:
             if idsse:
                 entry["idsse_pct"] = band_pct(idsse, key, group)
             rep["bands"][f"{key}_{group}"] = entry
+    rep["spacing"] = spacing.summarise([s["spacing"] for s in stats])
     if idsse:
         from secondwind.sim.idsse import position_means
 
         rep["idsse_matches"] = [m["match_id"] for m in idsse]
         rep["idsse_positions"] = position_means(idsse)
+        cached = spacing.idsse_measures(cached_only=True)
+        if cached:
+            rep["idsse_spacing"] = spacing.summarise(cached)
     return rep
 
 
@@ -390,6 +398,10 @@ def format_report(rep: dict) -> str:
                 )
                 row += f"   IDSSE {ids[k]:>6.2f}   {diff:+6.2f} pp{ok}"
             lines.append(row)
+
+    lines.append("")
+    lines.append("  Spacing (truth: noise-free; sim.spacing). IDSSE: mean of its matches.")
+    lines.append(spacing.format_table(rep["spacing"], rep.get("idsse_spacing")))
     return "\n".join(lines)
 
 
