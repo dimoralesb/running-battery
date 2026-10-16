@@ -42,6 +42,12 @@ def main(argv: list[str] | None = None) -> None:
     )
     tempo.add_argument("--no-tempo", action="store_true", help="no shared match tempo")
     parser.add_argument(
+        "--vary",
+        action="store_true",
+        help="validation spread: this match draws its own fatigue effect sizes, noise and a "
+        "wider player prior (params.VARY)",
+    )
+    parser.add_argument(
         "--no-subs",
         action="store_true",
         help="no substitutions (with --no-fatigue --no-tempo there are none anyway)",
@@ -65,6 +71,7 @@ def main(argv: list[str] | None = None) -> None:
         fatigue=not args.no_fatigue,
         tempo=tempo,
         subs=not args.no_subs,
+        vary=args.vary,
     )
     frames = sum(len(p.alive) for p in match.periods)
     print(

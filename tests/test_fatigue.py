@@ -379,3 +379,26 @@ def test_substitution_at_a_stoppage():
     assert engine.sub_log == [(1, 0.0, 9, old.id, "H12")]
     sub = [e for e in engine.events if e["type"] == EventType.SUBSTITUTION]
     assert len(sub) == 1 and (sub[0]["player_id"], sub[0]["related_player_id"]) == (old.id, "H12")
+
+
+# --- Validation spread ----------------------------------------------------------------------------
+
+
+def test_wider_prior_reaches_outside_the_estimator_prior():
+    """``VARY_PLAYERS`` draws some CS and D′ outside the estimator's prior ranges (PLAN §3.2);
+    the default prior never does. Overrides reach the physiology's settings."""
+    rng = np.random.default_rng(0)
+    from secondwind.sim.rosters import true_params
+
+    wide = [true_params(rng, P.VARY_PLAYERS) for _ in range(2000)]
+    plain = [true_params(rng) for _ in range(2000)]
+    outside = lambda ps: np.mean(  # noqa: E731
+        [
+            not (P.CS_RANGE[0] <= p.cs <= P.CS_RANGE[1])
+            or not (P.D_PRIME_RANGE[0] <= p.d_prime <= P.D_PRIME_RANGE[1])
+            for p in ps
+        ]
+    )
+    assert outside(plain) == 0.0 and 0.05 < outside(wide) < 0.5
+    body = Physiology(_params(), np.random.default_rng(0), {"tank_m": 1500.0, "nope": 1.0})
+    assert body.settings()["tank_m"] == 1500.0 and "nope" not in body.settings()

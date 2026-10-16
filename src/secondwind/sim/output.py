@@ -151,26 +151,33 @@ def simulate(
     fatigue: bool = True,
     tempo: bool | float = True,
     subs: bool = True,
+    vary: bool = False,
 ) -> SimMatch:
     """One match. Club test values go into the metadata only if ``club_tests`` is set; the
     match itself is the same either way. Noise is drawn after the match, so ``noise_sigma``
     changes only the tracking positions. ``tempo``: True draws the shared tempo, a number fixes
     it (a story control), False leaves it out. ``subs``: substitutions (never with fatigue and
-    tempo both off). The tempo, the fatigue skips and the substitutions have their own
-    generators (spawned from the seed), so they never shift the match flow's draws."""
+    tempo both off). ``vary`` (the validation batch): this match draws its own fatigue effect
+    sizes and position noise (``noise_sigma`` is then ignored), and players come from a wider
+    prior (``draw_variation``); all of it goes into truth.json ``settings``. The tempo, the
+    fatigue skips, the substitutions and the variation have their own generators (spawned from
+    the seed), so they never shift the match flow's draws."""
     rng = np.random.default_rng(seed)
-    tempo_rng, fatigue_rng, subs_rng = (
-        np.random.default_rng(s) for s in np.random.SeedSequence(seed).spawn(3)
+    tempo_rng, fatigue_rng, subs_rng, vary_rng = (
+        np.random.default_rng(s) for s in np.random.SeedSequence(seed).spawn(4)
     )
-    teams = make_teams(rng)
+    effects, prior = draw_variation(vary_rng) if vary else ({}, None)
+    if vary:
+        noise_sigma = effects.pop("noise_sigma_m")
+    teams = make_teams(rng, prior)
     lengths = period_lengths(rng)
     first_kick = int(rng.integers(2))
     drawn = draw_tempo(tempo_rng)
     match_tempo = None if tempo is False else (drawn if tempo is True else float(tempo))
     players = [p.params for team in teams for p in team.players]
-    body = Physiology(players, fatigue_rng) if fatigue else None
+    body = Physiology(players, fatigue_rng, effects) if fatigue else None
     legacy = body is None and match_tempo is None  # params.PRE_FATIGUE calibration
-    plans = plan_substitutions(subs_rng, teams) if subs and not legacy else []
+    plans = plan_substitutions(subs_rng, teams, prior) if subs and not legacy else []
     engine = MatchEngine(rng, teams, body, match_tempo, pre_fatigue=legacy, subs=plans)
     periods = [
         engine.run_period(1, lengths[0], first_kick),
@@ -215,6 +222,8 @@ def simulate(
     settings: dict[str, float] = noise_settings(noise_sigma)
     if match_tempo is not None:
         settings["tempo"] = match_tempo
+    if vary:
+        settings |= {"varied": True} | prior_settings(prior)
     if body is None:
         truth = neutral_truth(match_id, played, periods, settings)
     else:
@@ -287,6 +296,26 @@ def run_truth(
                 )
             )
     return rows
+
+
+def draw_variation(rng: np.random.Generator) -> tuple[dict[str, float], dict]:
+    """This match's validation spread (PLAN §2.6, point 3): effect sizes and position noise,
+    each uniform in its ``params.VARY`` range, and the wider player prior
+    (``params.VARY_PLAYERS``)."""
+    effects = {k: round(float(rng.uniform(*r)), 4) for k, r in P.VARY.items()}
+    return effects, dict(P.VARY_PLAYERS)
+
+
+def prior_settings(prior: dict) -> dict[str, float]:
+    """The player prior for ``settings``, ranges as ``_lo`` and ``_hi``."""
+    out = {}
+    for k, v in prior.items():
+        name = f"prior_{k.removesuffix('_range')}"
+        if isinstance(v, tuple):
+            out[f"{name}_lo"], out[f"{name}_hi"] = v
+        else:
+            out[name] = v
+    return out
 
 
 def noise_settings(sigma: float) -> dict[str, float]:
@@ -444,8 +473,11 @@ def generate(
     fatigue: bool = True,
     tempo: bool | float = True,
     subs: bool = True,
+    vary: bool = False,
 ) -> SimMatch:
     """Simulate one match and write its four files to ``folder`` (match id: folder name)."""
-    match = simulate(seed, match_id or folder.name, club_tests, noise_sigma, fatigue, tempo, subs)
+    match = simulate(
+        seed, match_id or folder.name, club_tests, noise_sigma, fatigue, tempo, subs, vary
+    )
     write(match, folder, clean_copy)
     return match

@@ -112,10 +112,12 @@ def observed_kinematics(m) -> tuple[list[np.ndarray], list[np.ndarray]]:
     return out_v, out_a
 
 
-def match_stats(seed: int, fatigue: bool = True, tempo: bool = True, subs: bool = True) -> dict:
+def match_stats(
+    seed: int, fatigue: bool = True, tempo: bool = True, subs: bool = True, vary: bool = False
+) -> dict:
     """Everything the report needs from one match, as plain numbers. Movement is per slot
     (starter plus substitute), like the position targets (synthesis §4.2)."""
-    m = simulate(seed, f"batch{seed:04d}", fatigue=fatigue, tempo=tempo, subs=subs)
+    m = simulate(seed, f"batch{seed:04d}", fatigue=fatigue, tempo=tempo, subs=subs, vary=vary)
     starters = [p for team in m.metadata.teams for p in team.players if p.starter]
     ids = [p.id for p in starters]
     positions = [p.position.value for p in starters]
@@ -207,10 +209,11 @@ def run_batch(
     fatigue: bool = True,
     tempo: bool = True,
     subs: bool = True,
+    vary: bool = False,
 ) -> list[dict]:
     jobs = jobs or min(len(seeds), os.cpu_count() or 1)
     with ProcessPoolExecutor(max_workers=jobs) as pool:
-        job = partial(match_stats, fatigue=fatigue, tempo=tempo, subs=subs)
+        job = partial(match_stats, fatigue=fatigue, tempo=tempo, subs=subs, vary=vary)
         return list(pool.map(job, seeds))
 
 
@@ -451,6 +454,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--no-fatigue", action="store_true", help="the no-fatigue control")
     parser.add_argument("--no-tempo", action="store_true", help="no shared match tempo")
     parser.add_argument("--no-subs", action="store_true", help="no substitutions")
+    parser.add_argument("--vary", action="store_true", help="validation spread (params.VARY)")
     parser.add_argument(
         "--idsse", action="store_true", help="compare bands with IDSSE (needs sim.idsse first)"
     )
@@ -463,7 +467,12 @@ def main(argv: list[str] | None = None) -> None:
         if idsse is None:
             print("No derived IDSSE files: run python -m secondwind.sim.idsse first.\n")
     stats = run_batch(
-        parse_seeds(args.seeds), args.jobs, not args.no_fatigue, not args.no_tempo, not args.no_subs
+        parse_seeds(args.seeds),
+        args.jobs,
+        not args.no_fatigue,
+        not args.no_tempo,
+        not args.no_subs,
+        args.vary,
     )
     rep = build_report(stats, idsse)
     print(format_report(rep))

@@ -369,6 +369,42 @@ CAPACITY_MAX_LOSS = 0.05
 TIRED_BELOW = 0.75
 LATE_TANK_BELOW = 0.75
 
+# --- Validation spread (PLAN §2.6, point 3) ---------------------------------------------------
+
+# With ``vary`` (the validation batch, ``--vary``) each match draws its own assumptions, uniform
+# in these ranges, so the estimator is judged across them, not at one setting [Qin2025, §2.2;
+# RuizPinto2026, Table 3]. They go into truth.json ``settings``. The ranges are our assumption,
+# around the defaults above, except where noted. The truth labels (TIRED_BELOW,
+# LATE_TANK_BELOW) stay fixed: they define what is scored.
+VARY = {
+    "tank_m": (1400.0, 2800.0),
+    "tank_half_time_refill": (0.3, 0.7),
+    # +40 to +85% slower slow-pool refill at a tank of 0.7 [Chorley2022; synthesis §3.2.4]
+    "slow_tau_per_tank": (1.33, 2.83),
+    "dip": (0.05, 0.15),
+    "dip_s": (300.0, 900.0),
+    "pool_free": (0.65, 0.85),
+    "pool_gain": (0.7, 1.3),
+    "shorten": (0.15, 0.45),
+    "slow": (0.0, 0.06),
+    "carry_slow": (0.15, 0.45),
+    "top_speed_per_tank": (0.0, 0.06),
+    "accel_per_tank": (0.06, 0.18),
+    "noise_sigma_m": (0.03, 0.10),
+}
+# Players in a varied match come from a wider prior than the estimator's (CS 3.7 ± 0.25 m/s,
+# 3.2–4.2; D′ 180 ± 54 m, 100–300; PLAN §3.2), so some true values lie outside it: SDs × 1.5 and
+# wider ranges, and wider pool settings. Our assumption.
+VARY_PLAYERS = {
+    "cs_sd": 0.375,
+    "cs_range": (2.9, 4.5),
+    "d_prime_sd": 81.0,
+    "d_prime_range": (70.0, 380.0),
+    "fast_fraction_range": (0.35, 0.55),
+    "tau_fast_range": (10.0, 45.0),
+    "tau_slow_range": (350.0, 600.0),
+}
+
 # --- Position noise (synthesis §3.1) -------------------------------------------------------------
 
 # White Gaussian noise, σ per axis. Optical tracking against VICON is off by 0.06–0.18 m

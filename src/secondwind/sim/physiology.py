@@ -86,7 +86,13 @@ class Decision:
 
 
 class Physiology:
-    def __init__(self, params: list[TrueParams], rng: np.random.Generator):
+    def __init__(
+        self,
+        params: list[TrueParams],
+        rng: np.random.Generator,
+        overrides: dict[str, float] | None = None,
+    ):
+        """``overrides``: this match's effect sizes, by ``settings`` name (``params.VARY``)."""
         self.rng = rng
         get = lambda name: np.array([getattr(p, name) for p in params])  # noqa: E731
         self.cs = get("cs")
@@ -120,6 +126,7 @@ class Physiology:
             "tired_below": P.TIRED_BELOW,
             "late_tank_below": P.LATE_TANK_BELOW,
         }
+        self.s.update({k: v for k, v in (overrides or {}).items() if k in self.s})
         self.decisions: list[Decision] = []
         self.rows: list[np.ndarray] = []  # one (7, players) row per second, see ``series``
         self.periods: list[int] = []

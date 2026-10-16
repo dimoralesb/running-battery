@@ -77,10 +77,12 @@ def generated(tmp_path_factory) -> tuple[dict, object]:
     folders["clean"] = root / "clean" / "m0001"
     folders["off"] = root / "off" / "m0001"
     folders["legacy"] = root / "legacy" / "m0001"
+    folders["vary"] = root / "vary" / "m0001"
     jobs = [(seed, folders[seed], []) for seed in SEEDS]
     jobs += [(1, folders["again"], []), (1, folders["club"], ["--club-tests"])]
     jobs += [(1, folders["clean"], ["--clean-copy"]), (1, folders["off"], ["--no-fatigue"])]
     jobs += [(1, folders["legacy"], ["--no-fatigue", "--no-tempo"])]
+    jobs += [(1, folders["vary"], ["--vary"])]
     procs = generate(jobs)
     sim1 = simulate(1, "m0001")
     finish(procs)
@@ -278,6 +280,27 @@ def test_no_fatigue_control(folders):
     params = {k: {p.player_id: p.params for p in t.players} for k, t in (("on", on), ("off", off))}
     assert all(params["off"][k] == v for k, v in params["on"].items() if k in params["off"])
     assert (folders[1] / TRACKING).read_bytes() != (folders["off"] / TRACKING).read_bytes()
+
+
+def test_varied_match_records_its_settings(folders):
+    """``--vary``: the match's effect sizes and noise are drawn in their ``params.VARY`` ranges
+    and written to ``settings`` with the wider player prior; the label thresholds stay fixed;
+    the starters are the same players (same names), with values from the wider prior."""
+    plain, varied = read_truth(folders[1]), read_truth(folders["vary"])
+    s = varied.settings
+    assert s["varied"] is True and "varied" not in plain.settings
+    for key, (lo, hi) in P.VARY.items():
+        assert lo <= s[key] <= hi, key
+    assert s["tired_below"] == P.TIRED_BELOW and s["late_tank_below"] == P.LATE_TANK_BELOW
+    assert s["prior_cs_sd"] == P.VARY_PLAYERS["cs_sd"]
+    assert (s["prior_d_prime_lo"], s["prior_d_prime_hi"]) == P.VARY_PLAYERS["d_prime_range"]
+    meta = {
+        k: MatchMetadata.model_validate_json((folders[k] / METADATA).read_text())
+        for k in (1, "vary")
+    }
+    names = {k: [p.name for t in m.teams for p in t.players if p.starter] for k, m in meta.items()}
+    assert names[1] == names["vary"]
+    assert [p.params for p in plain.players[:22]] != [p.params for p in varied.players[:22]]
 
 
 def test_truth_series_with_fatigue(sim1):

@@ -100,16 +100,22 @@ def _clipped_normal(rng: np.random.Generator, mean: float, sd: float, lo_hi) -> 
     return float(np.clip(rng.normal(mean, sd), *lo_hi))
 
 
-def true_params(rng: np.random.Generator) -> TrueParams:
-    """Hidden physiology of one player (synthesis §3.2.3, §3.2.4, §3.6)."""
+def true_params(rng: np.random.Generator, prior: dict | None = None) -> TrueParams:
+    """Hidden physiology of one player (synthesis §3.2.3, §3.2.4, §3.6). ``prior`` overrides
+    the CS, D′ and pool settings (``params.VARY_PLAYERS``); the draws are the same either way."""
+    q = prior or {}
+    cs_sd, cs_range = q.get("cs_sd", P.CS_SD), q.get("cs_range", P.CS_RANGE)
+    dp_sd, dp_range = q.get("d_prime_sd", P.D_PRIME_SD), q.get("d_prime_range", P.D_PRIME_RANGE)
     return TrueParams(
-        cs=round(_clipped_normal(rng, P.CS_MEAN, P.CS_SD, P.CS_RANGE), 3),
-        d_prime=round(_clipped_normal(rng, P.D_PRIME_MEAN, P.D_PRIME_SD, P.D_PRIME_RANGE), 1),
+        cs=round(_clipped_normal(rng, P.CS_MEAN, cs_sd, cs_range), 3),
+        d_prime=round(_clipped_normal(rng, P.D_PRIME_MEAN, dp_sd, dp_range), 1),
         a0=round(_clipped_normal(rng, P.A0_MEAN, P.A0_SD, P.A0_RANGE), 3),
         s0=round(_clipped_normal(rng, P.S0_MEAN, P.S0_SD, P.S0_RANGE), 3),
-        fast_fraction=round(float(rng.uniform(*P.FAST_FRACTION_RANGE)), 3),
-        tau_fast=round(float(rng.uniform(*P.TAU_FAST_RANGE)), 1),
-        tau_slow=round(float(rng.uniform(*P.TAU_SLOW_RANGE)), 1),
+        fast_fraction=round(
+            float(rng.uniform(*q.get("fast_fraction_range", P.FAST_FRACTION_RANGE))), 3
+        ),
+        tau_fast=round(float(rng.uniform(*q.get("tau_fast_range", P.TAU_FAST_RANGE))), 1),
+        tau_slow=round(float(rng.uniform(*q.get("tau_slow_range", P.TAU_SLOW_RANGE))), 1),
     )
 
 
@@ -137,7 +143,7 @@ def _player_name(rng: np.random.Generator, used: set[str]) -> str:
             return name
 
 
-def make_teams(rng: np.random.Generator) -> list[SimTeam]:
+def make_teams(rng: np.random.Generator, prior: dict | None = None) -> list[SimTeam]:
     """Home and away teams, both 4-2-3-1. Ids are H01–H11 and A01–A11 in formation order."""
     places = rng.choice(len(PLACES), size=2, replace=False)
     home_attacks_positive_x = bool(rng.random() < 0.5)
@@ -147,7 +153,7 @@ def make_teams(rng: np.random.Generator) -> list[SimTeam]:
         shirts = {pos: list(numbers) for pos, numbers in P.SHIRTS.items()}
         players = []
         for i, (pos, u, v) in enumerate(P.FORMATION_4231, start=1):
-            truth = true_params(rng)
+            truth = true_params(rng, prior)
             players.append(
                 SimPlayer(
                     id=f"{side[0].upper()}{i:02d}",
@@ -174,7 +180,9 @@ def make_teams(rng: np.random.Generator) -> list[SimTeam]:
     return teams
 
 
-def plan_substitutions(rng: np.random.Generator, teams: list[SimTeam]) -> list[SubPlan]:
+def plan_substitutions(
+    rng: np.random.Generator, teams: list[SimTeam], prior: dict | None = None
+) -> list[SubPlan]:
     """Each team's substitutes (params, "Substitutions"): how many, the windows, and who goes
     off, like for like. A substitute gets their own hidden values and club test values. Ids
     H12–H16 and A12–A16, shirts 12–16, in the order they are planned."""
@@ -194,7 +202,7 @@ def plan_substitutions(rng: np.random.Generator, teams: list[SimTeam]) -> list[S
                 j = int(rng.choice(11, p=weight / weight.sum()))
                 weight[j] = 0.0  # a slot is substituted once
                 off = team.players[j]
-                truth = true_params(rng)
+                truth = true_params(rng, prior)
                 player = SimPlayer(
                     id=f"{team.side[0].upper()}{number:02d}",
                     name=_player_name(rng, used),
