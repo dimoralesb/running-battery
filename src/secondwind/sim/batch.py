@@ -27,7 +27,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 from collections import Counter
 from concurrent.futures import ProcessPoolExecutor
 from functools import partial
@@ -35,6 +34,7 @@ from pathlib import Path
 
 import numpy as np
 
+from secondwind import default_workers
 from secondwind.schema import Position, RunPurpose
 from secondwind.sim import fatigue_checks, spacing
 from secondwind.sim import params as P
@@ -211,7 +211,7 @@ def run_batch(
     subs: bool = True,
     vary: bool = False,
 ) -> list[dict]:
-    jobs = jobs or min(len(seeds), os.cpu_count() or 1)
+    jobs = jobs or min(len(seeds), default_workers())
     with ProcessPoolExecutor(max_workers=jobs) as pool:
         job = partial(match_stats, fatigue=fatigue, tempo=tempo, subs=subs, vary=vary)
         return list(pool.map(job, seeds))
@@ -449,7 +449,9 @@ def format_report(rep: dict) -> str:
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(prog="python -m secondwind.sim.batch", description=__doc__)
     parser.add_argument("--seeds", default="1-10", help="e.g. 1-30 or 1,3,5 (default 1-10)")
-    parser.add_argument("--jobs", type=int, help="worker processes (default: one per seed)")
+    parser.add_argument(
+        "--jobs", type=int, help="worker processes (default: one per physical core)"
+    )
     parser.add_argument("--json", type=Path, help="also write the report to this JSON file")
     parser.add_argument("--no-fatigue", action="store_true", help="the no-fatigue control")
     parser.add_argument("--no-tempo", action="store_true", help="no shared match tempo")

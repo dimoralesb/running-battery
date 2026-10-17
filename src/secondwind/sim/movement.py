@@ -16,11 +16,20 @@ high back line when the team has the ball (``keeper_spot``).
 The team-shape helpers work in a team's *attacking frame*: u points at the opponent's goal and
 v to the team's left, so x = dir·u and y = dir·v with dir = ±1. Inline numbers (line limits,
 goalkeeper position) are our assumption.
+
+``spread_targets``, ``push_apart`` and ``step`` run 600 times a minute for 22 players, so their
+loops are compiled with numba (2026-10-17). The kernels do the same arithmetic in the same order
+as the numpy versions they replaced (git history before that date), so a seed gives the same
+match, file for file (checked on five matches, varied and no-fatigue included). ``params``
+values are passed in as arguments: numba would freeze module globals at compile time.
 """
 
 from __future__ import annotations
 
+import math
+
 import numpy as np
+from numba import njit
 
 from secondwind.sim import params as P
 
@@ -49,7 +58,7 @@ def shape_targets(
     line = shape["line_gain"] * ball_uv[0] + shape["line_offset"]
     if pressing:
         line += P.PRESS_LINE_PUSH
-    line = float(np.clip(line, -30.0, 25.0))
+    line = min(max(float(line), -30.0), 25.0)
     out = np.empty_like(slots)
     out[:, 0] = line + shape["depth"] * slots[:, 0]
     if hold is not None:
@@ -66,17 +75,17 @@ def keeper_spot(ball_uv: np.ndarray, in_possession: bool, back_line_u: float) ->
     to_ball = ball_uv - goal
     dist = max(float(np.hypot(*to_ball)), 1e-6)
     lo, hi = P.GK_DEPTH
-    depth = float(np.clip(lo + P.GK_DEPTH_SLOPE * (dist - P.GK_DEPTH_FROM), lo, hi))
+    depth = min(max(lo + P.GK_DEPTH_SLOPE * (dist - P.GK_DEPTH_FROM), lo), hi)
     spot = goal + to_ball / dist * min(depth, dist)
     if in_possession:
-        u = np.clip(back_line_u - P.GK_BEHIND_LINE, spot[0], -P.HALF_LENGTH + P.GK_MAX_OFF)
+        u = min(max(back_line_u - P.GK_BEHIND_LINE, spot[0]), -P.HALF_LENGTH + P.GK_MAX_OFF)
         spot = np.array([u, 0.5 * spot[1]])
     return spot
 
 
 def clip_to_pitch(points: np.ndarray, edge: float = EDGE) -> np.ndarray:
     lim = np.array([P.HALF_LENGTH - edge, P.HALF_WIDTH - edge])
-    return np.clip(points, -lim, lim)
+    return np.minimum(np.maximum(points, -lim), lim)
 
 
 def a_max(speed: np.ndarray, a0: np.ndarray, s0: np.ndarray) -> np.ndarray:
@@ -109,26 +118,31 @@ def forecast_hi_run(
     return False
 
 
-def _too_close(
-    points: np.ndarray, team_of: np.ndarray, team_keep: float, opp_keep: float
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """Pairs (i, j) closer than ``team_keep`` (team-mates) or ``opp_keep`` (opponents): how much
-    closer (m) and the unit vector from j to i. Two points on exactly the same spot split along
-    x, the lower index going left."""
-    gap = points[:, None, :] - points[None, :, :]
-    dist = np.hypot(gap[..., 0], gap[..., 1])
-    same = team_of[:, None] == team_of[None, :]
-    keep = np.where(same, team_keep, opp_keep)
-    short = np.maximum(keep - dist, 0.0)
-    np.fill_diagonal(short, 0.0)
-    i, j = np.nonzero(short)
-    d = dist[i, j]
-    away = np.where(
-        d[:, None] > 1e-6,
-        gap[i, j] / np.maximum(d, 1e-6)[:, None],
-        np.sign(i - j)[:, None] * np.array([1.0, 0.0]),
-    )
-    return i, j, short[i, j], away
+@njit(cache=True)
+def _spread_kernel(target, team_of, fixed, keep):
+    """``spread_targets`` in loops (pairs in row-major order, as ``np.add.at``); also whether
+    any pair was too close."""
+    n = target.shape[0]
+    out = target.copy()
+    moved = False
+    for i in range(n):
+        for j in range(n):
+            if i == j or team_of[i] != team_of[j]:
+                continue
+            gx, gy = target[i, 0] - target[j, 0], target[i, 1] - target[j, 1]
+            d = math.hypot(gx, gy)
+            short = max(keep - d, 0.0)
+            if short == 0.0:
+                continue
+            moved = True
+            if d > 1e-6:
+                ax, ay = gx / max(d, 1e-6), gy / max(d, 1e-6)
+            else:
+                ax, ay = _sign(i - j) * 1.0, _sign(i - j) * 0.0
+            share = 0.0 if fixed[i] else (1.0 if fixed[j] else 0.5)
+            out[i, 0] += share * short * ax
+            out[i, 1] += share * short * ay
+    return out, moved
 
 
 def spread_targets(
@@ -140,43 +154,90 @@ def spread_targets(
     """Team-mates' targets closer than ``keep`` (by default ``SEPARATION_TEAM``) move apart,
     each by half the shortfall (all of it when the other is ``anchored``, which never moves)."""
     keep = P.SEPARATION_TEAM if keep is None else keep
-    i, j, short, away = _too_close(target, team_of, keep, 0.0)
-    if len(i) == 0:
-        return target
-    fixed = np.zeros(len(target), dtype=bool) if anchored is None else anchored
-    share = np.where(fixed[i], 0.0, np.where(fixed[j], 1.0, 0.5))
-    out = target.copy()
-    np.add.at(out, i, (share * short)[:, None] * away)
-    return clip_to_pitch(out)
-
-
-def _closest_approach(
-    pos: np.ndarray, vel: np.ndarray, team_of: np.ndarray, keep: float, horizon: float
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """Team-mate pairs (i, j) that will come closer than ``keep`` within ``horizon`` seconds at
-    their current velocities: how much closer at their closest approach (m), and the unit vector
-    from j to i at that moment (sideways for paths that cross). A pair already moving apart is
-    judged where it is now."""
-    r = pos[:, None, :] - pos[None, :, :]
-    w = vel[:, None, :] - vel[None, :, :]
-    ww = np.einsum("ijk,ijk->ij", w, w)
-    t = np.clip(-np.einsum("ijk,ijk->ij", r, w) / np.maximum(ww, 1e-9), 0.0, horizon)
-    miss = r + w * t[..., None]
-    dist = np.hypot(miss[..., 0], miss[..., 1])
-    short = np.where(team_of[:, None] == team_of[None, :], np.maximum(keep - dist, 0.0), 0.0)
-    np.fill_diagonal(short, 0.0)
-    i, j = np.nonzero(short)
-    d = dist[i, j]
-    now = r[i, j]
-    now_d = np.hypot(now[:, 0], now[:, 1])
-    # Head-on (they would meet exactly): step aside, each to their own right.
-    side = np.where(
-        now_d[:, None] > 1e-6,
-        np.stack([-now[:, 1], now[:, 0]], axis=1) / np.maximum(now_d, 1e-6)[:, None],
-        np.sign(i - j)[:, None] * np.array([1.0, 0.0]),
+    n = len(target)
+    fixed = np.zeros(n, dtype=np.bool_) if anchored is None else np.asarray(anchored, np.bool_)
+    out, moved = _spread_kernel(
+        np.ascontiguousarray(target, dtype=np.float64),
+        np.ascontiguousarray(team_of, dtype=np.int64),
+        fixed,
+        float(keep),
     )
-    away = np.where(d[:, None] > 1e-6, miss[i, j] / np.maximum(d, 1e-6)[:, None], side)
-    return i, j, short[i, j], away
+    return clip_to_pitch(out) if moved else target
+
+
+@njit(cache=True)
+def _sign(x: int) -> float:
+    return 1.0 if x > 0 else (-1.0 if x < 0 else 0.0)
+
+
+@njit(cache=True)
+def _push_kernel(
+    pos, vel, team_of, anchored, wall, look_ahead, keep, horizon, opp_keep, wall_clear, tau, most
+):
+    """``push_apart`` in loops: the same sums in the same order as the numpy version (pairs in
+    row-major order, team-mates, then opponents, then the wall)."""
+    n = pos.shape[0]
+    push = np.zeros((n, 2))
+    # Team-mates: at their closest approach within ``horizon`` (``_closest_approach``), or where
+    # they are now (``_too_close``).
+    for i in range(n):
+        for j in range(n):
+            if i == j or team_of[i] != team_of[j]:
+                continue
+            rx, ry = pos[i, 0] - pos[j, 0], pos[i, 1] - pos[j, 1]
+            if look_ahead:
+                wx, wy = vel[i, 0] - vel[j, 0], vel[i, 1] - vel[j, 1]
+                ww = wx * wx + wy * wy
+                t = -(rx * wx + ry * wy) / max(ww, 1e-9)
+                t = min(max(t, 0.0), horizon)
+                mx, my = rx + wx * t, ry + wy * t
+            else:
+                mx, my = rx, ry
+            d = math.hypot(mx, my)
+            short = max(keep - d, 0.0)
+            if short == 0.0:
+                continue
+            if d > 1e-6:
+                ax, ay = mx / max(d, 1e-6), my / max(d, 1e-6)
+            elif look_ahead:
+                now_d = math.hypot(rx, ry)
+                if now_d > 1e-6:  # head-on: step aside, each to their own right
+                    ax, ay = -ry / max(now_d, 1e-6), rx / max(now_d, 1e-6)
+                else:
+                    ax, ay = _sign(i - j) * 1.0, _sign(i - j) * 0.0
+            else:
+                ax, ay = _sign(i - j) * 1.0, _sign(i - j) * 0.0
+            push[i, 0] += short * ax / tau
+            push[i, 1] += short * ay / tau
+    # Opponents, where they are now; then opponents of the wall members, off the wall.
+    for stage in range(2 if wall_clear > 0.0 else 1):
+        for i in range(n):
+            for j in range(n):
+                if i == j or team_of[i] == team_of[j]:
+                    continue
+                k = opp_keep if stage == 0 else (wall_clear if wall[j] and not wall[i] else 0.0)
+                gx, gy = pos[i, 0] - pos[j, 0], pos[i, 1] - pos[j, 1]
+                d = math.hypot(gx, gy)
+                short = max(k - d, 0.0)
+                if short == 0.0:
+                    continue
+                if d > 1e-6:
+                    ax, ay = gx / max(d, 1e-6), gy / max(d, 1e-6)
+                else:
+                    ax, ay = _sign(i - j) * 1.0, _sign(i - j) * 0.0
+                push[i, 0] += short * ax / tau
+                push[i, 1] += short * ay / tau
+        if stage == 0:
+            for i in range(n):
+                if anchored[i]:
+                    push[i, 0] = 0.0
+                    push[i, 1] = 0.0
+    for i in range(n):
+        size = math.hypot(push[i, 0], push[i, 1])
+        f = min(1.0, most / max(size, 1e-9))
+        push[i, 0] *= f
+        push[i, 1] *= f
+    return push
 
 
 def push_apart(
@@ -194,24 +255,65 @@ def push_apart(
     in time; opponents where they are now. ``anchored`` (bool) players are not pushed, but
     still push others. Opponents of the ``wall`` (bool) members, anchored or not, are pushed
     off it to ``WALL_CLEAR`` [IFAB2025, Law 13]."""
-    keep = P.SEPARATION_TEAM if team_keep is None else team_keep
-    push = np.zeros_like(pos)
-    if vel is None:
-        i, j, short, away = _too_close(pos, team_of, keep, 0.0)
-    else:
-        i, j, short, away = _closest_approach(pos, vel, team_of, keep, P.SEPARATION_LOOKAHEAD)
-    np.add.at(push, i, short[:, None] * away / P.SEPARATION_TAU)
-    i, j, short, away = _too_close(pos, team_of, 0.0, P.SEPARATION_OPP)
-    np.add.at(push, i, short[:, None] * away / P.SEPARATION_TAU)
-    if anchored is not None:
-        push[anchored] = 0.0
-    if wall is not None:
-        keep_off = np.where(wall[None, :] & ~wall[:, None], P.WALL_CLEAR, 0.0)
-        i, j, short, away = _too_close(pos, team_of, 0.0, keep_off)
-        np.add.at(push, i, short[:, None] * away / P.SEPARATION_TAU)
-    size = np.hypot(push[:, 0], push[:, 1])
-    push *= np.minimum(1.0, P.SEPARATION_MAX / np.maximum(size, 1e-9))[:, None]
-    return push
+    n = len(pos)
+    return _push_kernel(
+        np.ascontiguousarray(pos, dtype=np.float64),
+        np.zeros((n, 2)) if vel is None else np.ascontiguousarray(vel, dtype=np.float64),
+        np.ascontiguousarray(team_of, dtype=np.int64),
+        np.zeros(n, dtype=np.bool_) if anchored is None else np.asarray(anchored, dtype=np.bool_),
+        np.zeros(n, dtype=np.bool_) if wall is None else np.asarray(wall, dtype=np.bool_),
+        vel is not None,
+        float(P.SEPARATION_TEAM if team_keep is None else team_keep),
+        float(P.SEPARATION_LOOKAHEAD),
+        float(P.SEPARATION_OPP),
+        float(P.WALL_CLEAR) if wall is not None else 0.0,
+        float(P.SEPARATION_TAU),
+        float(P.SEPARATION_MAX),
+    )
+
+
+@njit(cache=True)
+def _step_kernel(
+    pos, vel, target, speed_cap, a0, s0, calm, push, has_push, calm_tau, tau, calm_alpha,
+    brake, turn, dt,
+):  # fmt: skip
+    """``step`` in a loop over players: the same arithmetic in the same order as the numpy
+    version (``einsum`` of two components = x·x + y·y)."""
+    n = pos.shape[0]
+    new_pos, new_vel = np.empty((n, 2)), np.empty((n, 2))
+    for i in range(n):
+        gx, gy = target[i, 0] - pos[i, 0], target[i, 1] - pos[i, 1]
+        dist = math.hypot(gx, gy)
+        arrive = calm_tau if calm[i] else tau
+        want_speed = min(min(speed_cap[i], s0[i]), dist / arrive)
+        hx, hy = (gx / dist, gy / dist) if dist > 1e-6 else (0.0, 0.0)
+        wx, wy = hx * want_speed, hy * want_speed
+        if has_push:
+            most = max(want_speed, math.hypot(push[i, 0], push[i, 1]))
+            wx, wy = wx + push[i, 0], wy + push[i, 1]
+            size = math.hypot(wx, wy)
+            f = min(1.0, most / max(size, 1e-9))
+            wx, wy = wx * f, wy * f
+        alpha = a0[i] / s0[i] * (calm_alpha if calm[i] else 1.0)
+        ax, ay = alpha * (wx - vel[i, 0]), alpha * (wy - vel[i, 1])
+        speed = math.hypot(vel[i, 0], vel[i, 1])
+        lx, ly = (vel[i, 0] / speed, vel[i, 1] / speed) if speed > 1e-6 else (hx, hy)
+        a_along = ax * lx + ay * ly
+        cx, cy = ax - a_along * lx, ay - a_along * ly
+        a_max_now = max(a0[i] * (1.0 - speed / s0[i]), 0.0)
+        a_along = min(max(a_along, -brake), a_max_now)
+        across = math.hypot(cx, cy)
+        f = turn / across if across > turn else 1.0
+        cx, cy = cx * f, cy * f
+        vx = vel[i, 0] + (a_along * lx + cx) * dt
+        vy = vel[i, 1] + (a_along * ly + cy) * dt
+        new_speed = math.hypot(vx, vy)
+        limit = min(s0[i], speed + a_max_now * dt)
+        f = limit / new_speed if new_speed > limit else 1.0
+        vx, vy = vx * f, vy * f
+        new_vel[i, 0], new_vel[i, 1] = vx, vy
+        new_pos[i, 0], new_pos[i, 1] = pos[i, 0] + vx * dt, pos[i, 1] + vy * dt
+    return new_pos, new_vel
 
 
 def step(
@@ -231,40 +333,31 @@ def step(
     a run or a ball role: they use the gentler ``CALM_ALPHA`` and ``CALM_ARRIVE_TAU``. ``push``
     (from ``push_apart``) is added to the wanted velocity, before the caps; it never raises the
     wanted speed above the larger of the two.
+
+    Speeding up is capped at a_max(v), braking at ``BRAKE_MAX`` (the part of the acceleration
+    along the current velocity), turning at ``TURN_MAX`` (the part across it); turning adds a
+    little speed in a discrete step, so the new speed is kept within a_max(v) and S0.
     """
-    gap = target - pos
-    dist = np.hypot(gap[:, 0], gap[:, 1])
-    calm = np.zeros(len(pos), dtype=bool) if calm is None else calm
-    arrive = np.where(calm, P.CALM_ARRIVE_TAU, P.ARRIVE_TAU)
-    want_speed = np.minimum(np.minimum(speed_cap, s0), dist / arrive)
-    with np.errstate(invalid="ignore", divide="ignore"):
-        heading = np.where(dist[:, None] > 1e-6, gap / dist[:, None], 0.0)
-    want = heading * want_speed[:, None]
-    if push is not None:
-        # The push turns or slows a moving player but never makes them faster than they want.
-        most = np.maximum(want_speed, np.hypot(push[:, 0], push[:, 1]))
-        want = want + push
-        size = np.hypot(want[:, 0], want[:, 1])
-        want *= np.minimum(1.0, most / np.maximum(size, 1e-9))[:, None]
-    alpha = a0 / s0 * np.where(calm, P.CALM_ALPHA, 1.0)
-    acc = alpha[:, None] * (want - vel)
+    n = len(pos)
 
-    # Split into the part along the current velocity (speeding up or braking) and the part
-    # across it (turning), and cap each.
-    speed = np.hypot(vel[:, 0], vel[:, 1])
-    with np.errstate(invalid="ignore", divide="ignore"):
-        along = np.where(speed[:, None] > 1e-6, vel / speed[:, None], heading)
-    a_along = np.einsum("ij,ij->i", acc, along)
-    a_across = acc - a_along[:, None] * along
-    a_along = np.clip(a_along, -P.BRAKE_MAX, a_max(speed, a0, s0))
-    across = np.hypot(a_across[:, 0], a_across[:, 1])
-    with np.errstate(invalid="ignore", divide="ignore"):
-        a_across *= np.where(across > P.TURN_MAX, P.TURN_MAX / across, 1.0)[:, None]
-    vel = vel + (a_along[:, None] * along + a_across) * P.DT
+    def f64(x) -> np.ndarray:
+        x = np.asarray(x, dtype=np.float64)
+        return x if x.shape[:1] == (n,) else np.broadcast_to(x, (n,) + x.shape[1:]).copy()
 
-    # Turning adds a little speed in a discrete step: keep the gain within a_max(v) and S0.
-    new_speed = np.hypot(vel[:, 0], vel[:, 1])
-    limit = np.minimum(s0, speed + a_max(speed, a0, s0) * P.DT)
-    with np.errstate(invalid="ignore", divide="ignore"):
-        vel = vel * np.where(new_speed > limit, limit / new_speed, 1.0)[:, None]
-    return pos + vel * P.DT, vel
+    return _step_kernel(
+        f64(pos),
+        f64(vel),
+        f64(target),
+        f64(speed_cap),
+        f64(a0),
+        f64(s0),
+        np.zeros(n, dtype=np.bool_) if calm is None else np.asarray(calm, dtype=np.bool_),
+        np.zeros((n, 2)) if push is None else f64(push),
+        push is not None,
+        float(P.CALM_ARRIVE_TAU),
+        float(P.ARRIVE_TAU),
+        float(P.CALM_ALPHA),
+        float(P.BRAKE_MAX),
+        float(P.TURN_MAX),
+        float(P.DT),
+    )

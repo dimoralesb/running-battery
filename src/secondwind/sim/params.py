@@ -39,9 +39,16 @@ FIRST_HALF_ADDED_SHARE = (0.25, 0.40)
 
 # --- Players ------------------------------------------------------------------------------------
 
-# Hidden "true" values, one shared prior for every outfield position (PLAN §7, decision 3).
-# CS 3.7 m/s (13.3 km/h), range 3.2–4.2 [synthesis §3.2.3]; SD = range / 4 is our assumption.
-CS_MEAN, CS_SD, CS_RANGE = 3.7, 0.25, (3.2, 4.2)
+# Hidden "true" values, one shared prior for every outfield position (PLAN §7, decisions 3 and 13):
+# a typical professional. CS 4.1 ± 0.3 m/s (14.8 km/h), clipped at ±2 SD to 3.5–4.7. Derivation
+# (synthesis §3.2.3): professionals' VO₂max 57.6 ml/kg/min and an oxygen cost of running of about
+# 0.196 ml/kg/m (derived: oxygen use at the anaerobic threshold divided by its speed) [Modric2020,
+# Table 1]; CS lies at 70–90% of VO₂max [Jones2017, p.S67], i.e. 3.4 / 3.9 / 4.4 m/s at 70 / 80 /
+# 90% (derived); professionals are well trained, so 85% (our assumption): 4.16, rounded to 4.1.
+# SD: the spread between professionals' threshold speeds, 0.21–0.26 m/s [Modric2020, Table 1],
+# widened to 0.3 for the uncertainty in the 70–90% (our assumption). Until 2026-10-17 the
+# generator drew from a university prior, CS 3.7 ± 0.25 m/s (now ``engine.params.PRIORS``).
+CS_MEAN, CS_SD, CS_RANGE = 4.1, 0.3, (3.5, 4.7)
 # D′ 180 m, range 100–300 [synthesis §3.2.3]; SD 54 m [Sutcliffe2025, Fig. 2].
 D_PRIME_MEAN, D_PRIME_SD, D_PRIME_RANGE = 180.0, 54.0, (100.0, 300.0)
 # A0 ~ N(7.4, 0.5) m/s², range 6.6–8.4; S0 ~ N(9.3, 0.45) m/s, range 8.4–10.3 [Morin2021, Table 1].
@@ -142,13 +149,17 @@ SPRINT_RUN_S = (3.0, 6.0)  # how long a sprint run may last, s. Our assumption.
 # on (the totals of real matches include fatigue): tired players skip, shorten and slow runs,
 # so every position needs a higher work rate than with fatigue off. DM and CM trimmed 0.5% with
 # substitutions on (2026-10-16): their sprint was +7% (240 seeds; fresh substitutes add sprinting).
+# Re-fitted on 2026-10-17 for the professional prior (CS 4.1 m/s, with the tank re-fitted): fewer
+# runs are skipped, so sprint rose (team +13%); FB +0.2%, DM −0.1%, CM +0.3%, AM −0.8% against the
+# values before, which brings HID within ±5% except FB (the one-knob trade-off) and the team's
+# sprint back to about +7% (120 and 240 seeds).
 POSITION_EFFORT = {
     Position.GK: 0.990,
     Position.CB: 0.962,
-    Position.FB: 1.028,
-    Position.DM: 1.055,
-    Position.CM: 1.052,
-    Position.AM: 1.055,
+    Position.FB: 1.030,
+    Position.DM: 1.054,
+    Position.CM: 1.055,
+    Position.AM: 1.047,
     Position.WM: 1.063,
     Position.CF: 0.978,
 }
@@ -299,8 +310,12 @@ HALF_TIME_S = 900.0
 # 15 min than in the first 15 [Bradley2009, Fig. 2], while running above 5.5 m/s and sprinting
 # are about the same in both halves [Bradley2009, p.162] (PLAN §2.5: within ±10%). A smaller
 # refill puts more of the decline into the second half; a larger one, less into the last 15 min.
-TANK_M = 2000.0
-TANK_HALF_TIME_REFILL = 0.5
+# Re-fitted on 2026-10-17 for the professional prior (CS 4.1 m/s; was 2000 m and 0.5 with CS
+# 3.7): a higher CS leaves fewer metres above it and the pools rarely run low, so the tank now
+# carries most of the late decline (sweeps of 120 seeds: 1400 / 1100 / 1000 / 850 m gave −13 / −17
+# / −21 / −19% in the last 15 min; a refill of 0.5 put sprinting −12% in the second half).
+TANK_M = 850.0
+TANK_HALF_TIME_REFILL = 0.65
 # After repeated hard efforts the slow pool refills 40–85% more slowly [Chorley2022; synthesis
 # §3.2.4]: its time constant is multiplied by 1 + SLOW_TAU_PER_TANK × (1 − tank), +60% at a tank
 # of 0.7. Our assumption (the middle of that range, at about the tank of the final minutes).
@@ -319,7 +334,9 @@ DIP_S = 600.0
 # (high-intensity running starts at 4 m/s [14.4 km/h] [Bradley2009, p.160]) is skipped with
 # chance 1 − run_choice_mult: while tired (TIRED_BELOW), players skip about a third of their
 # hard covering, recovery and close-down runs (sim.fatigue_checks, 2026-10-16), within the
-# 22–45% drops after peak periods [Ju2022, p.975]. Our assumption.
+# 22–45% drops after peak periods [Ju2022, p.975]. Our assumption. Kept with the professional
+# prior (2026-10-17), although the pools now run low far less often: POOL_FREE and POOL_GAIN set
+# where a tired moment starts in metres of D′, so changing them would change the label.
 POOL_GAIN = 1.0
 POOL_FREE = 0.75
 HARD_RUN_SPEED = 4.0
@@ -350,10 +367,11 @@ SHAPE_DECLINE_S = 5.0
 # ACCEL_PER_TANK × (1 − tank), each at most CAPACITY_MAX_LOSS. Match top speed barely changes
 # (7.65 vs 7.59 m/s [27.5 vs 27.3 km/h], −0.8%, not significant) [Bradley2009, p.163]; 10 m
 # sprint times, mostly acceleration, are about 3.5% slower after a match [SilvaJR2018, Table 5].
-# Our assumption: at a tank of 0.7, about the median at the final whistle (sim.batch,
-# 2026-10-16), top speed is 0.9% and acceleration 3.75% lower.
-TOP_SPEED_PER_TANK = 0.03
-ACCEL_PER_TANK = 0.125
+# Our assumption: at the median tank at the final whistle, top speed is 0.9% and acceleration
+# 3.75% lower (tank 0.7 with CS 3.7 on 2026-10-16: 0.03 and 0.125; about 0.6 with the
+# professional prior and the re-fitted tank, 2026-10-17: 0.025 and 0.105).
+TOP_SPEED_PER_TANK = 0.025
+ACCEL_PER_TANK = 0.105
 CAPACITY_MAX_LOSS = 0.05
 # Two truth labels (decided 2026-10-16), each where its part of the hidden state alone cuts the
 # chance of a hard run by at least a quarter. Our assumption, at the low end of the drops in
@@ -374,11 +392,12 @@ LATE_TANK_BELOW = 0.75
 # With ``vary`` (the validation batch, ``--vary``) each match draws its own assumptions, uniform
 # in these ranges, so the estimator is judged across them, not at one setting [Qin2025, §2.2;
 # RuizPinto2026, Table 3]. They go into truth.json ``settings``. The ranges are our assumption,
-# around the defaults above, except where noted. The truth labels (TIRED_BELOW,
+# around the defaults above, except where noted (tank and capacity ranges moved with their
+# defaults on 2026-10-17: about ×0.7–×1.4 and ±0.2 around them). The truth labels (TIRED_BELOW,
 # LATE_TANK_BELOW) stay fixed: they define what is scored.
 VARY = {
-    "tank_m": (1400.0, 2800.0),
-    "tank_half_time_refill": (0.3, 0.7),
+    "tank_m": (600.0, 1200.0),
+    "tank_half_time_refill": (0.45, 0.85),
     # +40 to +85% slower slow-pool refill at a tank of 0.7 [Chorley2022; synthesis §3.2.4]
     "slow_tau_per_tank": (1.33, 2.83),
     "dip": (0.05, 0.15),
@@ -388,16 +407,17 @@ VARY = {
     "shorten": (0.15, 0.45),
     "slow": (0.0, 0.06),
     "carry_slow": (0.15, 0.45),
-    "top_speed_per_tank": (0.0, 0.06),
-    "accel_per_tank": (0.06, 0.18),
+    "top_speed_per_tank": (0.0, 0.05),
+    "accel_per_tank": (0.05, 0.16),
     "noise_sigma_m": (0.03, 0.10),
 }
-# Players in a varied match come from a wider prior than the estimator's (CS 3.7 ± 0.25 m/s,
-# 3.2–4.2; D′ 180 ± 54 m, 100–300; PLAN §3.2), so some true values lie outside it: SDs × 1.5 and
-# wider ranges, and wider pool settings. Our assumption.
+# Players in a varied match come from a wider prior than the estimator's (CS 4.1 ± 0.3 m/s,
+# 3.5–4.7; D′ 180 ± 54 m, 100–300; PLAN §3.2), so some true values lie outside it: SDs × 1.5 and
+# wider ranges (CS ± 3.2 prior SDs, as for the university prior before 2026-10-17: 3.7 ± 0.8),
+# and wider pool settings. Our assumption.
 VARY_PLAYERS = {
-    "cs_sd": 0.375,
-    "cs_range": (2.9, 4.5),
+    "cs_sd": 0.45,
+    "cs_range": (3.15, 5.05),
     "d_prime_sd": 81.0,
     "d_prime_range": (70.0, 380.0),
     "fast_fraction_range": (0.35, 0.55),

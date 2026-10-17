@@ -34,7 +34,9 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 # a player's truth series covers only their time on the pitch.
 # 0.1.6: ``signals.json``, the estimator's output (per player, per second on the pitch).
 # 0.1.7: ``signals.json`` records the typical-player prior (``engine.prior``).
-SCHEMA_VERSION = "0.1.7"
+# 0.1.8: ``signals.json`` gets ``low_chance``, the typical-pro chance of a low battery (decision
+# 14); the default prior is ``pro``, the generator's population (decision 13).
+SCHEMA_VERSION = "0.1.8"
 
 # A little beyond the 52.5 x 34 m half-pitch, for players and the ball just outside the lines.
 X_LIMIT = 60.0
@@ -429,8 +431,8 @@ class EngineSettings(_Model):
         description="broadcast: shared prior only; club: club test values (validation only)"
     )
     prior: str = Field(
-        description="Typical player: university (the generator's population) or pro "
-        "(professional players); engine/params.py PRIORS"
+        description="Typical player: pro (professional players, the generator's population) or "
+        "university (sensitivity); engine/params.py PRIORS"
     )
     update: Literal["draws", "correction"] = Field(
         description="draws: per-player update of CS and D′ from prior draws (decision 9); "
@@ -476,6 +478,13 @@ class SignalSeries(_Model):
     battery: list[Share]
     battery_lo: list[Share] | None = Field(default=None, description="10% band; broadcast mode")
     battery_hi: list[Share] | None = None
+    low_chance: list[Share] | None = Field(
+        default=None,
+        description="Chance that a typical player of the prior's population (a typical "
+        "professional by default) would have a battery below low_battery after this running: "
+        "the weighted share of the prior draws (broadcast mode). About the running, not this "
+        "player's own state (PLAN §7, decision 14)",
+    )
     power: list[Annotated[float, Field(ge=0)]] = Field(description="Mean over the last second")
     power_1min: list[Annotated[float, Field(ge=0)]]
     power_5min: list[Annotated[float, Field(ge=0)]]

@@ -25,12 +25,12 @@ line thresholds are our choice.
 from __future__ import annotations
 
 import argparse
-import os
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 import numpy as np
 
+from secondwind import default_workers
 from secondwind.schema import EventType
 from secondwind.sim import params as P
 
@@ -280,11 +280,13 @@ def main(argv: list[str] | None = None) -> None:
 
     parser = argparse.ArgumentParser(prog="python -m secondwind.sim.spacing", description=__doc__)
     parser.add_argument("--seeds", default="1-10", help="e.g. 1-30 (default 1-10)")
-    parser.add_argument("--jobs", type=int, help="worker processes (default: one per seed)")
+    parser.add_argument(
+        "--jobs", type=int, help="worker processes (default: one per physical core)"
+    )
     parser.add_argument("--idsse", action="store_true", help="also measure the IDSSE matches")
     args = parser.parse_args(argv)
     seeds = parse_seeds(args.seeds)
-    with ProcessPoolExecutor(max_workers=args.jobs or min(len(seeds), os.cpu_count() or 1)) as ex:
+    with ProcessPoolExecutor(max_workers=args.jobs or min(len(seeds), default_workers())) as ex:
         ours = summarise(list(ex.map(_sim_one, seeds)))
     idsse = summarise(idsse_measures()) if args.idsse else None
     print(f"{len(seeds)} matches" + (f"; IDSSE {idsse['n']} matches" if idsse else ""))

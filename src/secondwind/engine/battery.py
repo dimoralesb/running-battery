@@ -13,7 +13,9 @@ never moves (PLAN §3.2).
 shared prior. Every draw runs its own battery, with the one-way correction. A draw whose D′ had to
 be raised is contradicted by the running: its weight is exp(−½ (raise / (width · D′))²), a soft
 penalty rather than a cut-off. The battery shown is the weighted median of the draws, with a
-weighted 10–90% band. Weights only use the running so far, so the battery at minute 30 does not
+weighted 10–90% band, and the weighted share of the draws below ``LOW_BATTERY``: the chance that a
+typical player of the prior's population would be that low after this running (decision 14).
+Weights only use the running so far, so the battery at minute 30 does not
 know what the player does at minute 60 (it works live).
 
 Match data mostly gives a lower bound on capacity [Sutcliffe2025, Fig. 3; Mizelman2024, p.2064]:
@@ -39,6 +41,7 @@ class BatteryResult:
     median: np.ndarray  # (S, players) fraction of D′
     lo: np.ndarray | None  # (S, players) 10% band; None without draws (club mode, fallback)
     hi: np.ndarray | None
+    low_chance: np.ndarray | None  # (S, players) weighted share of the draws below ``low``
     cs: np.ndarray  # (players, 3) weighted 10%, median, 90% of CS at the end of the match
     d_prime: np.ndarray  # (players, 3) the same for D′ after the correction
 
@@ -104,13 +107,15 @@ def run(
     d_prime: np.ndarray,
     k: float = P.K,
     width: float | None = P.PENALTY_WIDTH,
+    low: float = P.LOW_BATTERY,
 ) -> BatteryResult:
     """Run the battery over a match.
 
     ``speed`` (frames, players), NaN off the pitch; ``period`` (frames,); ``record`` (frames,)
     bool, the frames to report. ``cs`` and ``d_prime`` are (players, draws). With one draw per
     player (club mode, or the fallback) there is no band; with several, ``width`` sets the soft
-    penalty and the battery is the weighted median with a 10–90% band.
+    penalty and the battery is the weighted median with a 10–90% band, and ``low_chance`` the
+    weighted share of the draws whose balance is below ``low`` of their D′.
     """
     banded = cs.shape[1] > 1
     bal = d_prime.astype(float).copy()
@@ -119,6 +124,7 @@ def run(
     med = np.empty((len(rows), cs.shape[0]))
     lo = np.empty_like(med) if banded else None
     hi = np.empty_like(med) if banded else None
+    chance = np.empty_like(med) if banded else None
     qs = (P.BAND[0], 0.5, P.BAND[1])
     r = 0
     for f in range(len(speed)):
@@ -128,8 +134,10 @@ def run(
         if r < len(rows) and rows[r] == f:
             level = bal / dp
             if banded:
-                q = weighted_quantiles(level, weights(dp - d_prime, d_prime, width), qs)
+                w = weights(dp - d_prime, d_prime, width)
+                q = weighted_quantiles(level, w, qs)
                 lo[r], med[r], hi[r] = q[:, 0], q[:, 1], q[:, 2]
+                chance[r] = (w * (level < low)).sum(axis=-1)
             else:
                 med[r] = level[:, 0]
             r += 1
@@ -139,6 +147,7 @@ def run(
         median=med,
         lo=lo,
         hi=hi,
+        low_chance=chance,
         cs=weighted_quantiles(cs, w, qs),
         d_prime=weighted_quantiles(dp, w, qs),
     )

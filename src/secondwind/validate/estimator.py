@@ -11,6 +11,12 @@ player-second on the pitch:
   §2.3 "Two truth labels"): precision and recall per player-second. The post-peak flag is scored
   the same way for information only: it is not a tired signal (PLAN §7, decision 12). Late-match
   wear (the tank) is a trend, scored with the whole-match load (BUILD_PLAN §3, run 3).
+- the typical-pro chance of a low battery (``low_chance``, decision 14) by **calibration**: in
+  seconds where it says p, is the player tired (``tired``) about p of the time? A reliability
+  table by probability bin, the Brier score and the expected calibration error (the mean gap
+  between the chance and the observed share, weighted by the seconds in each bin). The share of
+  seconds with the hidden pools below ``LOW_BATTERY`` of D′ is shown next to it: the same
+  threshold as the signal, in the generator's two-pool model.
 """
 
 from __future__ import annotations
@@ -65,6 +71,61 @@ def goalkeepers(match: Match) -> set[str]:
     return {p.id for team in match.metadata.teams for p in team.players if p.position == "GK"}
 
 
+CALIBRATION_BINS = np.linspace(0.0, 1.0, 11)  # 0–0.1, 0.1–0.2, … 0.9–1.0
+
+
+def calibration(
+    chance: np.ndarray, real: np.ndarray, pools_low: np.ndarray
+) -> list[dict[str, float]]:
+    """Reliability table over flat arrays: per probability bin, the seconds, the mean chance,
+    the share truly tired and the share with the hidden pools below the threshold."""
+    edges = CALIBRATION_BINS
+    k = np.clip(np.digitize(chance, edges[1:-1]), 0, len(edges) - 2)
+    rows = []
+    for b in range(len(edges) - 1):
+        m = k == b
+        n = int(m.sum())
+        rows.append(
+            {
+                "lo": float(edges[b]),
+                "hi": float(edges[b + 1]),
+                "n": n,
+                "chance": float(chance[m].mean()) if n else np.nan,
+                "tired": float(real[m].mean()) if n else np.nan,
+                "pools_low": float(pools_low[m].mean()) if n else np.nan,
+            }
+        )
+    return rows
+
+
+def calibration_scores(chance: np.ndarray, real: np.ndarray) -> dict[str, float]:
+    """Brier score and expected calibration error (bins as in ``calibration``)."""
+    rows = calibration(chance, real, real)
+    n = max(len(chance), 1)
+    ece = sum(r["n"] / n * abs(r["chance"] - r["tired"]) for r in rows if r["n"])
+    return {
+        "brier": float(np.mean((chance - real) ** 2)),
+        "ece": float(ece),
+        "chance_mean": float(chance.mean()),
+    }
+
+
+def format_calibration(rows: list[dict[str, float]]) -> str:
+    lines = [f"  {'chance':>9} {'seconds':>9} {'mean':>6} {'tired':>6} {'pools<low':>9}"]
+    for r in rows:
+        if r["n"]:
+            lines.append(
+                f"  {r['lo']:.1f}–{r['hi']:.1f}  {r['n']:>9} {r['chance']:>6.3f} {r['tired']:>6.3f}"
+                f" {r['pools_low']:>9.3f}"
+            )
+    return "\n".join(lines)
+
+
+def keep_mask(est: Estimate, truth: Aligned) -> np.ndarray:
+    """Outfield player-seconds on the pitch with a truth value: what every score uses."""
+    return est.seconds.on & truth.outfield[None, :] & ~np.isnan(truth.pools)
+
+
 def precision_recall(pred: np.ndarray, real: np.ndarray) -> tuple[float, float]:
     tp = float((pred & real).sum())
     return tp / max(int(pred.sum()), 1), tp / max(int(real.sum()), 1)
@@ -73,7 +134,7 @@ def precision_recall(pred: np.ndarray, real: np.ndarray) -> tuple[float, float]:
 def scores(est: Estimate, truth: Aligned, low_battery: float = EP.LOW_BATTERY) -> dict[str, float]:
     """Battery vs pools and tired-moment precision and recall, outfield player-seconds."""
     s = est.seconds
-    keep = s.on & truth.outfield[None, :] & ~np.isnan(truth.pools)
+    keep = keep_mask(est, truth)
     flag = tired(s, low_battery)
     _, post = red_zone(s, est.settings.peak_share, est.settings.peak_floor)
     real = truth.tired[keep]
@@ -99,6 +160,10 @@ def scores(est: Estimate, truth: Aligned, low_battery: float = EP.LOW_BATTERY) -
         lo, hi = s.battery_lo[keep], s.battery_hi[keep]
         out["band_coverage"] = float(np.mean((p >= lo) & (p <= hi)))
         out["band_width"] = float(np.mean(hi - lo))
+    if s.low_chance is not None:
+        out |= {
+            f"low_chance_{k}": v for k, v in calibration_scores(s.low_chance[keep], real).items()
+        }
     return out
 
 
@@ -208,7 +273,16 @@ def main(argv: list[str] | None = None) -> None:
     est = compute(match, mode=args.mode, k=args.k)
     truth = align(est, read_truth(args.folder), goalkeepers(match))
     for name, value in scores(est, truth).items():
-        print(f"{name:>20} {value:.3f}")
+        print(f"{name:>22} {value:.3f}")
+    if est.seconds.low_chance is not None:
+        keep = keep_mask(est, truth)
+        rows = calibration(
+            est.seconds.low_chance[keep],
+            truth.tired[keep],
+            truth.pools[keep] < est.settings.low_battery,
+        )
+        print("calibration of the typical-pro low-battery chance against `tired`:")
+        print(format_calibration(rows))
     pid = args.player
     if pid is None:
         share = np.where(truth.outfield, truth.tired.mean(axis=0), -1)

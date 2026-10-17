@@ -50,13 +50,13 @@ adding (``summarise`` then gives % changes of the pooled sums):
 from __future__ import annotations
 
 import argparse
-import os
 from collections import Counter
 from concurrent.futures import ProcessPoolExecutor
 from functools import partial
 
 import numpy as np
 
+from secondwind import default_workers
 from secondwind.schema import EventType, Position, RunPurpose
 from secondwind.sim import params as P
 from secondwind.sim.output import owner
@@ -640,10 +640,12 @@ def main(argv: list[str] | None = None) -> None:
         prog="python -m secondwind.sim.fatigue_checks", description=__doc__
     )
     parser.add_argument("--seeds", default="1-30", help="e.g. 1-90 (default 1-30)")
-    parser.add_argument("--jobs", type=int, help="worker processes (default: one per CPU)")
+    parser.add_argument(
+        "--jobs", type=int, help="worker processes (default: one per physical core)"
+    )
     args = parser.parse_args(argv)
     seeds = parse_seeds(args.seeds)
-    with ProcessPoolExecutor(max_workers=args.jobs or os.cpu_count() or 1) as ex:
+    with ProcessPoolExecutor(max_workers=args.jobs or default_workers()) as ex:
         on = summarise(list(ex.map(partial(_sim_one, fatigue=True), seeds)))
         off = summarise(list(ex.map(partial(_sim_one, fatigue=False), seeds)))
     print(f"{len(seeds)} matches, fatigue on and off (same seeds)")

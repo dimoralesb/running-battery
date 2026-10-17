@@ -44,6 +44,7 @@ class Seconds:
     battery: np.ndarray
     battery_lo: np.ndarray | None
     battery_hi: np.ndarray | None
+    low_chance: np.ndarray | None = None  # typical-pro chance of a battery below LOW_BATTERY
 
 
 def _window_start(period: np.ndarray, t: np.ndarray, w: int) -> np.ndarray:
@@ -99,6 +100,7 @@ def per_second(tr: Tracks, bat: BatteryResult) -> Seconds:
         battery=bat.median,
         battery_lo=bat.lo,
         battery_hi=bat.hi,
+        low_chance=bat.low_chance,
     )
 
 

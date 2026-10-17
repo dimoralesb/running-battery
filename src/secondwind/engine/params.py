@@ -41,29 +41,30 @@ class Prior:
     d_prime_range: tuple[float, float]
 
 
-# "university": the generator's population. CS 3.7 ± 0.25 m/s (13.3 km/h) clipped to 3.2–4.2, from
-# university players' 3-min all-out tests, under-16s and field-sport norms [Sutcliffe2025, Fig. 2;
-# Liu2021, Table 4; synthesis §3.2.3]; the SD (range / 4) is our assumption. Use it to score the
-# estimator on synthetic matches, whose players are drawn from it (``sim/params.py``).
+# "pro" (the default, decision 13): a typical professional, the generator's population
+# (``sim/params.py``, where the derivation is). CS 4.1 ± 0.3 m/s (14.8 km/h), clipped to 3.5–4.7:
+# CS at about 85% of professionals' VO₂max [Jones2017, p.S67: 70–90%; Modric2020, Table 1]. VO₂max
+# does not differ between outfield positions [Slimani2019, p.241; Modric2020, Table 1], so one
+# prior for all positions (decision 3). No D′ data for professionals: D′ 180 ± 54 m clipped to
+# 100–300 [Sutcliffe2025, Fig. 2; synthesis §3.2.3]. Use it for synthetic matches and for real
+# tracking.
 #
-# "pro": a typical professional. CS is close to the maximal lactate steady state, above the
-# lactate threshold, at 70–90% of VO₂max [Jones2017, p.S67]. Croatian first-division players
-# (n = 16, treadmill at 2% incline, tested after the off-season break) reached their anaerobic
-# threshold at 4.29–4.57 m/s (15.5–16.5 km/h; forwards to midfielders), at 90–93% of VO₂max, with
-# SDs of 0.21–0.26 m/s [Modric2020, Table 1]. CS 4.4 ± 0.25 m/s (15.8 km/h) clipped to 3.9–4.9
-# (our assumption: CS taken as that threshold speed, the SD as in Modric2020, the clip at ±2 SD as
-# above). Their aerobic threshold, 3.38–3.98 m/s (12.2–14.3 km/h), brackets the university CS of
-# 3.7 and lies below CS by definition [Jones2017, p.S67]. VO₂max does not differ between outfield
-# positions [Slimani2019, p.241; Modric2020, Table 1], so one prior for all positions (decision 3).
-# No D′ data for professionals: D′ 180 ± 54 m clipped to 100–300 for both [Sutcliffe2025, Fig. 2;
-# synthesis §3.2.3].
+# "university": CS 3.7 ± 0.25 m/s (13.3 km/h) clipped to 3.2–4.2, from university players' 3-min
+# all-out tests, under-16s and field-sport norms [Sutcliffe2025, Fig. 2; Liu2021, Table 4;
+# synthesis §3.2.3]; the SD (range / 4) is our assumption. It sits at professionals' aerobic
+# threshold, 3.38–3.98 m/s [Modric2020, Table 1], below CS by definition [Jones2017, p.S67], so
+# it is kept for older or lower-level players and as a sensitivity run (and for matches generated
+# before 2026-10-17, whose players were drawn from it).
+#
+# What the battery means with either prior: the running a typical player of that population would
+# have done, not this player's own state (decision 14).
 PRIORS = {
-    "university": Prior(
+    "pro": Prior(
         SP.CS_MEAN, SP.CS_SD, SP.CS_RANGE, SP.D_PRIME_MEAN, SP.D_PRIME_SD, SP.D_PRIME_RANGE
     ),
-    "pro": Prior(4.4, 0.25, (3.9, 4.9), SP.D_PRIME_MEAN, SP.D_PRIME_SD, SP.D_PRIME_RANGE),
+    "university": Prior(3.7, 0.25, (3.2, 4.2), SP.D_PRIME_MEAN, SP.D_PRIME_SD, SP.D_PRIME_RANGE),
 }
-DEFAULT_PRIOR = "university"
+DEFAULT_PRIOR = "pro"
 # Per-player update (decision 9): about 200 draws from the prior per player.
 N_DRAWS = 200
 # Soft down-weighting of draws the running contradicts. A draw whose balance would go below zero
@@ -71,7 +72,9 @@ N_DRAWS = 200
 # exp(−½ (raise / (PENALTY_WIDTH · D′))²), so a draw that needed 10% more D′ keeps 61% of its weight
 # at PENALTY_WIDTH 0.1. The width is our assumption (PLAN §3.2, "tuned in validation"): on the
 # dev seeds, widths 0.05–0.4 changed the battery by less than 0.001 on average, because the
-# running rarely contradicts a draw (estimated vs true D′: r = 0.03; CS: r = 0.05).
+# running rarely contradicts a draw (estimated vs true D′: r = 0.03; CS: r = 0.05). Re-checked
+# with the professional prior (2026-10-17, dev seeds 1–60): widths 0.05–0.4 give the same battery
+# to three decimals; no draw is contradicted.
 PENALTY_WIDTH = 0.10
 BAND = (0.10, 0.90)  # 10–90% band (PLAN §3.2)
 DRAW_SEED = 0  # draws are seeded per player id, so a player's band does not depend on the others
@@ -119,6 +122,11 @@ POST_PEAK_HOLD_S = (120, 120, 300)
 # ≥ 0.7 at recall ≥ 0.5 (synthesis §6.3), is out of reach from positions: the same battery with
 # the true CS and D′ gives 0.57 / 0.45, and with club test values 0.38 / 0.45 (20 dev seeds).
 # Adding the post-peak flag (PLAN §3.3 as first written) gave 0.13–0.16 / 0.2–0.3.
+# Re-checked with the professional prior (2026-10-17, dev seeds 1–60; tired 1.3% of outfield
+# player-seconds): 0.50 / 0.55 / 0.60 / 0.65 give precision 0.26 / 0.23 / 0.20 / 0.15 and recall
+# 0.01 / 0.03 / 0.08 / 0.17. The same threshold sets ``low_chance`` (decision 14), whose
+# calibration against ``tired`` is best at 0.50 (expected calibration error 0.008 / 0.008 /
+# 0.014 / 0.036; it says about twice the observed share in every bin above 0.1), so 0.50 stays.
 LOW_BATTERY = 0.50
 # Events listed with a tired spell, for the agents: the player's defensive actions (PLAN §3.3:
 # duel, pressure; recovery runs are not events) and the player's own ball losses.

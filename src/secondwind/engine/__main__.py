@@ -34,8 +34,9 @@ def main(argv: list[str] | None = None) -> None:
         "--prior",
         choices=sorted(P.PRIORS),
         default=P.DEFAULT_PRIOR,
-        help="typical player: 'university' (the generator's population, for synthetic matches) "
-        "or 'pro' (professional players, for real tracking); engine/params.py",
+        help="typical player: 'pro' (professional players, the generator's population; for "
+        "synthetic matches and real tracking) or 'university' (sensitivity, older matches); "
+        "engine/params.py",
     )
     args = parser.parse_args(argv)
     start = time.perf_counter()

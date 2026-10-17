@@ -96,7 +96,7 @@ def compute(
     )
     tr = tracks(match)
     cs, dp = capacities(match, tr.ids, mode, update, n_draws, P.PRIORS[prior])
-    bat = run(tr.speed, tr.period, tr.whole_second, cs, dp, k, penalty_width)
+    bat = run(tr.speed, tr.period, tr.whole_second, cs, dp, k, penalty_width, P.LOW_BATTERY)
     return Estimate(settings, tr, bat, per_second(tr, bat))
 
 
@@ -131,6 +131,7 @@ def to_signals(match: Match, est: Estimate) -> MatchSignals:
             battery=_r(s.battery[m, j]),
             battery_lo=_r(s.battery_lo[m, j]) if band else None,
             battery_hi=_r(s.battery_hi[m, j]) if band else None,
+            low_chance=_r(s.low_chance[m, j]) if s.low_chance is not None else None,
             power=_r(s.power[m, j], 2),
             power_1min=_r(s.power_avg[60][m, j], 2),
             power_5min=_r(s.power_avg[300][m, j], 2),

@@ -115,8 +115,8 @@ def test_prior_draws_seeded_per_player_and_in_range():
 
 
 def test_pro_prior_drains_less_than_university():
-    """A professional's typical CS (4.4 m/s) is above the university one (3.7 m/s): the same
-    running at 4 m/s drains the university battery and leaves the pro battery full."""
+    """A professional's typical CS (4.1 m/s) is above the university one (3.7 m/s): the same
+    running at 4 m/s drains the university battery and leaves the pro battery's median full."""
     speed = np.full(60 * HZ, 4.0)
     period, record = np.ones(len(speed), dtype=int), np.arange(len(speed)) % HZ == HZ - 1
     level = {}
@@ -160,6 +160,20 @@ def test_band_narrows_and_moves_up_when_running_contradicts_small_d_prime():
     mid = 80  # 80 s into the run: the band is wide and the median is low
     assert res.hi[mid, 0] - res.lo[mid, 0] > 0.05
     assert res.median[mid, 0] < 0.3
+
+
+def test_low_chance_is_the_share_of_draws_below_low_battery():
+    """5 m/s for 60 s drains every draw (CS ≤ 4.7 m/s) by at most 90 m, less than any D′, so no
+    draw is down-weighted: the chance is the plain share of draws below LOW_BATTERY. Standing
+    still it is 0; with one value (club mode) there is no chance."""
+    res, d = _draws_battery(np.full(60 * HZ, 5.0))
+    level = 1.0 - (5.0 - d[:, 0]) * 60.0 / d[:, 1]
+    assert res.low_chance[-1, 0] == pytest.approx(np.mean(level < P.LOW_BATTERY), abs=0.011)
+    assert 0.0 < res.low_chance[-1, 0] < 1.0
+    assert np.all(np.diff(res.low_chance[:, 0]) >= 0)  # draining only: the chance only grows
+    still, _ = _draws_battery(np.zeros(60 * HZ))
+    assert np.all(still.low_chance == 0.0)
+    assert _battery(np.full(60 * HZ, 5.0)).low_chance is None
 
 
 # --- Red-zone spells and the post-peak flag ----------------------------------------------------
