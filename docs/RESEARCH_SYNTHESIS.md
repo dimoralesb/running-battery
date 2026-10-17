@@ -1,6 +1,8 @@
 # Second Wind: Research Synthesis
 
-What 64 papers let us build, and what they don't. (45 in the first pass; then the published Allen2024, Allen2025 and 18 more, added on 2026-10-14.)
+What 66 papers let us build, and what they don't. (45 in the first pass; then the published Allen2024, Allen2025 and 18 more, added on 2026-10-14; MarquesJimenez2017 and Snyder2023 added on 2026-10-17.)
+
+**Two papers outside our source rule** (READING_LIST), read on the user's request and used with care: MarquesJimenez2017 (narrative review, Bentham Open) and Snyder2023 (MDPI *Sports*). Neither supplies a calibration number. They are used for framing only and are marked where cited.
 
 - Per-paper notes are in [research/notes/](research/notes/). Each one has the full context, tables and page references.
 - Citation keys match [READING_LIST.md](READING_LIST.md).
@@ -51,6 +53,8 @@ Prepared 2026-10-14.
    - So a "capacity check" cannot reliably detect fatigue within one match. The PLAN's "low energy lowers top speed and acceleration" overstates the evidence.
 4. **We cannot claim fatigue causes errors.** Bad passes, bad decisions and tactical mistakes caused by fatigue are not supported in match data (section 5).
 5. **Not every drop in running is fatigue.** Ball out of play, score, opponent, venue and pacing all lower running too [Bradley2013; Morgans2025; Cortez2026]. In the minute after a peak, ball-in-play time falls from 82% to 57% [Cortez2026, Table 3]. The agents must check context before saying "tired".
+   - Players pace themselves. When the running is imposed in a simulation, high-speed running is already 21% down by minutes 15–20 and 47% down by minutes 80–85 (derived) [Snyder2023, p.5; MDPI, women collegiate players, with breaks]. In matches the clear drop comes only in the last 15 min [Bradley2009]. So in a match, a player who runs less may be tired or may be choosing to run less, and positions can't tell the two apart.
+6. **We cannot say who is tired.** No agreed fatigue marker exists even with lab tests: "lack of consensus about the usefulness of tests" and "no single biomarker has been validated" [MarquesJimenez2017, p.56, p.58; narrative review]. Every marker they rate as useful needs a jump test, a sprint test, a questionnaire or a blood sample (Fig. 1, p.60), and none of them can be seen from tracking. The same match also affects players differently, so the review recommends "an individual analysis" (p.61). From positions we can measure the **work** done and say what it would cost a typical professional (PLAN decision 14), not the state of this player.
 
 ### The single most important caveat
 
@@ -173,6 +177,7 @@ Our reference system for targets: **optical, 25 Hz, Premier League**.
   - GPS STATSports 18 Hz, >3 m/s² for 0.5 s, one EPL club: **0.81–0.97 accelerations/min and 0.86–1.17 decelerations/min** (≈ 75–95 per match, derived) [Morgans2025b, Table 1].
   - ZXY radio tracking 20 Hz, >2 m/s² for 0.5 s, one Danish club: 81 accelerations and 84 decelerations per match; CD 68, wide players ~90 [VighLarsen2018].
   - **The ">3 m/s²" count differs about 10-fold between GPS and broadcast tracking.** Only within-system, relative changes are meaningful.
+  - At a very low threshold (≥0.5 m/s² for 0.5 s, STATSports), counts fell 31–47% (accelerations) and 36–59% (decelerations) over a fixed-command simulation [Snyder2023, p.10; MDPI]. The commands were the same every segment, so the counts changed because players executed the same moves more gently, not because they did fewer moves. That paper's acceleration values are internally inconsistent (section 8.1).
 - Track Y; Ev. N. Use: S (shape only) E (relative change).
 
 **Change of direction (COD) count**
@@ -325,6 +330,7 @@ Our reference system for targets: **optical, 25 Hz, Premier League**.
    - The Verifier must check **thresholds**, not names.
 2. **Akenhead2013's acceleration table is internally inconsistent** (the band sums do not match the totals). Treat its low-band values as doubtful.
 3. **Acceleration distance is not a count of accelerations.** Leifsson and Akenhead both measure distance.
+4. **Accelerometer "load" metrics are out of scope.** Dynamic stress load, total loading, the STATSports fatigue index and step balance did not change over a fatiguing simulation, while speed metrics did [Snyder2023, p.7; MDPI]. We can't compute them from positions anyway.
 
 ---
 
@@ -614,11 +620,13 @@ On top of that, after a peak comes a stoppage: ball in play drops from 82% to 57
 | Start of the 2nd half | HIR lower only in the first 10 min of each half (ES 0.3–0.4) | [Bradley2013]. Mechanism: muscle temperature falls about 2 °C at half-time [Mohr2005] |
 | Per minute, 2nd vs 1st half, by role (Euro 2024) | TD/min down in most roles (ES 0.5–1.3); HIR (≥5.56 m/s)/min small, mostly ns declines (ES 0.1–0.4); sprint/min maintained | [Chen2025]; optical, full-match players, 13 roles |
 | Accelerations + decelerations (>2 m/s²), 2nd vs 1st half | −11 ± 3%; HIR −6 ± 4%; TD −5 ± 1%; sprint ns. Central players declined, wide players didn't | [VighLarsen2018]; one Danish club, 8 home wins, ZXY 20 Hz |
+| **Not a match: imposed intensity** (fixed commands, 18 × 5 min with 2–2.5 min breaks) | HSR (≥50% of own max speed, ≈3.8 m/s) −21% by min 15–20, −47% by min 80–85 (derived); max speed of one commanded sprint per 5 min −9.3% (d 1.15); TD per segment −3.8%; jumps unchanged | [Snyder2023, p.5–11]; MDPI; 20 women collegiate players; internal inconsistencies (8.1). **Not a target.** Shows the fade comes early when players can't pace |
 
-**Mechanisms, for agent explanations** [Mohr2005; Krustrup2006]:
+**Mechanisms, for agent explanations** [Mohr2005; Krustrup2006; same list in the review MarquesJimenez2017, p.54]:
 - **Temporary fatigue** is not explained by lactate, pH or glycogen. The leading hypothesis is potassium (K⁺) build-up in the muscle.
 - **Start of the 2nd half:** the muscles cool down during half-time.
-- **End of match:** about half of the muscle fibres are glycogen-empty, made worse by heat and dehydration.
+- **End of match:** about half of the muscle fibres are glycogen-empty, made worse by heat and dehydration. Core temperature in matches is 39.0–39.5 °C, and fluid loss correlated with a post-match sprint fatigue index at r = 0.73 (one study, cited by [MarquesJimenez2017, p.54]).
+- These are group mechanisms from biopsies and blood samples. None can be seen in one player from tracking, so the agents may explain them in general ("late in matches, muscles run low on stored carbohydrate"), never as a statement about this player (global rule 4).
 
 **Simulator spec (our choice, calibrated to the table above):**
 - A slow "tank" multiplier f_slow on the probability of choosing runs above 4 m/s.
@@ -902,7 +910,7 @@ Use the table in section 3.5. **Primary targets:**
 | Absolute acceleration-count targets from the literature | Counts differ ~10-fold between systems [Castellano2025; Morgans2025b]; use our own definition and relative changes only |
 | Lower shot accuracy in matches | Lab only [Russell2011]; shooting success unchanged; shots on target n.s. [Carling2011] |
 | Mental fatigue | Not visible in tracking; out of scope |
-| Fatigue carried over from previous matches | READING_LIST cites Julian2021, but **that paper was not downloaded or checked**. Carling2011's 3 games in 7 days (n = 7) showed no changes. Leave it out, and say the claim is unverified |
+| Fatigue carried over from previous matches | READING_LIST cites Julian2021, but **that paper was not downloaded or checked**. Carling2011's 3 games in 7 days (n = 7) showed no changes. A review reports running unaffected during fixture congestion even though muscle-damage markers stay raised for up to 72 h [MarquesJimenez2017, p.54, p.56, citing Rey 2010 and Carling 2015; second-hand]. Leave it out, and say the support is second-hand |
 | Heart rate as ground truth | Guess on top of a guess [Bangsbo2006] |
 | "Tired forwards lose the most space" | daSilva2025's role results are a hypothetical sweep, and they are small and similar for speed losses |
 
@@ -979,7 +987,7 @@ $$\dot{\vec v}=\alpha\,(V_{max}\,\vec n-\vec v)$$
 | 10 | "He's slower now" (top speed) | [Bradley2009] flat in matches; [SilvaJR2018] −3.5% in tests | Only for **repeated** efforts or after a peak: "His last few sprints were a bit slower than earlier ones." Never "he's lost his pace". |
 | 11 | "His battery is low" / D′ balance | Model adapted from cycling [Skiba2012; Jones2017]; parameters are assumptions | "Our model estimates his short-term energy is low", with the uncertainty band. |
 | 12 | "He's covered X km, like running Y km" (equivalent distance) | [Osgnach2010]; [Buchheit2015] underestimate | "About X km, an effort roughly like Y km of steady running (model estimate)." |
-| 13 | Drop in running due to fatigue vs tactics | [Bradley2013; Morgans2025; Cortez2026] | Must pass the context check. "His running dropped while his team sat on a 3–0 lead, so this may be tactical rather than fatigue." |
+| 13 | Drop in running due to fatigue vs tactics | [Bradley2013; Morgans2025; Cortez2026]; review: players "regulate their physical efforts" to the game [MarquesJimenez2017, p.55] | Must pass the context check. "His running dropped while his team sat on a 3–0 lead, so this may be tactical rather than fatigue." |
 | 14 | Pass, shot or touch **volume** falls after peaks or late | [Cortez2026; Carling2011] | Only together with ball-in-play: "Fewer touches, partly because the ball was out of play more." |
 | 15 | Second-half drop | [Bradley2013]: only high first-half load; [Thoseby2023]: acceleration peaks | "Players who ran hardest before the break usually do a bit less after it." |
 | 16 | Kicking / pass **speed** and shot precision drop | Lab only [Russell2011]; youth players | Analyst mode only: "In lab tests, tired players strike the ball a little slower and less precisely." Never applied to a specific pass. |
@@ -989,15 +997,16 @@ $$\dot{\vec v}=\alpha\,(V_{max}\,\vec n-\vec v)$$
 | 19a | "Teams that sprint more finish higher" | rs = .32 (2015–24) [Allen2026a]; r = .25 (2019–24) [Allen2026b]; small | "Higher-placed teams tend to sprint a little more; it's a weak link, not a recipe." |
 | 19b | "Pressing harder (out-of-possession running per minute) goes with success" | r = .34–.45; TOOP/TIP ratio r = .50–.65 [Allen2026b] | Association only: "Successful teams tend to work harder without the ball than with it." Never "they won because they pressed more". |
 | 19c | "His battery is empty" / "he's exhausted" | With the standard τ, speed-based D′ balance stayed at 60% at real exhaustion; it only worked with τ fitted per runner [Bellenger2025]; football τ unknown; W′ error 7–20% [Skiba2021] | Only relative: "lowest point of his match", "lower than his teammates". |
+| 19d | "Players pace themselves" | In matches the clear drop comes late [Bradley2009]; when the pace is imposed it comes from minute 15 [Snyder2023, MDPI, women collegiate, simulation]; neuromuscular losses are larger after simulations than after real matches [SilvaJR2018, Fig. 4]; review [MarquesJimenez2017, p.55] | Analyst mode, general only: "When players can't choose their pace, as in lab simulations, running drops much earlier. In matches they spread their effort." Never about one player's choices ("he's saving himself") |
 
 ### 5.3 Not supported (❌): block
 
 | # | Claim pattern | Why | Allowed alternative |
 |---|---|---|---|
-| 20 | "Misplaced the pass because he was tired" | Pass completion unchanged in matches [Fang2024; Carling2011; Rampinini2008] | "He'd just finished a hard spell. In general, passing accuracy holds up under fatigue." |
+| 20 | "Misplaced the pass because he was tired" | Pass completion unchanged in matches [Fang2024; Carling2011; Rampinini2008]; skill performance "may not be a reliable tool to detect fatigued players" [MarquesJimenez2017, p.58, Fig. 1] | "He'd just finished a hard spell. In general, passing accuracy holds up under fatigue." |
 | 21 | "Bad decision / lost concentration because tired" | [Dambroz2022]: not established; mental fatigue isn't visible in tracking | None. Describe the action only. |
 | 22 | "Missed the shot because tired" | Shooting success unchanged [Russell2011; Carling2011] | None |
-| 23 | "He can't accelerate any more" right after a peak | AccD is higher after peaks [Leifsson2024] | "He's still making short bursts, but fewer long high-speed runs." |
+| 23 | "He can't accelerate any more" right after a peak | AccD is higher after peaks [Leifsson2024]; jump power unchanged through a fatiguing simulation [Snyder2023, p.8–9, MDPI] | "He's still making short bursts, but fewer long high-speed runs." |
 | 24 | Any % without a baseline, or "−93% / −77%" presented as "below normal" | These are vs the peak [Cortez2026; Fang2024] | Use match-average figures (Leifsson, Ju) |
 | 25 | "His lactic acid / lactate is high" | Doesn't track temporary fatigue [Krustrup2006] | Claim 9 wording |
 | 26 | "Tired from Wednesday's match" | Not modelled; source unverified (Julian2021 not checked) | None |
@@ -1176,10 +1185,10 @@ This is a methods contribution no published paper makes. It is the strongest rig
 | Out-of-possession running and success | Totals without the ball correlate **negatively** with points [Andrzejewski2022] vs per-minute out-of-possession running correlates **positively** [Allen2026b] | Not a real conflict: totals reflect possession time. Always use per-minute rates per phase |
 | Acceleration counts | ~75–95 per match >3 m/s² (GPS) [Morgans2025b] vs 6–9 (broadcast, ≥0.7 s) [Castellano2025] vs 81 >2 m/s² (ZXY) [VighLarsen2018] | System and rule dependent; relative use only |
 | Lab vs match passing | LSPT penalties +62% after the 2nd half, but in-match pass success unchanged, **in the same study** [Rampinini2008] | Matches win: no accuracy penalty |
-| Simulation vs matches | Neuromuscular test losses are larger after simulations than after real 11 vs 11 matches (CMJ −0.65 / −1.13 vs −0.15) [SilvaJR2018, Fig. 4] | Players pace themselves in real matches; prefer match evidence |
+| Simulation vs matches | Neuromuscular test losses are larger after simulations than after real 11 vs 11 matches (CMJ −0.65 / −1.13 vs −0.15) [SilvaJR2018, Fig. 4]. With imposed running, HSR falls from minute 15 and max speed by 9% [Snyder2023], while in matches the drop is late and top speed is flat [Bradley2009] | Players pace themselves in real matches; prefer match evidence. Our generator has no pacing (a known simplification), so its late fade is all physiology |
 | Which substitutes gain | Central midfielders [Bradley2013] vs attackers [Bradley 2014 via Hills2018] | Model a general +10–25% HIR; don't claim a position effect |
 | Pitch-control parameters | σ 0.45 vs 0.54 s; λ 4.30 vs 3.99 s⁻¹; κ only in 2018 [Spearman2017 vs Spearman2018]; daSilva text 10 s integration vs code 50 s | Use the 2017 values (the da Silva baseline), κ = 1 |
-| Within-paper errors | Dambroz2022 misreports Russell's pass accuracy; Wang2024 overstates; Cortez2026 abstract vs results; Thoseby2023 position lists inconsistent; Kavanagh2024 30% ASR threshold inconsistent with its formula; Osgnach2010 16 vs 14 km/h; Buchheit2015 29 vs 23%; Russell2011 shot-speed text vs figure; SilvaJR2018 "recovered by 72 h" vs −4.8% peak speed | Notes flag each one; we use the tables over the abstracts |
+| Within-paper errors | Dambroz2022 misreports Russell's pass accuracy; Wang2024 overstates; Cortez2026 abstract vs results; Thoseby2023 position lists inconsistent; Kavanagh2024 30% ASR threshold inconsistent with its formula; Osgnach2010 16 vs 14 km/h; Buchheit2015 29 vs 23%; Russell2011 shot-speed text vs figure; SilvaJR2018 "recovered by 72 h" vs −4.8% peak speed; Snyder2023 acceleration values swapped, Table 3's ACC row a copy of the Max Speed row, text vs Table 3 on when max and average speed first drop, implausibly small whole-session SDs; MarquesJimenez2017 reverses Bradley2009's first/last 15-min order and prints SD 96 as 9 | Notes flag each one; we use the tables over the abstracts, and primary papers over reviews |
 
 ### 8.2 Gaps in the evidence
 
@@ -1193,6 +1202,8 @@ This is a methods contribution no published paper makes. It is the strongest rig
 8. **No 5-substitute-era substitute data** [Hills2018 is the 3-sub era].
 9. **Context effects are poorly quantified.** Only Morgans2025 (opponent, venue) and Bradley2013 (score) give numbers; Paul2015 is a commentary with no data.
 10. **Several sampling rates are unknown**: Prozone in Leifsson2024 and Bradley2013; Ju2022's system. That limits how comparable they are.
+11. **No agreed marker of an individual's fatigue, even in the lab** [MarquesJimenez2017, p.56, p.58]. So no real-match "ground truth" for who is tired exists to validate against; only our synthetic truth does. On real data we can check the work numbers (load, red-zone spells) against published values, not a fatigue state.
+12. **No study of pacing in professional men's matches in our set.** The pacing evidence is indirect: simulations vs matches [SilvaJR2018; Snyder2023] and the review's reading [MarquesJimenez2017; Bradley2013].
 
 ### 8.3 Corrections to READING_LIST.md and PLAN.md found while reading
 
@@ -1297,6 +1308,7 @@ Check against the PDFs before reusing anything from these `.md` files.
 | Allen2026b | .md starts mid-introduction (abstract lost); Table 2 rows merged (Everton–Southampton); Table 5 cells blank. Abstract from the PDF |
 | Morgans2025b | .md starts mid-introduction (first page lost) |
 | Allen2025 | All values in figure images (Figs 1–3); .md has none |
+| Snyder2023 | Results text duplicated several times; Tables 2–3 merged with the statistics paragraph; page headers mixed into the text. Use `pdftotext -layout`. The errors in 8.1 are in the PDF too |
 
 **Equations missing or garbled; use the PDF:** Skiba2021 (all equations dropped), Chorley2023 (Eqs. 4–8 garbled to single characters; use pdftotext -layout), Lievens2024 (Eqs. 1–2), Weigend2023 (hydraulic equations are in Weigend 2021, not in our set), Osgnach2010, diPrampero2005, Mizelman2024 (Table 1), Jones2017, Narizuka2023, Spearman2017, Spearman2018, Fernandez2018 (appendix), daSilva2025, Bou2026.
 
@@ -1329,6 +1341,6 @@ Check against the PDFs before reusing anything from these `.md` files.
 | Morgans2025c | Tables 1–6 garbled |
 | Allen2024 | Tables 4 and 6 scrambled (columns merged, rows shifted); Table 5 header garbled. `pdftotext -layout` on the PDF gives Tables 4–5 cleanly |
 
-**Figures are the only source of key values** (not in any .md): Allen2025 (Figs 1–3: all running-load values and calibration equations are in images), Morgans2025, daSilva2025, Sutcliffe2025, Bortnik2022, Akenhead2013, Fang2024 (Fig. 1), Russell2011 (Fig. 4), Mohr2005.
+**Figures are the only source of key values** (not in any .md): MarquesJimenez2017 (Fig. 1: the ✓ / ✗ / ? marks are images; the .md keeps only the marker names), Allen2025 (Figs 1–3: all running-load values and calibration equations are in images), Morgans2025, daSilva2025, Sutcliffe2025, Bortnik2022, Akenhead2013, Fang2024 (Fig. 1), Russell2011 (Fig. 4), Mohr2005.
 
 **Good conversions:** Leifsson2024, Cortez2026, Niu2026, Liu2021, Paul2015, SilvaH2025, Bradley2009, Sutcliffe2025 (text), Bassek2025 (text).

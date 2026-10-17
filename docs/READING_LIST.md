@@ -116,7 +116,14 @@ Found via PubMed "cited by" for Carling2011 (69 citing papers) and Rampinini2008
 | Bradley2009 | Bradley PS et al. (2009). J Sports Sci 27(2):159–168. | Premier League, but 2005/06 data. Use for speed thresholds only; numbers from Allen2024. |
 | DiSalvo2007 | Di Salvo V et al. (2007). Int J Sports Med 28(3):222–227. | Old position profiles from the **Spanish league + Champions League** (Amisco 25 Hz), not the Premier League. Replaced by Allen2024 / Morgans2025. |
 
-**Removed:** Snyder, Maung-Maung & Whitacre (2023), *Indicators of fatigue during a soccer match simulation…*, published in *Sports* (MDPI).
+## F. Outside the source rule (read as exceptions, 2026-10-17)
+
+Read on the user's request. Framing only: no calibration number comes from these. Cite with the qualifier shown.
+
+| Key | Paper | Note |
+|---|---|---|
+| ✅ MarquesJimenez2017 | Marqués-Jiménez D, Calleja-González J, Arratibel I, Delextrat A, Terrados N (2017). *Fatigue and recovery in soccer: evidence and challenges.* Open Sports Sci J 10(Suppl 1: M5):52–70. doi:10.2174/1875399X01710010052 | Narrative review in a Bentham Open journal (publisher on Beall's list), 2017. Match numbers are second-hand (Bradley2009, Bradley2013) and partly miscopied, so cite the primary paper. Useful for: fatigue has many causes; players regulate their effort (p.55); responses differ between players, "individual analysis" (p.61); no agreed fatigue marker even with lab tests (p.56, p.58, Fig. 1). |
+| ✅ Snyder2023 | Snyder BJ, Maung-Maung C, Whitacre C (2023). *Indicators of fatigue during a soccer match simulation using GPS-derived workload values: which metrics are most useful?* Sports 12(1):9 (online 27 Dec 2023). doi:10.3390/sports12010009 | **MDPI**, previously removed under the rule above. 20 women collegiate players, modified T-SAFT90 with 2–2.5 min breaks every 5 min. With imposed running, high-speed running falls from minute 15 (indirect evidence for pacing in matches); accelerometer load metrics don't change; jumps preserved. Several internal inconsistencies (notes). |
 
 ---
 
@@ -205,9 +212,11 @@ Key → file name in `docs/papers/md/` (add `.md`). The PDF in `docs/papers/pdf/
 | Slimani2019 | `Slimani_et_al._-_2019_-_Maximum_Oxygen_Uptake_of_Male_Soccer_Players_According_to_their_Competitive_Level,_Playing_Position` |
 | Xu2026 | `Xu_et_al._-_2026_-_Comparative_effectiveness_of_training_interventions_on_VO2max_in_male_soccer_players_a_systematic_r` (Markdown only) |
 | Liu2021 | `Liu_et_al._-_2021_-_Comparing_critical_speed_modelling_approaches_and_exploring_relationships_with_match-play_variables` |
+| MarquesJimenez2017 | `Marqués-Jiménez_et_al._-_Fatigue_and_Recovery_in_Soccer_Evidence_and_Challenges` (no year in the file name) |
+| Snyder2023 | `Snyder_et_al._-_2023_-_Indicators_of_Fatigue_during_a_Soccer_Match_Simulation_Using_GPS-Derived_Workload_Values_Which_Metr` |
 | Smith2018 | *not downloaded* |
 | Julian2021 | *not downloaded* |
 | Bradley2009 | `Bradley_et_al._-_2009_-_High-intensity_running_in_English_FA_Premier_League_soccer_matches` |
 | DiSalvo2007 | `Di_Salvo_et_al._-_2007_-_Performance_Characteristics_According_to_Playing_Position_in_Elite_Soccer` |
 
-`Snyder_et_al._-_2023_…` is also in the folder, but it is **excluded** (MDPI journal). Don't use it.
+`Snyder_et_al._-_2023_…` and `Marqués-Jiménez_et_al._…` are outside the source rule (section F); use only as described there.
