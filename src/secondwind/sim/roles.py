@@ -117,6 +117,8 @@ class Roles:
         body = self.e.physiology
         if body is not None:
             rate = self.effort[i] * (1.0 if self.tempo is None else self.tempo)
+            if self.e.story_press(int(self.e.team_of[i]), t):
+                rate *= self.e.story.press_effort
             want = min(run.speed * rate, 1.0) * self.e.s0[i]
             if want > P.HARD_RUN_SPEED:
                 made = body.makes_run(i, run.speed >= P.DECISIVE_EFFORT)
@@ -292,6 +294,8 @@ class Roles:
             who, chance = self.is_dm | self.is_cm, P.MID_PRESS_CHANCE
         else:
             return
+        if e.story_press(team, t):
+            chance = min(chance * e.story.press_run_boost, 1.0)
         near = [int(i) for i in e.members(team) if who[i] and self.free(int(i))]
         if not near or e.rng.random() >= chance:
             return
@@ -699,6 +703,10 @@ class Roles:
         effort = self.effort
         if self.tempo is not None and mode != "dead":
             effort = effort * self.tempo  # in play only: the set-piece jog stays below HI_SPEED
+        if e.story is not None and mode != "dead":
+            press = e.story.press_team
+            if e.story_press(press, t):
+                effort = np.where(e.team_of == press, effort * e.story.press_effort, effort)
         frac = np.where(calm, frac, np.minimum(frac * effort, 1.0))
         if e.physiology is not None:
             frac = np.where(calm, frac, frac * e.physiology.speed_factor())

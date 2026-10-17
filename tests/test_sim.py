@@ -816,3 +816,26 @@ def test_replay_stills(folders, tmp_path):
     out = tmp_path / "stills.png"
     write_stills(load_window(folders[1], start=600.0, seconds=4.0), out, 2)
     assert out.stat().st_size > 10_000
+
+
+def test_story_controls_press_until_the_hour_and_sub_the_exposed_full_back():
+    """Story controls (PLAN §2.3; sim.story): the press is on for the pressing team only, until
+    press_until_min; the story substitution takes the exposed full-back's slot, like for like,
+    and keeps the number of substitutions."""
+    from secondwind.sim.rosters import make_teams, plan_substitutions
+    from secondwind.sim.story import STORIES, story_subs
+
+    story = STORIES["press-fade"]
+    assert story.pressing(0, 59 * 60.0) and not story.pressing(0, 60 * 60.0)
+    assert not story.pressing(1, 10 * 60.0)
+    rng = np.random.default_rng(3)
+    teams = make_teams(rng)
+    plans = plan_substitutions(rng, teams)
+    new = story_subs(plans, teams, story)
+    assert len(new) == len(plans)
+    mine = [p for p in new if p.slot == story.exposed_slot]
+    assert len(mine) == 1 and mine[0].clock_s == story.sub_minute * 60.0
+    off = teams[0].players[story.exposed_slot]
+    assert mine[0].player.position == off.position == "FB" and mine[0].player.slot == off.slot
+    assert len({p.slot for p in new}) == len(new)  # a slot is substituted once
+    assert story.settings()["name"] == "press-fade"

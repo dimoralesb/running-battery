@@ -13,6 +13,7 @@ from pathlib import Path
 
 from secondwind.sim import params as P
 from secondwind.sim.output import CLEAN_COPY, generate
+from secondwind.sim.story import STORIES
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -53,6 +54,11 @@ def main(argv: list[str] | None = None) -> None:
         help="no substitutions (with --no-fatigue --no-tempo there are none anyway)",
     )
     parser.add_argument(
+        "--story",
+        choices=sorted(STORIES),
+        help="demo story controls (sim.story); story matches are never used for validation",
+    )
+    parser.add_argument(
         "--clean-copy",
         action="store_true",
         help=f"also save the noise-free positions to <out>/{CLEAN_COPY} (debugging only)",
@@ -72,6 +78,7 @@ def main(argv: list[str] | None = None) -> None:
         tempo=tempo,
         subs=not args.no_subs,
         vary=args.vary,
+        story=STORIES[args.story] if args.story else None,
     )
     frames = sum(len(p.alive) for p in match.periods)
     print(

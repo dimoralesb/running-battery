@@ -53,6 +53,7 @@ from secondwind.sim import params as P
 from secondwind.sim.physiology import Physiology
 from secondwind.sim.roles import Roles
 from secondwind.sim.rosters import SimTeam, SubPlan
+from secondwind.sim.story import Story
 
 GRAVITY = 9.81
 GOAL_U = P.HALF_LENGTH
@@ -131,12 +132,14 @@ class MatchEngine:
         tempo: float | None = None,
         pre_fatigue: bool = False,
         subs: list[SubPlan] | None = None,
+        story: Story | None = None,
     ):
         """``physiology`` None is fatigue off; ``tempo`` None is no shared tempo.
         ``pre_fatigue`` uses the fatigue-off calibration (``params.PRE_FATIGUE``); with both off
         and no ``subs`` too, the engine is the generator as it was before fatigue and tempo
-        existed."""
+        existed. ``story``: the demo's story controls (``sim.story``), None for natural matches."""
         self.rng = rng
+        self.story = story
         self.teams = teams
         self.physiology = physiology
         self.tempo = tempo
@@ -266,9 +269,21 @@ class MatchEngine:
             self.transition = (team, t + float(np.clip(rng.normal(mean, sd), lo, hi)))
             self.transition_start = t
         elif self.to_uv(team, where)[0] < -P.THIRD:
-            if rng.random() < self.teams[1 - team].press_chance:
+            if rng.random() < self.press_chance(1 - team, t):
                 self.press = (1 - team, t + P.PRESS_MAX_S)
         self.roles.on_possession_change(team, t)
+
+    def clock(self, t: float) -> float:
+        return t + (45.0 * 60.0 if self.period == 2 else 0.0)
+
+    def story_press(self, team: int, t: float) -> bool:
+        """The team is pressing high because the story says so (``sim.story``)."""
+        return self.story is not None and self.story.pressing(team, self.clock(t))
+
+    def press_chance(self, team: int, t: float) -> float:
+        if self.story_press(team, t):
+            return self.story.press_chance
+        return self.teams[team].press_chance
 
     def end_transition(self, t: float) -> None:
         """A transition ends when its time is up, the ball changes hands, or play stops."""
@@ -406,6 +421,10 @@ class MatchEngine:
         opp = self.pos[self.members(1 - team)]
         free = np.min(np.hypot(*(self.pos[mates][:, None, :] - opp[None]).transpose(2, 0, 1)), 1)
         weight *= np.clip(free / 5.0, 0.15, 1.5)
+        story = self.story
+        if story is not None and in_transition and team != story.exposed_slot // 11:
+            near = np.hypot(*(self.pos[mates] - self.pos[story.exposed_slot]).T)
+            weight = np.where(near < story.counter_reach, weight * story.counter_bias, weight)
         weight[[self.positions[i] == Position.GK for i in mates]] *= 0.2
         mates_uv = self.to_uv(team, self.pos[mates])
         in_box = (mates_uv[:, 0] > GOAL_U - P.BOX_DEPTH - 4) & (
@@ -1007,7 +1026,7 @@ class MatchEngine:
 
     def substitute_due(self, t: float, k: int) -> list[tuple[int, int, str]]:
         """Make the substitutions due by now (the ball is dead); returns (frame, slot, id)."""
-        clock = t + (45.0 * 60.0 if self.period == 2 else 0.0)
+        clock = self.clock(t)
         due = [s for s in self.pending if s.clock_s <= clock]
         made = []
         for sub in due:

@@ -7,8 +7,17 @@ Each rule is tied to a row of the claims register (``claims.json``, from synthes
 blocked claim (20–34), a qualified claim used without its qualifier (10, 11, 17, 19c, 19d), an
 analyst-only claim in fan mode (9c, 16, 18, 19, 19d), or a global rule (G1 baseline for every
 percentage, G2 estimate language, G9 typical-professional wording). A sentence passes only if no
-rule fires. The checks read the sentence alone; the context check (G3: ball in play, score,
-start of a half) needs the match data and belongs to the agent that writes the sentence.
+rule fires.
+
+With a ``context`` (from the ``moment_context`` tool, plus the facts the sentence was written
+from) two more checks run (v2, 2026-10-17):
+- **Context check** (rule 2, G3, claim 13): "tired", "fatigue", "in the red" and the like while
+  a non-fatigue reason is present (a big lead, a long stoppage, the start of a half, just
+  subbed on, his team on the ball…) must name that reason; otherwise use neutral words.
+- **Numbers** (N1): every number in the sentence must be one of the facts (or a rounding, a
+  percentage or km/h of one), the cited claim's own wording (except the examples in claims 11,
+  12 and 13), or a window length ("5 min").
+The rules can only block. The LLM pass (``agents.llm_verifier``) runs after them.
 """
 
 from __future__ import annotations
@@ -44,9 +53,42 @@ STATE = r"(tired|exhausted|fatigued|knackered|spent|shattered|out on his feet|do
 # Baselines that make a percentage meaningful (G1, claim 24).
 BASELINE = (
     r"\b(than|vs\.?|versus|compared (?:with|to)|match average|average|normal|usual|peak|"
-    r"first 15|kick-off|first half|reserve|typical professional|of the time|chance|earlier)\b"
+    r"first 15|kick-off|first half|reserve|typical professional|of the time|chance|earlier|"
+    r"of the (last|first|next) \d+ min\w*|team-?mates)\b"
 )
 NEGATED_LACTIC = r"\b(isn'?t|is not|not|no|nothing to do with)\b[^.]{0,25}\blactic"
+# Wording that blames fatigue, for the context check (rule 2).
+TIRED = (
+    r"\b(tired|tiring|tire[sd]? out|fatigu\w*|exhaust\w*|in the red|leggy|heavy legs|dead legs|"
+    r"legs (?:had|have) gone|out of steam|out of gas|running on empty|fad(?:e|es|ed|ing))\b"
+)
+# How a sentence names each non-fatigue reason (codes from tools.REASONS).
+STOPPAGE = (
+    r"stoppage|out of play|ball (was|is|has been|went) (out|dead)|break in play|delay|restart"
+)
+NAMES_REASON = {
+    "big_lead": r"\blead\b|leading|ahead|\bup\b|\d\s*[–-]\s*\d|sitting (deep|back)|"
+    r"sat (deep|back|on)|game state|comfortable",
+    "start_of_half": r"(start|beginning|opening|first (few )?minutes) of the (second |2nd |first )?"
+    r"half|after the (break|restart|interval)|since the restart|half-?time|kick-?off",
+    "just_subbed_on": r"came on|coming on|just on\b|substitute|off the bench|fresh legs|settling",
+    "ball_out_of_play": STOPPAGE + r"|injury|treatment",
+    "low_ball_in_play": STOPPAGE + r"|ball in play",
+    "team_in_possession": r"possession|had the ball|has the ball|on the ball|with the ball|"
+    r"(kept|keeping|keep) the ball",
+    "just_won_ball": r"possession|won (the ball|it) back|won the ball|on the ball|with the ball",
+    "low_first_half_load": r"first half|first-half|before the break",
+}  # fmt: skip
+# Fatigue named only to rule it out ("tactical rather than fatigue", "not fatigue").
+NOT_FATIGUE = (
+    r"(rather than|not|isn'?t|is not|instead of|no sign of|nothing to do with)\s+"
+    r"(a sign of |just |simply )?(fatigue|tiredness|being tired)"
+)
+# Claims whose wording holds an example, not a finding ("about 40%", "13 km", "a 3–0 lead"):
+# its numbers must come from the facts.
+EXAMPLE_WORDING = {"11", "12", "13"}
+NUMBER = r"(?<![\w.])\d+(?:[.,]\d+)?"
+WINDOW = r"(?<![\w.])(1|2|5|10|15|30|45|60|90)\s*(-|\s)?(min\w*|second\w*|s\b|metres?)"
 
 
 @dataclass(frozen=True)
@@ -57,6 +99,7 @@ class Rule:
     needs: str | None = None  # …and this is found too
     unless: str | None = None  # …and this is not found
     fan_only: bool = False  # only blocks in fan mode (analyst-only claims)
+    sourced_ok: bool = False  # passes when every number in it is one of the facts (N1)
 
 
 RULES: tuple[Rule, ...] = (
@@ -94,7 +137,7 @@ RULES: tuple[Rule, ...] = (
          "first 15 min)", r"\d+\s*(%|percent)", unless=BASELINE),
     Rule("24", "A drop this large is vs the peak, not \"below normal\" (claim 24)",
          r"\b([6-9]\d|100)\s*(%|percent)[^.]*\b(less than|below|under)\s+(his |her |their )?"
-         r"(normal|usual|match average|average)"),
+         r"(normal|usual|match average|average)", sourced_ok=True),
     # 25–29.
     Rule("25", "Lactate does not track temporary fatigue (claim 25)", r"\blact(ic|ate)\b",
          unless=NEGATED_LACTIC),
@@ -164,12 +207,82 @@ def register() -> dict:
     return json.loads(REGISTER.read_text())
 
 
+def register_row(claim_id: str) -> dict | None:
+    """One row of the register (a claim or a global rule), or None."""
+    reg = register()
+    return next((r for r in reg["claims"] + reg["global_rules"] if r["id"] == str(claim_id)), None)
+
+
 def _found(pattern: str, text: str) -> bool:
     return re.search(pattern, text, FLAGS) is not None
 
 
-def verify(sentence: str, mode: Mode = "fan") -> Verdict:
-    """Check one sentence against the fixed rules; ``ok`` only if none fires."""
+def numbers_in(obj) -> list[float]:
+    """Every number in a context or facts structure (values, scores, clock labels)."""
+    if isinstance(obj, bool) or obj is None:
+        return []
+    if isinstance(obj, int | float):
+        return [float(obj)] if obj == obj else []
+    if isinstance(obj, str):
+        return [float(x.replace(",", ".")) for x in re.findall(NUMBER, obj)]
+    if isinstance(obj, dict):
+        return [x for v in obj.values() for x in numbers_in(v)]
+    if isinstance(obj, list | tuple):
+        return [x for v in obj for x in numbers_in(v)]
+    return []
+
+
+def _traced(x: float, known: list[float]) -> bool:
+    """x is one of the known numbers, rounded (fan mode says "about 40%"), as a percentage of a
+    share, as km/h of a speed in m/s, or as the size of a change ("30% below" for −30)."""
+    for a in known:
+        for b in (a, 100.0 * a, 3.6 * a, abs(a)):
+            if abs(x - b) <= max(0.6, 0.08 * abs(b)):
+                return True
+    return False
+
+
+def _all_traced(text: str, context: dict) -> bool:
+    known = numbers_in(context)
+    bare = re.sub(WINDOW, " ", text, flags=FLAGS)
+    return all(_traced(float(x.replace(",", ".")), known) for x in re.findall(NUMBER, bare))
+
+
+def context_findings(text: str, context: dict, claim_id: str | None) -> list[Finding]:
+    """The checks that need the match: rule 2 (claim 13) and N1."""
+    out = []
+    reasons = [r["code"] for r in context.get("non_fatigue_reasons", [])]
+    if reasons and _found(TIRED, text) and not _found(NOT_FATIGUE, text):
+        if not any(_found(NAMES_REASON.get(code, r"$^"), text) for code in reasons):
+            listed = ", ".join(r["text"] for r in context["non_fatigue_reasons"])
+            out.append(
+                Finding(
+                    "13",
+                    f"Context check: {listed}; name it or use neutral words "
+                    "such as 'ran less' (rule 2, claim 13)",
+                )
+            )
+    if "facts" in context:
+        known = numbers_in(context)
+        if claim_id and str(claim_id) not in EXAMPLE_WORDING:
+            row = next((c for c in register()["claims"] if c["id"] == str(claim_id)), None)
+            known += numbers_in(row.get("wording", "")) if row else []
+        bare = re.sub(WINDOW, " ", text, flags=FLAGS)
+        loose = [x for x in re.findall(NUMBER, bare)
+                 if not _traced(float(x.replace(",", ".")), known)]  # fmt: skip
+        if loose:
+            out.append(
+                Finding("N1", f"Number(s) {', '.join(loose)} not in the data or the cited claim")
+            )
+    return out
+
+
+def verify(
+    sentence: str, mode: Mode = "fan", context: dict | None = None, claim_id: str | None = None
+) -> Verdict:
+    """Check one sentence against the fixed rules; ``ok`` only if none fires. ``context``: the
+    moment's context and facts (adds the context check and the numbers check); ``claim_id``:
+    the register row the sentence was written from."""
     text = sentence.replace("’", "'")
     findings = []
     for rule in RULES:
@@ -181,7 +294,11 @@ def verify(sentence: str, mode: Mode = "fan") -> Verdict:
             continue
         if rule.unless and _found(rule.unless, text):
             continue
+        if rule.sourced_ok and context and "facts" in context and _all_traced(text, context):
+            continue
         findings.append(Finding(rule.claim, rule.message))
+    if context:
+        findings += context_findings(text, context, claim_id)
     return Verdict(sentence, not findings, tuple(dict.fromkeys(findings)))
 
 

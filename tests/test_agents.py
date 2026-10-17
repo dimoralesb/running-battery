@@ -1,0 +1,299 @@
+"""MCP tools, server and feed (BUILD_PLAN "Wed 21"–"Thu 22") on a constructed match: each tool's
+output shape, the moments it must find, the context reasons, and that nothing in agents/ can
+read the truth. Constructed inputs only (the same seed gives a different match elsewhere); no
+LLM calls (the feed runs offline)."""
+
+import ast
+import asyncio
+import builtins
+import io
+import json
+from pathlib import Path
+
+import numpy as np
+import pytest
+
+from secondwind.agents import feed as feed_mod
+from secondwind.agents.tools import MOMENT_KINDS, MatchTools, clock_label, parse_time
+from secondwind.agents.verifier import verify
+from secondwind.engine.estimate import estimate
+from secondwind.io import SIGNALS, Match, write_match, write_signals
+from secondwind.schema import (
+    Ball,
+    Event,
+    Generator,
+    MatchMetadata,
+    PeriodInfo,
+    PlayerInfo,
+    PlayerPosition,
+    Point,
+    Score,
+    Substitution,
+    TeamInfo,
+    TrackingFrame,
+)
+
+AGENTS = Path(__file__).resolve().parents[1] / "src" / "secondwind" / "agents"
+HZ = 10
+DURATION = (900.0, 600.0)
+POSITIONS = ["GK", "CB", "CB", "FB", "FB", "DM", "CM", "AM", "WM", "WM", "CF"]
+SUB_T = 30.0  # H12 on for H11, 30 s into the second half
+LOST = (200.0, 260.0)  # period 1: away have the ball (home just lost it at 200 s)
+DEAD = (300.0, 360.0)  # period 2: a one-minute stoppage
+
+
+def _speed(pid: str, period: int, t: float) -> float:
+    """Who runs, when: H04 (left-back) a red-zone minute at 7 m/s, then back to his normal
+    later; H12 (the substitute) two minutes at 6 m/s."""
+    if pid == "H04" and period == 1 and (60.0 <= t < 120.0):
+        return 7.0
+    if pid == "H04" and period == 1 and (700.0 <= t < 760.0):
+        return 6.0
+    if pid == "H12" and period == 2 and (60.0 <= t < 180.0):
+        return 6.0
+    return 0.0
+
+
+def _team(side: str) -> TeamInfo:
+    letter = side[0].upper()
+    players = [
+        PlayerInfo(id=f"{letter}{i:02d}", name=f"Player {letter}{i}", shirt=i, position=pos,
+                   starter=True)
+        for i, pos in enumerate(POSITIONS, start=1)
+    ]  # fmt: skip
+    players.append(PlayerInfo(id=f"{letter}12", name=f"Sub {letter}", shirt=12, position="CF",
+                              starter=False))  # fmt: skip
+    return TeamInfo(id=side, name=f"{side} FC", side=side, formation="4-2-3-1",
+                    attacks_positive_x_in_period_1=side == "home", players=players)  # fmt: skip
+
+
+def _event(i, period, t, type_, team, player, score, **kw) -> Event:
+    return Event(id=i, period=period, t=t, clock=t + (2700.0 if period == 2 else 0.0),
+                 type=type_, team_id=team, player_id=player,
+                 score=Score(home=score[0], away=score[1]), **kw)  # fmt: skip
+
+
+def _match() -> Match:
+    teams = [_team("home"), _team("away")]
+    starters = [p.id for team in teams for p in team.players if p.starter]
+    spots = {pid: (-40.0 + 4.0 * k, -30.0 + 2.5 * k) for k, pid in enumerate(starters)}
+    angle = {pid: 0.0 for pid in [*starters, "H12"]}
+    frames, frame = [], 0
+    for period, duration in enumerate(DURATION, start=1):
+        for k in range(round(duration * HZ)):
+            t = round(k / HZ, 1)
+            players = []
+            for pid in starters:
+                if pid == "H11" and period == 2 and t >= SUB_T:
+                    pid = "H12"
+                v = _speed(pid, period, t)
+                angle[pid] += v / HZ / 15.0
+                x, y = spots["H11" if pid == "H12" else pid]
+                if v or angle[pid]:  # runners circle the centre spot (15 m radius)
+                    x, y = 15.0 * np.cos(angle[pid]), 15.0 * np.sin(angle[pid])
+                players.append(PlayerPosition(id=pid, x=round(x, 2), y=round(y, 2)))
+            dead = period == 2 and DEAD[0] <= t < DEAD[1]
+            away = period == 1 and LOST[0] <= t < LOST[1]
+            frames.append(TrackingFrame(
+                frame=frame, period=period, t=t, clock=t + (2700.0 if period == 2 else 0.0),
+                ball_status="dead" if dead else "alive",
+                possession_team="away" if away else "home",
+                ball=Ball(x=0.0, y=0.0, z=0.0), players=players,
+            ))  # fmt: skip
+            frame += 1
+    n1 = round(DURATION[0] * HZ)
+    events = [
+        _event(0, 1, 100.0, "goal", "home", "H11", (0, 0), possession_id=1),
+        _event(1, 1, 200.5, "pass", "away", "A08", (1, 0), possession_id=2,
+               phase="positive_transition", start=Point(x=0.0, y=0.0)),
+        _event(2, 1, 205.0, "shot", "away", "A11", (1, 0), possession_id=2, phase="final_third",
+               xg=0.3),
+        _event(3, 2, SUB_T, "substitution", "home", "H11", (1, 0), related_player_id="H12"),
+        _event(4, 2, 50.0, "goal", "home", "H10", (1, 0), possession_id=3),
+    ]  # fmt: skip
+    meta = MatchMetadata(
+        match_id="constructed",
+        generator=Generator(version="test", seed=0),
+        periods=[
+            PeriodInfo(period=1, start_frame=0, end_frame=n1 - 1, duration_s=DURATION[0]),
+            PeriodInfo(period=2, start_frame=n1, end_frame=frame - 1, duration_s=DURATION[1]),
+        ],
+        teams=teams,
+        substitutions=[
+            Substitution(period=2, t=SUB_T, team_id="home", player_out="H11", player_in="H12")
+        ],
+    )
+    return Match(metadata=meta, frames=frames, events=events)
+
+
+@pytest.fixture(scope="module")
+def folder(tmp_path_factory) -> Path:
+    path = tmp_path_factory.mktemp("match")
+    m = _match()
+    write_match(path, m.metadata, m.frames, m.events)
+    write_signals(path / SIGNALS, estimate(m))
+    (path / "truth.json").write_text(json.dumps({"secret": True}))
+    return path
+
+
+@pytest.fixture(scope="module")
+def tools(folder) -> MatchTools:
+    return MatchTools(folder)
+
+
+def _numbers_have_units(obj, path="") -> None:
+    """Every {"value": …} carries a unit and a source."""
+    if isinstance(obj, dict):
+        if "value" in obj and isinstance(obj["value"], int | float):
+            assert {"unit", "source"} <= obj.keys(), path
+        for k, v in obj.items():
+            _numbers_have_units(v, f"{path}.{k}")
+    elif isinstance(obj, list):
+        for i, v in enumerate(obj):
+            _numbers_have_units(v, f"{path}[{i}]")
+
+
+def test_clock_labels_and_parsing():
+    assert clock_label(1, 2830.0) == "45+2:10" and parse_time("45+2:10") == (1, 2830.0)
+    assert clock_label(2, 1332.0) == "67:12" and parse_time("67:12") == (2, 1332.0)
+    assert parse_time("20:00") == (1, 1200.0) and parse_time(67.2)[0] == 2
+    assert clock_label(2, 2760.0) == "90+1:00"
+
+
+def test_match_summary(tools):
+    s = tools.match_summary()
+    assert s["synthetic"] and [t["id"] for t in s["teams"]] == ["home", "away"]
+    assert s["final_score"] == {"home": 2, "away": 0}
+    assert [g["score"] for g in s["goals"]] == [{"home": 1, "away": 0}, {"home": 2, "away": 0}]
+    assert s["substitutions"][0] | {} and s["substitutions"][0]["on_id"] == "H12"
+    assert s["substitutions"][0]["clock"] == "45:30"
+    _numbers_have_units(s)
+
+
+def test_player_signals_shape(tools):
+    p = tools.player_signals("H04", "0:00", "3:00")
+    assert p["on_pitch"] and p["player"]["position"] == "FB"
+    assert set(p) >= {"battery", "low_chance", "energy", "hsr", "flags", "in_play"}
+    assert 0.0 <= p["battery"]["typical_pro_at_end"]["value"] <= 1.0
+    assert p["flags"]["red_zone_spells"]["value"] >= 1
+    assert "typical professional" in p["battery"]["note"]
+    assert "calibration" in p["low_chance"]["calibration"].lower()
+    _numbers_have_units(p)
+    assert tools.player_signals("home 4")["player"]["id"] == "H04"  # team and shirt
+    assert tools.player_signals("H12", "0:00", "10:00")["on_pitch"] is False  # not on yet
+
+
+def test_find_moments(tools):
+    for kind in MOMENT_KINDS:
+        r = tools.find_moments(kind, 5)
+        assert r["kind"] == kind and r["claims"] and isinstance(r["moments"], list)
+        assert [m["rank"] for m in r["moments"]] == list(range(1, len(r["moments"]) + 1))
+        for m in r["moments"]:
+            assert {"id", "period", "t", "clock", "video_s", "player", "facts"} <= m.keys()
+            _numbers_have_units(m["facts"])
+    red = tools.find_moments("red_zone")["moments"]
+    assert red and red[0]["player"]["id"] == "H04" and red[0]["period"] == 1
+    exposed = tools.find_moments("exposed_on_turnover", player="H04")["moments"]
+    assert exposed and exposed[0]["t"] == 200.5 and exposed[0]["facts"]["counter_xg"]["value"]
+    back = tools.find_moments("second_wind", player="H04")["moments"]
+    assert back and 700.0 <= back[0]["t"] <= 760.0  # back to his normal on the second run
+    fresh = tools.find_moments("fresh_legs")["moments"]
+    assert [m["player"]["id"] for m in fresh] == ["H12"]
+    assert fresh[0]["facts"]["sub_hsr_per_min"]["value"] > 0
+    assert fresh[0]["facts"]["vs_teammates"]["value"] is None  # team-mates stood still: no ratio
+    assert "error" in tools.find_moments("tired")
+
+
+def test_moment_context_reasons(tools):
+    ctx = tools.moment_context("50:30", 2, team="home")  # 330 s into the half: stoppage, 2–0
+    codes = {r["code"] for r in ctx["non_fatigue_reasons"]}
+    assert not ctx["ball_in_play"] and ctx["ball_out_for"]["value"] >= 30
+    assert {"ball_out_of_play", "big_lead", "start_of_half"} <= codes
+    sub = tools.moment_context(46.5, 2, "H12")  # 90 s into the half, on for 60 s
+    assert "just_subbed_on" in {r["code"] for r in sub["non_fatigue_reasons"]}
+    lost = tools.moment_context("3:23", player="H04")
+    assert tools.context_at(1, 203.0, "H04") == lost
+    assert lost["team_just_lost_ball"] and lost["possession"] == "away"
+    calm = tools.moment_context(12.0, 1, "H04")  # 12 min in, 1–0, home on the ball since 4:20
+    assert [r["code"] for r in calm["non_fatigue_reasons"]] == ["team_in_possession"]
+    assert calm["ball_in_play"] and not calm["team_just_lost_ball"]
+    _numbers_have_units(ctx)
+
+
+def test_claim_and_verify_tools(tools):
+    assert tools.claim("33")["status"] == "blocked" and "error" in tools.claim("99")
+    assert tools.verify("He is tired.")["ok"] is False
+    ctx = tools.moment_context("50:30", 2, team="home")
+    v = tools.verify("A typical professional would likely be in the red after this.", "fan", ctx)
+    assert not v["ok"] and v["findings"][0]["claim"] == "13"
+
+
+def test_agents_never_read_truth():
+    """Static check, as test_engine_never_imports_truth: no agents module uses the truth reader
+    or models, or names truth.json in code."""
+    banned = {"read_truth", "MatchTruth", "PlayerTruth", "TruthSeries", "TrueParams", "TRUTH"}
+    for path in AGENTS.glob("*.py"):
+        for node in ast.walk(ast.parse(path.read_text())):
+            if isinstance(node, ast.ImportFrom | ast.Import):
+                names = {a.name for a in node.names}
+                assert not names & banned, (path.name, names & banned)
+            used = getattr(node, "id", None) or getattr(node, "attr", None)
+            assert used not in banned, (path.name, used)
+            if isinstance(node, ast.Constant) and isinstance(node.value, str):
+                assert not node.value.strip().endswith("truth.json"), path.name
+
+
+def test_tools_never_open_truth_json(folder, monkeypatch):
+    opened: list[str] = []
+    real_open = io.open
+
+    def spy(file, *args, **kwargs):
+        opened.append(str(file))
+        return real_open(file, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "open", spy)
+    monkeypatch.setattr(io, "open", spy)
+    t = MatchTools(folder)
+    for kind in MOMENT_KINDS:
+        t.find_moments(kind)
+    t.match_summary()
+    monkeypatch.undo()
+    names = {Path(p).name for p in opened}
+    assert "truth.json" not in names
+    assert {"signals.json", "tracking.jsonl", "events.jsonl", "metadata.json"} <= names
+
+
+def test_mcp_server_serves_the_six_read_only_tools(folder):
+    pytest.importorskip("mcp")
+    from secondwind.agents.mcp_server import build
+
+    server = build(folder)
+
+    async def run():
+        listed = await server.list_tools()
+        result = await server.call_tool("claim", {"claim_id": "11"})
+        return listed, result
+
+    listed, result = asyncio.run(run())
+    assert {t.name for t in listed} == {"match_summary", "player_signals", "find_moments",
+                                        "moment_context", "claim", "verify"}  # fmt: skip
+    assert all(t.annotations.readOnlyHint for t in listed)
+    assert "typical professional" in json.dumps(result[1] if isinstance(result, tuple) else
+                                                result.structuredContent)  # fmt: skip
+
+
+def test_offline_feed_is_verified_and_timestamped(folder):
+    feed = asyncio.run(feed_mod.build(folder, offline=True))
+    assert feed["synthetic"] and feed["moments"] and feed["agents"]["tactical"] == "offline"
+    keys = {"t", "period", "clock", "video_s", "player", "kind", "sentence", "claim", "sources",
+            "mode", "verdict", "shown", "verifier"}  # fmt: skip
+    assert {e["mode"] for e in feed["entries"]} == {"fan", "analyst"}
+    for e in feed["entries"]:
+        assert keys <= e.keys()
+        if e["shown"]:
+            assert verify(e["sentence"], e["mode"]).ok, e["sentence"]
+            assert e["sources"]
+    times = [e["video_s"] for e in feed["entries"]]
+    assert times == sorted(times)
+    fav = asyncio.run(feed_mod.build(folder, offline=True, favourite="Sub H"))
+    assert fav["favourite"] == "H12"

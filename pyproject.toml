@@ -18,6 +18,13 @@ calib = ["floodlight>=1.2"]
 # Replay as GIF or still frames (python -m secondwind.sim.replay --gif / --stills). The HTML
 # replay needs nothing extra.
 replay = ["matplotlib>=3.9"]
+agents = [
+    "agent-framework-core>=1.22",
+    "agent-framework-openai>=1.17",
+    "azure-identity>=1.26",
+    "mcp>=1.24,<2",
+    "openai>=3.30",
+]
 
 [dependency-groups]
 dev = ["pytest>=8.3", "ruff>=0.8"]

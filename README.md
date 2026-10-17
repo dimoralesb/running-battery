@@ -46,6 +46,41 @@ uv run python -m secondwind.validate.real data/synthetic/dev --jobs 4   # IDSSE 
 uv run python -m secondwind.validate.figures                            # docs/figures/*.png
 ```
 
+Agents (`uv sync --extra agents`; Foundry settings in `.env`, keyless auth via `az login`):
+
+```bash
+uv run python scripts/foundry_smoke.py                                  # model access, quota, latency
+uv run python -m secondwind.agents.mcp_server data/synthetic/demo/story # MCP server (stdio)
+uv run python -m secondwind.agents.feed data/synthetic/demo/story       # feed.json (add --offline)
+uv run python -m secondwind.agents.verifier_suite --llm                 # Verifier report
+scripts/demo.sh                                                         # both demo matches + feeds
+```
+
+## Agents
+
+Four agents on Microsoft Foundry (Agent Framework, gpt-5-mini) turn a match into a timestamped,
+verified feed (`feed.json`, synced to the replay or a video by `video_s`). They see the match
+only through an MCP server with six read-only tools, and every number comes back with its unit
+and the field it came from; nothing in `agents/` can read the hidden truth. **Tactical** picks
+the moments (red-zone spells, a defender exposed on the turnover, second wind, fresh legs, a drop
+that is tactical rather than fatigue); **Narrator** writes from the claims register's wordings;
+**Personalization** sets the fan or analyst style; **Verifier** checks every sentence before it
+reaches the screen.
+
+The Verifier runs fixed rules first, then an LLM pass that can only block, against the claims
+register (synthesis §5) and the moment's context: a sentence that blames fatigue while the team
+is 3–0 up, the ball is out of play or the player has just come on must say so, and every number
+must be one of the facts. On 104 test sentences ([docs/verifier_report.json](docs/verifier_report.json)):
+
+| | Unsupported sentences caught | Valid sentences blocked |
+|---|---|---|
+| Rules alone | 48 / 64 (paraphrases 2 / 16) | 0 / 40 |
+| Rules + LLM | 64 / 64 (paraphrases 16 / 16) | 2 / 40 |
+
+The demo feeds are in [docs/feeds/](docs/feeds/): a story match (seed 2028, a high press that
+fades, a full-back exposed on turnovers, a fresh substitute) and a natural one (seed 2031). Story
+matches are never used for validation numbers.
+
 ## Validation
 
 **Estimator vs hidden truth.** The battery (blue, with its band) against the generator's hidden
@@ -75,6 +110,9 @@ fatigue.
 - On the 7 real IDSSE matches [Bassek2025] the estimator's load, distances and battery dips look
   like the synthetic ones, but real players faded more in the second half (high-speed running
   −21% vs −9%) and our synthetic peak spells are about 12% more intense (PLAN §2.6).
+- The Verifier's LLM pass varies from run to run (on the suite, 2 of 40 valid sentences blocked in
+  the final run, 7 in the first), and the feed's wording with it; the rules give the same verdict
+  every time. The committed demo feeds are one run each.
 - Player fitness (CS, D′) can't be measured from tracking; the professional prior is derived from
   published tests, and no professional D′ has been published (synthesis §3.2.3).
 

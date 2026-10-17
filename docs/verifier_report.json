@@ -1,0 +1,2246 @@
+{
+ "report": {
+  "n": 104,
+  "by_set": {
+   "valid": {
+    "rules": {
+     "caught": "0/0",
+     "false_blocks": "0/29",
+     "caught_rate": 0.0,
+     "false_block_rate": 0.0
+    },
+    "llm": {
+     "caught": "0/0",
+     "false_blocks": "0/29",
+     "caught_rate": 0.0,
+     "false_block_rate": 0.0
+    }
+   },
+   "blocked": {
+    "rules": {
+     "caught": "34/34",
+     "false_blocks": "0/0",
+     "caught_rate": 1.0,
+     "false_block_rate": 0.0
+    },
+    "llm": {
+     "caught": "34/34",
+     "false_blocks": "0/0",
+     "caught_rate": 1.0,
+     "false_block_rate": 0.0
+    }
+   },
+   "paraphrase": {
+    "rules": {
+     "caught": "2/16",
+     "false_blocks": "0/0",
+     "caught_rate": 0.125,
+     "false_block_rate": 0.0
+    },
+    "llm": {
+     "caught": "16/16",
+     "false_blocks": "0/0",
+     "caught_rate": 1.0,
+     "false_block_rate": 0.0
+    }
+   },
+   "context": {
+    "rules": {
+     "caught": "12/14",
+     "false_blocks": "0/11",
+     "caught_rate": 0.857,
+     "false_block_rate": 0.0
+    },
+    "llm": {
+     "caught": "14/14",
+     "false_blocks": "2/11",
+     "caught_rate": 1.0,
+     "false_block_rate": 0.182
+    }
+   }
+  },
+  "rules": {
+   "caught": "48/64",
+   "false_blocks": "0/40",
+   "caught_rate": 0.75,
+   "false_block_rate": 0.0
+  },
+  "llm": {
+   "caught": "64/64",
+   "false_blocks": "2/40",
+   "caught_rate": 1.0,
+   "false_block_rate": 0.05
+  }
+ },
+ "rows": [
+  {
+   "set": "valid",
+   "sentence": "After that 5-minute spell, players typically cover about 40% less high-speed distance in the next minute than their match average. It comes back over about 5 minutes.",
+   "mode": "fan",
+   "context": null,
+   "claim": null,
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "valid",
+   "sentence": "Short bursts are shaken off in a minute or two. A five-minute spell takes about five minutes, and sprinting takes longer.",
+   "mode": "fan",
+   "context": null,
+   "claim": null,
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "valid",
+   "sentence": "In the Premier League, players make about a third fewer high-speed recovery runs right after their most intense spell than they normally do. Our estimate says he had less in the tank for this one.",
+   "mode": "fan",
+   "context": null,
+   "claim": null,
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "valid",
+   "sentence": "Losing the ball forces the hardest running of the game. This is where tired legs get exposed.",
+   "mode": "fan",
+   "context": null,
+   "claim": null,
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "valid",
+   "sentence": "His runs after that spell are shorter, and he's receiving the ball at lower speed.",
+   "mode": "fan",
+   "context": null,
+   "claim": null,
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "valid",
+   "sentence": "Fresh legs: substitutes typically do 15–25% more high-intensity running per minute than players who started.",
+   "mode": "fan",
+   "context": null,
+   "claim": null,
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "valid",
+   "sentence": "In the last 15 minutes, players typically do about a fifth less hard running than at kick-off, with longer breaks between efforts.",
+   "mode": "fan",
+   "context": null,
+   "claim": null,
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "valid",
+   "sentence": "He's still moving, but the high-speed runs aren't there yet.",
+   "mode": "fan",
+   "context": null,
+   "claim": null,
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "valid",
+   "sentence": "It isn't 'lactic acid'. Scientists think it's a short-lived disturbance in the muscle's salt balance, which clears in minutes.",
+   "mode": "fan",
+   "context": null,
+   "claim": null,
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "valid",
+   "sentence": "Without the ball, Premier League players typically cover about 10% more ground per minute than when they have it.",
+   "mode": "fan",
+   "context": null,
+   "claim": null,
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "valid",
+   "sentence": "In lab tests, about a fifth of the short-term reserve returns in the first 30 seconds of easy recovery.",
+   "mode": "analyst",
+   "context": null,
+   "claim": null,
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "valid",
+   "sentence": "His last few sprints were a bit slower than earlier ones.",
+   "mode": "fan",
+   "context": null,
+   "claim": null,
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "valid",
+   "sentence": "He has done running that would leave a typical professional at about 40% of their short-term reserve.",
+   "mode": "fan",
+   "context": null,
+   "claim": null,
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "valid",
+   "sentence": "A typical professional would be in the red after this about one time in three.",
+   "mode": "fan",
+   "context": null,
+   "claim": null,
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "valid",
+   "sentence": "About 11 km, an effort roughly like 13 km of steady running (model estimate).",
+   "mode": "fan",
+   "context": null,
+   "claim": null,
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "valid",
+   "sentence": "His running dropped while his team sat on a 3–0 lead, so this may be tactical rather than fatigue.",
+   "mode": "fan",
+   "context": null,
+   "claim": null,
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "valid",
+   "sentence": "Fewer touches, partly because the ball was out of play more.",
+   "mode": "fan",
+   "context": null,
+   "claim": null,
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "valid",
+   "sentence": "Players who ran hardest before the break usually do a bit less after it.",
+   "mode": "fan",
+   "context": null,
+   "claim": null,
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "valid",
+   "sentence": "In lab tests, tired players strike the ball a little slower and less precisely.",
+   "mode": "analyst",
+   "context": null,
+   "claim": null,
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "valid",
+   "sentence": "Model view: if he were fresh, we estimate he'd control a bit more of this area.",
+   "mode": "fan",
+   "context": null,
+   "claim": null,
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "valid",
+   "sentence": "Higher-placed teams tend to sprint a little more; it's a weak link, not a recipe.",
+   "mode": "fan",
+   "context": null,
+   "claim": null,
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "valid",
+   "sentence": "This is the lowest point of his match so far, by our estimate.",
+   "mode": "fan",
+   "context": null,
+   "claim": null,
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "valid",
+   "sentence": "Post-match, low confidence: his acceleration profile in the second half sits a little below the first.",
+   "mode": "analyst",
+   "context": null,
+   "claim": null,
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "valid",
+   "sentence": "He'd just finished a hard spell. In general, passing accuracy holds up under fatigue.",
+   "mode": "fan",
+   "context": null,
+   "claim": null,
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "valid",
+   "sentence": "He's still making short bursts, but fewer long high-speed runs.",
+   "mode": "fan",
+   "context": null,
+   "claim": null,
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "valid",
+   "sentence": "Both teams ran a similar amount; the difference was in what they did with it.",
+   "mode": "fan",
+   "context": null,
+   "claim": null,
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "valid",
+   "sentence": "His high-speed running is 30% below his match average.",
+   "mode": "fan",
+   "context": null,
+   "claim": null,
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "valid",
+   "sentence": "His second red-zone spell in five minutes.",
+   "mode": "fan",
+   "context": null,
+   "claim": null,
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "valid",
+   "sentence": "He covered 11.4 km, the most on his team.",
+   "mode": "fan",
+   "context": null,
+   "claim": null,
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "blocked",
+   "sentence": "He misplaced that pass because he was tired.",
+   "mode": "fan",
+   "context": null,
+   "claim": "20",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "33",
+    "20",
+    "G2"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "33",
+     "message": "About the player's own state; say what the running would cost a typical professional (claim 11)",
+     "stage": "rules"
+    },
+    {
+     "claim": "20",
+     "message": "Pass accuracy holds up under fatigue in matches (claim 20)",
+     "stage": "rules"
+    },
+    {
+     "claim": "G2",
+     "message": "Fatigue statements about a player need estimate language or the typical-professional wording",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "blocked",
+   "sentence": "Fatigue caused that wayward pass.",
+   "mode": "fan",
+   "context": null,
+   "claim": "20",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "20"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "20",
+     "message": "Pass accuracy holds up under fatigue in matches (claim 20)",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "blocked",
+   "sentence": "He lost concentration because of fatigue.",
+   "mode": "fan",
+   "context": null,
+   "claim": "21",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "21",
+    "G2"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "21",
+     "message": "Decisions and concentration are not shown to fail with fatigue (claim 21)",
+     "stage": "rules"
+    },
+    {
+     "claim": "G2",
+     "message": "Fatigue statements about a player need estimate language or the typical-professional wording",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "blocked",
+   "sentence": "He made the wrong decision there because his legs had gone.",
+   "mode": "fan",
+   "context": null,
+   "claim": "21",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "21",
+    "G2"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "21",
+     "message": "Decisions and concentration are not shown to fail with fatigue (claim 21)",
+     "stage": "rules"
+    },
+    {
+     "claim": "G2",
+     "message": "Fatigue statements about a player need estimate language or the typical-professional wording",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "blocked",
+   "sentence": "He missed the shot because he was tired.",
+   "mode": "fan",
+   "context": null,
+   "claim": "22",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "33",
+    "22",
+    "G2"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "33",
+     "message": "About the player's own state; say what the running would cost a typical professional (claim 11)",
+     "stage": "rules"
+    },
+    {
+     "claim": "22",
+     "message": "Shooting success is unchanged with fatigue (claim 22)",
+     "stage": "rules"
+    },
+    {
+     "claim": "G2",
+     "message": "Fatigue statements about a player need estimate language or the typical-professional wording",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "blocked",
+   "sentence": "He can't accelerate any more after that spell.",
+   "mode": "fan",
+   "context": null,
+   "claim": "23",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "23"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "23",
+     "message": "Intense accelerations are not suppressed after peaks (claim 23)",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "blocked",
+   "sentence": "His sprint distance is down 45%.",
+   "mode": "fan",
+   "context": null,
+   "claim": "24",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "24"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "24",
+     "message": "A percentage without its baseline (vs his match average, vs his peak, vs the first 15 min)",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "blocked",
+   "sentence": "He covered 30% more ground.",
+   "mode": "analyst",
+   "context": null,
+   "claim": "24",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "24"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "24",
+     "message": "A percentage without its baseline (vs his match average, vs his peak, vs the first 15 min)",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "blocked",
+   "sentence": "He ran 93% less than normal after his peak minute.",
+   "mode": "fan",
+   "context": null,
+   "claim": "24",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "24"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "24",
+     "message": "A drop this large is vs the peak, not \"below normal\" (claim 24)",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "blocked",
+   "sentence": "His lactic acid is building up.",
+   "mode": "fan",
+   "context": null,
+   "claim": "25",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "25"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "25",
+     "message": "Lactate does not track temporary fatigue (claim 25)",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "blocked",
+   "sentence": "Lactate is high in his legs.",
+   "mode": "analyst",
+   "context": null,
+   "claim": "25",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "25"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "25",
+     "message": "Lactate does not track temporary fatigue (claim 25)",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "blocked",
+   "sentence": "He's still tired from Wednesday's match.",
+   "mode": "fan",
+   "context": null,
+   "claim": "26",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "33",
+    "26",
+    "G2"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "33",
+     "message": "About the player's own state; say what the running would cost a typical professional (claim 11)",
+     "stage": "rules"
+    },
+    {
+     "claim": "26",
+     "message": "Carry-over from earlier matches is not modelled (claim 26)",
+     "stage": "rules"
+    },
+    {
+     "claim": "G2",
+     "message": "Fatigue statements about a player need estimate language or the typical-professional wording",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "blocked",
+   "sentence": "His heart rate is 180 right now.",
+   "mode": "fan",
+   "context": null,
+   "claim": "27",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "27"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "27",
+     "message": "No heart-rate data (claim 27)",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "blocked",
+   "sentence": "Tired forwards lose the most space.",
+   "mode": "analyst",
+   "context": null,
+   "claim": "28",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "28",
+    "17"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "28",
+     "message": "Not supported: role effects on space are small and similar (claim 28)",
+     "stage": "rules"
+    },
+    {
+     "claim": "17",
+     "message": "Pitch control with fatigue is a model view (claim 17)",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "blocked",
+   "sentence": "His critical speed is 3.8 m/s.",
+   "mode": "analyst",
+   "context": null,
+   "claim": "29",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "29"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "29",
+     "message": "A player's physiology is assumed, never measured from tracking (claim 29)",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "blocked",
+   "sentence": "His critical speed from this match is 4.2 m/s.",
+   "mode": "fan",
+   "context": null,
+   "claim": "29",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "29"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "29",
+     "message": "A player's physiology is assumed, never measured from tracking (claim 29)",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "blocked",
+   "sentence": "They won because they ran more.",
+   "mode": "fan",
+   "context": null,
+   "claim": "30",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "30"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "30",
+     "message": "Winners outrun losers only slightly; no causal claim (claim 30)",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "blocked",
+   "sentence": "City outran them, so they won.",
+   "mode": "fan",
+   "context": null,
+   "claim": "30",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "30"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "30",
+     "message": "Winners outrun losers only slightly; no causal claim (claim 30)",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "blocked",
+   "sentence": "They ran more with the ball, so they played better.",
+   "mode": "fan",
+   "context": null,
+   "claim": "31",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "31"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "31",
+     "message": "In-possession running goes with fewer points, not better play (claim 31)",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "blocked",
+   "sentence": "He made 95 accelerations, more than the Premier League average.",
+   "mode": "analyst",
+   "context": null,
+   "claim": "32",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "32"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "32",
+     "message": "Acceleration counts differ ~10-fold between tracking systems (claim 32)",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "blocked",
+   "sentence": "He is tired.",
+   "mode": "fan",
+   "context": null,
+   "claim": "33",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "33",
+    "G2"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "33",
+     "message": "About the player's own state; say what the running would cost a typical professional (claim 11)",
+     "stage": "rules"
+    },
+    {
+     "claim": "G2",
+     "message": "Fatigue statements about a player need estimate language or the typical-professional wording",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "blocked",
+   "sentence": "He’s at 40%.",
+   "mode": "fan",
+   "context": null,
+   "claim": "33",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "33",
+    "24"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "33",
+     "message": "A percentage of the player himself; say what it would leave a typical professional",
+     "stage": "rules"
+    },
+    {
+     "claim": "24",
+     "message": "A percentage without its baseline (vs his match average, vs his peak, vs the first 15 min)",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "blocked",
+   "sentence": "His battery is at 40%.",
+   "mode": "fan",
+   "context": null,
+   "claim": "33",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "33",
+    "24",
+    "G2"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "33",
+     "message": "The player's battery; say what the running would leave a typical professional",
+     "stage": "rules"
+    },
+    {
+     "claim": "24",
+     "message": "A percentage without its baseline (vs his match average, vs his peak, vs the first 15 min)",
+     "stage": "rules"
+    },
+    {
+     "claim": "G2",
+     "message": "Fatigue statements about a player need estimate language or the typical-professional wording",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "blocked",
+   "sentence": "He is running on empty.",
+   "mode": "fan",
+   "context": null,
+   "claim": "33",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "33",
+    "G2"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "33",
+     "message": "\"Running on empty\" is about the player's own state",
+     "stage": "rules"
+    },
+    {
+     "claim": "G2",
+     "message": "Fatigue statements about a player need estimate language or the typical-professional wording",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "blocked",
+   "sentence": "Saka is exhausted.",
+   "mode": "analyst",
+   "context": null,
+   "claim": "33",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "33"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "33",
+     "message": "About the player's own state; say what the running would cost a typical professional (claim 11)",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "blocked",
+   "sentence": "He ran more, so he's fitter than the others.",
+   "mode": "fan",
+   "context": null,
+   "claim": "34",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "34"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "34",
+     "message": "Running in a match does not show fitness (claim 34)",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "blocked",
+   "sentence": "He's the fittest player on the pitch: he covered 12 km.",
+   "mode": "fan",
+   "context": null,
+   "claim": "34",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "34"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "34",
+     "message": "Running in a match does not show fitness (claim 34)",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "blocked",
+   "sentence": "His battery is empty.",
+   "mode": "fan",
+   "context": null,
+   "claim": "19c",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "33",
+    "19c",
+    "G2"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "33",
+     "message": "The player's battery; say what the running would leave a typical professional",
+     "stage": "rules"
+    },
+    {
+     "claim": "19c",
+     "message": "Never \"empty\" or \"exhausted\" from the battery (claim 19c)",
+     "stage": "rules"
+    },
+    {
+     "claim": "G2",
+     "message": "Fatigue statements about a player need estimate language or the typical-professional wording",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "blocked",
+   "sentence": "He's lost his pace.",
+   "mode": "fan",
+   "context": null,
+   "claim": "10",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "10"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "10",
+     "message": "Top speed barely changes in matches; only \"a bit slower than earlier\" (claim 10)",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "blocked",
+   "sentence": "He's saving himself for the last 15 minutes.",
+   "mode": "analyst",
+   "context": null,
+   "claim": "19d",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "19d"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "19d",
+     "message": "Never about one player's choices (claim 19d)",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "blocked",
+   "sentence": "In lab tests, tired players strike the ball a little slower and less precisely.",
+   "mode": "fan",
+   "context": null,
+   "claim": "16",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "16"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "16",
+     "message": "Lab-only finding: analyst mode only (claims 9c, 16, 19d)",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "blocked",
+   "sentence": "He has little left in the tank.",
+   "mode": "fan",
+   "context": null,
+   "claim": "G2",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "G2"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "G2",
+     "message": "Fatigue statements about a player need estimate language or the typical-professional wording",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "blocked",
+   "sentence": "He's in the red.",
+   "mode": "fan",
+   "context": null,
+   "claim": "G2",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "G2"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "G2",
+     "message": "Fatigue statements about a player need estimate language or the typical-professional wording",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "blocked",
+   "sentence": "He has used 60% of his reserve.",
+   "mode": "fan",
+   "context": null,
+   "claim": "G9",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "G9",
+    "G2"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "G9",
+     "message": "A share of the player's own reserve; use the typical-professional wording",
+     "stage": "rules"
+    },
+    {
+     "claim": "G2",
+     "message": "Fatigue statements about a player need estimate language or the typical-professional wording",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "paraphrase",
+   "sentence": "You can see his legs have gone, and that's why the pass went astray.",
+   "mode": "fan",
+   "context": null,
+   "claim": "20",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "G2"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "G2",
+     "message": "Fatigue statements about a player need estimate language or the typical-professional wording",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "paraphrase",
+   "sentence": "He couldn't find a team-mate because his legs were heavy.",
+   "mode": "fan",
+   "context": null,
+   "claim": "20",
+   "should_pass": false,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": false,
+   "llm_stage": "llm",
+   "llm_findings": [
+    {
+     "claim": "20, 21",
+     "message": "The sentence attributes a failed pass/decision to the player's being tired ('legs were heavy'), which is a blocked claim (misplacing a pass or bad decision because of fatigue is not allowed).",
+     "stage": "llm"
+    }
+   ]
+  },
+  {
+   "set": "paraphrase",
+   "sentence": "His concentration slipped as his energy ran low.",
+   "mode": "fan",
+   "context": null,
+   "claim": "21",
+   "should_pass": false,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": false,
+   "llm_stage": "llm",
+   "llm_findings": [
+    {
+     "claim": "21",
+     "message": "This attributes the player's drop in concentration to low energy (a causal link to individual fatigue), which is explicitly blocked by claim 21 and the register's ban on blaming an individual's decisions or attention on fatigue.",
+     "stage": "llm"
+    }
+   ]
+  },
+  {
+   "set": "paraphrase",
+   "sentence": "Running out of juice, he scuffed his finish wide of the post.",
+   "mode": "fan",
+   "context": null,
+   "claim": "22",
+   "should_pass": false,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": false,
+   "llm_stage": "llm",
+   "llm_findings": [
+    {
+     "claim": "22,33",
+     "message": "This attributes the missed finish to the player's fatigue ('running out of juice'), which is blocked: you may not claim an error was caused by tiredness or state the player's own fatigue level.",
+     "stage": "llm"
+    }
+   ]
+  },
+  {
+   "set": "paraphrase",
+   "sentence": "There's nothing left in his legs now.",
+   "mode": "fan",
+   "context": null,
+   "claim": "33",
+   "should_pass": false,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": false,
+   "llm_stage": "llm",
+   "llm_findings": [
+    {
+     "claim": "33",
+     "message": "This directly states the player's own exhaustion (‘nothing left in his legs’), which is prohibited — fatigue must be framed as an estimate relative to a typical professional, not as the individual's measured state.",
+     "stage": "llm"
+    }
+   ]
+  },
+  {
+   "set": "paraphrase",
+   "sentence": "Tarvsall has hit the wall.",
+   "mode": "fan",
+   "context": null,
+   "claim": "33",
+   "should_pass": false,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": false,
+   "llm_stage": "llm",
+   "llm_findings": [
+    {
+     "claim": "33",
+     "message": "This asserts the individual is exhausted ('hit the wall'), which is a blocked claim about a specific player's own fatigue or being 'running on empty'.",
+     "stage": "llm"
+    }
+   ]
+  },
+  {
+   "set": "paraphrase",
+   "sentence": "His reserve is down to 30%.",
+   "mode": "fan",
+   "context": null,
+   "claim": "33",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "G2"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "G2",
+     "message": "Fatigue statements about a player need estimate language or the typical-professional wording",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "paraphrase",
+   "sentence": "Albion won this because they simply outworked their opponents.",
+   "mode": "fan",
+   "context": null,
+   "claim": "30",
+   "should_pass": false,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": false,
+   "llm_stage": "llm",
+   "llm_findings": [
+    {
+     "claim": "30",
+     "message": "This attributes the victory directly to running ('outworked'), which is a blocked causal claim (they won because they ran more).",
+     "stage": "llm"
+    }
+   ]
+  },
+  {
+   "set": "paraphrase",
+   "sentence": "They outlasted them physically, and that's what won it.",
+   "mode": "fan",
+   "context": null,
+   "claim": "30",
+   "should_pass": false,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": false,
+   "llm_stage": "llm",
+   "llm_findings": [
+    {
+     "claim": "30",
+     "message": "This attributes the result directly to physical outlasting (running/fitness), which is blocked by the rule that you must not claim a team won because they ran more or outlasted the opponent.",
+     "stage": "llm"
+    }
+   ]
+  },
+  {
+   "set": "paraphrase",
+   "sentence": "All that extra running shows he's in better shape than the rest.",
+   "mode": "fan",
+   "context": null,
+   "claim": "34",
+   "should_pass": false,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": false,
+   "llm_stage": "llm",
+   "llm_findings": [
+    {
+     "claim": "34",
+     "message": "This asserts that more running proves the player is 'in better shape', which is blocked (you can't infer a player's fitness from running totals).",
+     "stage": "llm"
+    }
+   ]
+  },
+  {
+   "set": "paraphrase",
+   "sentence": "He's a yard slower than he was at kick-off.",
+   "mode": "fan",
+   "context": null,
+   "claim": "10",
+   "should_pass": false,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": false,
+   "llm_stage": "llm",
+   "llm_findings": [
+    {
+     "claim": "Claim 10 (slower now allowed only for repeated efforts or after a peak)",
+     "message": "The sentence asserts an absolute drop in his speed versus kick-off without the required qualifier (it must refer to repeated efforts or follow a peak); that makes it disallowed under claim 10.",
+     "stage": "llm"
+    }
+   ]
+  },
+  {
+   "set": "paraphrase",
+   "sentence": "After that spell his top speed has gone.",
+   "mode": "fan",
+   "context": null,
+   "claim": "10",
+   "should_pass": false,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": false,
+   "llm_stage": "llm",
+   "llm_findings": [
+    {
+     "claim": "10, G2",
+     "message": "This asserts an absolute loss of top speed after a spell; claim 10 allows only qualified wording about repeated efforts or after a peak and G2 requires estimate/qualified language rather than a definitive statement.",
+     "stage": "llm"
+    }
+   ]
+  },
+  {
+   "set": "paraphrase",
+   "sentence": "His VO2max is clearly higher than his team-mates'.",
+   "mode": "analyst",
+   "context": null,
+   "claim": "29",
+   "should_pass": false,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": false,
+   "llm_stage": "llm",
+   "llm_findings": [
+    {
+     "claim": "29, G4",
+     "message": "This asserts a specific player's physiological trait (VO2max) relative to teammates, which is forbidden: the system cannot measure individual physiology from movement data.",
+     "stage": "llm"
+    }
+   ]
+  },
+  {
+   "set": "paraphrase",
+   "sentence": "The burn in his thighs tells you the acid is building.",
+   "mode": "fan",
+   "context": null,
+   "claim": "25",
+   "should_pass": false,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": false,
+   "llm_stage": "llm",
+   "llm_findings": [
+    {
+     "claim": "25",
+     "message": "This asserts lactic acid is building in the player's muscles, which is explicitly blocked (no claims about lactate/lactic acid).",
+     "stage": "llm"
+    }
+   ]
+  },
+  {
+   "set": "paraphrase",
+   "sentence": "After that sprint he has no burst left at all.",
+   "mode": "fan",
+   "context": null,
+   "claim": "23",
+   "should_pass": false,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": false,
+   "llm_stage": "llm",
+   "llm_findings": [
+    {
+     "claim": "23",
+     "message": "This asserts an individual cannot accelerate at all after a sprint, which is a blocked claim (see rule 23: 'He can't accelerate any more right after a peak') and therefore attributes a specific physical inability rather than using the permitted wording.",
+     "stage": "llm"
+    }
+   ]
+  },
+  {
+   "set": "paraphrase",
+   "sentence": "He's clearly feeling Wednesday's trip in his legs.",
+   "mode": "fan",
+   "context": null,
+   "claim": "26",
+   "should_pass": false,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": false,
+   "llm_stage": "llm",
+   "llm_findings": [
+    {
+     "claim": "26",
+     "message": "This attributes the player's current tiredness to Wednesday's trip (claims about being tired because of a prior match/travel are explicitly blocked).",
+     "stage": "llm"
+    }
+   ]
+  },
+  {
+   "set": "context",
+   "sentence": "A typical professional would likely be in the red after running like this.",
+   "mode": "fan",
+   "context": {
+    "non_fatigue_reasons": [
+     {
+      "code": "big_lead",
+      "text": "his team leads by 3 (3–0)"
+     }
+    ]
+   },
+   "claim": "11",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "13"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "13",
+     "message": "Context check: his team leads by 3 (3–0); name it or use neutral words such as 'ran less' (rule 2, claim 13)",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "context",
+   "sentence": "A typical professional would likely be in the red after running like this.",
+   "mode": "fan",
+   "context": {
+    "non_fatigue_reasons": []
+   },
+   "claim": "11",
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "context",
+   "sentence": "His running dropped while his team sat on a 3–0 lead, so this may be tactical rather than fatigue.",
+   "mode": "fan",
+   "context": {
+    "non_fatigue_reasons": [
+     {
+      "code": "big_lead",
+      "text": "his team leads by 3 (3–0)"
+     }
+    ]
+   },
+   "claim": "13",
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "context",
+   "sentence": "His running has dropped, likely from fatigue.",
+   "mode": "fan",
+   "context": {
+    "non_fatigue_reasons": [
+     {
+      "code": "start_of_half",
+      "text": "the first 10 min of the half"
+     }
+    ]
+   },
+   "claim": "13",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "13"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "13",
+     "message": "Context check: the first 10 min of the half; name it or use neutral words such as 'ran less' (rule 2, claim 13)",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "context",
+   "sentence": "Just after the restart his running dropped, which is normal at the start of the second half rather than a sign of fatigue.",
+   "mode": "fan",
+   "context": {
+    "non_fatigue_reasons": [
+     {
+      "code": "start_of_half",
+      "text": "the first 10 min of the half"
+     }
+    ]
+   },
+   "claim": "13",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "G2"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "G2",
+     "message": "Fatigue statements about a player need estimate language or the typical-professional wording",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "context",
+   "sentence": "Just after the restart his running dropped, which is normal at the start of the second half and likely not a sign of fatigue.",
+   "mode": "fan",
+   "context": {
+    "non_fatigue_reasons": [
+     {
+      "code": "start_of_half",
+      "text": "the first 10 min of the half"
+     }
+    ]
+   },
+   "claim": "13",
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "context",
+   "sentence": "He is likely tiring already.",
+   "mode": "fan",
+   "context": {
+    "non_fatigue_reasons": [
+     {
+      "code": "just_subbed_on",
+      "text": "he came on 4 min ago"
+     }
+    ]
+   },
+   "claim": "13",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "13"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "13",
+     "message": "Context check: he came on 4 min ago; name it or use neutral words such as 'ran less' (rule 2, claim 13)",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "context",
+   "sentence": "He came on four minutes ago, so a quiet spell is him settling in, not fatigue.",
+   "mode": "fan",
+   "context": {
+    "non_fatigue_reasons": [
+     {
+      "code": "just_subbed_on",
+      "text": "he came on 4 min ago"
+     }
+    ]
+   },
+   "claim": "13",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "G2"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "G2",
+     "message": "Fatigue statements about a player need estimate language or the typical-professional wording",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "context",
+   "sentence": "He came on four minutes ago, so a quiet spell is probably him settling in rather than fatigue.",
+   "mode": "fan",
+   "context": {
+    "non_fatigue_reasons": [
+     {
+      "code": "just_subbed_on",
+      "text": "he came on 4 min ago"
+     }
+    ]
+   },
+   "claim": "13",
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "context",
+   "sentence": "The data suggest fatigue is setting in.",
+   "mode": "fan",
+   "context": {
+    "non_fatigue_reasons": [
+     {
+      "code": "ball_out_of_play",
+      "text": "the ball has been out of play for 52 s"
+     }
+    ]
+   },
+   "claim": "13",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "13"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "13",
+     "message": "Context check: the ball has been out of play for 52 s; name it or use neutral words such as 'ran less' (rule 2, claim 13)",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "context",
+   "sentence": "With the ball out of play for almost a minute, his running dropped; that is the stoppage, not fatigue.",
+   "mode": "fan",
+   "context": {
+    "non_fatigue_reasons": [
+     {
+      "code": "ball_out_of_play",
+      "text": "the ball has been out of play for 52 s"
+     }
+    ]
+   },
+   "claim": "13",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "G2"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "G2",
+     "message": "Fatigue statements about a player need estimate language or the typical-professional wording",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "context",
+   "sentence": "With the ball out of play for almost a minute, his running dropped; that is likely the stoppage, not fatigue.",
+   "mode": "fan",
+   "context": {
+    "non_fatigue_reasons": [
+     {
+      "code": "ball_out_of_play",
+      "text": "the ball has been out of play for 52 s"
+     }
+    ]
+   },
+   "claim": "13",
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "context",
+   "sentence": "His team kept the ball for most of the last five minutes, so he ran less; likely not fatigue.",
+   "mode": "fan",
+   "context": {
+    "non_fatigue_reasons": [
+     {
+      "code": "team_in_possession",
+      "text": "his team had the ball 71% of the last 5 min"
+     }
+    ]
+   },
+   "claim": "13",
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "context",
+   "sentence": "He likely faded after the break.",
+   "mode": "fan",
+   "context": {
+    "non_fatigue_reasons": [
+     {
+      "code": "start_of_half",
+      "text": "the first 10 min of the half"
+     },
+     {
+      "code": "low_first_half_load",
+      "text": "his first-half load was 84% of the median"
+     }
+    ]
+   },
+   "claim": "15",
+   "should_pass": false,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": false,
+   "llm_stage": "llm",
+   "llm_findings": [
+    {
+     "claim": "15",
+     "message": "Claim 15 only applies when the player had a high first-half load; the facts say his first-half load was 84% of the median, so you can't support 'he likely faded after the break' with that claim.",
+     "stage": "llm"
+    }
+   ]
+  },
+  {
+   "set": "context",
+   "sentence": "He ran less after the break than before it.",
+   "mode": "fan",
+   "context": {
+    "non_fatigue_reasons": [
+     {
+      "code": "low_first_half_load",
+      "text": "his first-half load was 84% of the median"
+     }
+    ]
+   },
+   "claim": "15",
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": false,
+   "llm_stage": "llm",
+   "llm_findings": [
+    {
+     "claim": "15",
+     "message": "Claim 15 (second-half drop) is qualified: it applies only after a high first-half load; the facts show his first-half load was 84% of the median, so you cannot assert he ran less after the break on that basis.",
+     "stage": "llm"
+    }
+   ]
+  },
+  {
+   "set": "context",
+   "sentence": "His high-speed running is 30% below his match average.",
+   "mode": "fan",
+   "context": {
+    "facts": {
+     "hsr_vs_match_average": {
+      "value": -30.0,
+      "unit": "%"
+     },
+     "typical_pro_battery": {
+      "value": 0.41,
+      "unit": "share"
+     },
+     "speed": {
+      "value": 6.1,
+      "unit": "m/s"
+     }
+    }
+   },
+   "claim": null,
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "context",
+   "sentence": "His high-speed running is 45% below his match average.",
+   "mode": "fan",
+   "context": {
+    "facts": {
+     "hsr_vs_match_average": {
+      "value": -30.0,
+      "unit": "%"
+     },
+     "typical_pro_battery": {
+      "value": 0.41,
+      "unit": "share"
+     },
+     "speed": {
+      "value": 6.1,
+      "unit": "m/s"
+     }
+    }
+   },
+   "claim": null,
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "N1"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "N1",
+     "message": "Number(s) 45 not in the data or the cited claim",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "context",
+   "sentence": "He has done running that would leave a typical professional at about 40% of their short-term reserve.",
+   "mode": "fan",
+   "context": {
+    "facts": {
+     "hsr_vs_match_average": {
+      "value": -30.0,
+      "unit": "%"
+     },
+     "typical_pro_battery": {
+      "value": 0.41,
+      "unit": "share"
+     },
+     "speed": {
+      "value": 6.1,
+      "unit": "m/s"
+     }
+    }
+   },
+   "claim": "11",
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "context",
+   "sentence": "He has done running that would leave a typical professional at about 60% of their short-term reserve.",
+   "mode": "fan",
+   "context": {
+    "facts": {
+     "hsr_vs_match_average": {
+      "value": -30.0,
+      "unit": "%"
+     },
+     "typical_pro_battery": {
+      "value": 0.41,
+      "unit": "share"
+     },
+     "speed": {
+      "value": 6.1,
+      "unit": "m/s"
+     }
+    }
+   },
+   "claim": "11",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "N1"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "N1",
+     "message": "Number(s) 60 not in the data or the cited claim",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "context",
+   "sentence": "He reached 6.1 m/s (22 km/h) on that recovery run.",
+   "mode": "analyst",
+   "context": {
+    "facts": {
+     "hsr_vs_match_average": {
+      "value": -30.0,
+      "unit": "%"
+     },
+     "typical_pro_battery": {
+      "value": 0.41,
+      "unit": "share"
+     },
+     "speed": {
+      "value": 6.1,
+      "unit": "m/s"
+     }
+    }
+   },
+   "claim": null,
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "context",
+   "sentence": "He reached 7.4 m/s (27 km/h) on that recovery run.",
+   "mode": "analyst",
+   "context": {
+    "facts": {
+     "hsr_vs_match_average": {
+      "value": -30.0,
+      "unit": "%"
+     },
+     "typical_pro_battery": {
+      "value": 0.41,
+      "unit": "share"
+     },
+     "speed": {
+      "value": 6.1,
+      "unit": "m/s"
+     }
+    }
+   },
+   "claim": null,
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "N1"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "N1",
+     "message": "Number(s) 7.4, 27 not in the data or the cited claim",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "context",
+   "sentence": "His high-speed running in the last 5 minutes was 86% below his match average.",
+   "mode": "fan",
+   "context": {
+    "facts": {
+     "vs_match_average": {
+      "value": -86.0,
+      "unit": "%"
+     }
+    }
+   },
+   "claim": null,
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": false,
+   "llm_stage": "llm",
+   "llm_findings": [
+    {
+     "claim": "G5",
+     "message": "The rule requires phase comparisons to be stated per minute rather than as a raw total; the sentence omits 'per minute' so it could be read as a raw-total comparison.",
+     "stage": "llm"
+    }
+   ]
+  },
+  {
+   "set": "context",
+   "sentence": "His high-speed running in the last 5 minutes was 86% below his match average.",
+   "mode": "fan",
+   "context": null,
+   "claim": null,
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "24"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "24",
+     "message": "A drop this large is vs the peak, not \"below normal\" (claim 24)",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "context",
+   "sentence": "He has done running that would leave a typical professional at about 40% of their short-term reserve.",
+   "mode": "fan",
+   "context": {
+    "facts": {
+     "typical_pro_battery_now": {
+      "value": 0.8,
+      "unit": "share"
+     },
+     "lowest_typical_pro_battery_so_far": {
+      "value": 0.62,
+      "unit": "share"
+     }
+    }
+   },
+   "claim": "11",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "N1"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "N1",
+     "message": "Number(s) 40 not in the data or the cited claim",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "context",
+   "sentence": "This is the lowest point of his match so far, by our estimate.",
+   "mode": "analyst",
+   "context": {
+    "facts": {
+     "typical_pro_battery_now": {
+      "value": 0.8,
+      "unit": "share"
+     },
+     "lowest_typical_pro_battery_so_far": {
+      "value": 0.62,
+      "unit": "share"
+     }
+    }
+   },
+   "claim": "19c",
+   "should_pass": false,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": false,
+   "llm_stage": "llm",
+   "llm_findings": [
+    {
+     "claim": "F1",
+     "message": "The facts show typical_pro_battery_now = 0.8 but the lowest point so far is 0.62, so claiming “this is the lowest point of his match so far” contradicts the provided data.",
+     "stage": "llm"
+    }
+   ]
+  }
+ ]
+}

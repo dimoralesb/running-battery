@@ -1,0 +1,503 @@
+"""The explanation feed (BUILD_PLAN "Thu 22"): a match folder in, a verified, timestamped
+``feed.json`` out, so the overlay and a video can sync to it (PLAN §4).
+
+``python -m secondwind.agents.feed <match folder> [--offline] [--favourite H04]``
+
+Four agents, each with a plain-code fallback so the feed never has a gap:
+1. **Tactical** picks the moments: an Agent Framework agent on Foundry with the MCP server
+   (``agents.mcp_server``) as its only tool; offline, the best-ranked moments of each kind,
+   spread over the match.
+2. **Narrator** writes one sentence per moment from the claims register's wordings and the
+   moment's facts; offline (or as the fallback for a blocked sentence), fixed templates.
+3. **Personalization** (a thin step, decision 6): fan or analyst wording, and a favourite
+   player's moments first.
+4. **Verifier** checks every sentence: the rules, then the LLM pass (``agents.llm_verifier``).
+   A blocked sentence is replaced by the Verifier's rewrite if that passes both checks, else by
+   the template, else left out. Blocked sentences stay in the feed with ``shown: false``.
+
+Each entry: ``t`` and ``period`` (seconds since that period's kick-off), ``clock``, ``video_s``,
+``player``, ``kind``, ``sentence``, ``claim`` (register id, or ``fact`` for a measured fact),
+``sources`` (citation keys and data fields), ``mode``, ``verdict`` (pass, rewritten, fallback,
+blocked) and what the Verifier found.
+"""
+
+from __future__ import annotations
+
+import argparse
+import asyncio
+import json
+import math
+import re
+import sys
+from datetime import date
+from pathlib import Path
+from typing import Any
+
+from pydantic import BaseModel
+
+from secondwind.agents import verifier
+from secondwind.agents.llm_verifier import FullVerdict, verify_full
+from secondwind.agents.tools import MOMENT_KINDS, MatchTools
+
+FEED = "feed.json"
+MODES = ("fan", "analyst")
+PER_KIND = {"red_zone": 3, "exposed_on_turnover": 3, "second_wind": 2, "fresh_legs": 2,
+            "not_tired_tactical": 2}  # fmt: skip
+MIN_GAP_S = 180.0  # moments at least 3 min apart (our assumption, for a readable feed)
+MAX_PER_PLAYER = 3
+ORDINAL = {1: "first", 2: "second", 3: "third", 4: "fourth", 5: "fifth", 6: "sixth"}
+
+
+# --- Tactical --------------------------------------------------------------------------------
+
+
+def candidates(tools: MatchTools, limit: int = 8) -> dict[str, dict]:
+    """Every ranked moment the Tactical agent may pick, by id."""
+    out = {}
+    for kind in MOMENT_KINDS:
+        for mo in tools.find_moments(kind, limit)["moments"]:
+            out[mo["id"]] = mo
+    return out
+
+
+def pick_offline(found: dict[str, dict], favourite: str | None = None) -> list[str]:
+    """The best-ranked moments of each kind, at least MIN_GAP_S apart and at most
+    MAX_PER_PLAYER per player; a favourite player's moments are tried first."""
+    chosen: list[dict] = []
+    per_player: dict[str, int] = {}
+
+    def fits(mo: dict) -> bool:
+        if per_player.get(mo["player"]["id"], 0) >= MAX_PER_PLAYER:
+            return False
+        return all(abs(mo["video_s"] - c["video_s"]) >= MIN_GAP_S for c in chosen)
+
+    order = sorted(found.values(), key=lambda m: (m["player"]["id"] != favourite, m["rank"]))
+    for kind, n in PER_KIND.items():
+        taken = 0
+        for mo in order:
+            if mo["kind"] == kind and taken < n and fits(mo):
+                chosen.append(mo)
+                per_player[mo["player"]["id"]] = per_player.get(mo["player"]["id"], 0) + 1
+                taken += 1
+    return [m["id"] for m in sorted(chosen, key=lambda m: m["video_s"])]
+
+
+class Pick(BaseModel):
+    moment_id: str
+    why: str
+
+
+class Picks(BaseModel):
+    picks: list[Pick]
+
+
+TACTICAL = """You are the Tactical analyst of Second Wind. Using only the tools, pick the 10 to 14
+moments of this synthetic match that best tell the story of who did the most hard running and
+when it cost them. Call match_summary once, then find_moments for each kind (red_zone,
+exposed_on_turnover, second_wind, fresh_legs, not_tired_tactical) with limit 6. Prefer variety
+(every kind if it exists, several players and both teams), moments at least 3 minutes apart,
+the story arc (a high press, a defender exposed on turnovers, a fresh substitute, a drop that is
+tactical rather than fatigue). {favourite}Return the moment ids exactly as the tools gave
+them, in match order, each with a one-line reason."""
+
+
+async def pick_llm(folder: Path, found: dict[str, dict], favourite: str | None) -> list[str]:
+    from agent_framework import MCPStdioTool
+
+    from secondwind.agents import foundry
+
+    fav = (
+        f"The viewer's favourite player is {favourite}: include his moments. " if favourite else ""
+    )
+    server = MCPStdioTool(
+        name="secondwind", command=sys.executable,
+        args=["-m", "secondwind.agents.mcp_server", str(folder)],
+    )  # fmt: skip
+    async with server:
+        agent = foundry.agent("Tactical", TACTICAL.format(favourite=fav), "main", tools=server)
+        r = await agent.run("Pick the moments.", options={"response_format": Picks})
+    ids = [p.moment_id for p in (r.value.picks if r.value else []) if p.moment_id in found]
+    return sorted(dict.fromkeys(ids), key=lambda i: found[i]["video_s"])
+
+
+# --- Facts and context -----------------------------------------------------------------------
+
+
+def brief(tools: MatchTools, mo: dict) -> dict[str, Any]:
+    """What the Narrator and the Verifier get for one moment: its facts, the player's signals
+    over the 5 min before it, the context and the claims it may use."""
+    pid, per, t = mo["player"]["id"], mo["period"], mo["t"]
+    ctx = tools.context_at(per, t, pid)
+    end = ctx["clock"]
+    start = max(t - 300.0, 0.0)
+    sig = tools.player_signals(pid, _clock(tools, per, start), _clock(tools, per, t))
+    facts = dict(mo["facts"])
+    if sig.get("on_pitch"):
+        b, h = sig["battery"], sig["hsr"]
+        facts |= {
+            "typical_pro_battery_now": b["typical_pro_at_end"],
+            "typical_pro_battery_band": b["band_10_90_at_end"],
+            "lowest_typical_pro_battery_so_far": b["lowest_in_match_so_far"],
+            "low_chance_now": sig["low_chance"]["at_end"] if sig["low_chance"] else None,
+            "energy_since_kickoff": sig["energy"]["since_kickoff"],
+            "hsr_last_5min_vs_match_average": h["window_vs_match_average"],
+            "hsr_threshold": h["threshold"],
+        }
+    claims = []
+    for cid in mo["claims"]:
+        row = tools.claim(cid)
+        claims.append({k: row.get(k) for k in ("id", "status", "mode", "pattern", "qualifier",
+                                                  "wording", "sources")})  # fmt: skip
+    return {
+        "moment_id": mo["id"], "kind": mo["kind"], "what": MOMENT_KINDS[mo["kind"]][0],
+        "clock": end, "player": mo["player"], "facts": facts,
+        "non_fatigue_reasons": ctx["non_fatigue_reasons"],
+        "context": {k: ctx[k] for k in ("score", "ball_in_play", "possession", "lead",
+                                        "team_just_lost_ball", "team_just_won_ball",
+                                        "came_on") if k in ctx},
+        "claims": claims,
+        "low_chance_calibration": "calibrated for a typical professional; when it says 0.1–0.2 "
+        "a typical professional was short-term tired about 12% of the time (PLAN §3.3)",
+    }  # fmt: skip
+
+
+def _clock(tools: MatchTools, period: int, t: float) -> str:
+    return tools.m.when(period, t)["clock"]
+
+
+def verifier_context(b: dict) -> dict[str, Any]:
+    return {"non_fatigue_reasons": b["non_fatigue_reasons"], "facts": b["facts"],
+            "context": b["context"], "player": b["player"]["name"]}  # fmt: skip
+
+
+# --- Narrator (templates) --------------------------------------------------------------------
+
+
+def _v(b: dict, key: str, scale: float = 1.0, digits: int = 0):
+    x = b["facts"].get(key)
+    x = x["value"] if isinstance(x, dict) else x
+    if x is None or not math.isfinite(x):
+        return None
+    x = x * scale
+    return int(round(x)) if digits == 0 else round(x, digits)
+
+
+def template(b: dict, mode: str) -> list[tuple[str, str]]:
+    """(claim id, sentence) for a moment, from the register's wordings and the facts."""
+    name, kind = b["player"]["name"], b["kind"]
+    bat = _v(b, "typical_pro_battery_now", 100)
+    pro = (
+        ("11", f"That running would leave a typical professional at about {bat}% of their "
+               "short-term reserve, by our estimate.") if bat is not None else None
+    )  # fmt: skip
+    out: list[tuple[str, str] | None] = []
+    if kind == "red_zone":
+        n = _v(b, "spell_number")
+        peak = _v(b, "peak_1min_hsr")
+        nth = ORDINAL.get(n, f"number {n}")
+        if mode == "fan":
+            out.append(
+                (
+                    "fact",
+                    f"{name}'s {nth} red-zone spell: {peak} m of high-speed running "
+                    "in one minute, against a published average peak of 62 m.",
+                )
+            )
+        else:
+            out.append(
+                (
+                    "fact",
+                    f"{name}: red-zone spell {n}, a 1-min peak of {peak} m above "
+                    "5.5 m/s (19.8 km/h), against a published mean peak of 62 m "
+                    "[Leifsson2024].",
+                )
+            )
+        out.append(pro)
+    elif kind == "exposed_on_turnover":
+        d0, d8 = _v(b, "distance_to_ball_at_turnover"), _v(b, "distance_to_ball_8s_later")
+        team = b["player"]["team_name"]
+        out.append(
+            (
+                "fact",
+                f"{team} lose the ball while {name} is catching breath after a "
+                f"red-zone spell: {d0} m from the ball, then {d8} m eight seconds "
+                "later.",
+            )
+        )
+        out.append(
+            (
+                "4",
+                "Losing the ball forces the hardest running of the game. This is where "
+                "tired legs get exposed.",
+            )
+            if mode == "fan" and not b["non_fatigue_reasons"]  # claim 4 blames tired legs
+            else pro
+        )
+    elif kind == "second_wind":
+        mins = _v(b, "minutes_after_spell", digits=1)
+        rate, avg = (
+            _v(b, "last_2min_hsr_per_min", digits=1),
+            _v(b, "match_average_per_min", digits=1),
+        )
+        out.append(
+            (
+                "fact",
+                f"Second wind for {name}: {mins} minutes after his red-zone spell, "
+                f"his high-speed running is back to his match average ({rate} m per "
+                f"minute vs {avg}).",
+            )
+        )
+        if mode == "analyst":
+            out.append(
+                (
+                    "1",
+                    "After that 5-minute spell, players typically cover about 40% less "
+                    "high-speed distance in the next minute than their match average. "
+                    "It comes back over about 5 minutes.",
+                )
+            )
+    elif kind == "fresh_legs":
+        rate, pct = _v(b, "sub_hsr_per_min", digits=1), _v(b, "vs_teammates")
+        more = None if pct is None else f"{pct}% more" if pct >= 0 else f"{-pct}% less"
+        out.append(
+            (
+                "fact",
+                f"Fresh legs: since coming on, {name} has done {rate} m of "
+                f"high-speed running per minute, {more} than his team-mates over the "
+                "same minutes.",
+            )
+        )
+        out.append(
+            (
+                "6",
+                "Fresh legs: substitutes typically do 15–25% more high-intensity "
+                "running per minute than players who started.",
+            )
+        )
+    elif kind == "not_tired_tactical":
+        pct = _v(b, "vs_match_average")
+        reason = b["facts"]["reasons"][0]["text"] if b["facts"].get("reasons") else None
+        drop = (
+            "has hardly run at high speed in the last 5 minutes"
+            if pct is None or pct <= -90
+            else f"is doing {-pct}% less high-speed running than his match average"
+        )
+        out.append(("13", f"{name} {drop}, but {reason}, so this is likely not fatigue."))
+    return [x for x in out if x and not re.search(r"\bNone\b", x[1])]  # a fact was missing
+
+
+# --- Narrator and Personalization (LLM) ------------------------------------------------------
+
+
+class Line(BaseModel):
+    moment_id: str
+    claim_id: str
+    sentence: str
+
+
+class Lines(BaseModel):
+    lines: list[Line]
+
+
+NARRATOR = """You are the Narrator of Second Wind, live commentary on a synthetic football match
+for {audience}. For each moment write one or two sentences, each a separate line with the
+claim id it uses: a register claim id from the moment's "claims", or "fact" for a measured fact
+from its "facts" (distances, high-speed running, red-zone spells, energy, speeds).
+
+Rules (a Verifier blocks anything else):
+- Never say a player is tired, exhausted, empty, unfit or fitter, or blame an error, a miss, a
+  decision or a result on fatigue. The battery and low_chance describe the RUNNING relative to a
+  typical professional: "running that would leave a typical professional at about X% of their
+  short-term reserve", never "he is at X%" or "his battery".
+- Use the register's wordings, adapted to the moment; keep their qualifiers.
+- Every number must be one of the moment's facts (you may round it) or in the claim's wording.
+  Every percentage says what it is compared with (his match average, his peak, his team-mates).
+- If the moment lists non_fatigue_reasons, a sentence that mentions fatigue must name the reason
+  and hedge ("likely", "may be").
+- The post-peak window is neutral: "catching breath after a red-zone spell".
+- The numbers in the wordings of claims 11, 12 and 13 are examples: for claim 11 use the
+  moment's typical_pro_battery_now (0.62 is "about 62%"). What you say must agree with the facts.
+- Say something specific to each moment; use a general register sentence at most twice in the
+  whole feed. For not_tired_tactical moments, say what fits instead of fatigue (the reason).
+- Write "hardly any" rather than "0.0 m/min".
+- Claim 1's "after that 5-minute spell" only fits a spell that lasted about 5 minutes (the
+  moment's duration); otherwise say "after a spell like that".
+- m/s first, km/h in brackets. Plain English.
+{style}"""
+STYLE = {
+    "fan": "Fan mode: short, vivid sentences, numbers rounded, one number per sentence, no "
+    "jargon, no citation keys. Analyst-only claims are not allowed.",
+    "analyst": "Analyst mode: precise, with units and the battery band where useful; you may "
+    "add citation keys in brackets such as [Leifsson2024]; CS and D′ are model parameters "
+    "(assumed), never measured.",
+}
+
+
+def personalize(mode: str, favourite: str | None) -> str:
+    """The Personalization step: the audience, the style, and the favourite player."""
+    style = STYLE[mode]
+    if favourite:
+        style += f" The viewer follows {favourite}: name him first when he is in a moment."
+    return NARRATOR.format(audience="casual fans" if mode == "fan" else "analysts", style=style)
+
+
+async def narrate_llm(briefs: list[dict], mode: str, favourite: str | None) -> list[Line]:
+    from secondwind.agents import foundry
+
+    agent = foundry.agent("Narrator", personalize(mode, favourite), "main")
+    payload = json.dumps([{k: v for k, v in b.items() if k != "what"} for b in briefs],
+                         ensure_ascii=False)  # fmt: skip
+    r = await agent.run(f"Moments (JSON):\n{payload}", options={"response_format": Lines})
+    return r.value.lines if r.value else []
+
+
+# --- Verifier and the feed -------------------------------------------------------------------
+
+
+def sources(b: dict, claim: str) -> list[str]:
+    out = []
+    if claim not in ("fact", None):
+        row = next((c for c in b["claims"] if c["id"] == claim), None)
+        row = row or verifier.register_row(claim)
+        out += (row or {}).get("sources") or []
+    out += sorted({f["source"] for f in b["facts"].values()
+                   if isinstance(f, dict) and "source" in f})  # fmt: skip
+    return out
+
+
+async def check(
+    b: dict, mode: str, claim: str, sentence: str, agent
+) -> tuple[FullVerdict, str | None]:
+    ctx = verifier_context(b)
+    cid = None if claim == "fact" else claim
+    v = await verify_full(sentence, mode, ctx, cid, agent)
+    return v, cid
+
+
+async def entries_for(b: dict, mode: str, lines: list[tuple[str, str]], agent) -> list[dict]:
+    """Verify each line; replace a blocked one by the rewrite or the template."""
+    out = []
+    fallback = template(b, mode)
+    for k, (claim, sentence) in enumerate(lines):
+        v, _ = await check(b, mode, claim, sentence, agent)
+        entry = _entry(b, mode, claim, sentence, v)
+        if v.ok:
+            out.append(entry)
+            continue
+        out.append(entry | {"shown": False})
+        if v.rewrite:
+            rv, _ = await check(b, mode, claim, v.rewrite, agent)
+            if rv.ok:
+                out.append(_entry(b, mode, claim, v.rewrite, rv, "rewritten", sentence))
+                continue
+        if k < len(fallback) and fallback[k][1] != sentence:
+            fc, fs = fallback[k]
+            fv, _ = await check(b, mode, fc, fs, agent)
+            if fv.ok:
+                out.append(_entry(b, mode, fc, fs, fv, "fallback", sentence))
+    return out
+
+
+def _entry(b, mode, claim, sentence, v: FullVerdict, verdict=None, original=None) -> dict:
+    when = {k: b["_when"][k] for k in ("t", "period", "clock", "video_s")}
+    e = when | {
+        "player": {k: b["player"][k] for k in ("id", "name", "shirt", "team")},
+        "kind": b["kind"], "moment_id": b["moment_id"], "sentence": sentence, "claim": claim,
+        "sources": sources(b, claim), "mode": mode,
+        "verdict": verdict or ("pass" if v.ok else "blocked"), "shown": True,
+        "verifier": {"stage": v.stage, "findings": v.findings},
+    }  # fmt: skip
+    if original:
+        e["original"] = original
+    return e
+
+
+async def build(
+    folder: Path, offline: bool = False, favourite: str | None = None
+) -> dict[str, Any]:
+    tools = MatchTools(folder)
+    found = candidates(tools)
+    fav = tools.m.player(favourite)["id"] if favourite else None
+    picked, how = None, "offline"
+    if not offline:
+        try:
+            picked = await pick_llm(folder, found, fav)
+            how = "llm"
+        except Exception as e:  # the plain-code pick stands in
+            how = f"offline (tactical agent failed: {type(e).__name__})"
+    if not picked:
+        picked = pick_offline(found, fav)
+    briefs = []
+    for mid in picked:
+        b = brief(tools, found[mid])
+        b["_when"] = {k: found[mid][k] for k in ("t", "period", "clock", "video_s")}
+        briefs.append(b)
+    agent = None
+    if not offline:
+        from secondwind.agents.llm_verifier import verifier_agent
+
+        agent = verifier_agent()
+    entries: list[dict] = []
+    narration = {}
+    for mode in MODES:
+        lines: dict[str, list[tuple[str, str]]] = {}
+        narration[mode] = "offline"
+        if not offline:
+            try:
+                for ln in await narrate_llm([_public(b) for b in briefs], mode, fav and
+                                            tools.m.players[fav]["name"]):  # fmt: skip
+                    lines.setdefault(ln.moment_id, []).append((ln.claim_id, ln.sentence))
+                narration[mode] = "llm"
+            except Exception as e:
+                narration[mode] = f"offline (narrator failed: {type(e).__name__})"
+        jobs = [entries_for(b, mode, lines.get(b["moment_id"]) or template(b, mode), agent)
+                for b in briefs]  # fmt: skip
+        for chunk in await asyncio.gather(*jobs):
+            entries += chunk
+    entries.sort(key=lambda e: (e["video_s"], e["mode"]))
+    return {
+        "match_id": tools.m.metadata.match_id,
+        "synthetic": True,
+        "created": date.today().isoformat(),
+        "agents": {"tactical": how, "narrator": narration, "personalization": "plain code",
+                   "verifier": "rules + llm" if agent else "rules",
+                   "models": _models(offline)},
+        "favourite": fav,
+        "moments": [{k: b[k] for k in ("moment_id", "kind", "clock")} | b["_when"]
+                    for b in briefs],
+        "entries": entries,
+    }  # fmt: skip
+
+
+def _public(b: dict) -> dict:
+    return {k: v for k, v in b.items() if not k.startswith("_")}
+
+
+def _models(offline: bool) -> dict | None:
+    if offline:
+        return None
+    from secondwind.agents import foundry
+
+    return {"main": foundry.model("main")}
+
+
+def main(argv: list[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(prog="python -m secondwind.agents.feed", description=__doc__)
+    parser.add_argument("folder", type=Path)
+    parser.add_argument("--offline", action="store_true", help="no LLM: templates and rules")
+    parser.add_argument("--favourite", help="player id, name or 'home 3'")
+    parser.add_argument("--out", type=Path, help=f"default <folder>/{FEED}")
+    args = parser.parse_args(argv)
+    feed = asyncio.run(build(args.folder, args.offline, args.favourite))
+    out = args.out or args.folder / FEED
+    out.write_text(json.dumps(feed, indent=1, ensure_ascii=False))
+    shown = [e for e in feed["entries"] if e["shown"]]
+    blocked = [e for e in feed["entries"] if not e["shown"]]
+    print(
+        f"wrote {out}: {len(feed['moments'])} moments, {len(shown)} sentences shown, "
+        f"{len(blocked)} blocked; agents {feed['agents']}"
+    )
+
+
+if __name__ == "__main__":
+    main()

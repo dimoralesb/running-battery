@@ -50,6 +50,7 @@ from secondwind.sim.match import MatchEngine, PeriodFrames
 from secondwind.sim.physiology import Physiology
 from secondwind.sim.rosters import SimPlayer, SimTeam, make_teams, plan_substitutions
 from secondwind.sim.runs import hi_runs
+from secondwind.sim.story import Story, story_subs
 
 PERIOD_2_CLOCK = 2700.0  # schema: period 2 starts at 45:00 on the match clock
 CLEAN_COPY = Path("debug") / "tracking_clean.npz"  # inside the match folder; debugging only
@@ -152,6 +153,7 @@ def simulate(
     tempo: bool | float = True,
     subs: bool = True,
     vary: bool = False,
+    story: Story | None = None,
 ) -> SimMatch:
     """One match. Club test values go into the metadata only if ``club_tests`` is set; the
     match itself is the same either way. Noise is drawn after the match, so ``noise_sigma``
@@ -161,7 +163,8 @@ def simulate(
     sizes and position noise (``noise_sigma`` is then ignored), and players come from a wider
     prior (``draw_variation``); all of it goes into truth.json ``settings``. The tempo, the
     fatigue skips, the substitutions and the variation have their own generators (spawned from
-    the seed), so they never shift the match flow's draws."""
+    the seed), so they never shift the match flow's draws. ``story``: the demo's story controls
+    (``sim.story``), recorded in truth.json ``story``; None for natural matches."""
     rng = np.random.default_rng(seed)
     tempo_rng, fatigue_rng, subs_rng, vary_rng = (
         np.random.default_rng(s) for s in np.random.SeedSequence(seed).spawn(4)
@@ -178,7 +181,9 @@ def simulate(
     body = Physiology(players, fatigue_rng, effects) if fatigue else None
     legacy = body is None and match_tempo is None  # params.PRE_FATIGUE calibration
     plans = plan_substitutions(subs_rng, teams, prior) if subs and not legacy else []
-    engine = MatchEngine(rng, teams, body, match_tempo, pre_fatigue=legacy, subs=plans)
+    if story is not None:
+        plans = story_subs(plans, teams, story)
+    engine = MatchEngine(rng, teams, body, match_tempo, legacy, plans, story)
     periods = [
         engine.run_period(1, lengths[0], first_kick),
         engine.run_period(2, lengths[1], 1 - first_kick),
@@ -228,6 +233,8 @@ def simulate(
         truth = neutral_truth(match_id, played, periods, settings)
     else:
         truth = fatigue_truth(match_id, played, periods, body, settings | body.settings())
+    if story is not None:
+        truth = truth.model_copy(update={"story": story.settings()})
     return SimMatch(metadata, periods, observed, to_events(engine), truth, body, played)
 
 
@@ -474,10 +481,11 @@ def generate(
     tempo: bool | float = True,
     subs: bool = True,
     vary: bool = False,
+    story: Story | None = None,
 ) -> SimMatch:
     """Simulate one match and write its four files to ``folder`` (match id: folder name)."""
     match = simulate(
-        seed, match_id or folder.name, club_tests, noise_sigma, fatigue, tempo, subs, vary
+        seed, match_id or folder.name, club_tests, noise_sigma, fatigue, tempo, subs, vary, story
     )
     write(match, folder, clean_copy)
     return match
