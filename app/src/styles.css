@@ -1,0 +1,148 @@
+/* Tokens: the dataviz reference palette (team colours = categorical slots 1 and 2, validated in
+   both modes; red zone = status "warning", always with its legend label). */
+:root {
+  color-scheme: light;
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --muted: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.1);
+  --home: #2a78d6;
+  --away: #eb6834;
+  --warning: #fab219;
+  --good-text: #006300;
+  --pitch: #eef0ea;
+  --pitch-line: #c3c2b7;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface: #1a1a19;
+    --ink: #f0efec;
+    --ink-2: #c3c2b7;
+    --muted: #898781;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --border: rgba(255, 255, 255, 0.1);
+    --home: #3987e5;
+    --away: #d95926;
+    --good-text: #0ca30c;
+    --pitch: #161815;
+    --pitch-line: #383835;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d;
+  --surface: #1a1a19;
+  --ink: #f0efec;
+  --ink-2: #c3c2b7;
+  --grid: #2c2c2a;
+  --axis: #383835;
+  --border: rgba(255, 255, 255, 0.1);
+  --home: #3987e5;
+  --away: #d95926;
+  --good-text: #0ca30c;
+  --pitch: #161815;
+  --pitch-line: #383835;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page); color: var(--ink); }
+button, select, input { font: inherit; color: inherit; }
+button, select {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+  padding: 4px 10px; cursor: pointer;
+}
+.app { max-width: 1400px; margin: 0 auto; padding: 12px 16px 32px; }
+.muted { color: var(--ink-2); }
+.small { font-size: 0.82rem; }
+
+.top { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+.brand { display: flex; flex-direction: column; }
+.brand strong { font-size: 1.3rem; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.toggle { display: inline-flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+.toggle button { border: 0; border-radius: 0; }
+.toggle button.on { background: var(--ink); color: var(--surface); }
+
+.scoreline { display: flex; gap: 12px; align-items: baseline; margin: 12px 0 8px; font-size: 1.1rem; }
+.scoreline .score { font-weight: 700; font-size: 1.4rem; font-variant-numeric: tabular-nums; }
+.scoreline .team.home { border-left: 4px solid var(--home); padding-left: 6px; }
+.scoreline .team.away { border-right: 4px solid var(--away); padding-right: 6px; }
+.scoreline .clock { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--ink-2); }
+
+.grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(300px, 1fr); gap: 16px; }
+@media (max-width: 900px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+
+.pitch { width: 100%; height: auto; display: block; border-radius: 8px; background: var(--pitch); }
+.pitch .grass { fill: var(--pitch); }
+.pitch .lines { fill: none; stroke: var(--pitch-line); stroke-width: 0.3; }
+.player { cursor: pointer; }
+.player .hit { fill: transparent; }
+.player .dot { stroke: var(--surface); stroke-width: 0.3; }
+.player.home .dot { fill: var(--home); }
+.player.away .dot { fill: var(--away); }
+.player.sel .dot { stroke: var(--ink); stroke-width: 0.5; }
+.player .shirt { font-size: 1.5px; text-anchor: middle; fill: #fff; font-weight: 700; pointer-events: none; }
+.player .redzone, .redzone-key { fill: none; stroke: var(--warning); stroke-width: 0.6; }
+.player .fav { fill: none; stroke: var(--ink); stroke-width: 0.25; stroke-dasharray: 0.6 0.4; }
+.ball { fill: var(--ink); stroke: var(--surface); stroke-width: 0.2; }
+.battery .shell { fill: var(--surface); stroke: var(--ink-2); stroke-width: 0.12; }
+.battery .cell { fill: var(--grid); }
+.battery .cell.full { fill: var(--ink); }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 0.82rem; color: var(--ink-2); margin-top: 6px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend .key { width: 14px; height: 14px; }
+.legend .key.wide { width: 36px; height: 11px; }
+.fav-key { fill: none; stroke: var(--ink); stroke-width: 0.25; stroke-dasharray: 0.6 0.4; }
+
+.transport { display: flex; gap: 8px; align-items: center; margin: 8px 0; }
+.transport input[type="range"] { flex: 1; }
+.moments { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.chip { font-size: 0.8rem; padding: 2px 8px; border-radius: 999px; }
+
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+.player-card h3 { margin: 0 0 4px; font-size: 1rem; }
+.player-card p { margin: 4px 0; }
+
+.trace { margin-top: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px; }
+.chart { margin: 0 0 4px; }
+.chart figcaption { font-size: 0.85rem; color: var(--ink-2); margin: 2px 4px; }
+.chart svg { width: 100%; height: auto; display: block; cursor: crosshair; }
+.chart .grid { stroke: var(--grid); stroke-width: 1; }
+.chart .axis { font-size: 11px; fill: var(--muted); }
+.chart .line { fill: none; stroke: var(--home); stroke-width: 2; stroke-linejoin: round; }
+.chart .band { fill: var(--home); opacity: 0.18; }
+.chart .zone { fill: var(--warning); opacity: 0.22; }
+.chart .half { stroke: var(--axis); stroke-dasharray: 4 3; }
+.chart .now { stroke: var(--ink); stroke-width: 1.5; }
+.chart .cross { stroke: var(--ink-2); stroke-width: 1; }
+.chart .marker { fill: var(--home); stroke: var(--surface); stroke-width: 2; }
+.tooltip { display: flex; flex-wrap: wrap; gap: 10px; font-size: 0.85rem; min-height: 1.4em; padding: 2px 4px; }
+
+.feed { display: flex; flex-direction: column; gap: 8px; max-height: calc(100vh - 140px); overflow-y: auto; }
+.feed-head { display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: var(--page); padding: 4px 0; }
+.feed-head h2 { font-size: 1.05rem; margin: 0; }
+.entry { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--border); border-radius: 8px; padding: 8px 10px; }
+.entry.home { border-left-color: var(--home); }
+.entry.away { border-left-color: var(--away); }
+.entry.fav { box-shadow: 0 0 0 2px var(--ink-2); }
+.entry p { margin: 6px 0; line-height: 1.4; }
+.entry .meta { display: flex; gap: 6px; align-items: center; border: 0; padding: 0; background: none; font-size: 0.85rem; color: var(--ink-2); }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.dot.home { background: var(--home); }
+.dot.away { background: var(--away); }
+.foot { display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; font-size: 0.8rem; }
+.badge { border: 1px solid var(--border); border-radius: 999px; padding: 1px 8px; color: var(--ink-2); }
+.badge.pass { color: var(--good-text); }
+.sources summary { cursor: pointer; color: var(--ink-2); }
+.sources ul { margin: 4px 0; padding-left: 18px; color: var(--ink-2); }
+.blocked-list { border: 1px dashed var(--axis); border-radius: 8px; padding: 6px 8px; }
+.entry.blocked { border-left-color: var(--axis); }
+.entry.blocked .reason { color: var(--ink-2); }

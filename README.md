@@ -56,6 +56,14 @@ uv run python -m secondwind.agents.verifier_suite --llm                 # Verifi
 scripts/demo.sh                                                         # both demo matches + feeds
 ```
 
+Overlay (React + Vite, runs locally from files; Node 20+):
+
+```bash
+uv run python -m secondwind.export data/synthetic/demo/story --out app/public/data/story --feed docs/feeds/story.json
+uv run python -m secondwind.export data/synthetic/demo/natural --out app/public/data/natural --feed docs/feeds/natural.json
+cd app && npm install && npm run dev   # http://localhost:5173/?match=story&mode=analyst&player=H04&t=3500
+```
+
 ## Agents
 
 Four agents on Microsoft Foundry (Agent Framework, gpt-5-mini) turn a match into a timestamped,
@@ -76,6 +84,11 @@ must be one of the facts. On 104 test sentences ([docs/verifier_report.json](doc
 |---|---|---|
 | Rules alone | 48 / 64 (paraphrases 2 / 16) | 0 / 40 |
 | Rules + LLM | 64 / 64 (paraphrases 16 / 16) | 2 / 40 |
+
+The overlay (`app/`) replays the match with a battery icon per player (fan mode) or the selected
+player's battery trace with its band and his high-speed running (analyst mode), next to the
+feed; each line shows its claim, sources and the Verifier's verdict, and a toggle shows what the
+Verifier blocked. Its own fixed sentences (`app/src/copy.json`) pass the Verifier too.
 
 The demo feeds are in [docs/feeds/](docs/feeds/): a story match (seed 2028, a high press that
 fades, a full-back exposed on turnovers, a fresh substitute) and a natural one (seed 2031). Story

@@ -1,0 +1,143 @@
+// The overlay's data: files written by `python -m secondwind.export` (match.json,
+// positions.bin, signals.json, feed.json). All times are video_s: seconds from kick-off with
+// half-time left out, as in feed.json.
+
+export type Mode = "fan" | "analyst";
+
+export interface Player {
+  id: string;
+  name: string;
+  shirt: number;
+  team: string;
+  team_name: string;
+  position: string;
+  starter: boolean;
+}
+
+export interface Meta {
+  match_id: string;
+  pos_hz: number;
+  frames: number;
+  ids: string[];
+  missing: number;
+  periods: { period: number; video_start: number; duration_s: number }[];
+  teams: { id: string; name: string; side: string; formation: string }[];
+  players: Player[];
+  goals: { video_s: number; team: string; scorer: string; clock: string }[];
+  substitutions: { video_s: number; team: string; off: string; on: string; clock: string }[];
+}
+
+export interface Signals {
+  start: number;
+  battery: number[];
+  lo: number[] | null;
+  hi: number[] | null;
+  low_chance: number[] | null;
+  hsr_1min: number[];
+  red_zone: number[];
+  post_peak: number[];
+}
+
+export interface Finding {
+  claim: string;
+  message: string;
+  stage: string;
+}
+
+export interface Entry {
+  t: number;
+  period: number;
+  clock: string;
+  video_s: number;
+  player: { id: string; name: string; shirt: number; team: string };
+  kind: string;
+  moment_id: string;
+  sentence: string;
+  claim: string;
+  sources: string[];
+  mode: Mode;
+  verdict: "pass" | "rewritten" | "fallback" | "blocked";
+  shown: boolean;
+  verifier: { stage: string; findings: Finding[] };
+  original?: string;
+}
+
+export interface Feed {
+  match_id: string;
+  agents: Record<string, unknown>;
+  moments: { moment_id: string; kind: string; clock: string; video_s: number }[];
+  entries: Entry[];
+}
+
+export interface MatchData {
+  meta: Meta;
+  pos: Int16Array;
+  signals: Record<string, Signals>;
+  feed: Feed;
+  duration: number;
+}
+
+export const MATCHES = [
+  { id: "story", label: "Story match: the high press" },
+  { id: "natural", label: "Natural match" },
+];
+
+export async function loadMatch(id: string): Promise<MatchData> {
+  const base = `${import.meta.env.BASE_URL}data/${id}/`;
+  const [meta, buf, signals, feed] = await Promise.all([
+    fetch(base + "match.json").then((r) => r.json() as Promise<Meta>),
+    fetch(base + "positions.bin").then((r) => r.arrayBuffer()),
+    fetch(base + "signals.json").then((r) => r.json() as Promise<Record<string, Signals>>),
+    fetch(base + "feed.json").then((r) => r.json() as Promise<Feed>),
+  ]);
+  const duration = meta.periods.reduce((s, p) => s + p.duration_s, 0);
+  return { meta, pos: new Int16Array(buf), signals, feed, duration };
+}
+
+/** The broadcast clock label for a replay time ("45+2:10", "67:12"). */
+export function clockLabel(meta: Meta, v: number): string {
+  const p2 = meta.periods.find((p) => p.period === 2);
+  const second = p2 !== undefined && v >= p2.video_start;
+  const t = second ? v - p2!.video_start : v;
+  const c = t + (second ? 2700 : 0);
+  const end = second ? 5400 : 2700;
+  const mmss = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+  return c >= end ? `${end / 60}+${mmss(c - end)}` : mmss(c);
+}
+
+/** x, y in metres for column j at replay time v (linear between frames), or null. */
+export function position(d: MatchData, j: number, v: number): [number, number] | null {
+  const cols = d.meta.ids.length + 1;
+  const f = Math.min(Math.max(v * d.meta.pos_hz, 0), d.meta.frames - 1);
+  const a = Math.floor(f);
+  const b = Math.min(a + 1, d.meta.frames - 1);
+  const w = f - a;
+  const ia = (a * cols + j) * 2;
+  const ib = (b * cols + j) * 2;
+  if (d.pos[ia] === d.meta.missing) return null;
+  if (d.pos[ib] === d.meta.missing) return [d.pos[ia] / 10, d.pos[ia + 1] / 10];
+  return [
+    (d.pos[ia] * (1 - w) + d.pos[ib] * w) / 10,
+    (d.pos[ia + 1] * (1 - w) + d.pos[ib + 1] * w) / 10,
+  ];
+}
+
+/** Index into a player's per-second signals at replay time v, or null when off the pitch. */
+export function signalIndex(s: Signals | undefined, v: number): number | null {
+  if (!s) return null;
+  const i = Math.floor(v - s.start);
+  return i >= 0 && i < s.battery.length ? i : null;
+}
+
+export function score(meta: Meta, v: number): { home: number; away: number } {
+  const done = meta.goals.filter((g) => g.video_s <= v);
+  return {
+    home: done.filter((g) => g.team === "home").length,
+    away: done.filter((g) => g.team === "away").length,
+  };
+}
+
+/** The 5-level fan icon (synthesis §9.3). */
+export function fanLevel(batteryPct: number): number {
+  return Math.min(Math.max(Math.ceil(batteryPct / 20), 1), 5);
+}

@@ -24,8 +24,11 @@ __pycache__/
 # Front end
 node_modules/
 dist/
+# Overlay data (python -m secondwind.export; scripts/demo.sh)
+app/public/data/
 
 # Secrets
 .env
 .env.*
 !.env.example
+*.tsbuildinfo

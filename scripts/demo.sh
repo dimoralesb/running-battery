@@ -9,4 +9,7 @@ uv run python -m secondwind.sim --seed 2031 --out "$D/natural"
 for m in story natural; do
     uv run python -m secondwind.engine "$D/$m"
     uv run --extra agents python -m secondwind.agents.feed "$D/$m" "$@"
+    uv run python -m secondwind.export "$D/$m" --out "app/public/data/$m"
 done
+# For the committed demo feeds instead of fresh ones:
+#   uv run python -m secondwind.export $D/story --out app/public/data/story --feed docs/feeds/story.json

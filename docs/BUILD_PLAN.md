@@ -1,6 +1,6 @@
 # Second Wind: Build Plan
 
-**Status (2026-10-17):** approved and in progress, about four days ahead. Done: Wed 14 to Tue 20, Wed 21 (MCP server, claims register, Verifier v1 and v2) and Thu 22 (agents and the feed, on Foundry: decision 18). Next: Fri 23 (web app). Science frozen (decision 17).
+**Status (2026-10-17):** approved and in progress, about four days ahead. Done: Wed 14 to Tue 20, Wed 21 (MCP server, claims register, Verifier v1 and v2) and Thu 22 (agents and the feed, on Foundry: decision 18). Fri 23 started: the overlay runs locally from files (`app/`, `secondwind.export`): replay, battery icons (fan), traces with bands (analyst), the verified feed with sources and what the Verifier blocked. Next: pitch-control circles, polish, then Sat 24 (Azure). Science frozen (decision 17).
 Deadline: October 27, 2026, 11:59 pm PT. Design and sources are in [PLAN.md](PLAN.md). Numbers and targets are in [RESEARCH_SYNTHESIS.md](RESEARCH_SYNTHESIS.md) ("synthesis §x").
 Solo developer. Python 3.12 for everything except the front end (React + Vite + TypeScript). English only. Azure free account ($200 credit); Foundry access confirmed on October 17 (gpt-5-mini; PLAN decision 18).
 

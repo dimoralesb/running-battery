@@ -95,3 +95,15 @@ def test_report_covers_this_suite():
     assert [r["sentence"] for r in rep["rows"]] == [c["sentence"] for c in cases()]
     assert [r["rules_ok"] for r in rep["rows"]] == [r["rules_ok"] for r in run_rules()]
     assert rep["report"]["llm"]["caught_rate"] == 1.0
+
+
+def test_overlay_copy_passes_the_verifier():
+    """Every fixed sentence on the overlay (app/src/copy.json) goes through the rules too."""
+    copy = json.loads((REPORT.parents[1] / "app" / "src" / "copy.json").read_text())
+    sample = {"name": "Marco Tarvsall", "pct": 62, "lo": 48, "hi": 74, "chance": "about 18%"}
+    for key, text in copy.items():
+        if key.startswith("_"):
+            continue
+        for mode in ("fan", "analyst"):
+            v = verify(text.format(**sample), mode)
+            assert v.ok, (key, [f.claim for f in v.findings])
