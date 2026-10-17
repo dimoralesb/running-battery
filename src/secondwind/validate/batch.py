@@ -5,8 +5,8 @@
 Validation code: it reads ``truth.json``. Runs the estimator on every match folder and pools the
 outfield player-seconds (``validate.estimator``): battery against the hidden pools (error, bias,
 correlation, 10–90% band coverage), the tired flag's precision and recall against ``tired``, the
-calibration of the typical-pro low-battery chance (reliability table, Brier score, expected
-calibration error), and late-match wear as a trend: the hidden tank against the estimator's
+calibration of the typical-pro chance, raw and calibrated (reliability table, Brier score,
+expected calibration error), and late-match wear as a trend: the hidden tank against the estimator's
 energy since kick-off (load), per player-second and at each whole-match player's last second.
 Per-match values are summarised too (median and 10–90% range), because the varied batch draws
 its own assumptions per match (PLAN §2.6, point 3).
@@ -15,6 +15,7 @@ its own assumptions per match (PLAN §2.6, point 3).
 from __future__ import annotations
 
 import argparse
+import json
 from concurrent.futures import ProcessPoolExecutor
 from functools import partial
 from pathlib import Path
@@ -38,7 +39,19 @@ from secondwind.validate.estimator import (
     scores,
 )
 
-FLAT = ("battery", "lo", "hi", "pools", "tired", "flag", "low_chance", "energy", "tank")
+FLAT = (
+    "battery",
+    "lo",
+    "hi",
+    "pools",
+    "tired",
+    "flag",
+    "low_chance",
+    "low_chance_raw",
+    "energy",
+    "tank",
+)
+CHANCES = (("low_chance_raw", "raw"), ("low_chance", "calibrated"))
 
 
 def match_arrays(folder: Path, **kw) -> dict:
@@ -59,6 +72,7 @@ def match_arrays(folder: Path, **kw) -> dict:
         "tired": truth.tired[keep],
         "flag": tired(s, est.settings.low_battery)[keep],
         "low_chance": (s.low_chance if s.low_chance is not None else nan)[keep],
+        "low_chance_raw": (s.low_chance_raw if s.low_chance_raw is not None else nan)[keep],
         "energy": s.energy[keep],
         "tank": truth.tank[keep],
     }
@@ -94,11 +108,10 @@ def pooled(parts: list[dict], low_battery: float = EP.LOW_BATTERY) -> dict:
         out["band_below"] = float(np.mean(p < a["lo"]))
         out["band_above"] = float(np.mean(p > a["hi"]))
         out["band_width"] = float(np.mean(a["hi"] - a["lo"]))
-    if np.isfinite(a["low_chance"]).all():
-        out |= {
-            f"low_chance_{k}": v for k, v in calibration_scores(a["low_chance"], a["tired"]).items()
-        }
-        out["calibration"] = calibration(a["low_chance"], a["tired"], a["pools"] < low_battery)
+    for name, _ in CHANCES:
+        if np.isfinite(a[name]).all():
+            out |= {f"{name}_{k}": v for k, v in calibration_scores(a[name], a["tired"]).items()}
+            out[f"calibration_{name}"] = calibration(a[name], a["tired"], a["pools"] < low_battery)
     # Late-match wear: the tank falls as work piles up; the load (energy since kick-off) is the
     # estimator's measure of that work (PLAN §2.3, "Two truth labels").
     out["late_share"] = float(np.mean(a["tank"] < SP.LATE_TANK_BELOW))
@@ -118,12 +131,17 @@ def run(folders: list[Path], jobs: int | None = None, **kw) -> dict:
 
 
 def format_pooled(out: dict) -> str:
-    skip = {"calibration", "per_match", "matches", "player_s"}
+    skip = {"per_match", "matches", "player_s"}
     lines = [f"{out['matches']} matches, {out['player_s']} outfield player-seconds"]
-    lines += [f"  {k:>24} {v:.3f}" for k, v in out.items() if k not in skip]
-    if "calibration" in out:
-        lines.append("calibration of the typical-pro low-battery chance against `tired`:")
-        lines.append(format_calibration(out["calibration"]))
+    lines += [
+        f"  {k:>24} {v:.3f}"
+        for k, v in out.items()
+        if k not in skip and not k.startswith("calibration_")
+    ]
+    for name, label in CHANCES:
+        if f"calibration_{name}" in out:
+            lines.append(f"calibration of the typical-pro chance ({label}) against `tired`:")
+            lines.append(format_calibration(out[f"calibration_{name}"]))
     lines.append("per match, 10% / median / 90%:")
     for k in (
         "tired_share",
@@ -131,6 +149,7 @@ def format_pooled(out: dict) -> str:
         "recall",
         "battery_mae",
         "band_coverage",
+        "low_chance_raw_ece",
         "low_chance_ece",
     ):
         if k in out["per_match"]:
@@ -149,11 +168,14 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--k", type=float, default=EP.K)
     parser.add_argument("--prior", choices=sorted(EP.PRIORS), default=EP.DEFAULT_PRIOR)
     parser.add_argument("--jobs", type=int)
+    parser.add_argument("--json", type=Path, help="also write the pooled results here")
     args = parser.parse_args(argv)
     folders = sorted(p for p in args.folder.iterdir() if p.is_dir())[: args.matches]
     out = run(folders, args.jobs, mode=args.mode, k=args.k, prior=args.prior)
     print(f"mode {args.mode}, k {args.k:g}, prior {args.prior}")
     print(format_pooled(out))
+    if args.json:
+        args.json.write_text(json.dumps(out, indent=1))
 
 
 if __name__ == "__main__":

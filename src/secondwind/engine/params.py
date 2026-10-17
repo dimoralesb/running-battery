@@ -128,6 +128,40 @@ POST_PEAK_HOLD_S = (120, 120, 300)
 # calibration against ``tired`` is best at 0.50 (expected calibration error 0.008 / 0.008 /
 # 0.014 / 0.036; it says about twice the observed share in every bin above 0.1), so 0.50 stays.
 LOW_BATTERY = 0.50
+
+# --- Typical-pro chance: calibration map (decision 14) ------------------------------------------
+
+# The raw chance (the weighted share of the prior draws below LOW_BATTERY) is ordered but about
+# twice too high on the dev seeds: seconds it puts at 0.1–0.2 / 0.3–0.4 / 0.6–0.7 were tired
+# 10 / 18 / 38% of the time (PLAN §3.3), likely because our one-pool battery refills more slowly
+# than the generator's fast pool. So the engine reports a calibrated chance: the raw chance put
+# through a monotone (isotonic) map from raw chance to the observed share of ``tired``, fitted on
+# the default matches of dev seeds 1–60 only (never the validation seeds), and keeps the raw one
+# as ``low_chance_raw``. Fitted 2026-10-17 with ``python -m secondwind.validate.calibrate
+# data/synthetic/dev``: (mean raw chance of each isotonic block, its share tired); in between,
+# linear interpolation; beyond the ends, the end values. It holds only for the settings it was
+# fitted with (LOW_CHANCE_MAP_FOR); with any other prior, k, mode or update the engine passes the
+# raw chance through and says so in ``engine.low_chance_map``. 7,209,200 outfield player-seconds,
+# tired 1.27%; 86% of them have a raw chance of exactly 0 (tired 0.5%). The knots above a raw
+# chance of 0.6 rest on about 1,300 seconds, so the top of the map is the least certain part.
+LOW_CHANCE_MAP: tuple[tuple[float, float], ...] | None = (
+    (0.000, 0.005),
+    (0.018, 0.039),
+    (0.069, 0.062),
+    (0.121, 0.099),
+    (0.172, 0.105),
+    (0.221, 0.126),
+    (0.272, 0.150),
+    (0.323, 0.184),
+    (0.373, 0.184),
+    (0.478, 0.193),
+    (0.622, 0.345),
+    (0.690, 0.433),
+    (0.797, 0.582),
+)
+LOW_CHANCE_MAP_FOR = {"mode": "broadcast", "update": "draws", "prior": "pro", "k": K}
+LOW_CHANCE_MAP_SOURCE = "isotonic fit on dev seeds 1–60 (pro prior, k 4), 2026-10-17"
+
 # Events listed with a tired spell, for the agents: the player's defensive actions (PLAN §3.3:
 # duel, pressure; recovery runs are not events) and the player's own ball losses.
 DEFENSIVE_EVENTS = ("duel", "tackle", "interception", "pressure", "ball_recovery", "clearance")

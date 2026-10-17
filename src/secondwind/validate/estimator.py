@@ -16,7 +16,8 @@ player-second on the pitch:
   table by probability bin, the Brier score and the expected calibration error (the mean gap
   between the chance and the observed share, weighted by the seconds in each bin). The share of
   seconds with the hidden pools below ``LOW_BATTERY`` of D′ is shown next to it: the same
-  threshold as the signal, in the generator's two-pool model.
+  threshold as the signal, in the generator's two-pool model. The raw chance (the share of the
+  draws, ``low_chance_raw``) is scored next to the calibrated one, so the map's effect is visible.
 """
 
 from __future__ import annotations
@@ -160,10 +161,10 @@ def scores(est: Estimate, truth: Aligned, low_battery: float = EP.LOW_BATTERY) -
         lo, hi = s.battery_lo[keep], s.battery_hi[keep]
         out["band_coverage"] = float(np.mean((p >= lo) & (p <= hi)))
         out["band_width"] = float(np.mean(hi - lo))
-    if s.low_chance is not None:
-        out |= {
-            f"low_chance_{k}": v for k, v in calibration_scores(s.low_chance[keep], real).items()
-        }
+    for name in ("low_chance", "low_chance_raw"):
+        chance = getattr(s, name)
+        if chance is not None:
+            out |= {f"{name}_{k}": v for k, v in calibration_scores(chance[keep], real).items()}
     return out
 
 
@@ -201,11 +202,16 @@ def player_table(est: Estimate, truth: Aligned, pid: str, step_s: int = 300) -> 
     return "\n".join(lines)
 
 
-def plot_player(est: Estimate, truth: Aligned, pid: str, path: Path) -> None:
-    """PNG of one player's battery, band, hidden pools and tired seconds (needs matplotlib)."""
+BATTERY_COLOR, POOLS_COLOR, TANK_COLOR = "#2a78d6", "#eb6834", "#52514e"  # dataviz palette
+
+
+def plot_player(est: Estimate, truth: Aligned, pid: str, path: Path | None = None, ax=None) -> None:
+    """One player's battery, band, hidden pools and tired seconds (needs matplotlib): a PNG at
+    ``path``, or drawn into ``ax``."""
     import matplotlib
 
-    matplotlib.use("Agg")
+    if ax is None:
+        matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
     s = est.seconds
@@ -214,7 +220,9 @@ def plot_player(est: Estimate, truth: Aligned, pid: str, path: Path) -> None:
     # Playing minutes, added time included: the second half starts where the first ended.
     first_half = (s.period == 1).sum() / 60.0
     minute = s.t / 60.0 + np.where(s.period == 2, first_half, 0.0)
-    fig, ax = plt.subplots(figsize=(11, 3.6))
+    fig = None
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(11, 3.6))
     for half in (1, 2):
         rows = np.flatnonzero(s.on[:, j] & (s.period == half))
         if not len(rows):
@@ -226,25 +234,34 @@ def plot_player(est: Estimate, truth: Aligned, pid: str, path: Path) -> None:
                 x,
                 s.battery_lo[rows, j],
                 s.battery_hi[rows, j],
-                color="C0",
+                color=BATTERY_COLOR,
                 alpha=0.2,
                 lw=0,
                 label="battery 10–90% band" if first else None,
             )
-        ax.plot(x, s.battery[rows, j], color="C0", lw=1.2, label="battery" if first else None)
         ax.plot(
-            x, truth.pools[rows, j], color="C3", lw=0.8, label="hidden pools" if first else None
+            x, s.battery[rows, j], color=BATTERY_COLOR, lw=1.5, label="battery" if first else None
+        )
+        ax.plot(
+            x,
+            truth.pools[rows, j],
+            color=POOLS_COLOR,
+            lw=1.0,
+            label="hidden pools" if first else None,
         )
         ax.plot(
             x,
             truth.tank[rows, j],
-            color="0.5",
+            color=TANK_COLOR,
             lw=0.8,
             ls="--",
             label="hidden tank" if first else None,
         )
     rows = np.flatnonzero(s.on[:, j])
-    marks = (("truth tired", -0.06, truth.tired, "C3"), ("flagged tired", -0.12, flag, "C0"))
+    marks = (
+        ("truth tired", -0.06, truth.tired, POOLS_COLOR),
+        ("flagged tired", -0.12, flag, BATTERY_COLOR),
+    )
     for name, y, x, c in marks:
         on = x[rows, j]
         ax.scatter(minute[rows][on], np.full(on.sum(), y), s=2, color=c, marker="|", label=name)
@@ -254,9 +271,10 @@ def plot_player(est: Estimate, truth: Aligned, pid: str, path: Path) -> None:
     ax.set_ylabel("share of D′")
     ax.set_title(f"{pid}: battery vs hidden pools")
     ax.legend(loc="lower left", fontsize=7, ncol=3)
-    fig.tight_layout()
-    fig.savefig(path, dpi=130)
-    plt.close(fig)
+    if fig is not None:
+        fig.tight_layout()
+        fig.savefig(path, dpi=130)
+        plt.close(fig)
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -274,15 +292,15 @@ def main(argv: list[str] | None = None) -> None:
     truth = align(est, read_truth(args.folder), goalkeepers(match))
     for name, value in scores(est, truth).items():
         print(f"{name:>22} {value:.3f}")
-    if est.seconds.low_chance is not None:
-        keep = keep_mask(est, truth)
-        rows = calibration(
-            est.seconds.low_chance[keep],
-            truth.tired[keep],
-            truth.pools[keep] < est.settings.low_battery,
-        )
-        print("calibration of the typical-pro low-battery chance against `tired`:")
-        print(format_calibration(rows))
+    keep = keep_mask(est, truth)
+    for name, label in (("low_chance_raw", "raw"), ("low_chance", "calibrated")):
+        chance = getattr(est.seconds, name)
+        if chance is not None:
+            rows = calibration(
+                chance[keep], truth.tired[keep], truth.pools[keep] < est.settings.low_battery
+            )
+            print(f"calibration of the typical-pro chance ({label}) against `tired`:")
+            print(format_calibration(rows))
     pid = args.player
     if pid is None:
         share = np.where(truth.outfield, truth.tired.mean(axis=0), -1)

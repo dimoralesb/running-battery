@@ -11,6 +11,8 @@ OFFICIAL RULES.md
 
 # Generated matches (regenerate from seeds)
 data/synthetic/
+# Cached numbers behind docs/figures (regenerate with python -m secondwind.validate.figures)
+data/figures_cache/
 
 # Python
 .venv/

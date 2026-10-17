@@ -84,6 +84,19 @@
           "exclusiveMinimum": 0,
           "title": "Hi Speed",
           "type": "number"
+        },
+        "low_chance_map": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The calibration map applied to low_chance (where and when it was fitted); null when none fits these settings and low_chance is the raw share of the draws",
+          "title": "Low Chance Map"
         }
       },
       "required": [
@@ -268,8 +281,26 @@
             }
           ],
           "default": null,
-          "description": "Chance that a typical player of the prior's population (a typical professional by default) would have a battery below low_battery after this running: the weighted share of the prior draws (broadcast mode). About the running, not this player's own state (PLAN §7, decision 14)",
+          "description": "Chance that a typical player of the prior's population (a typical professional by default) would be short-term tired after this running (broadcast mode): low_chance_raw through the calibration map named in engine.low_chance_map. About the running, not this player's own state (PLAN §7, decision 14)",
           "title": "Low Chance"
+        },
+        "low_chance_raw": {
+          "anyOf": [
+            {
+              "items": {
+                "maximum": 1,
+                "minimum": 0,
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The weighted share of the prior draws with a battery below low_battery, before calibration",
+          "title": "Low Chance Raw"
         },
         "power": {
           "description": "Mean over the last second",
@@ -480,7 +511,7 @@
   "additionalProperties": false,
   "properties": {
     "schema_version": {
-      "default": "0.1.8",
+      "default": "0.1.9",
       "title": "Schema Version",
       "type": "string"
     },

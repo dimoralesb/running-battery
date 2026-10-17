@@ -69,6 +69,13 @@ def capacities(
     return draws[..., 0], draws[..., 1]
 
 
+def chance_map(mode: Mode, update: Update, prior: str, k: float) -> tuple | None:
+    """The calibration map of the typical-pro chance, if it was fitted for these settings."""
+    want = P.LOW_CHANCE_MAP_FOR
+    same = (mode, update, prior, k) == (want["mode"], want["update"], want["prior"], want["k"])
+    return P.LOW_CHANCE_MAP if same else None
+
+
 def compute(
     match: Match,
     mode: Mode = "broadcast",
@@ -82,6 +89,7 @@ def compute(
         match = broadcast_view(match)
     else:
         update = "correction"
+    table = chance_map(mode, update, prior, k)
     settings = EngineSettings(
         mode=mode,
         update=update,
@@ -93,11 +101,12 @@ def compute(
         peak_share=P.PEAK_SHARE,
         peak_floor=P.PEAK_FLOOR,
         hi_speed=P.HI_SPEED,
+        low_chance_map=P.LOW_CHANCE_MAP_SOURCE if table is not None else None,
     )
     tr = tracks(match)
     cs, dp = capacities(match, tr.ids, mode, update, n_draws, P.PRIORS[prior])
     bat = run(tr.speed, tr.period, tr.whole_second, cs, dp, k, penalty_width, P.LOW_BATTERY)
-    return Estimate(settings, tr, bat, per_second(tr, bat))
+    return Estimate(settings, tr, bat, per_second(tr, bat, table))
 
 
 def _r(x: np.ndarray, digits: int = 3) -> list[float]:
@@ -132,6 +141,7 @@ def to_signals(match: Match, est: Estimate) -> MatchSignals:
             battery_lo=_r(s.battery_lo[m, j]) if band else None,
             battery_hi=_r(s.battery_hi[m, j]) if band else None,
             low_chance=_r(s.low_chance[m, j]) if s.low_chance is not None else None,
+            low_chance_raw=_r(s.low_chance_raw[m, j]) if s.low_chance_raw is not None else None,
             power=_r(s.power[m, j], 2),
             power_1min=_r(s.power_avg[60][m, j], 2),
             power_5min=_r(s.power_avg[300][m, j], 2),

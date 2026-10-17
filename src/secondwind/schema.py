@@ -36,7 +36,10 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 # 0.1.7: ``signals.json`` records the typical-player prior (``engine.prior``).
 # 0.1.8: ``signals.json`` gets ``low_chance``, the typical-pro chance of a low battery (decision
 # 14); the default prior is ``pro``, the generator's population (decision 13).
-SCHEMA_VERSION = "0.1.8"
+# 0.1.9: ``low_chance`` is calibrated (a monotone map fitted on the dev seeds,
+# ``engine/params.py`` LOW_CHANCE_MAP); the raw share of the draws is kept as ``low_chance_raw``,
+# and ``engine.low_chance_map`` names the map (null: no map, the two are the same).
+SCHEMA_VERSION = "0.1.9"
 
 # A little beyond the 52.5 x 34 m half-pitch, for players and the ball just outside the lines.
 X_LIMIT = 60.0
@@ -445,6 +448,11 @@ class EngineSettings(_Model):
     peak_share: Share
     peak_floor: Annotated[float, Field(ge=0)]
     hi_speed: Annotated[float, Field(gt=0, description="High-speed running threshold, m/s")]
+    low_chance_map: str | None = Field(
+        default=None,
+        description="The calibration map applied to low_chance (where and when it was fitted); "
+        "null when none fits these settings and low_chance is the raw share of the draws",
+    )
 
 
 class Range(_Model):
@@ -481,9 +489,14 @@ class SignalSeries(_Model):
     low_chance: list[Share] | None = Field(
         default=None,
         description="Chance that a typical player of the prior's population (a typical "
-        "professional by default) would have a battery below low_battery after this running: "
-        "the weighted share of the prior draws (broadcast mode). About the running, not this "
-        "player's own state (PLAN §7, decision 14)",
+        "professional by default) would be short-term tired after this running (broadcast "
+        "mode): low_chance_raw through the calibration map named in engine.low_chance_map. "
+        "About the running, not this player's own state (PLAN §7, decision 14)",
+    )
+    low_chance_raw: list[Share] | None = Field(
+        default=None,
+        description="The weighted share of the prior draws with a battery below low_battery, "
+        "before calibration",
     )
     power: list[Annotated[float, Field(ge=0)]] = Field(description="Mean over the last second")
     power_1min: list[Annotated[float, Field(ge=0)]]

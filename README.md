@@ -1,8 +1,8 @@
 # Second Wind
 
-> The story the scoreline doesn't tell: who's running on empty, and when it costs them.
+> The story the scoreline doesn't tell: who has done the most hard running, and when it costs them.
 
-Second Wind estimates football player fatigue from tracking data and explains it to fans and analysts through AI agents on Microsoft Foundry. It is an entry for the Microsoft x Premier League "Inside the Game" hackathon.
+Second Wind measures from tracking data how much hard running each football player has done and what it would cost a typical professional, and explains it to fans and analysts through AI agents on Microsoft Foundry. It is an entry for the Microsoft x Premier League "Inside the Game" hackathon.
 
 All match data is **synthetic**: we built a generator whose players get tired according to published sports science, with a hidden "true" fatigue we use to test our estimator.
 
@@ -10,7 +10,7 @@ All match data is **synthetic**: we built a generator whose players get tired ac
 
 - Project plan: [docs/PLAN.md](docs/PLAN.md)
 - Build plan: [docs/BUILD_PLAN.md](docs/BUILD_PLAN.md)
-- Evidence base (64 papers): [docs/RESEARCH_SYNTHESIS.md](docs/RESEARCH_SYNTHESIS.md)
+- Evidence base (74 papers): [docs/RESEARCH_SYNTHESIS.md](docs/RESEARCH_SYNTHESIS.md)
 - Data format: [src/secondwind/schema.py](src/secondwind/schema.py), JSON Schemas in [schemas/](schemas/)
 
 ## Development
@@ -36,6 +36,47 @@ Replay as a GIF or still frames needs matplotlib: `uv sync --all-extras` (or `--
 then add `--gif` or `--stills 6`. Add `--clean-copy` when generating to keep the noise-free positions for debugging
 (`debug/tracking_clean.npz`; not part of the match data).
 
+Estimator and validation (`uv sync --all-extras` for IDSSE and the charts):
+
+```bash
+uv run python -m secondwind.engine data/synthetic/m0001                 # signals.json
+uv run python -m secondwind.validate.batch data/synthetic/validation    # estimator vs truth
+uv run python -m secondwind.validate.calibrate data/synthetic/dev       # refit the chance map (dev seeds only)
+uv run python -m secondwind.validate.real data/synthetic/dev --jobs 4   # IDSSE vs synthetic
+uv run python -m secondwind.validate.figures                            # docs/figures/*.png
+```
+
+## Validation
+
+**Estimator vs hidden truth.** The battery (blue, with its band) against the generator's hidden
+pools (orange) for one player of a validation match; the calibration of the typical-pro chance
+(`low_chance`) before and after its map; and how well anything could tell *who* is tired from
+positions alone. With each player's true fitness the generator's own physiology finds the tired
+moments almost perfectly (precision 0.99); without it, the best possible precision is 0.24 at
+recall 0.1, and our battery reaches 0.17. That gap is why Second Wind reports the running and
+what it would cost a typical professional, never "he is tired".
+
+![Estimator vs truth](docs/figures/estimator_vs_truth.png)
+
+**No-fatigue control.** The same 240 synthetic matches with fatigue switched on and off. Most of
+the published drop after a player's most intense spell appears even without fatigue (picking the
+peak guarantees a lower value next, and play stops after peaks); the end-of-match decline is all
+fatigue.
+
+![No-fatigue control](docs/figures/no_fatigue_control.png)
+
+## Limitations
+
+- Our synthetic players don't pace themselves, so the generator's late-match fade is all
+  physiology; in real matches part of it is the player's choice [Snyder2023; synthesis §8.1].
+- The typical-pro chance is calibrated for a typical professional (dev seeds, professional
+  prior). On matches with a wider range of players it stays poorly calibrated (expected
+  calibration error 0.064 → 0.059), because a typical-pro signal cannot see who is less fit.
+- On the 7 real IDSSE matches [Bassek2025] the estimator's load, distances and battery dips look
+  like the synthetic ones, but real players faded more in the second half (high-speed running
+  −21% vs −9%) and our synthetic peak spells are about 12% more intense (PLAN §2.6).
+- Player fitness (CS, D′) can't be measured from tracking; the professional prior is derived from
+  published tests, and no professional D′ has been published (synthesis §3.2.3).
 
 ## License
 

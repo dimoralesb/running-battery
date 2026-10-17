@@ -10,8 +10,9 @@ wider prior for a varied match). The share of draws that are tired at a second i
 P(tired | running): what a detector could know if it had the generator exactly and only the
 player's own values were unknown. Its best precision at a given recall is the ceiling for any
 positions-only tired detector. The estimator's battery and its typical-pro low-battery chance
-are scored the same way, and so is the physiology run with the player's true values (how much of
-the gap is the unknown player, and how much the smoothed speed).
+(raw: the calibration map keeps its order) are scored the same way, and so is the physiology
+run with the player's true values (how much of the gap is the unknown player, and how much the
+smoothed speed).
 """
 
 from __future__ import annotations
@@ -98,7 +99,8 @@ def match_arrays(folder: Path, n: int = N_DRAWS, seed: int = DRAW_SEED) -> dict[
     exact = tired_series(
         speed, tr.period, tr.t, tr.whole_second, [by_id[tr.ids[j]] for j in whole], truth.settings
     )
-    low = s.low_chance[:, whole] if s.low_chance is not None else np.full_like(chance, np.nan)
+    raw = s.low_chance_raw
+    low = raw[:, whole] if raw is not None else np.full_like(chance, np.nan)
     return {
         "real": a.tired[:, whole].ravel(),
         "ceiling": chance.ravel(),

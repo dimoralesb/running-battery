@@ -14,8 +14,8 @@ import pytest
 from secondwind.engine import params as P
 from secondwind.engine.__main__ import main as engine_main
 from secondwind.engine.battery import prior_draws, run, tau, weighted_quantiles
-from secondwind.engine.estimate import compute, estimate
-from secondwind.engine.signals import Seconds, metabolic_power, red_zone
+from secondwind.engine.estimate import chance_map, compute, estimate
+from secondwind.engine.signals import Seconds, calibrate_chance, metabolic_power, red_zone
 from secondwind.io import SIGNALS, Match, read_signals, write_match
 from secondwind.schema import (
     Ball,
@@ -174,6 +174,24 @@ def test_low_chance_is_the_share_of_draws_below_low_battery():
     still, _ = _draws_battery(np.zeros(60 * HZ))
     assert np.all(still.low_chance == 0.0)
     assert _battery(np.full(60 * HZ, 5.0)).low_chance is None
+
+
+def test_calibration_map_is_monotone_and_interpolates():
+    """The fitted map (engine/params.py) is a valid monotone map on [0, 1]; between knots the
+    chance is linear, beyond the ends it holds the end values."""
+    xs, ys = np.array(P.LOW_CHANCE_MAP).T
+    assert np.all(np.diff(xs) > 0) and np.all(np.diff(ys) >= 0)
+    assert 0.0 <= ys.min() and ys.max() <= 1.0 and xs[0] == 0.0
+    table = ((0.0, 0.0), (0.5, 0.2), (0.8, 0.6))
+    out = calibrate_chance(np.array([0.0, 0.25, 0.65, 0.8, 1.0]), table)
+    assert out == pytest.approx([0.0, 0.1, 0.4, 0.6, 0.6])
+
+
+def test_calibration_map_only_for_the_settings_it_was_fitted_with():
+    assert chance_map("broadcast", "draws", "pro", P.K) is P.LOW_CHANCE_MAP
+    assert chance_map("broadcast", "draws", "pro", 3.0) is None
+    assert chance_map("broadcast", "draws", "university", P.K) is None
+    assert chance_map("club", "correction", "pro", P.K) is None
 
 
 # --- Red-zone spells and the post-peak flag ----------------------------------------------------
@@ -353,6 +371,22 @@ def test_broadcast_mode_ignores_club_test_values(constructed):
     assert club.settings.update == "correction" and club.battery.lo is None
     j = club.tracks.ids.index("H11")
     assert club.battery.cs[j, 1] == TESTS.cs and club.battery.d_prime[j, 1] == TESTS.d_prime
+
+
+def test_signals_keep_the_raw_chance_next_to_the_calibrated_one(constructed):
+    """The calibrated chance is the raw one through the map; with settings the map was not
+    fitted for, the two are the same and no map is named."""
+    sig = estimate(constructed)
+    assert sig.engine.low_chance_map == P.LOW_CHANCE_MAP_SOURCE
+    s = {p.player_id: p.series for p in sig.players}["H11"]
+    expected = calibrate_chance(np.array(s.low_chance_raw), P.LOW_CHANCE_MAP)
+    # both rounded to 3 decimals, and the map is up to about twice as steep as the raw chance
+    assert s.low_chance == pytest.approx(expected, abs=0.002)
+    assert max(s.low_chance_raw) > 0.0
+    other = estimate(constructed, k=3.0)
+    assert other.engine.low_chance_map is None
+    for p in other.players:
+        assert p.series.low_chance == p.series.low_chance_raw
 
 
 def test_substitutes_get_their_own_time_on_the_pitch(constructed):

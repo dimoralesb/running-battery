@@ -23,10 +23,26 @@ from __future__ import annotations
 
 import argparse
 import json
+from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
 
+from secondwind.io import Match
+from secondwind.schema import (
+    X_LIMIT,
+    Y_LIMIT,
+    Ball,
+    BallStatus,
+    Generator,
+    MatchMetadata,
+    PeriodInfo,
+    PlayerInfo,
+    PlayerPosition,
+    Substitution,
+    TeamInfo,
+    TrackingFrame,
+)
 from secondwind.sim import params as P
 from secondwind.sim.runs import spells
 from secondwind.sim.summary import (
@@ -158,6 +174,164 @@ def position_means(matches: list[dict], min_minutes: float = 85.0) -> dict[str, 
         for key, name in (("sprints", "sprints_per_98"), ("high_decels", "hdec_per_98")):
             out[pos][name] = float(np.mean([r[key] * EFFORT_MINUTES / r["minutes"] for r in rs]))
     return out
+
+
+# --- IDSSE as an ``io.Match`` for the estimator (BUILD_PLAN §3, run 4) ------------------------
+
+START_S = 10.0  # a player first tracked within 10 s of the kick-off is a starter (our choice)
+
+
+@dataclass(frozen=True)
+class Converted:
+    """One IDSSE match for the estimator, with what the conversion had to guess."""
+
+    match: Match
+    sent_off: list[str]  # left the pitch for good with no one coming on for them
+    no_position: list[str]  # played, but no DFL position: given CM (our choice)
+
+
+def _codes(code: np.ndarray, n10: int) -> np.ndarray:
+    """A 25 Hz code series (ball status, possession) at the 10 Hz frames: nearest earlier."""
+    idx = np.floor(np.arange(n10) * SOURCE_HZ / P.FRAME_RATE_HZ + 1e-9).astype(int)
+    return code[np.minimum(idx, len(code) - 1)]
+
+
+def to_match(folder: Path) -> Converted:
+    """One IDSSE match [Bassek2025] as an ``io.Match``: 10 Hz positions (``resample``), ball
+    status and possession, both halves; events left empty (the estimator does not need them).
+
+    Line-ups and substitutions come from the tracking, since a player's position is NaN while
+    they are off the pitch: starters are the players tracked within ``START_S`` of the kick-off;
+    every later first appearance is a substitution, paired with the player of the same team who
+    left closest in time. A player who left with no one to pair is reported in ``sent_off``;
+    the metadata keeps them on the pitch, standing still, so leave them out of whole-match
+    measures. Calibration only: built in memory, never written into the repo (PLAN §2.2)."""
+    from floodlight.io.dfl import read_position_data_xml
+
+    xy, possession, ballstatus, teamsheets, _ = read_position_data_xml(
+        folder / "positions.xml", folder / "info.xml"
+    )
+    segments = list(xy)  # firstHalf, secondHalf
+    at10 = {
+        (h, team): resample(xy[seg][team].xy) for h, seg in enumerate(segments, 1)
+        for team in ("Home", "Away", "Ball")
+    }  # fmt: skip
+    n10 = {h: len(at10[(h, "Home")]) for h in (1, 2)}
+
+    def clock(when: tuple[int, float]) -> float:
+        return when[1] + (n10[1] / P.FRAME_RATE_HZ if when[0] == 2 else 0.0)
+
+    teams, subs, sent_off, no_position = [], [], [], []
+    cols: dict[str, tuple[str, int]] = {}
+    for team in ("Home", "Away"):
+        sheet = teamsheets[team].teamsheet
+        tid = str(sheet["tID"].iloc[0])
+        seen: dict[str, tuple[tuple[int, float], tuple[int, float]]] = {}  # first, last
+        rows = {}
+        for _, row in sheet.iterrows():
+            if "xID" not in row or row["xID"] != row["xID"]:
+                continue
+            x, pid = int(row["xID"]), str(row["pID"])
+            first = last = None
+            for h in (1, 2):
+                on = np.isfinite(at10[(h, team)][:, 2 * x : 2 * x + 2]).all(axis=1)
+                if on.any():
+                    k = np.flatnonzero(on)
+                    first = first or (h, k[0] / P.FRAME_RATE_HZ)
+                    last = (h, k[-1] / P.FRAME_RATE_HZ)
+            if first is None:
+                continue  # did not play
+            seen[pid], rows[pid] = (first, last), row
+            cols[pid] = (team, x)
+        starters = [p for p, (f, _) in seen.items() if f[0] == 1 and f[1] <= START_S]
+        if len(starters) != 11:
+            raise ValueError(f"{folder.name} {team}: {len(starters)} starters tracked")
+        end = (2, (n10[2] - 1) / P.FRAME_RATE_HZ - START_S)
+        outs = [(p, la) for p, (_, la) in seen.items() if la < end]
+        for pid in sorted((p for p in seen if p not in starters), key=lambda p: seen[p][0]):
+            h, t = seen[pid][0]
+            if not outs:
+                raise ValueError(f"{folder.name}: {pid} came on but no one went off")
+            # Prefer players who left before the substitute appeared (30 s slack).
+            gap = [abs(clock(la) - clock((h, t))) for _, la in outs]
+            late = [clock(la) > clock((h, t)) + 30.0 for _, la in outs]
+            out, _ = outs.pop(int(np.argmin(np.array(gap) + np.array(late) * 1e6)))
+            subs.append(Substitution(period=h, t=t, team_id=tid, player_out=out, player_in=pid))
+        sent_off += [p for p, _ in outs]
+        players = []
+        for pid in seen:
+            pos = DFL_POSITIONS.get(rows[pid]["position"] or "")
+            if pos is None:
+                no_position.append(pid)
+                pos = "CM"
+            players.append(
+                PlayerInfo(
+                    id=pid,
+                    name=str(rows[pid]["player"]),
+                    shirt=int(rows[pid]["jID"]),
+                    position=pos,
+                    starter=pid in starters,
+                )
+            )
+        mean_x = np.nanmean(at10[(1, team)][: round(START_S * P.FRAME_RATE_HZ), 0::2])
+        teams.append(
+            TeamInfo(
+                id=tid,
+                name=str(sheet["team"].iloc[0]),
+                side="home" if team == "Home" else "away",
+                formation="unknown",
+                attacks_positive_x_in_period_1=bool(mean_x < 0),
+                players=players,
+            )
+        )
+    team_id = {"Home": teams[0].id, "Away": teams[1].id}
+    frames, periods, k = [], [], 0
+    for h, seg in enumerate(segments, 1):
+        alive = _codes(ballstatus[seg].code, n10[h]) == 1
+        poss = _codes(possession[seg].code, n10[h])
+        ball = np.nan_to_num(at10[(h, "Ball")])
+        start = k
+        for f in range(n10[h]):
+            t = round(f / P.FRAME_RATE_HZ, 1)
+            players = []
+            for pid, (team, x) in cols.items():
+                px, py = at10[(h, team)][f, 2 * x : 2 * x + 2]
+                if np.isfinite(px) and np.isfinite(py):
+                    players.append(
+                        PlayerPosition.model_construct(
+                            id=pid,
+                            x=float(np.clip(px, -X_LIMIT + 0.1, X_LIMIT - 0.1)),
+                            y=float(np.clip(py, -Y_LIMIT + 0.1, Y_LIMIT - 0.1)),
+                        )
+                    )
+            frames.append(
+                TrackingFrame.model_construct(
+                    frame=k,
+                    period=h,
+                    t=t,
+                    clock=t + (2700.0 if h == 2 else 0.0),
+                    ball_status=BallStatus.ALIVE if alive[f] else BallStatus.DEAD,
+                    possession_team={1: team_id["Home"], 2: team_id["Away"]}.get(int(poss[f])),
+                    ball=Ball.model_construct(
+                        x=float(np.clip(ball[f, 0], -X_LIMIT, X_LIMIT)),
+                        y=float(np.clip(ball[f, 1], -Y_LIMIT, Y_LIMIT)),
+                        z=0.0,
+                    ),
+                    players=players,
+                )
+            )
+            k += 1
+        periods.append(
+            PeriodInfo(period=h, start_frame=start, end_frame=k - 1, duration_s=n10[h] / 10.0)
+        )
+    meta = MatchMetadata(
+        match_id=folder.name,
+        generator=Generator(name="idsse", version="floodlight", seed=0),
+        periods=periods,
+        teams=teams,
+        substitutions=subs,
+    )
+    return Converted(Match(metadata=meta, frames=frames, events=[]), sent_off, no_position)
 
 
 def main(argv: list[str] | None = None) -> None:

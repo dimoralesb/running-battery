@@ -45,6 +45,14 @@ class Seconds:
     battery_lo: np.ndarray | None
     battery_hi: np.ndarray | None
     low_chance: np.ndarray | None = None  # typical-pro chance of a battery below LOW_BATTERY
+    low_chance_raw: np.ndarray | None = None  # the same before the calibration map
+
+
+def calibrate_chance(raw: np.ndarray, table: tuple[tuple[float, float], ...]) -> np.ndarray:
+    """The raw typical-pro chance through a monotone map given as (raw, calibrated) knots with
+    increasing raw values: linear in between, the end values beyond the ends."""
+    xs, ys = np.array(table, dtype=float).T
+    return np.interp(raw, xs, ys)
 
 
 def _window_start(period: np.ndarray, t: np.ndarray, w: int) -> np.ndarray:
@@ -53,7 +61,10 @@ def _window_start(period: np.ndarray, t: np.ndarray, w: int) -> np.ndarray:
     return rows - np.minimum(w, t).astype(int)
 
 
-def per_second(tr: Tracks, bat: BatteryResult) -> Seconds:
+def per_second(
+    tr: Tracks, bat: BatteryResult, chance_map: tuple[tuple[float, float], ...] | None = None
+) -> Seconds:
+    """Per-second signals; ``chance_map`` calibrates the typical-pro chance (None: raw)."""
     rows = bat.seconds
     period, t = tr.period[rows], np.round(tr.t[rows]).astype(int)
     for p in np.unique(period):  # whole seconds 0, 1, 2 … in each period
@@ -86,6 +97,9 @@ def per_second(tr: Tracks, bat: BatteryResult) -> Seconds:
 
     windows = sorted(set(P.LOAD_WINDOWS_S) | set(P.HSR_WINDOWS_S))
     on = on10[rows]
+    chance = bat.low_chance
+    if chance is not None and chance_map is not None:
+        chance = calibrate_chance(chance, chance_map)
     return Seconds(
         period=period,
         t=t,
@@ -100,7 +114,8 @@ def per_second(tr: Tracks, bat: BatteryResult) -> Seconds:
         battery=bat.median,
         battery_lo=bat.lo,
         battery_hi=bat.hi,
-        low_chance=bat.low_chance,
+        low_chance=chance,
+        low_chance_raw=bat.low_chance,
     )
 
 
