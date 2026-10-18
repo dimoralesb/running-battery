@@ -68,7 +68,7 @@ export interface Entry {
   claim: string;
   sources: string[];
   mode: Mode;
-  verdict: "pass" | "rewritten" | "fallback" | "blocked";
+  verdict: "pass" | "rewritten" | "fallback" | "template" | "repeat" | "blocked";
   shown: boolean;
   verifier: { stage: string; findings: Finding[] };
   original?: string;
@@ -77,6 +77,7 @@ export interface Entry {
 export interface Feed {
   match_id: string;
   agents: Record<string, unknown>;
+  favourite?: string | null; // the feed was made for this player (--favourite)
   moments: { moment_id: string; kind: string; clock: string; video_s: number }[];
   entries: Entry[];
 }

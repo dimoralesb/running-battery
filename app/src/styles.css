@@ -72,7 +72,12 @@ button, select {
 .toggle button.on { background: var(--ink); color: var(--surface); }
 
 .scoreline { display: flex; gap: 12px; align-items: baseline; margin: 12px 0 8px; font-size: 1.1rem; }
-.scoreline .score { font-weight: 700; font-size: 1.4rem; font-variant-numeric: tabular-nums; }
+.scoreline .score { font-weight: 700; font-size: 1.4rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+@media (max-width: 520px) {
+  .scoreline { font-size: 0.95rem; gap: 8px; }
+  .scoreline .score { font-size: 1.15rem; }
+  .feed { max-height: none; }
+}
 .scoreline .team.home { border-left: 4px solid var(--home); padding-left: 6px; }
 .scoreline .team.away { border-right: 4px solid var(--away); padding-right: 6px; }
 .scoreline .clock { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--ink-2); }
@@ -101,6 +106,15 @@ button, select {
 .legend .key { width: 14px; height: 14px; }
 .legend .key.wide { width: 36px; height: 11px; }
 .fav-key { fill: none; stroke: var(--ink); stroke-width: 0.25; stroke-dasharray: 0.6 0.4; }
+.player .pulse, .flat-key { fill: none; stroke: var(--ink); stroke-width: 0.35; }
+.flat-label { font-size: 1.7px; fill: var(--ink); font-weight: 600; pointer-events: none; }
+.reach circle, .reach-key { stroke-width: 0.25; stroke-dasharray: 0.8 0.5; }
+.reach.home circle { fill: var(--home); fill-opacity: 0.08; stroke: var(--home); }
+.reach.away circle { fill: var(--away); fill-opacity: 0.08; stroke: var(--away); }
+.reach-key { fill: none; stroke: var(--ink-2); stroke-width: 0.2; }
+.reach-label, .flat-label { paint-order: stroke; stroke: var(--pitch); stroke-width: 0.6px; stroke-linejoin: round; }
+.reach-label { font-size: 1.6px; fill: var(--ink-2); text-anchor: middle; pointer-events: none; }
+.legend .check { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
 
 .transport { display: flex; gap: 8px; align-items: center; margin: 8px 0; }
 .transport input[type="range"] { flex: 1; }
@@ -157,3 +171,4 @@ button, select {
 .chart .marker.home { fill: var(--home); }
 .chart .marker.away { fill: var(--away); }
 .chart .direct { font-size: 11px; fill: var(--ink-2); }
+.sources code { overflow-wrap: anywhere; }

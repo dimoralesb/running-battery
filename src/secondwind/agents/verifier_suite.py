@@ -8,7 +8,7 @@ Four sets:
   (tests/test_verifier.py).
 - ``PARAPHRASES`` (21): blocked claims in other words, written before the rules were run on
   them and never used to tune the rules. What the rules miss here is what the LLM pass is for.
-- ``CONTEXT`` (26): sentences with a moment's context (rule 2, claim 13) or facts (N1): a 3–0
+- ``CONTEXT`` (37): sentences with a moment's context (rule 2, claim 13) or facts (N1): a 3–0
   lead, the start of the second half, just subbed on, a long stoppage, possession, a low
   first-half load, and numbers that are or are not in the data. Each says whether it should pass.
 
@@ -164,6 +164,14 @@ FACTS = {"facts": {"hsr_vs_match_average": {"value": -30.0, "unit": "%"},
                    "typical_pro_battery": {"value": 0.41, "unit": "share"},
                    "speed": {"value": 6.1, "unit": "m/s"}}}  # fmt: skip
 
+TOUCHES = {"facts": {"touches_last_5min": {"value": 2, "unit": "touches"},
+                     "touches_per_5min_so_far": {"value": 6.4, "unit": "touches per 5 min"},
+                     "in_play_last_5min": {"value": 0.31, "unit": "share"},
+                     "fewer_touches_than_usual": True}}  # fmt: skip
+MORE_TOUCHES = {"facts": {"touches_last_5min": {"value": 7, "unit": "touches"},
+                          "touches_per_5min_so_far": {"value": 6.4, "unit": "touches per 5 min"},
+                          "fewer_touches_than_usual": False}}  # fmt: skip
+
 HIGH = {
     "facts": {
         "typical_pro_battery_now": {"value": 0.8, "unit": "share"},
@@ -233,6 +241,56 @@ CONTEXT = [
      "short-term reserve.", "fan", HIGH, "11", False),
     ("This is the lowest point of his match so far, by our estimate.", "analyst", HIGH, "19c",
      False),
+    # Found in the third feeds (2026-10-17): claim 14 used with no touch counts in the facts.
+    # Decision 25 adds them to not_tired_tactical moments; "fewer touches" needs them.
+    ("Fewer touches, partly because the ball was out of play more.", "fan", FACTS, "14", False),
+    ("Fewer touches, partly because the ball was out of play more.", "fan", TOUCHES, "14", True),
+    ("He had 2 touches in the last 5 minutes against about 6 per 5 minutes in his match so far, "
+     "partly because the ball was in play only 31% of the time.", "analyst", TOUCHES, "14", True),
+    ("Fewer touches, partly because the ball was out of play more.", "fan", MORE_TOUCHES, "14",
+     False),
+    # Found in the fourth feeds (2026-10-18). The LLM blocked the post-peak window's neutral
+    # name (decision 12) as physiology, 7 times in three feeds (prompt revision 3 after this).
+    ("This is the third time his team have lost the ball while he was catching breath after a "
+     "red-zone spell.", "fan",
+     {"facts": {"times_exposed_so_far": {"value": 3, "unit": "turnovers"}}}, None, True),
+    # A rewrite both passes let through: a second wind (running back above his average) put down
+    # to "less opportunity to run" (F1, LLM pass only).
+    ("Five minutes after his red-zone spell his high-speed running over the last two minutes was "
+     "10.9 m/min, about 5% above his match average of 10.4 m/min; with the ball in play only 42% "
+     "of the last five minutes this could reflect less opportunity to run rather than the "
+     "player's own fatigue.", "analyst",
+     {"facts": {"last_2min_hsr_per_min": {"value": 10.9, "unit": "m/min"},
+                "match_average_per_min": {"value": 10.4, "unit": "m/min"},
+                "vs_match_average": {"value": 5.0, "unit": "%"}},
+      "context": {"in_play_last_5min": 0.42}}, None, False),
+    # Found in the fifth feeds (2026-10-18): a rules false block, "the player he replaced" was
+    # not read as a baseline (BASELINE fixed).
+    ("Since coming on he has done 9.3 m/min, about 5% below the player he replaced (9.8 m/min).",
+     "analyst", {"facts": {"sub_hsr_per_min": {"value": 9.3, "unit": "m/min"},
+                           "replaced_player_hsr_per_min": {"value": 9.8, "unit": "m/min"},
+                           "vs_replaced_player": {"value": -5.0, "unit": "%"}}}, None, True),
+    # Found in the sixth feeds (2026-10-18): a rules false block, the LLM's non-breaking hyphen
+    # ("team‑mates", U+2011) hid the baseline (the rules now read it as "-") …
+    ("He has done 9.8 m/min, 25% below the player he replaced but 49% above his team‑mates "
+     "over the same minutes.", "analyst",
+     {"facts": {"sub_hsr_per_min": {"value": 9.8, "unit": "m/min"},
+                "vs_replaced_player": {"value": -25.0, "unit": "%"},
+                "vs_teammates": {"value": 49.0, "unit": "%"}}}, None, True),
+    # … and a line both passes let through that reasons backwards: a 76 s spell is a short burst
+    # (claim 2), not "the longer recovery" (F1, LLM pass only).
+    ("Short bursts are shaken off in a minute or two, while a five-minute spell takes about five "
+     "minutes to recover from; he is 6.5 min out from his 76 s spell, so this fits the longer "
+     "recovery for intense work.", "analyst",
+     {"facts": {"minutes_after_spell": {"value": 6.5, "unit": "min"},
+                "spell_duration": {"value": 76, "unit": "s"}}}, "2", False),
+    # Claims used where they do not fit (decision 25): claim 36 at 12:29, claim 7 at 45+2.
+    ("Top speed hardly drops over a match: in the Premier League, players' fastest runs late on "
+     "are almost as fast as their fastest early on.", "fan",
+     {"facts": {}, "claims_offered": ["37", "10"]}, "36", False),
+    ("In the last 15 minutes, players typically do about a fifth less hard running than at "
+     "kick-off, with longer breaks between efforts.", "fan",
+     {"facts": {}, "claims_offered": ["9a", "9b", "7", "30"]}, "7", True),
 ]  # fmt: skip
 
 

@@ -90,6 +90,14 @@ FLAT_OUT_SHARE = 0.9  # a flat-out run: ≥ 90% of his top speed so far (our ass
 FLAT_OUT_MIN_SPEED = 7.0  # m/s (25.2 km/h): about the sprint threshold [Bradley2009, p.162]
 FLAT_OUT_FROM_S = 600.0  # from the 10th minute, so that "his top speed so far" means something
 MAX_PLAUSIBLE_SPEED = 11.0  # m/s; faster seconds are tracking errors (our assumption)
+# A touch: an on-ball event of his (our definition; a carry is the run between a reception and
+# the next action, so it is not counted again). Claim 14 needs these counts (decision 25).
+TOUCH_TYPES = ("pass", "reception", "shot", "clearance", "interception", "ball_recovery")
+# Claims offered only where they fit (decision 25): claim 1's figure is for a spell of about
+# 5 min [Leifsson2024, Table 1], claim 36 for a run after the 75th minute, claim 7 for the
+# last block of the match.
+LONG_SPELL_S = 240.0
+MIN_AVERAGE_S = 600  # a "match average" needs 10 min on the pitch (as MIN_ON_S)
 # Published match peak speed by position, Brazil, 10 Hz GNSS [SilvaH2025, Table 1]; DM and AM
 # use the central midfielders' value.
 MATCH_PEAK = {"CB": 8.09, "FB": 8.79, "DM": 8.41, "CM": 8.41, "AM": 8.41, "WM": 8.52,
@@ -321,6 +329,21 @@ class MatchData:
                 out.append((per, a, min(b, dur)))
                 a = b
         return out
+
+    @cached_property
+    def touches(self) -> dict[str, list[tuple[int, float]]]:
+        """Player id -> (period, t) of each touch (``TOUCH_TYPES``)."""
+        out: dict[str, list[tuple[int, float]]] = {}
+        for e in self.events:
+            if e.player_id and e.type.value in TOUCH_TYPES:
+                out.setdefault(e.player_id, []).append((e.period, e.t))
+        return out
+
+    def in_play(self, pid: str) -> np.ndarray:
+        """For each of his seconds on the pitch: was the ball in play?"""
+        s = self.series[pid]
+        return np.array([bool(self.alive[int(p)][self.second(int(p), float(t))])
+                         for p, t in zip(s.period, s.t, strict=True)])  # fmt: skip
 
     def hsr_per_s(self, pid: str) -> np.ndarray:
         """Metres above HI_SPEED in each second (the per-second mean speed)."""
@@ -655,22 +678,25 @@ class MatchTools:
         return {"kind": kind, "what": what, "claims": claims, "count": len(found),
                 "moments": found[:limit]}  # fmt: skip
 
-    def _moment(self, kind, pid, period, t, score, facts, why) -> dict[str, Any]:
+    def _moment(self, kind, pid, period, t, score, facts, why, claims=None) -> dict[str, Any]:
         return {
             "id": f"{kind}:{pid}:{period}:{int(t)}", "kind": kind,
             **self.m.when(period, t),
             "player": self.m.players[pid], "score": round(float(score), 3),
-            "facts": facts, "claims": MOMENT_KINDS[kind][1], "why": why,
+            "facts": facts, "claims": MOMENT_KINDS[kind][1] if claims is None else claims,
+            "why": why,
         }  # fmt: skip
 
-    def _team_moment(self, team, period, t, score, facts, why) -> dict[str, Any]:
+    def _team_moment(self, team, period, t, score, facts, why, claims=None) -> dict[str, Any]:
         info = self.m.teams[team]
+        other = next(t for k, t in self.m.teams.items() if k != team)
         return {
             "id": f"tug_of_war:{team}:{period}:{int(t)}", "kind": "tug_of_war",
             **self.m.when(period, t),
             "player": None, "team": {"id": team, "name": info.name},
+            "opponent": {"id": other.id, "name": other.name},
             "score": round(float(score), 3), "facts": facts,
-            "claims": MOMENT_KINDS["tug_of_war"][1], "why": why,
+            "claims": MOMENT_KINDS["tug_of_war"][1] if claims is None else claims, "why": why,
         }  # fmt: skip
 
     def _moments_tug_of_war(self) -> list[dict]:
@@ -736,7 +762,9 @@ class MatchTools:
                 if closed
                 else "one team ran much harder per ball-in-play minute"
             )
-            out.append(self._team_moment(lead, per, t, score, facts, why))
+            last = per == max(m.durations) and hi >= m.durations[per]
+            claims = [c for c in MOMENT_KINDS["tug_of_war"][1] if c != "7" or last]
+            out.append(self._team_moment(lead, per, t, score, facts, why, claims))
         return out
 
     def _moments_flat_out(self) -> list[dict]:
@@ -788,9 +816,18 @@ class MatchTools:
             if direction:
                 facts["running"] = direction
             score = peak / 10.0 + 0.5 * (peak > top) + 1.0 * fastest + 0.3 * (vid >= 75 * 60)
+            late = "share_of_top_before_75" in facts
+            claims = [c for c in MOMENT_KINDS["flat_out"][1] if c != "36" or late]
             out.append(
                 self._moment(
-                    "flat_out", pid, per, t, score, facts, "a run at or near his top speed so far"
+                    "flat_out",
+                    pid,
+                    per,
+                    t,
+                    score,
+                    facts,
+                    "a run at or near his top speed so far",
+                    claims,
                 )
             )
         return out
@@ -836,15 +873,22 @@ class MatchTools:
                     "spell_number": q(n, "spells so far", sig + "red_zone"),
                     "duration": q(float(s.t[b] - s.t[a] + 1), "s", sig + "red_zone", 0),
                     "peak_1min_hsr": q(peak, "m in 1 min", sig + "hsr_1min", 0),
-                    "published_mean_peak_1min": q(62.0, "m/min", "Leifsson2024, Table 1", 0),
+                    "published_mean_peak_1min": q(
+                        62.0,
+                        "m/min, mean 1-min peak of outfield players (all positions)",
+                        "Leifsson2024, Table 1",
+                        0,
+                    ),  # fmt: skip
                     "typical_pro_battery_low": q(
                         low, "share of a typical professional's short-term reserve", sig + "battery"
                     ),
                     "low_chance_max": q(
                         float(s.cols["low_chance"][a : b + 1].max()), "chance", sig + "low_chance"
                     ),
-                    "match_average_per_min": q(m.hsr_avg_so_far(pid)[i], "m/min", HSR_SRC, 1),
                 }
+                if i >= MIN_AVERAGE_S:
+                    avg = m.hsr_avg_so_far(pid)[i]
+                    facts["match_average_per_min"] = q(avg, "m/min", HSR_SRC, 1)
                 recent = [
                     x
                     for x in self._spells(pid)[: n - 1]
@@ -852,6 +896,8 @@ class MatchTools:
                 ]
                 facts["spells_in_last_5min"] = q(len(recent) + 1, "spells", sig + "red_zone")
                 score = peak / 62.0 + (1.0 - low) + 0.3 * len(recent)
+                long = s.t[b] - s.t[a] + 1 >= LONG_SPELL_S
+                claims = [c for c in MOMENT_KINDS["red_zone"][1] if c != "1" or long]
                 out.append(
                     self._moment(
                         "red_zone",
@@ -861,6 +907,7 @@ class MatchTools:
                         score,
                         facts,
                         "high-speed running at his peak",
+                        claims,
                     )
                 )
         return out
@@ -873,6 +920,7 @@ class MatchTools:
             if e.possession_id is not None:
                 by_poss.setdefault(e.possession_id, []).append(e)
         sig = "signals.players[].series."
+        exposed: dict[str, int] = {}
         for e in m.events:
             pid_ = e.possession_id
             if e.phase is None or e.phase.value != "positive_transition" or pid_ in seen:
@@ -920,8 +968,15 @@ class MatchTools:
                     "window_after_turnover": q(8, "s", "tracking, 8 s after the turnover"),
                     "losing_team": lost,
                 }
+                exposed[pid] = exposed.get(pid, 0) + 1
+                facts["times_exposed_so_far"] = q(
+                    exposed[pid], "turnovers so far while he was in or just after a red-zone "
+                    "spell, this one included", "events.jsonl positive_transition and "
+                    "signals.players[].series.red_zone, post_peak",
+                )  # fmt: skip
                 score = (
-                    2.0 * goal
+                    0.5 * (exposed[pid] - 1)  # the same defender exposed again: the story
+                    + 2.0 * goal
                     + 2.0 * shot
                     + float(s.cols["low_chance"][i]) * 3
                     + (0.5 if s.cols["red_zone"][i] else 0.0)
@@ -970,7 +1025,11 @@ class MatchTools:
                 facts["spell_peak_1min_hsr"] = q(
                     peak, "m in 1 min", "signals.players[].series.hsr_1min", 0
                 )
+                dur = float(s.t[b] - s.t[a] + 1)
+                facts["spell_duration"] = q(dur, "s", "signals.players[].series.red_zone", 0)
                 score = peak / 62.0 + 0.5 * (hi - (s.t[i] - end)) / hi
+                claims = [c for c in MOMENT_KINDS["second_wind"][1]
+                          if c != "1" or dur >= LONG_SPELL_S]  # fmt: skip
                 out.append(
                     self._moment(
                         "second_wind",
@@ -980,6 +1039,7 @@ class MatchTools:
                         score,
                         facts,
                         "back to his normal high-speed running",
+                        claims,
                     )
                 )
         return out
@@ -1074,6 +1134,9 @@ class MatchTools:
                 ),
                 "reasons": reasons,
             }
+            facts |= self._touch_facts(pid, i)
+            fewer = facts["fewer_touches_than_usual"] and facts["less_ball_in_play_than_usual"]
+            claims = [c for c in MOMENT_KINDS["not_tired_tactical"][1] if c != "14" or fewer]
             out.append(
                 self._moment(
                     "not_tired_tactical",
@@ -1083,9 +1146,43 @@ class MatchTools:
                     drop + sum(WINDOW_REASONS[r["code"]] for r in reasons) + avg[i] / 20.0,
                     facts,
                     "running dropped, and something other than fatigue fits",
+                    claims,
                 )
             )
         return out
+
+    def _touch_facts(self, pid: str, i: int) -> dict[str, Any]:
+        """His touches in the 5 min up to his i-th second on the pitch against his match so
+        far, as counts and per ball-in-play minute (claim 14 needs them; decision 25)."""
+        m, s = self.m, self.m.series[pid]
+        per, t = int(s.period[i]), float(s.t[i])
+        alive = m.in_play(pid)[: i + 1]
+        window = (s.period[: i + 1] == per) & (s.t[: i + 1] > t - 300.0)
+        times = [x for x in m.touches.get(pid, []) if x <= (per, t)]
+        recent = sum(1 for p, x in times if p == per and x > t - 300.0)
+        usual = len(times) / (i + 1) * 300.0  # per 5 min on the pitch, his match so far
+        play_now, play_usual = alive[window].mean(), alive.mean()
+        src = "events.jsonl (" + ", ".join(TOUCH_TYPES) + ") by player_id"
+        bip = "tracking.ball_status"
+
+        def rate(n: float, sec: float) -> float:
+            return n / sec * 60.0 if sec > 0 else float("nan")
+
+        return {
+            "touches_last_5min": q(recent, "touches (his on-ball events)", src),
+            "touches_per_5min_so_far": q(usual, "touches per 5 min on the pitch, his match so "
+                                         "far", src, 1),
+            "touches_per_in_play_min_last_5min": q(
+                rate(recent, alive[window].sum()), "touches per ball-in-play minute", src, 1),
+            "touches_per_in_play_min_so_far": q(
+                rate(len(times), alive.sum()), "touches per ball-in-play minute, his match so far",
+                src, 1),
+            "in_play_last_5min": q(play_now, "share of the last 5 min with the ball in play", bip),
+            "in_play_so_far": q(play_usual, "share of his minutes so far with the ball in play",
+                                bip),
+            "fewer_touches_than_usual": bool(recent < usual),
+            "less_ball_in_play_than_usual": bool(play_now < play_usual),
+        }  # fmt: skip
 
     # --- claim, verify -----------------------------------------------------------------------
 

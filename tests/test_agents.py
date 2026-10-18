@@ -8,6 +8,7 @@ import asyncio
 import builtins
 import io
 import json
+import re
 from pathlib import Path
 
 import numpy as np
@@ -215,6 +216,7 @@ def test_team_running_and_tug_of_war(tools):
     _numbers_have_units(r)
     tug = tools.find_moments("tug_of_war")["moments"]
     assert tug and tug[0]["player"] is None and tug[0]["team"]["id"] == "home"
+    assert tug[0]["opponent"] == {"id": "away", "name": "away FC"}
     assert (
         tug[0]["facts"]["pattern"] == "ran harder" and tug[0]["facts"]["vs_opponent"]["value"] > 15
     )
@@ -231,6 +233,22 @@ def test_flat_out_is_near_his_top_speed_so_far(tools):
         or abs(f["peak_speed_kmh"]["value"] - f["peak_speed"]["value"] * 3.6) < 1
     )
     assert "SilvaH2025" in f["published_match_peak_for_position"]["source"]
+
+
+def test_touches_are_measured_and_gate_claim_14(tools):
+    """Decision 25: touch counts from events.jsonl; claim 14 only when touches fell while the ball
+    was out of play more than usual."""
+    assert tools.m.touches == {"A08": [(1, 200.5)], "A11": [(1, 205.0)]}  # a pass and a shot
+    s = tools.m.series["A11"]
+    f = tools._touch_facts("A11", s.index(1, 400.0))
+    assert f["touches_last_5min"]["value"] == 1 and not f["fewer_touches_than_usual"]
+    f = tools._touch_facts("A11", s.index(1, 600.0))  # the shot is more than 5 min ago
+    assert f["touches_last_5min"]["value"] == 0 and f["fewer_touches_than_usual"]
+    assert not f["less_ball_in_play_than_usual"]  # the ball was never dead in the first half
+    _numbers_have_units(f)
+    for mo in tools.find_moments("not_tired_tactical", 50)["moments"]:
+        fewer = mo["facts"]["fewer_touches_than_usual"]
+        assert ("14" in mo["claims"]) == (fewer and mo["facts"]["less_ball_in_play_than_usual"])
 
 
 def test_moment_context_reasons(tools):
@@ -326,5 +344,26 @@ def test_offline_feed_is_verified_and_timestamped(folder):
     assert any(e["player"] is None and e["kind"] == "tug_of_war" for e in feed["entries"])
     times = [e["video_s"] for e in feed["entries"]]
     assert times == sorted(times)
+    for mode in feed_mod.MODES:  # a team moment says how the two teams compare (decision 25)
+        team = [e["sentence"] for e in feed["entries"]
+                if e["kind"] == "tug_of_war" and e["mode"] == mode and e["shown"]]  # fmt: skip
+        assert any(re.search(feed_mod.MUST_SAY["ran harder"], x) for x in team), team
     fav = asyncio.run(feed_mod.build(folder, offline=True, favourite="Sub H"))
     assert fav["favourite"] == "H12"
+    # The favourite's replacement counts as his: H11 went off for H12, whose fresh legs show.
+    assert feed_mod.related(MatchTools(folder), "H11") == {"H11", "H12"}
+    off = asyncio.run(feed_mod.build(folder, offline=True, favourite="H11"))
+    assert any(m["moment_id"].startswith("fresh_legs:H12") for m in off["moments"])
+
+
+def test_general_sentences_at_most_twice_per_mode():
+    def e(v, claim, mode="fan"):
+        return {"video_s": v, "claim": claim, "mode": mode, "shown": True, "verdict": "pass"}
+
+    entries = [e(30, "1"), e(10, "1"), e(20, "1"), e(40, "1", "analyst"), e(50, "11"),
+               e(60, "11"), e(70, "11"), e(80, "fact"), e(90, "6")]  # fmt: skip
+    feed_mod.cap_general(entries)
+    assert [x["shown"] for x in entries] == [False] + [True] * 8  # the third use, in match order
+    assert entries[0]["verdict"] == "repeat" and feed_mod.MAX_GENERAL == 2
+    assert feed_mod.unlabel("fact: he had 0 touches.") == "He had 0 touches."
+    assert feed_mod.unlabel("Factually level.") == "Factually level."

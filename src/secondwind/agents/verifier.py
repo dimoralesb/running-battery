@@ -17,6 +17,11 @@ from) two more checks run (v2, 2026-10-17):
 - **Numbers** (N1): every number in the sentence must be one of the facts (or a rounding, a
   percentage or km/h of one), the cited claim's own wording (except the examples in claims 11,
   12 and 13), or a window length ("5 min").
+- **Touches** (claim 14, decision 25): "fewer touches" needs the measured touch counts in the
+  facts, and they must show fewer touches than his match so far.
+- **Claims offered** (decision 25): with ``claims_offered`` (the register ids the moment offers,
+  ``find_moments``), a sentence citing any other claim is blocked: claim 1 only after a spell of
+  about 5 min, claim 36 only after the 75th minute, claim 7 only in the last block.
 The rules can only block. The LLM pass (``agents.llm_verifier``) runs after them.
 """
 
@@ -54,7 +59,8 @@ STATE = r"(tired|exhausted|fatigued|knackered|spent|shattered|out on his feet|do
 BASELINE = (
     r"\b(than|vs\.?|versus|compared (?:with|to)|match average|average|normal|usual|peak|"
     r"first 15|kick-off|first half|reserve|typical professional|of the time|chance|earlier|"
-    r"of the (last|first|next) \d+ min\w*|team-?mates|top speed|opponents?)\b"
+    r"of the (last|first|next) \d+ min\w*|team-?mates|top speed|opponents?|"
+    r"(the )?player he replaced)\b"
 )
 NEGATED_LACTIC = r"\b(isn'?t|is not|not|no|nothing to do with)\b[^.]{0,25}\blactic"
 # Wording that blames fatigue, for the context check (rule 2).
@@ -88,6 +94,11 @@ NOT_FATIGUE = (
 # its numbers must come from the facts.
 EXAMPLE_WORDING = {"11", "12", "13"}
 NUMBER = r"(?<![\w.])\d+(?:[.,]\d+)?"
+# Claim 14's finding ("fewer touches"), however it is worded.
+FEWER_TOUCHES = (
+    r"\b(fewer|less|reduced|drop in|fall in)\s+(\w+\s+)?(touch(es)?|on the ball)\b|"
+    r"\btouch(es)?\b[^.]*\b(dropped|fell|down)\b"
+)
 WINDOW = r"(?<![\w.])(1|2|5|10|15|30|45|60|90)\s*(-|\s)?(min\w*|second\w*|s\b|metres?)"
 
 
@@ -278,6 +289,18 @@ def context_findings(text: str, context: dict, claim_id: str | None) -> list[Fin
                     "such as 'ran less' (rule 2, claim 13)",
                 )
             )
+    offered = context.get("claims_offered")
+    if offered is not None and claim_id and str(claim_id) not in offered:
+        out.append(Finding(str(claim_id), f"Claim {claim_id} is not offered for this moment "
+                           f"(offered: {', '.join(offered) or 'none'}; decision 25)"))  # fmt: skip
+    facts = context.get("facts") or {}
+    if "facts" in context and (str(claim_id) == "14" or _found(FEWER_TOUCHES, text)):
+        if "touches_last_5min" not in facts:
+            out.append(Finding("14", "Fewer touches needs the measured touch counts in the facts "
+                               "(claim 14, decision 25)"))  # fmt: skip
+        elif not facts.get("fewer_touches_than_usual"):
+            out.append(Finding("14", "The touch counts do not show fewer touches than his match "
+                               "so far (claim 14)"))  # fmt: skip
     if "facts" in context:
         known = numbers_in(context)
         if claim_id and str(claim_id) not in EXAMPLE_WORDING:
@@ -299,7 +322,8 @@ def verify(
     """Check one sentence against the fixed rules; ``ok`` only if none fires. ``context``: the
     moment's context and facts (adds the context check and the numbers check); ``claim_id``:
     the register row the sentence was written from."""
-    text = sentence.replace("’", "'")
+    # The LLM writes non-breaking hyphens ("team‑mates", U+2011): the patterns expect "-".
+    text = sentence.replace("’", "'").replace("‑", "-").replace("‐", "-")
     findings = []
     for rule in RULES:
         if rule.fan_only and mode != "fan":

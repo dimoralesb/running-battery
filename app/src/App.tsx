@@ -17,6 +17,9 @@ import { Trace } from "./Trace";
 const SPEEDS = [1, 5, 20];
 // Start state from the URL (for links and video capture): ?match=story&t=3500&mode=analyst&player=H04
 const QUERY = new URLSearchParams(window.location.search);
+// ?theme=light|dark overrides the system setting (for screenshots).
+const THEME = QUERY.get("theme");
+if (THEME === "light" || THEME === "dark") document.documentElement.dataset.theme = THEME;
 
 export function fill(text: string, values: Record<string, string | number>): string {
   return text.replace(/\{(\w+)\}/g, (_, k) => String(values[k] ?? ""));
@@ -33,6 +36,7 @@ export default function App() {
   const [selected, setSelected] = useState<string | null>(null);
   const [favourite, setFavourite] = useState<string | null>(null);
   const [showBlocked, setShowBlocked] = useState(false);
+  const [allBatteries, setAllBatteries] = useState(QUERY.get("batteries") === "all");
 
   useEffect(() => {
     setData(null);
@@ -43,6 +47,7 @@ export default function App() {
         const t = Number(QUERY.get("t"));
         setNow(Number.isFinite(t) && t > 0 ? t : d.feed.moments[0]?.video_s ?? 0);
         setSelected(QUERY.get("player") ?? d.feed.entries.find((e) => e.player)?.player?.id ?? null);
+        setFavourite(QUERY.get("favourite") ?? d.feed.favourite ?? null);
       })
       .catch((e) => setError(String(e)));
   }, [matchId]);
@@ -128,8 +133,10 @@ export default function App() {
       <main className="grid">
         <section className="left">
           <Pitch data={data} now={now} mode={mode} selected={selected} favourite={favourite}
-                 onSelect={setSelected} />
-          <Legend mode={mode} batteryText={copy.legendBattery} />
+                 allBatteries={allBatteries} reachLabel={copy.reachLabel}
+                 flatLabel={copy.flatLabel} onSelect={setSelected} />
+          <Legend mode={mode} text={copy} allBatteries={allBatteries}
+                  onAllBatteries={setAllBatteries} />
           <div className="transport">
             <button onClick={() => setPlaying((p) => !p)} aria-label={playing ? "Pause" : "Play"}>
               {playing ? "Pause" : "Play"}

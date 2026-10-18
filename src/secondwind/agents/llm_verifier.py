@@ -97,6 +97,9 @@ How to read the rules (do not block for these):
 - Ruling fatigue out ("not fatigue", "rather than fatigue") because a non-fatigue reason fits is
   what claim 13 asks for; it is not a claim about the player's own state.
 - G5 is about phases of play (with or without the ball, ball in play), not halves or minutes.
+- "Catching breath after a red-zone spell" is the system's neutral name for a measured window
+  (the minutes after his most intense running, the post-peak flag; decision 12), not a claim
+  about his physiology or his own tiredness.
 - Measured facts about one player's running (distance, high-speed running vs his own match
   average or peak, red-zone spells, speeds, energy used) are facts, not physiology.
 

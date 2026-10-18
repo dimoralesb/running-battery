@@ -1,6 +1,6 @@
 {
  "report": {
-  "n": 120,
+  "n": 131,
   "by_set": {
    "valid": {
     "rules": {
@@ -46,30 +46,30 @@
    },
    "context": {
     "rules": {
-     "caught": "12/15",
-     "false_blocks": "0/11",
-     "caught_rate": 0.8,
+     "caught": "15/20",
+     "false_blocks": "0/17",
+     "caught_rate": 0.75,
      "false_block_rate": 0.0
     },
     "llm": {
-     "caught": "15/15",
-     "false_blocks": "0/11",
-     "caught_rate": 1.0,
-     "false_block_rate": 0.0
+     "caught": "18/20",
+     "false_blocks": "2/17",
+     "caught_rate": 0.9,
+     "false_block_rate": 0.118
     }
    }
   },
   "rules": {
-   "caught": "52/74",
-   "false_blocks": "0/46",
-   "caught_rate": 0.703,
+   "caught": "55/79",
+   "false_blocks": "0/52",
+   "caught_rate": 0.696,
    "false_block_rate": 0.0
   },
   "llm": {
-   "caught": "74/74",
-   "false_blocks": "0/46",
-   "caught_rate": 1.0,
-   "false_block_rate": 0.0
+   "caught": "77/79",
+   "false_blocks": "2/52",
+   "caught_rate": 0.975,
+   "false_block_rate": 0.038
   }
  },
  "rows": [
@@ -1462,8 +1462,8 @@
    "llm_stage": "llm",
    "llm_findings": [
     {
-     "claim": "20,21",
-     "message": "This blames an individual player's technical action on being tired ('his legs were heavy'), which is explicitly blocked (claims 20 and 21 forbid attributing a misplaced pass or bad decision to a player's fatigue).",
+     "claim": "20",
+     "message": "This blames a specific error on the player's fatigue (legs heavy), which is disallowed — we cannot attribute a misplaced pass or poor decision to tiredness.",
      "stage": "llm"
     }
    ]
@@ -1482,7 +1482,7 @@
    "llm_findings": [
     {
      "claim": "21",
-     "message": "This attributes a dip in concentration to being tired/low energy (blaming a decision on fatigue), which is explicitly blocked: we must not claim lost concentration because a player was tired.",
+     "message": "This sentence attributes an individual player's loss of concentration to low energy (a causal claim about his state), which is blocked by the rules against blaming decisions or concentration on fatigue.",
      "stage": "llm"
     }
    ]
@@ -1500,8 +1500,8 @@
    "llm_stage": "llm",
    "llm_findings": [
     {
-     "claim": "20,21,22,33",
-     "message": "The sentence blames the missed shot on the player being 'running out of juice' (tired), which asserts a causal effect of fatigue on a specific action — a blocked claim.",
+     "claim": "22, 33",
+     "message": "This attributes the missed shot to the player's fatigue ('running out of juice'), which is blocked: you cannot say a player missed because they were tired or that an individual is 'running out of juice'.",
      "stage": "llm"
     }
    ]
@@ -1520,7 +1520,7 @@
    "llm_findings": [
     {
      "claim": "33",
-     "message": "This asserts the individual is completely exhausted ('nothing left in his legs'), which is a blocked claim about a specific player's state; the register requires estimates relative to a typical professional, not statements about this player's own physiology or exhaustion.",
+     "message": "This asserts the player's own exhaustion ('nothing left in his legs'), which is a blocked personal-tiredness/empty-battery claim (see rule 33).",
      "stage": "llm"
     }
    ]
@@ -1539,7 +1539,7 @@
    "llm_findings": [
     {
      "claim": "33",
-     "message": "'Hit the wall' asserts that this specific player is exhausted, which is a blocked claim about an individual's physiological/tired state (see rule 33).",
+     "message": "This asserts the player's own exhaustion ('hit the wall') as a fact, which is blocked — fatigue claims about an individual must be framed as estimates relative to a typical professional.",
      "stage": "llm"
     }
    ]
@@ -1579,7 +1579,7 @@
    "llm_findings": [
     {
      "claim": "30",
-     "message": "This attributes the match outcome solely to running ('they simply outworked their opponents'), which is blocked (claim 30 forbids saying a team won because they ran more).",
+     "message": "This attributes the result directly to running (\"won because they outworked\"), which is blocked by claim 30 — you may not claim a win was caused by running alone.",
      "stage": "llm"
     }
    ]
@@ -1598,7 +1598,7 @@
    "llm_findings": [
     {
      "claim": "30, 35",
-     "message": "This asserts a team-level physical superiority caused the win — claiming a team 'outlasted' the other or won because they ran more is blocked (claims 30 and 35).",
+     "message": "This attributes the win to one team's superior physical condition/running (they 'outlasted them physically' and 'that's what won it'), which is a blocked causal claim about team-level fitness or running causing victory.",
      "stage": "llm"
     }
    ]
@@ -1617,7 +1617,7 @@
    "llm_findings": [
     {
      "claim": "34",
-     "message": "This infers a player's long-term fitness ('better shape') from running volume, which is blocked by rule 34 (running more ≠ fitter).",
+     "message": "The sentence infers a player's fitness from their running volume, which the register blocks (you cannot conclude someone is 'in better shape' simply because they ran more).",
      "stage": "llm"
     }
    ]
@@ -1635,8 +1635,8 @@
    "llm_stage": "llm",
    "llm_findings": [
     {
-     "claim": "claim 10 (qualified)",
-     "message": "The sentence asserts an individual is slower now without the required context — claim 10 only allows 'he's slower now' for repeated efforts or after a peak, and the line gives no such context or estimate language.",
+     "claim": "10",
+     "message": "Claim 10 allows saying a player is slower now only when it's tied to repeated efforts or just after a peak; this sentence compares him to kick-off with no such context and so breaches that constraint.",
      "stage": "llm"
     }
    ]
@@ -1654,8 +1654,8 @@
    "llm_stage": "llm",
    "llm_findings": [
     {
-     "claim": "10",
-     "message": "This presents an absolute loss of the player's top speed ('has gone') rather than the allowed cautious wording about repeated efforts after a peak; claim 10 requires softer phrasing (e.g. 'his last few sprints were a bit slower').",
+     "claim": "claim 10, G2",
+     "message": "This states an absolute loss of a specific player's top speed without the required qualifier or estimate language; claim 10 only allows saying recent sprints were a bit slower (not that 'top speed has gone').",
      "stage": "llm"
     }
    ]
@@ -1673,8 +1673,8 @@
    "llm_stage": "llm",
    "llm_findings": [
     {
-     "claim": "G4, 29",
-     "message": "This asserts an individual's physiological capacity (VO2max), which the system cannot know from movement data and is prohibited by G4 and rule 29.",
+     "claim": "G4; claim 29 (blocked)",
+     "message": "This asserts an individual's physiological attribute (VO2max) for a specific player, which the register forbids because position data cannot determine individual physiology.",
      "stage": "llm"
     }
    ]
@@ -1692,8 +1692,8 @@
    "llm_stage": "llm",
    "llm_findings": [
     {
-     "claim": "25, G4",
-     "message": "The sentence asserts rising lactic acid in this player's muscles, which is a blocked claim about an individual’s physiology (lactate/‘acid’).",
+     "claim": "25",
+     "message": "This asserts rising lactic acid ('the acid is building'), which is explicitly blocked (claim 25) — the system must not state a player's lactic acid is high or rising.",
      "stage": "llm"
     }
    ]
@@ -1711,8 +1711,8 @@
    "llm_stage": "llm",
    "llm_findings": [
     {
-     "claim": "33",
-     "message": "This states an individual is unable to accelerate ('no burst left at all'), which claims the player's own fatigue/empty battery and is forbidden; we can only give typical‑professional estimates or general patterns.",
+     "claim": "23",
+     "message": "This states the player 'has no burst left' (an individual inability to accelerate) which is a blocked claim — we may not assert a specific player's loss of acceleration or exhaustion after a peak.",
      "stage": "llm"
     }
    ]
@@ -1731,7 +1731,7 @@
    "llm_findings": [
     {
      "claim": "26",
-     "message": "This asserts the player is tired specifically because of Wednesday's trip, which is forbidden (claim 26) — the system cannot know an individual player's fatigue from positions alone.",
+     "message": "This attributes the player's current state to a prior midweek match and asserts his legs are tired from that trip, which is explicitly blocked (no claims that a player is tired from Wednesday's match or similar).",
      "stage": "llm"
     }
    ]
@@ -1750,7 +1750,7 @@
    "llm_findings": [
     {
      "claim": "35",
-     "message": "This makes an absolute claim that the whole team is 'run out of legs' (team-level fatigue/fitness), which the register forbids: we cannot state a team's tiredness as fact.",
+     "message": "This states a team-level fatigue claim ('have run out of legs as a side'), which is blocked: the system cannot assert that a team is more tired or fresher than another.",
      "stage": "llm"
     }
    ]
@@ -1769,7 +1769,7 @@
    "llm_findings": [
     {
      "claim": "35",
-     "message": "This asserts a team-level claim that one XI 'has more left in the tank' (is fresher), which is blocked — team-level tiredness/freshness or fitness comparisons are not allowed.",
+     "message": "This asserts that one team 'has more left in the tank' (a team-level remaining energy/freshness), which is blocked by claim 35 — we cannot state that one team is more tired or fresher than another.",
      "stage": "llm"
     }
    ]
@@ -1788,7 +1788,7 @@
    "llm_findings": [
     {
      "claim": "38",
-     "message": "This attributes the player's intention/effort ('didn't fancy') which reads his mental state; the register forbids inferring intent (claim 38).",
+     "message": "This attributes intent (‘didn't fancy’) to the player — reading effort or motive from an observed action is blocked by rule 38.",
      "stage": "llm"
     }
    ]
@@ -1807,7 +1807,7 @@
    "llm_findings": [
     {
      "claim": "38",
-     "message": "This reads the player's intent/effort (‘not putting the yards in’ = he didn't try/gave up), which is explicitly blocked (rule 38).",
+     "message": "This reads as a judgement of effort/intent (he's 'not putting the yards in'), which is blocked: the system may report measured running but not infer lack of trying or intent.",
      "stage": "llm"
     }
    ]
@@ -1826,7 +1826,7 @@
    "llm_findings": [
     {
      "claim": "38",
-     "message": "This attributes a mental state/intent (‘lack of desire’) to the player (saying he gave up), which the register forbids — we cannot infer intent or effort from movement data.",
+     "message": "This attributes a mental state/intent ('lack of desire') to the player, which the register blocks as reading effort or intent from an action.",
      "stage": "llm"
     }
    ]
@@ -1870,9 +1870,15 @@
    "should_pass": true,
    "rules_ok": true,
    "rules_findings": [],
-   "llm_ok": true,
+   "llm_ok": false,
    "llm_stage": "llm",
-   "llm_findings": []
+   "llm_findings": [
+    {
+     "claim": "11",
+     "message": "Claim 11 (qualified) requires the typical‑professional band or calibrated chance to be stated; “likely in the red” is vague and omits the required model estimate (e.g. ~40% of the short‑term reserve).",
+     "stage": "llm"
+    }
+   ]
   },
   {
    "set": "context",
@@ -2167,7 +2173,7 @@
    "llm_findings": [
     {
      "claim": "15",
-     "message": "Claim 15 is qualified to cases with a high first-half load; the facts show his first-half load was only 84% of the median, so saying 'He likely faded' (an individual post-break fatigue claim) isn't supported.",
+     "message": "Claim 15 (second-half drop) is qualified 'only for high first-half load', but the context shows his first-half load was 84% of the median, so saying 'he likely faded after the break' attributes a fatigue drop without the required high pre-break load.",
      "stage": "llm"
     }
    ]
@@ -2188,9 +2194,15 @@
    "should_pass": true,
    "rules_ok": true,
    "rules_findings": [],
-   "llm_ok": true,
+   "llm_ok": false,
    "llm_stage": "llm",
-   "llm_findings": []
+   "llm_findings": [
+    {
+     "claim": "Claim 15 (qualified: only for high first-half load)",
+     "message": "Claim 15's 'second-half drop' wording is allowed only when the player had a high first-half load; the context shows his first-half load was 84% of the median, so asserting a usual post-break drop is not supported and risks misapplying the qualifier.",
+     "stage": "llm"
+    }
+   ]
   },
   {
    "set": "context",
@@ -2408,15 +2420,9 @@
    "should_pass": false,
    "rules_ok": true,
    "rules_findings": [],
-   "llm_ok": false,
+   "llm_ok": true,
    "llm_stage": "llm",
-   "llm_findings": [
-    {
-     "claim": "G1",
-     "message": "The percentage lacks an explicit baseline as required: every percentage must name what it's being compared to (match average, peak, opponent, etc.).",
-     "stage": "llm"
-    }
-   ]
+   "llm_findings": []
   },
   {
    "set": "context",
@@ -2516,10 +2522,322 @@
    "llm_findings": [
     {
      "claim": "F1",
-     "message": "The facts show a typical-professional battery now at 0.80 and a previous lowest of 0.62, so the claim that 'this is the lowest point of his match so far' is contradicted by the provided values.",
+     "message": "The facts show the current typical-professional battery (0.8) is higher than the earlier lowest value (0.62), so the statement that 'this is the lowest point of his match so far' contradicts the provided data.",
      "stage": "llm"
     }
    ]
+  },
+  {
+   "set": "context",
+   "sentence": "Fewer touches, partly because the ball was out of play more.",
+   "mode": "fan",
+   "context": {
+    "facts": {
+     "hsr_vs_match_average": {
+      "value": -30.0,
+      "unit": "%"
+     },
+     "typical_pro_battery": {
+      "value": 0.41,
+      "unit": "share"
+     },
+     "speed": {
+      "value": 6.1,
+      "unit": "m/s"
+     }
+    }
+   },
+   "claim": "14",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "14"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "14",
+     "message": "Fewer touches needs the measured touch counts in the facts (claim 14, decision 25)",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "context",
+   "sentence": "Fewer touches, partly because the ball was out of play more.",
+   "mode": "fan",
+   "context": {
+    "facts": {
+     "touches_last_5min": {
+      "value": 2,
+      "unit": "touches"
+     },
+     "touches_per_5min_so_far": {
+      "value": 6.4,
+      "unit": "touches per 5 min"
+     },
+     "in_play_last_5min": {
+      "value": 0.31,
+      "unit": "share"
+     },
+     "fewer_touches_than_usual": true
+    }
+   },
+   "claim": "14",
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "context",
+   "sentence": "He had 2 touches in the last 5 minutes against about 6 per 5 minutes in his match so far, partly because the ball was in play only 31% of the time.",
+   "mode": "analyst",
+   "context": {
+    "facts": {
+     "touches_last_5min": {
+      "value": 2,
+      "unit": "touches"
+     },
+     "touches_per_5min_so_far": {
+      "value": 6.4,
+      "unit": "touches per 5 min"
+     },
+     "in_play_last_5min": {
+      "value": 0.31,
+      "unit": "share"
+     },
+     "fewer_touches_than_usual": true
+    }
+   },
+   "claim": "14",
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "context",
+   "sentence": "Fewer touches, partly because the ball was out of play more.",
+   "mode": "fan",
+   "context": {
+    "facts": {
+     "touches_last_5min": {
+      "value": 7,
+      "unit": "touches"
+     },
+     "touches_per_5min_so_far": {
+      "value": 6.4,
+      "unit": "touches per 5 min"
+     },
+     "fewer_touches_than_usual": false
+    }
+   },
+   "claim": "14",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "14"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "14",
+     "message": "The touch counts do not show fewer touches than his match so far (claim 14)",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "context",
+   "sentence": "This is the third time his team have lost the ball while he was catching breath after a red-zone spell.",
+   "mode": "fan",
+   "context": {
+    "facts": {
+     "times_exposed_so_far": {
+      "value": 3,
+      "unit": "turnovers"
+     }
+    }
+   },
+   "claim": null,
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "context",
+   "sentence": "Five minutes after his red-zone spell his high-speed running over the last two minutes was 10.9 m/min, about 5% above his match average of 10.4 m/min; with the ball in play only 42% of the last five minutes this could reflect less opportunity to run rather than the player's own fatigue.",
+   "mode": "analyst",
+   "context": {
+    "facts": {
+     "last_2min_hsr_per_min": {
+      "value": 10.9,
+      "unit": "m/min"
+     },
+     "match_average_per_min": {
+      "value": 10.4,
+      "unit": "m/min"
+     },
+     "vs_match_average": {
+      "value": 5.0,
+      "unit": "%"
+     }
+    },
+    "context": {
+     "in_play_last_5min": 0.42
+    }
+   },
+   "claim": null,
+   "should_pass": false,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "context",
+   "sentence": "Since coming on he has done 9.3 m/min, about 5% below the player he replaced (9.8 m/min).",
+   "mode": "analyst",
+   "context": {
+    "facts": {
+     "sub_hsr_per_min": {
+      "value": 9.3,
+      "unit": "m/min"
+     },
+     "replaced_player_hsr_per_min": {
+      "value": 9.8,
+      "unit": "m/min"
+     },
+     "vs_replaced_player": {
+      "value": -5.0,
+      "unit": "%"
+     }
+    }
+   },
+   "claim": null,
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "context",
+   "sentence": "He has done 9.8 m/min, 25% below the player he replaced but 49% above his team‑mates over the same minutes.",
+   "mode": "analyst",
+   "context": {
+    "facts": {
+     "sub_hsr_per_min": {
+      "value": 9.8,
+      "unit": "m/min"
+     },
+     "vs_replaced_player": {
+      "value": -25.0,
+      "unit": "%"
+     },
+     "vs_teammates": {
+      "value": 49.0,
+      "unit": "%"
+     }
+    }
+   },
+   "claim": null,
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
+  },
+  {
+   "set": "context",
+   "sentence": "Short bursts are shaken off in a minute or two, while a five-minute spell takes about five minutes to recover from; he is 6.5 min out from his 76 s spell, so this fits the longer recovery for intense work.",
+   "mode": "analyst",
+   "context": {
+    "facts": {
+     "minutes_after_spell": {
+      "value": 6.5,
+      "unit": "min"
+     },
+     "spell_duration": {
+      "value": 76,
+      "unit": "s"
+     }
+    }
+   },
+   "claim": "2",
+   "should_pass": false,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": false,
+   "llm_stage": "llm",
+   "llm_findings": [
+    {
+     "claim": "F1",
+     "message": "The sentence implies a 76 s spell needs the 'longer' recovery (≈5 min) but the facts show 76 s is a short burst (≈1.3 min) and claim 2 says short bursts recover in 1–2 minutes, so saying 6.5 min 'fits the longer recovery' contradicts the facts.",
+     "stage": "llm"
+    }
+   ]
+  },
+  {
+   "set": "context",
+   "sentence": "Top speed hardly drops over a match: in the Premier League, players' fastest runs late on are almost as fast as their fastest early on.",
+   "mode": "fan",
+   "context": {
+    "facts": {},
+    "claims_offered": [
+     "37",
+     "10"
+    ]
+   },
+   "claim": "36",
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "36"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "36",
+     "message": "Claim 36 is not offered for this moment (offered: 37, 10; decision 25)",
+     "stage": "rules"
+    }
+   ]
+  },
+  {
+   "set": "context",
+   "sentence": "In the last 15 minutes, players typically do about a fifth less hard running than at kick-off, with longer breaks between efforts.",
+   "mode": "fan",
+   "context": {
+    "facts": {},
+    "claims_offered": [
+     "9a",
+     "9b",
+     "7",
+     "30"
+    ]
+   },
+   "claim": "7",
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": []
   }
  ]
 }

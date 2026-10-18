@@ -1,0 +1,20 @@
+{
+  "mimeTypes": {
+    ".bin": "application/octet-stream",
+    ".json": "application/json"
+  },
+  "routes": [
+    {
+      "route": "/data/*",
+      "headers": { "cache-control": "public, max-age=3600" }
+    },
+    {
+      "route": "/assets/*",
+      "headers": { "cache-control": "public, max-age=31536000, immutable" }
+    }
+  ],
+  "globalHeaders": {
+    "x-content-type-options": "nosniff",
+    "referrer-policy": "no-referrer"
+  }
+}

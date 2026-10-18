@@ -16,6 +16,8 @@ const VERDICT: Record<Entry["verdict"], string> = {
   pass: "Verified",
   rewritten: "Rewritten by the Verifier",
   fallback: "Template (the agent's line was blocked)",
+  template: "Template (plain code)",
+  repeat: "Held back (said twice already)",
   blocked: "Blocked",
 };
 
@@ -41,7 +43,7 @@ export function Feed({ feed, now, mode, favourite, showBlocked, blockedNote, onS
                        onSeek }: Props) {
   const mine = feed.entries.filter((e) => e.mode === mode && e.video_s <= now + 0.5);
   const shown = mine.filter((e) => e.shown).reverse();
-  const blocked = mine.filter((e) => !e.shown).reverse();
+  const blocked = mine.filter((e) => e.verdict === "blocked").reverse();
   const later = feed.entries.filter((e) => e.mode === mode && e.shown && e.video_s > now).length;
   return (
     <div className="feed">

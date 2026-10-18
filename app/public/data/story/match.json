@@ -1,0 +1,777 @@
+{
+ "match_id": "story",
+ "synthetic": true,
+ "pos_hz": 5,
+ "frames": 27825,
+ "ids": [
+  "H01",
+  "H02",
+  "H03",
+  "H04",
+  "H05",
+  "H06",
+  "H07",
+  "H08",
+  "H09",
+  "H10",
+  "H11",
+  "H12",
+  "H13",
+  "H15",
+  "H14",
+  "H16",
+  "A01",
+  "A02",
+  "A03",
+  "A04",
+  "A05",
+  "A06",
+  "A07",
+  "A08",
+  "A09",
+  "A10",
+  "A11",
+  "A12",
+  "A13",
+  "A14",
+  "A15",
+  "A16"
+ ],
+ "missing": -32768,
+ "periods": [
+  {
+   "period": 1,
+   "video_start": 0.0,
+   "duration_s": 2765.7
+  },
+  {
+   "period": 2,
+   "video_start": 2765.7,
+   "duration_s": 2799.2
+  }
+ ],
+ "teams": [
+  {
+   "id": "home",
+   "name": "Westerlyn Albion",
+   "side": "home",
+   "formation": "4-2-3-1"
+  },
+  {
+   "id": "away",
+   "name": "Ravensholt Albion",
+   "side": "away",
+   "formation": "4-2-3-1"
+  }
+ ],
+ "players": [
+  {
+   "id": "H01",
+   "name": "Luca Haskaway",
+   "shirt": 1,
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "position": "GK",
+   "starter": true
+  },
+  {
+   "id": "H02",
+   "name": "Hugo Elmock",
+   "shirt": 5,
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "position": "CB",
+   "starter": true
+  },
+  {
+   "id": "H03",
+   "name": "Yusuf Cadock",
+   "shirt": 4,
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "position": "CB",
+   "starter": true
+  },
+  {
+   "id": "H04",
+   "name": "Marco Tarvsall",
+   "shirt": 3,
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "position": "FB",
+   "starter": true
+  },
+  {
+   "id": "H05",
+   "name": "Dario Fennock",
+   "shirt": 2,
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "position": "FB",
+   "starter": true
+  },
+  {
+   "id": "H06",
+   "name": "Yusuf Jorraway",
+   "shirt": 6,
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "position": "DM",
+   "starter": true
+  },
+  {
+   "id": "H07",
+   "name": "Adam Morrbury",
+   "shirt": 8,
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "position": "CM",
+   "starter": true
+  },
+  {
+   "id": "H08",
+   "name": "Felix Raskmere",
+   "shirt": 10,
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "position": "AM",
+   "starter": true
+  },
+  {
+   "id": "H09",
+   "name": "Kofi Kestaway",
+   "shirt": 11,
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "position": "WM",
+   "starter": true
+  },
+  {
+   "id": "H10",
+   "name": "Dario Cadcott",
+   "shirt": 7,
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "position": "WM",
+   "starter": true
+  },
+  {
+   "id": "H11",
+   "name": "Kofi Rasknell",
+   "shirt": 9,
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "position": "CF",
+   "starter": true
+  },
+  {
+   "id": "H12",
+   "name": "Adam Dorrock",
+   "shirt": 12,
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "position": "CM",
+   "starter": false
+  },
+  {
+   "id": "H13",
+   "name": "Theo Galdcott",
+   "shirt": 13,
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "position": "WM",
+   "starter": false
+  },
+  {
+   "id": "H15",
+   "name": "Rafael Elmnell",
+   "shirt": 15,
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "position": "FB",
+   "starter": false
+  },
+  {
+   "id": "H14",
+   "name": "Hugo Haskcott",
+   "shirt": 14,
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "position": "DM",
+   "starter": false
+  },
+  {
+   "id": "H16",
+   "name": "Felix Morrmere",
+   "shirt": 16,
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "position": "FB",
+   "starter": false
+  },
+  {
+   "id": "A01",
+   "name": "Felix Sorrbury",
+   "shirt": 1,
+   "team": "away",
+   "team_name": "Ravensholt Albion",
+   "position": "GK",
+   "starter": true
+  },
+  {
+   "id": "A02",
+   "name": "Sami Yarrrigg",
+   "shirt": 5,
+   "team": "away",
+   "team_name": "Ravensholt Albion",
+   "position": "CB",
+   "starter": true
+  },
+  {
+   "id": "A03",
+   "name": "Sami Yarrick",
+   "shirt": 4,
+   "team": "away",
+   "team_name": "Ravensholt Albion",
+   "position": "CB",
+   "starter": true
+  },
+  {
+   "id": "A04",
+   "name": "Luca Ashock",
+   "shirt": 3,
+   "team": "away",
+   "team_name": "Ravensholt Albion",
+   "position": "FB",
+   "starter": true
+  },
+  {
+   "id": "A05",
+   "name": "Luca Elmbury",
+   "shirt": 2,
+   "team": "away",
+   "team_name": "Ravensholt Albion",
+   "position": "FB",
+   "starter": true
+  },
+  {
+   "id": "A06",
+   "name": "Dario Cadsall",
+   "shirt": 6,
+   "team": "away",
+   "team_name": "Ravensholt Albion",
+   "position": "DM",
+   "starter": true
+  },
+  {
+   "id": "A07",
+   "name": "Hugo Raskver",
+   "shirt": 8,
+   "team": "away",
+   "team_name": "Ravensholt Albion",
+   "position": "CM",
+   "starter": true
+  },
+  {
+   "id": "A08",
+   "name": "Jonah Wendrigg",
+   "shirt": 10,
+   "team": "away",
+   "team_name": "Ravensholt Albion",
+   "position": "AM",
+   "starter": true
+  },
+  {
+   "id": "A09",
+   "name": "Hugo Dorrlowe",
+   "shirt": 11,
+   "team": "away",
+   "team_name": "Ravensholt Albion",
+   "position": "WM",
+   "starter": true
+  },
+  {
+   "id": "A10",
+   "name": "Ivan Morrsall",
+   "shirt": 7,
+   "team": "away",
+   "team_name": "Ravensholt Albion",
+   "position": "WM",
+   "starter": true
+  },
+  {
+   "id": "A11",
+   "name": "Jonah Jorrlowe",
+   "shirt": 9,
+   "team": "away",
+   "team_name": "Ravensholt Albion",
+   "position": "CF",
+   "starter": true
+  },
+  {
+   "id": "A12",
+   "name": "Marco Jorrsall",
+   "shirt": 12,
+   "team": "away",
+   "team_name": "Ravensholt Albion",
+   "position": "DM",
+   "starter": false
+  },
+  {
+   "id": "A13",
+   "name": "Marco Orvrigg",
+   "shirt": 13,
+   "team": "away",
+   "team_name": "Ravensholt Albion",
+   "position": "WM",
+   "starter": false
+  },
+  {
+   "id": "A14",
+   "name": "Yusuf Wendnell",
+   "shirt": 14,
+   "team": "away",
+   "team_name": "Ravensholt Albion",
+   "position": "CB",
+   "starter": false
+  },
+  {
+   "id": "A15",
+   "name": "Hugo Elmwick",
+   "shirt": 15,
+   "team": "away",
+   "team_name": "Ravensholt Albion",
+   "position": "AM",
+   "starter": false
+  },
+  {
+   "id": "A16",
+   "name": "Theo Morrick",
+   "shirt": 16,
+   "team": "away",
+   "team_name": "Ravensholt Albion",
+   "position": "CB",
+   "starter": false
+  }
+ ],
+ "team_running": [
+  {
+   "video_start": 0.0,
+   "video_end": 300.0,
+   "clock": "0:00",
+   "home": {
+    "hsr": 267,
+    "possession": 0.26,
+    "in_play_s": 242.0
+   },
+   "away": {
+    "hsr": 199,
+    "possession": 0.63,
+    "in_play_s": 242.0
+   }
+  },
+  {
+   "video_start": 300.0,
+   "video_end": 600.0,
+   "clock": "5:00",
+   "home": {
+    "hsr": 174,
+    "possession": 0.53,
+    "in_play_s": 77.0
+   },
+   "away": {
+    "hsr": 115,
+    "possession": 0.35,
+    "in_play_s": 77.0
+   }
+  },
+  {
+   "video_start": 600.0,
+   "video_end": 900.0,
+   "clock": "10:00",
+   "home": {
+    "hsr": 154,
+    "possession": 0.37,
+    "in_play_s": 220.0
+   },
+   "away": {
+    "hsr": 134,
+    "possession": 0.55,
+    "in_play_s": 220.0
+   }
+  },
+  {
+   "video_start": 900.0,
+   "video_end": 1200.0,
+   "clock": "15:00",
+   "home": {
+    "hsr": 97,
+    "possession": 0.72,
+    "in_play_s": 111.0
+   },
+   "away": {
+    "hsr": 170,
+    "possession": 0.2,
+    "in_play_s": 111.0
+   }
+  },
+  {
+   "video_start": 1200.0,
+   "video_end": 1500.0,
+   "clock": "20:00",
+   "home": {
+    "hsr": 276,
+    "possession": 0.45,
+    "in_play_s": 152.0
+   },
+   "away": {
+    "hsr": 152,
+    "possession": 0.45,
+    "in_play_s": 152.0
+   }
+  },
+  {
+   "video_start": 1500.0,
+   "video_end": 1800.0,
+   "clock": "25:00",
+   "home": {
+    "hsr": 148,
+    "possession": 0.45,
+    "in_play_s": 207.0
+   },
+   "away": {
+    "hsr": 114,
+    "possession": 0.45,
+    "in_play_s": 207.0
+   }
+  },
+  {
+   "video_start": 1800.0,
+   "video_end": 2100.0,
+   "clock": "30:00",
+   "home": {
+    "hsr": 220,
+    "possession": 0.49,
+    "in_play_s": 206.0
+   },
+   "away": {
+    "hsr": 160,
+    "possession": 0.37,
+    "in_play_s": 206.0
+   }
+  },
+  {
+   "video_start": 2100.0,
+   "video_end": 2400.0,
+   "clock": "35:00",
+   "home": {
+    "hsr": 187,
+    "possession": 0.39,
+    "in_play_s": 186.0
+   },
+   "away": {
+    "hsr": 155,
+    "possession": 0.48,
+    "in_play_s": 186.0
+   }
+  },
+  {
+   "video_start": 2400.0,
+   "video_end": 2700.0,
+   "clock": "40:00",
+   "home": {
+    "hsr": 91,
+    "possession": 0.29,
+    "in_play_s": 103.0
+   },
+   "away": {
+    "hsr": 40,
+    "possession": 0.55,
+    "in_play_s": 103.0
+   }
+  },
+  {
+   "video_start": 2700.0,
+   "video_end": 2765.7,
+   "clock": "45+0:00",
+   "home": {
+    "hsr": 88,
+    "possession": 0.88,
+    "in_play_s": 49.0
+   },
+   "away": {
+    "hsr": 82,
+    "possession": 0.08,
+    "in_play_s": 49.0
+   }
+  },
+  {
+   "video_start": 2765.7,
+   "video_end": 3065.7,
+   "clock": "45:00",
+   "home": {
+    "hsr": 173,
+    "possession": 0.38,
+    "in_play_s": 177.0
+   },
+   "away": {
+    "hsr": 123,
+    "possession": 0.49,
+    "in_play_s": 177.0
+   }
+  },
+  {
+   "video_start": 3065.7,
+   "video_end": 3365.7,
+   "clock": "50:00",
+   "home": {
+    "hsr": 152,
+    "possession": 0.42,
+    "in_play_s": 223.0
+   },
+   "away": {
+    "hsr": 132,
+    "possession": 0.48,
+    "in_play_s": 223.0
+   }
+  },
+  {
+   "video_start": 3365.7,
+   "video_end": 3665.7,
+   "clock": "55:00",
+   "home": {
+    "hsr": 272,
+    "possession": 0.46,
+    "in_play_s": 101.0
+   },
+   "away": {
+    "hsr": 319,
+    "possession": 0.46,
+    "in_play_s": 101.0
+   }
+  },
+  {
+   "video_start": 3665.7,
+   "video_end": 3965.7,
+   "clock": "60:00",
+   "home": {
+    "hsr": 182,
+    "possession": 0.64,
+    "in_play_s": 180.0
+   },
+   "away": {
+    "hsr": 174,
+    "possession": 0.31,
+    "in_play_s": 180.0
+   }
+  },
+  {
+   "video_start": 3965.7,
+   "video_end": 4265.7,
+   "clock": "65:00",
+   "home": {
+    "hsr": 138,
+    "possession": 0.15,
+    "in_play_s": 139.0
+   },
+   "away": {
+    "hsr": 116,
+    "possession": 0.76,
+    "in_play_s": 139.0
+   }
+  },
+  {
+   "video_start": 4265.7,
+   "video_end": 4565.7,
+   "clock": "70:00",
+   "home": {
+    "hsr": 136,
+    "possession": 0.5,
+    "in_play_s": 161.0
+   },
+   "away": {
+    "hsr": 162,
+    "possession": 0.45,
+    "in_play_s": 161.0
+   }
+  },
+  {
+   "video_start": 4565.7,
+   "video_end": 4865.7,
+   "clock": "75:00",
+   "home": {
+    "hsr": 186,
+    "possession": 0.46,
+    "in_play_s": 110.0
+   },
+   "away": {
+    "hsr": 154,
+    "possession": 0.48,
+    "in_play_s": 110.0
+   }
+  },
+  {
+   "video_start": 4865.7,
+   "video_end": 5165.7,
+   "clock": "80:00",
+   "home": {
+    "hsr": 98,
+    "possession": 0.23,
+    "in_play_s": 252.0
+   },
+   "away": {
+    "hsr": 122,
+    "possession": 0.68,
+    "in_play_s": 252.0
+   }
+  },
+  {
+   "video_start": 5165.7,
+   "video_end": 5465.7,
+   "clock": "85:00",
+   "home": {
+    "hsr": 151,
+    "possession": 0.39,
+    "in_play_s": 201.0
+   },
+   "away": {
+    "hsr": 139,
+    "possession": 0.52,
+    "in_play_s": 201.0
+   }
+  },
+  {
+   "video_start": 5465.7,
+   "video_end": 5564.9,
+   "clock": "90+0:00",
+   "home": {
+    "hsr": 360,
+    "possession": 0.44,
+    "in_play_s": 9.0
+   },
+   "away": {
+    "hsr": 216,
+    "possession": 0.56,
+    "in_play_s": 9.0
+   }
+  }
+ ],
+ "goals": [
+  {
+   "period": 1,
+   "t": 373.8,
+   "clock": "6:13",
+   "video_s": 373.8,
+   "team": "away",
+   "scorer": "A09"
+  },
+  {
+   "period": 1,
+   "t": 2105.0,
+   "clock": "35:05",
+   "video_s": 2105.0,
+   "team": "home",
+   "scorer": "H06"
+  },
+  {
+   "period": 2,
+   "t": 1325.6,
+   "clock": "67:05",
+   "video_s": 4091.3,
+   "team": "away",
+   "scorer": "A11"
+  }
+ ],
+ "substitutions": [
+  {
+   "period": 2,
+   "t": 687.6,
+   "clock": "56:27",
+   "video_s": 3453.3,
+   "team": "away",
+   "off": "A06",
+   "on": "A12"
+  },
+  {
+   "period": 2,
+   "t": 687.6,
+   "clock": "56:27",
+   "video_s": 3453.3,
+   "team": "away",
+   "off": "A09",
+   "on": "A13"
+  },
+  {
+   "period": 2,
+   "t": 845.9,
+   "clock": "59:05",
+   "video_s": 3611.6,
+   "team": "home",
+   "off": "H07",
+   "on": "H12"
+  },
+  {
+   "period": 2,
+   "t": 845.9,
+   "clock": "59:05",
+   "video_s": 3611.6,
+   "team": "home",
+   "off": "H09",
+   "on": "H13"
+  },
+  {
+   "period": 2,
+   "t": 976.0,
+   "clock": "61:16",
+   "video_s": 3741.7,
+   "team": "home",
+   "off": "H05",
+   "on": "H15"
+  },
+  {
+   "period": 2,
+   "t": 976.0,
+   "clock": "61:16",
+   "video_s": 3741.7,
+   "team": "home",
+   "off": "H06",
+   "on": "H14"
+  },
+  {
+   "period": 2,
+   "t": 1260.0,
+   "clock": "66:00",
+   "video_s": 4025.7,
+   "team": "home",
+   "off": "H04",
+   "on": "H16"
+  },
+  {
+   "period": 2,
+   "t": 1351.2,
+   "clock": "67:31",
+   "video_s": 4116.9,
+   "team": "away",
+   "off": "A02",
+   "on": "A14"
+  },
+  {
+   "period": 2,
+   "t": 1351.2,
+   "clock": "67:31",
+   "video_s": 4116.9,
+   "team": "away",
+   "off": "A08",
+   "on": "A15"
+  },
+  {
+   "period": 2,
+   "t": 2368.6,
+   "clock": "84:28",
+   "video_s": 5134.3,
+   "team": "away",
+   "off": "A03",
+   "on": "A16"
+  }
+ ]
+}

@@ -24,8 +24,8 @@ __pycache__/
 # Front end
 node_modules/
 dist/
-# Overlay data (python -m secondwind.export; scripts/demo.sh)
-app/public/data/
+# Overlay data (app/public/data/) is committed: the demo matches made on this machine, with
+# their feeds (PLAN decision 26). The same seed gives a different match elsewhere.
 
 # Secrets
 .env

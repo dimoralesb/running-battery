@@ -1,0 +1,736 @@
+{
+ "match_id": "natural",
+ "synthetic": true,
+ "pos_hz": 5,
+ "frames": 29388,
+ "ids": [
+  "H01",
+  "H02",
+  "H03",
+  "H04",
+  "H05",
+  "H06",
+  "H07",
+  "H08",
+  "H09",
+  "H10",
+  "H11",
+  "H13",
+  "H12",
+  "H14",
+  "H15",
+  "A01",
+  "A02",
+  "A03",
+  "A04",
+  "A05",
+  "A06",
+  "A07",
+  "A08",
+  "A09",
+  "A10",
+  "A11",
+  "A12",
+  "A13",
+  "A14"
+ ],
+ "missing": -32768,
+ "periods": [
+  {
+   "period": 1,
+   "video_start": 0.0,
+   "duration_s": 2851.0
+  },
+  {
+   "period": 2,
+   "video_start": 2851.0,
+   "duration_s": 3026.5
+  }
+ ],
+ "teams": [
+  {
+   "id": "home",
+   "name": "Westerlyn Town",
+   "side": "home",
+   "formation": "4-2-3-1"
+  },
+  {
+   "id": "away",
+   "name": "Ravensholt Harriers",
+   "side": "away",
+   "formation": "4-2-3-1"
+  }
+ ],
+ "players": [
+  {
+   "id": "H01",
+   "name": "Kofi Sorrrigg",
+   "shirt": 1,
+   "team": "home",
+   "team_name": "Westerlyn Town",
+   "position": "GK",
+   "starter": true
+  },
+  {
+   "id": "H02",
+   "name": "Pablo Fenndane",
+   "shirt": 5,
+   "team": "home",
+   "team_name": "Westerlyn Town",
+   "position": "CB",
+   "starter": true
+  },
+  {
+   "id": "H03",
+   "name": "Yusuf Morrmere",
+   "shirt": 4,
+   "team": "home",
+   "team_name": "Westerlyn Town",
+   "position": "CB",
+   "starter": true
+  },
+  {
+   "id": "H04",
+   "name": "Ben Orvsall",
+   "shirt": 3,
+   "team": "home",
+   "team_name": "Westerlyn Town",
+   "position": "FB",
+   "starter": true
+  },
+  {
+   "id": "H05",
+   "name": "Gabriel Orvenby",
+   "shirt": 2,
+   "team": "home",
+   "team_name": "Westerlyn Town",
+   "position": "FB",
+   "starter": true
+  },
+  {
+   "id": "H06",
+   "name": "Hugo Orvrigg",
+   "shirt": 6,
+   "team": "home",
+   "team_name": "Westerlyn Town",
+   "position": "DM",
+   "starter": true
+  },
+  {
+   "id": "H07",
+   "name": "Dario Pellmere",
+   "shirt": 8,
+   "team": "home",
+   "team_name": "Westerlyn Town",
+   "position": "CM",
+   "starter": true
+  },
+  {
+   "id": "H08",
+   "name": "Sami Ivelmere",
+   "shirt": 10,
+   "team": "home",
+   "team_name": "Westerlyn Town",
+   "position": "AM",
+   "starter": true
+  },
+  {
+   "id": "H09",
+   "name": "Luca Galddane",
+   "shirt": 11,
+   "team": "home",
+   "team_name": "Westerlyn Town",
+   "position": "WM",
+   "starter": true
+  },
+  {
+   "id": "H10",
+   "name": "Callum Ashdane",
+   "shirt": 7,
+   "team": "home",
+   "team_name": "Westerlyn Town",
+   "position": "WM",
+   "starter": true
+  },
+  {
+   "id": "H11",
+   "name": "Ben Dorrenby",
+   "shirt": 9,
+   "team": "home",
+   "team_name": "Westerlyn Town",
+   "position": "CF",
+   "starter": true
+  },
+  {
+   "id": "H13",
+   "name": "Dario Ivelrigg",
+   "shirt": 13,
+   "team": "home",
+   "team_name": "Westerlyn Town",
+   "position": "WM",
+   "starter": false
+  },
+  {
+   "id": "H12",
+   "name": "Dario Ivelenby",
+   "shirt": 12,
+   "team": "home",
+   "team_name": "Westerlyn Town",
+   "position": "WM",
+   "starter": false
+  },
+  {
+   "id": "H14",
+   "name": "Felix Wendlowe",
+   "shirt": 14,
+   "team": "home",
+   "team_name": "Westerlyn Town",
+   "position": "FB",
+   "starter": false
+  },
+  {
+   "id": "H15",
+   "name": "Adam Cadbury",
+   "shirt": 15,
+   "team": "home",
+   "team_name": "Westerlyn Town",
+   "position": "CM",
+   "starter": false
+  },
+  {
+   "id": "A01",
+   "name": "Jonah Yarrdane",
+   "shirt": 1,
+   "team": "away",
+   "team_name": "Ravensholt Harriers",
+   "position": "GK",
+   "starter": true
+  },
+  {
+   "id": "A02",
+   "name": "Sami Wendock",
+   "shirt": 5,
+   "team": "away",
+   "team_name": "Ravensholt Harriers",
+   "position": "CB",
+   "starter": true
+  },
+  {
+   "id": "A03",
+   "name": "Kofi Pellver",
+   "shirt": 4,
+   "team": "away",
+   "team_name": "Ravensholt Harriers",
+   "position": "CB",
+   "starter": true
+  },
+  {
+   "id": "A04",
+   "name": "Yusuf Lanvnell",
+   "shirt": 3,
+   "team": "away",
+   "team_name": "Ravensholt Harriers",
+   "position": "FB",
+   "starter": true
+  },
+  {
+   "id": "A05",
+   "name": "Hugo Haskmere",
+   "shirt": 2,
+   "team": "away",
+   "team_name": "Ravensholt Harriers",
+   "position": "FB",
+   "starter": true
+  },
+  {
+   "id": "A06",
+   "name": "Theo Dorrick",
+   "shirt": 6,
+   "team": "away",
+   "team_name": "Ravensholt Harriers",
+   "position": "DM",
+   "starter": true
+  },
+  {
+   "id": "A07",
+   "name": "Ivan Lanvick",
+   "shirt": 8,
+   "team": "away",
+   "team_name": "Ravensholt Harriers",
+   "position": "CM",
+   "starter": true
+  },
+  {
+   "id": "A08",
+   "name": "Dario Varrcott",
+   "shirt": 10,
+   "team": "away",
+   "team_name": "Ravensholt Harriers",
+   "position": "AM",
+   "starter": true
+  },
+  {
+   "id": "A09",
+   "name": "Ben Dorrnell",
+   "shirt": 11,
+   "team": "away",
+   "team_name": "Ravensholt Harriers",
+   "position": "WM",
+   "starter": true
+  },
+  {
+   "id": "A10",
+   "name": "Pablo Jorrholm",
+   "shirt": 7,
+   "team": "away",
+   "team_name": "Ravensholt Harriers",
+   "position": "WM",
+   "starter": true
+  },
+  {
+   "id": "A11",
+   "name": "Eli Haskcott",
+   "shirt": 9,
+   "team": "away",
+   "team_name": "Ravensholt Harriers",
+   "position": "CF",
+   "starter": true
+  },
+  {
+   "id": "A12",
+   "name": "Gabriel Kestaway",
+   "shirt": 12,
+   "team": "away",
+   "team_name": "Ravensholt Harriers",
+   "position": "AM",
+   "starter": false
+  },
+  {
+   "id": "A13",
+   "name": "Pablo Galdlowe",
+   "shirt": 13,
+   "team": "away",
+   "team_name": "Ravensholt Harriers",
+   "position": "WM",
+   "starter": false
+  },
+  {
+   "id": "A14",
+   "name": "Rafael Rasksall",
+   "shirt": 14,
+   "team": "away",
+   "team_name": "Ravensholt Harriers",
+   "position": "CF",
+   "starter": false
+  }
+ ],
+ "team_running": [
+  {
+   "video_start": 0.0,
+   "video_end": 300.0,
+   "clock": "0:00",
+   "home": {
+    "hsr": 149,
+    "possession": 0.44,
+    "in_play_s": 170.0
+   },
+   "away": {
+    "hsr": 152,
+    "possession": 0.44,
+    "in_play_s": 170.0
+   }
+  },
+  {
+   "video_start": 300.0,
+   "video_end": 600.0,
+   "clock": "5:00",
+   "home": {
+    "hsr": 220,
+    "possession": 0.35,
+    "in_play_s": 136.0
+   },
+   "away": {
+    "hsr": 190,
+    "possession": 0.48,
+    "in_play_s": 136.0
+   }
+  },
+  {
+   "video_start": 600.0,
+   "video_end": 900.0,
+   "clock": "10:00",
+   "home": {
+    "hsr": 227,
+    "possession": 0.46,
+    "in_play_s": 152.0
+   },
+   "away": {
+    "hsr": 142,
+    "possession": 0.46,
+    "in_play_s": 152.0
+   }
+  },
+  {
+   "video_start": 900.0,
+   "video_end": 1200.0,
+   "clock": "15:00",
+   "home": {
+    "hsr": 125,
+    "possession": 0.44,
+    "in_play_s": 124.0
+   },
+   "away": {
+    "hsr": 186,
+    "possession": 0.54,
+    "in_play_s": 124.0
+   }
+  },
+  {
+   "video_start": 1200.0,
+   "video_end": 1500.0,
+   "clock": "20:00",
+   "home": {
+    "hsr": 159,
+    "possession": 0.34,
+    "in_play_s": 139.0
+   },
+   "away": {
+    "hsr": 139,
+    "possession": 0.6,
+    "in_play_s": 139.0
+   }
+  },
+  {
+   "video_start": 1500.0,
+   "video_end": 1800.0,
+   "clock": "25:00",
+   "home": {
+    "hsr": 157,
+    "possession": 0.35,
+    "in_play_s": 225.0
+   },
+   "away": {
+    "hsr": 118,
+    "possession": 0.53,
+    "in_play_s": 225.0
+   }
+  },
+  {
+   "video_start": 1800.0,
+   "video_end": 2100.0,
+   "clock": "30:00",
+   "home": {
+    "hsr": 228,
+    "possession": 0.46,
+    "in_play_s": 104.0
+   },
+   "away": {
+    "hsr": 143,
+    "possession": 0.35,
+    "in_play_s": 104.0
+   }
+  },
+  {
+   "video_start": 2100.0,
+   "video_end": 2400.0,
+   "clock": "35:00",
+   "home": {
+    "hsr": 151,
+    "possession": 0.44,
+    "in_play_s": 171.0
+   },
+   "away": {
+    "hsr": 158,
+    "possession": 0.44,
+    "in_play_s": 171.0
+   }
+  },
+  {
+   "video_start": 2400.0,
+   "video_end": 2700.0,
+   "clock": "40:00",
+   "home": {
+    "hsr": 125,
+    "possession": 0.35,
+    "in_play_s": 162.0
+   },
+   "away": {
+    "hsr": 84,
+    "possession": 0.48,
+    "in_play_s": 162.0
+   }
+  },
+  {
+   "video_start": 2700.0,
+   "video_end": 2851.0,
+   "clock": "45+0:00",
+   "home": {
+    "hsr": 205,
+    "possession": 0.46,
+    "in_play_s": 69.0
+   },
+   "away": {
+    "hsr": 76,
+    "possession": 0.42,
+    "in_play_s": 69.0
+   }
+  },
+  {
+   "video_start": 2851.0,
+   "video_end": 3151.0,
+   "clock": "45:00",
+   "home": {
+    "hsr": 111,
+    "possession": 0.57,
+    "in_play_s": 167.0
+   },
+   "away": {
+    "hsr": 140,
+    "possession": 0.37,
+    "in_play_s": 167.0
+   }
+  },
+  {
+   "video_start": 3151.0,
+   "video_end": 3451.0,
+   "clock": "50:00",
+   "home": {
+    "hsr": 141,
+    "possession": 0.24,
+    "in_play_s": 182.0
+   },
+   "away": {
+    "hsr": 101,
+    "possession": 0.69,
+    "in_play_s": 182.0
+   }
+  },
+  {
+   "video_start": 3451.0,
+   "video_end": 3751.0,
+   "clock": "55:00",
+   "home": {
+    "hsr": 155,
+    "possession": 0.64,
+    "in_play_s": 193.0
+   },
+   "away": {
+    "hsr": 190,
+    "possession": 0.27,
+    "in_play_s": 193.0
+   }
+  },
+  {
+   "video_start": 3751.0,
+   "video_end": 4051.0,
+   "clock": "60:00",
+   "home": {
+    "hsr": 143,
+    "possession": 0.36,
+    "in_play_s": 196.0
+   },
+   "away": {
+    "hsr": 85,
+    "possession": 0.56,
+    "in_play_s": 196.0
+   }
+  },
+  {
+   "video_start": 4051.0,
+   "video_end": 4351.0,
+   "clock": "65:00",
+   "home": {
+    "hsr": 121,
+    "possession": 0.36,
+    "in_play_s": 155.0
+   },
+   "away": {
+    "hsr": 117,
+    "possession": 0.54,
+    "in_play_s": 155.0
+   }
+  },
+  {
+   "video_start": 4351.0,
+   "video_end": 4651.0,
+   "clock": "70:00",
+   "home": {
+    "hsr": 159,
+    "possession": 0.26,
+    "in_play_s": 255.0
+   },
+   "away": {
+    "hsr": 114,
+    "possession": 0.58,
+    "in_play_s": 255.0
+   }
+  },
+  {
+   "video_start": 4651.0,
+   "video_end": 4951.0,
+   "clock": "75:00",
+   "home": {
+    "hsr": 195,
+    "possession": 0.42,
+    "in_play_s": 172.0
+   },
+   "away": {
+    "hsr": 186,
+    "possession": 0.45,
+    "in_play_s": 172.0
+   }
+  },
+  {
+   "video_start": 4951.0,
+   "video_end": 5251.0,
+   "clock": "80:00",
+   "home": {
+    "hsr": 140,
+    "possession": 0.4,
+    "in_play_s": 196.0
+   },
+   "away": {
+    "hsr": 152,
+    "possession": 0.51,
+    "in_play_s": 196.0
+   }
+  },
+  {
+   "video_start": 5251.0,
+   "video_end": 5551.0,
+   "clock": "85:00",
+   "home": {
+    "hsr": 162,
+    "possession": 0.43,
+    "in_play_s": 142.0
+   },
+   "away": {
+    "hsr": 108,
+    "possession": 0.42,
+    "in_play_s": 142.0
+   }
+  },
+  {
+   "video_start": 5551.0,
+   "video_end": 5851.0,
+   "clock": "90+0:00",
+   "home": {
+    "hsr": 164,
+    "possession": 0.32,
+    "in_play_s": 185.0
+   },
+   "away": {
+    "hsr": 131,
+    "possession": 0.55,
+    "in_play_s": 185.0
+   }
+  }
+ ],
+ "goals": [
+  {
+   "period": 1,
+   "t": 544.7,
+   "clock": "9:04",
+   "video_s": 544.7,
+   "team": "away",
+   "scorer": "A11"
+  },
+  {
+   "period": 1,
+   "t": 685.2,
+   "clock": "11:25",
+   "video_s": 685.2,
+   "team": "home",
+   "scorer": "H11"
+  },
+  {
+   "period": 1,
+   "t": 1334.3,
+   "clock": "22:14",
+   "video_s": 1334.3,
+   "team": "home",
+   "scorer": "H11"
+  },
+  {
+   "period": 2,
+   "t": 1267.9,
+   "clock": "66:07",
+   "video_s": 4118.9,
+   "team": "home",
+   "scorer": "H13"
+  },
+  {
+   "period": 2,
+   "t": 2591.9,
+   "clock": "88:11",
+   "video_s": 5442.9,
+   "team": "away",
+   "scorer": "A14"
+  }
+ ],
+ "substitutions": [
+  {
+   "period": 2,
+   "t": 568.6,
+   "clock": "54:28",
+   "video_s": 3419.6,
+   "team": "away",
+   "off": "A08",
+   "on": "A12"
+  },
+  {
+   "period": 2,
+   "t": 644.7,
+   "clock": "55:44",
+   "video_s": 3495.7,
+   "team": "home",
+   "off": "H09",
+   "on": "H13"
+  },
+  {
+   "period": 2,
+   "t": 644.7,
+   "clock": "55:44",
+   "video_s": 3495.7,
+   "team": "home",
+   "off": "H10",
+   "on": "H12"
+  },
+  {
+   "period": 2,
+   "t": 1823.4,
+   "clock": "75:23",
+   "video_s": 4674.4,
+   "team": "home",
+   "off": "H05",
+   "on": "H14"
+  },
+  {
+   "period": 2,
+   "t": 1823.4,
+   "clock": "75:23",
+   "video_s": 4674.4,
+   "team": "away",
+   "off": "A10",
+   "on": "A13"
+  },
+  {
+   "period": 2,
+   "t": 1823.4,
+   "clock": "75:23",
+   "video_s": 4674.4,
+   "team": "away",
+   "off": "A11",
+   "on": "A14"
+  },
+  {
+   "period": 2,
+   "t": 2163.9,
+   "clock": "81:03",
+   "video_s": 5014.9,
+   "team": "home",
+   "off": "H07",
+   "on": "H15"
+  }
+ ]
+}

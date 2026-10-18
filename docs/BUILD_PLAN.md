@@ -1,6 +1,6 @@
 # Second Wind: Build Plan
 
-**Status (2026-10-17):** approved and in progress, about four days ahead. Done: Wed 14 to Tue 20, Wed 21 (MCP server, claims register, Verifier v1 and v2) and Thu 22 (agents and the feed, on Foundry: decision 18). Fri 23 started: the overlay runs locally from files (`app/`, `secondwind.export`): replay, battery icons (fan), traces with bands (analyst), the verified feed with sources and what the Verifier blocked. Next: pitch-control circles, polish, then Sat 24 (Azure). Science frozen (decision 17).
+**Status (2026-10-18):** approved and in progress, about four days ahead. Done: Wed 14 to Tue 20, Wed 21 (MCP server, claims register, Verifier v1 and v2), Thu 22 (agents and the feed, on Foundry: decision 18), Fri 23 (overlay: replay, batteries for the selected, favourite and five lowest players, flat-out pulse, reachable-area circles labelled "model", traces, tug of war, the verified feed; light, dark and phone checked), Sat 24 (public site on Azure Static Web Apps, Free: decision 26) and most of Sun 25 (README: data card, realism table, charts, Verifier table, what we don't claim). The feed holds to its prompts in code (decision 25). Next: Mon 26 (video, clean-clone test). Science frozen (decision 17).
 Deadline: October 27, 2026, 11:59 pm PT. Design and sources are in [PLAN.md](PLAN.md). Numbers and targets are in [RESEARCH_SYNTHESIS.md](RESEARCH_SYNTHESIS.md) ("synthesis §x").
 Solo developer. Python 3.12 for everything except the front end (React + Vite + TypeScript). English only. Azure free account ($200 credit); Foundry access confirmed on October 17 (gpt-5-mini; PLAN decision 18).
 
@@ -46,7 +46,7 @@ Solo developer. Python 3.12 for everything except the front end (React + Vite + 
 | **Wed 21** | MCP server; claims register as a data file; rule-based Verifier + test suite | Verifier suite passes |
 | **Thu 22** | Agents on Foundry (4 roles, handoffs, retry on failure) | Full match → explained timeline |
 | **Fri 23** | Web app: replay, battery, feed, fan/analyst toggle, pitch control at events | Runs locally end to end |
-| **Sat 24** | Azure: Container Apps, Event Hubs live stream, shared state | Public URL works |
+| **Sat 24** | Azure: ~~Container Apps, Event Hubs live stream, shared state~~ Static Web Apps (Free) with the committed demo data (PLAN decision 26) | Public URL works |
 | **Sun 25** | README (realism table, validation charts, synthetic-data card, citations); fix bugs | README complete |
 | **Mon 26** | Video under 2 min, pitch text, final test from a clean clone | Video uploaded |
 | **Tue 27** | **Submit in the morning** | Submitted |
@@ -57,8 +57,8 @@ Buffer: Sunday 25 and Monday 26 each have about half a day of slack.
 
 1. Already cut: the second truth model, and the capacity check (A–S profile).
 2. ~~Extra languages~~ (cut 2026-10-14: English only).
-3. Event Hubs: replay from a file instead of a live stream.
-4. Pitch control: show reachable-area circles instead [Narizuka2023], or drop it.
+3. ~~Event Hubs~~ (cut 2026-10-18, PLAN decision 26: replay from files; the test namespace is deleted).
+4. ~~Pitch control~~ (2026-10-18: reachable-area circles instead [Narizuka2023], labelled "model").
 5. Merge the Personalization agent into the Narrator.
 6. ~~Club mode~~ (decided 2026-10-15: broadcast is the only product mode; club data stays as one validation run).
 7. Shorter realism table: keep position totals, post-peak curves, end-of-match decline and running by phase.
