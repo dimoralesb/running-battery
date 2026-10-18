@@ -11,6 +11,7 @@ import {
 } from "./data";
 import { Feed } from "./Feed";
 import { Legend, Pitch } from "./Pitch";
+import { TeamChart } from "./TeamChart";
 import { Trace } from "./Trace";
 
 const SPEEDS = [1, 5, 20];
@@ -41,7 +42,7 @@ export default function App() {
         setData(d);
         const t = Number(QUERY.get("t"));
         setNow(Number.isFinite(t) && t > 0 ? t : d.feed.moments[0]?.video_s ?? 0);
-        setSelected(QUERY.get("player") ?? d.feed.entries[0]?.player.id ?? null);
+        setSelected(QUERY.get("player") ?? d.feed.entries.find((e) => e.player)?.player?.id ?? null);
       })
       .catch((e) => setError(String(e)));
   }, [matchId]);
@@ -166,6 +167,7 @@ export default function App() {
                       chance: s.low_chance[i] < 1 ? "less than 1%" : `about ${s.low_chance[i]}%`,
                     })}</p>
                   )}
+                  <p>{fill(copy.topSpeed, topSpeed(sel.name, s.speed, i))}</p>
                   {s.red_zone[i] ? <p>{fill(copy.redZone, { name: sel.name })}</p>
                     : s.post_peak[i] ? <p>{fill(copy.postPeak, { name: sel.name })}</p> : null}
                 </>
@@ -174,6 +176,7 @@ export default function App() {
               <p className="muted">Click a player on the pitch.</p>
             )}
           </div>
+          <TeamChart meta={data.meta} now={now} title={copy.teamChart} onSeek={setNow} />
           {mode === "analyst" && sel && s && (
             <Trace signals={s} meta={data.meta} now={now} name={sel.name} onSeek={setNow} />
           )}
@@ -183,12 +186,18 @@ export default function App() {
           <Feed feed={data.feed} meta={data.meta} now={now} mode={mode} favourite={favourite}
                 showBlocked={showBlocked} onShowBlocked={setShowBlocked} onSeek={(v, p) => {
                   setNow(v);
-                  setSelected(p);
+                  if (p) setSelected(p);
                 }} blockedNote={copy.blocked} />
         </aside>
       </main>
     </div>
   );
+}
+
+function topSpeed(name: string, speed: number[], i: number) {
+  let top = 0;
+  for (let k = 0; k <= i; k++) if (speed[k] <= 110 && speed[k] > top) top = speed[k];
+  return { name, v: (top / 10).toFixed(1), kmh: Math.round(top * 0.36) };
 }
 
 export const KIND: Record<string, string> = {
@@ -197,4 +206,6 @@ export const KIND: Record<string, string> = {
   second_wind: "Second wind",
   fresh_legs: "Fresh legs",
   not_tired_tactical: "Not tired, tactical",
+  tug_of_war: "Tug of war",
+  flat_out: "Flat out",
 };

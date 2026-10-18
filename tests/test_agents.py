@@ -43,11 +43,14 @@ DEAD = (300.0, 360.0)  # period 2: a one-minute stoppage
 
 
 def _speed(pid: str, period: int, t: float) -> float:
-    """Who runs, when: H04 (left-back) a red-zone minute at 7 m/s, then back to his normal
-    later; H12 (the substitute) two minutes at 6 m/s."""
+    """Who runs, when: H04 (left-back) a red-zone minute at 7.5 m/s, then another later (back
+    to his normal, and near his top speed); A04 (the away left-back) a minute at
+    6 m/s; H12 (the substitute) two minutes at 6 m/s."""
     if pid == "H04" and period == 1 and (60.0 <= t < 120.0):
-        return 7.0
+        return 7.5
     if pid == "H04" and period == 1 and (700.0 <= t < 760.0):
+        return 7.5  # the first run's top is a little higher: he steps onto the circle
+    if pid == "A04" and period == 1 and (300.0 <= t < 360.0):
         return 6.0
     if pid == "H12" and period == 2 and (60.0 <= t < 180.0):
         return 6.0
@@ -204,6 +207,32 @@ def test_find_moments(tools):
     assert "error" in tools.find_moments("tired")
 
 
+def test_team_running_and_tug_of_war(tools):
+    r = tools.team_running()
+    home, away = r["teams"]["home"], r["teams"]["away"]
+    assert home["hsr_per_in_play_min"]["value"] > away["hsr_per_in_play_min"]["value"] > 0
+    assert [b["period"] for b in r["blocks"]] == [1, 2] and "claim 35" in r["note"]
+    _numbers_have_units(r)
+    tug = tools.find_moments("tug_of_war")["moments"]
+    assert tug and tug[0]["player"] is None and tug[0]["team"]["id"] == "home"
+    assert (
+        tug[0]["facts"]["pattern"] == "ran harder" and tug[0]["facts"]["vs_opponent"]["value"] > 15
+    )
+    assert tools.find_moments("tug_of_war", player="H04")["moments"] == []  # team moments only
+
+
+def test_flat_out_is_near_his_top_speed_so_far(tools):
+    flat = tools.find_moments("flat_out", player="H04")["moments"]
+    assert flat and 700.0 <= flat[0]["t"] <= 760.0
+    f = flat[0]["facts"]
+    assert 90 <= f["share_of_top_speed"]["value"] <= 100 and not f["new_personal_best"]
+    assert (
+        f["peak_speed_kmh"]["value"] == round(f["peak_speed"]["value"] * 3.6)
+        or abs(f["peak_speed_kmh"]["value"] - f["peak_speed"]["value"] * 3.6) < 1
+    )
+    assert "SilvaH2025" in f["published_match_peak_for_position"]["source"]
+
+
 def test_moment_context_reasons(tools):
     ctx = tools.moment_context("50:30", 2, team="home")  # 330 s into the half: stoppage, 2–0
     codes = {r["code"] for r in ctx["non_fatigue_reasons"]}
@@ -263,7 +292,7 @@ def test_tools_never_open_truth_json(folder, monkeypatch):
     assert {"signals.json", "tracking.jsonl", "events.jsonl", "metadata.json"} <= names
 
 
-def test_mcp_server_serves_the_six_read_only_tools(folder):
+def test_mcp_server_serves_the_seven_read_only_tools(folder):
     pytest.importorskip("mcp")
     from secondwind.agents.mcp_server import build
 
@@ -276,7 +305,8 @@ def test_mcp_server_serves_the_six_read_only_tools(folder):
 
     listed, result = asyncio.run(run())
     assert {t.name for t in listed} == {"match_summary", "player_signals", "find_moments",
-                                        "moment_context", "claim", "verify"}  # fmt: skip
+                                        "team_running", "moment_context", "claim",
+                                        "verify"}  # fmt: skip
     assert all(t.annotations.readOnlyHint for t in listed)
     assert "typical professional" in json.dumps(result[1] if isinstance(result, tuple) else
                                                 result.structuredContent)  # fmt: skip
@@ -293,6 +323,7 @@ def test_offline_feed_is_verified_and_timestamped(folder):
         if e["shown"]:
             assert verify(e["sentence"], e["mode"]).ok, e["sentence"]
             assert e["sources"]
+    assert any(e["player"] is None and e["kind"] == "tug_of_war" for e in feed["entries"])
     times = [e["video_s"] for e in feed["entries"]]
     assert times == sorted(times)
     fav = asyncio.run(feed_mod.build(folder, offline=True, favourite="Sub H"))

@@ -15,7 +15,9 @@ REPORT = Path(__file__).resolve().parents[1] / "docs" / "verifier_report.json"
 # Context cases the rules get wrong on purpose: naming the time ("after the break") without
 # naming it as the reason, and a claim the facts contradict (F1); only the LLM pass can tell.
 RULES_MISS = {"He likely faded after the break.",
-              "This is the lowest point of his match so far, by our estimate."}  # fmt: skip
+              "This is the lowest point of his match so far, by our estimate.",
+              "Westerlyn cover 196 m of high-speed running per ball-in-play minute while their "
+              "opponents cover 160 m, roughly 22% less."}  # fmt: skip
 
 
 @pytest.mark.parametrize(("sentence", "mode"), VALID)
@@ -100,7 +102,15 @@ def test_report_covers_this_suite():
 def test_overlay_copy_passes_the_verifier():
     """Every fixed sentence on the overlay (app/src/copy.json) goes through the rules too."""
     copy = json.loads((REPORT.parents[1] / "app" / "src" / "copy.json").read_text())
-    sample = {"name": "Marco Tarvsall", "pct": 62, "lo": 48, "hi": 74, "chance": "about 18%"}
+    sample = {
+        "name": "Marco Tarvsall",
+        "pct": 62,
+        "lo": 48,
+        "hi": 74,
+        "chance": "about 18%",
+        "v": 8.6,
+        "kmh": 31,
+    }
     for key, text in copy.items():
         if key.startswith("_"):
             continue

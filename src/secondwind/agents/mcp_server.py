@@ -20,7 +20,8 @@ from secondwind.agents.tools import MOMENT_KINDS, MatchTools
 
 READ_ONLY = ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True)
 Kind = Literal[
-    "red_zone", "exposed_on_turnover", "second_wind", "fresh_legs", "not_tired_tactical"
+    "red_zone", "exposed_on_turnover", "second_wind", "fresh_legs", "not_tired_tactical",
+    "tug_of_war", "flat_out",
 ]  # fmt: skip
 
 
@@ -57,9 +58,18 @@ def build(folder: Path | str) -> FastMCP:
         """Story moments, ranked best first: red_zone (a red-zone spell), exposed_on_turnover (a
         defender catching breath when his team loses the ball), second_wind (back to normal
         after a spell), fresh_legs (a substitute's first minutes), not_tired_tactical (running
-        dropped while a non-fatigue reason fits). Each moment lists its facts and the claims
-        register rows that may describe it."""
+        dropped while a non-fatigue reason fits), tug_of_war (team level: one team ran much
+        harder per ball-in-play minute, or a gap closed), flat_out (a run at or near a player's
+        top speed so far). Each moment lists its facts and the claims register rows that may
+        describe it; team moments have a team instead of a player."""
         return tools.find_moments(kind, limit, player)
+
+    @server.tool(annotations=READ_ONLY)
+    def team_running(start: str | None = None, end: str | None = None) -> dict[str, Any]:
+        """Both teams' running per ball-in-play minute, with and without the ball, over a window
+        (match clock, default the whole match) and in 15-min blocks. Measured running only:
+        which team is more tired is not measurable from positions (claim 35)."""
+        return tools.team_running(start, end)
 
     @server.tool(annotations=READ_ONLY)
     def moment_context(

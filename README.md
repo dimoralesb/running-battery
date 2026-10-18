@@ -68,31 +68,40 @@ cd app && npm install && npm run dev   # http://localhost:5173/?match=story&mode
 
 Four agents on Microsoft Foundry (Agent Framework, gpt-5-mini) turn a match into a timestamped,
 verified feed (`feed.json`, synced to the replay or a video by `video_s`). They see the match
-only through an MCP server with six read-only tools, and every number comes back with its unit
+only through an MCP server with seven read-only tools, and every number comes back with its unit
 and the field it came from; nothing in `agents/` can read the hidden truth. **Tactical** picks
 the moments (red-zone spells, a defender exposed on the turnover, second wind, fresh legs, a drop
-that is tactical rather than fatigue); **Narrator** writes from the claims register's wordings;
+that is tactical rather than fatigue, flat-out runs near a player's top speed, and the tug of war
+between the two teams' running); **Narrator** writes from the claims register's wordings;
 **Personalization** sets the fan or analyst style; **Verifier** checks every sentence before it
 reaches the screen.
 
 The Verifier runs fixed rules first, then an LLM pass that can only block, against the claims
 register (synthesis §5) and the moment's context: a sentence that blames fatigue while the team
 is 3–0 up, the ball is out of play or the player has just come on must say so, and every number
-must be one of the facts. On 104 test sentences ([docs/verifier_report.json](docs/verifier_report.json)):
+must be one of the facts. On 120 test sentences ([docs/verifier_report.json](docs/verifier_report.json)):
 
 | | Unsupported sentences caught | Valid sentences blocked |
 |---|---|---|
-| Rules alone | 48 / 64 (paraphrases 2 / 16) | 0 / 40 |
-| Rules + LLM | 64 / 64 (paraphrases 16 / 16) | 2 / 40 |
+| Rules alone | 52 / 74 (paraphrases 2 / 21) | 0 / 46 |
+| Rules + LLM | 74 / 74 (paraphrases 21 / 21) | 0 / 46 (2 in the previous run) |
 
 The overlay (`app/`) replays the match with a battery icon per player (fan mode) or the selected
-player's battery trace with its band and his high-speed running (analyst mode), next to the
-feed; each line shows its claim, sources and the Verifier's verdict, and a toggle shows what the
+player's battery trace with its band and his high-speed running (analyst mode), and both teams'
+running per ball-in-play minute, next to the feed; each line shows its claim, sources and the Verifier's verdict, and a toggle shows what the
 Verifier blocked. Its own fixed sentences (`app/src/copy.json`) pass the Verifier too.
 
 The demo feeds are in [docs/feeds/](docs/feeds/): a story match (seed 2028, a high press that
 fades, a full-back exposed on turnovers, a fresh substitute) and a natural one (seed 2031). Story
 matches are never used for validation numbers.
+
+What we do not claim, because we tested it and it does not work from positions
+([validate/teams.py](src/secondwind/validate/teams.py), 60 synthetic matches with the hidden
+truth): **which team is more tired** (the estimator picks the team with more late-match wear
+in at most 68% of matches, and with more short-term tiredness at chance level), and **whether a
+player ran slower than he could when it mattered** (a slow defender after a turnover had no run
+asked by his role in 94% of cases, and a skipped run in 5%). We show the measured running
+instead: team totals per ball-in-play minute, top speeds, and how a gap changed.
 
 ## Validation
 

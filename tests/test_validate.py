@@ -11,6 +11,7 @@ from secondwind.sim.output import prior_settings
 from secondwind.validate.calibrate import binned, fit_map, isotonic
 from secondwind.validate.ceiling import best_precision, player_prior, tired_series
 from secondwind.validate.estimator import calibration, calibration_scores
+from secondwind.validate.teams import agreement, auc
 
 HZ = round(SP.FRAME_RATE_HZ)
 
@@ -109,3 +110,12 @@ def test_real_data_measures_on_a_constructed_match():
     s = summarise([m, m])
     assert s["players"] == 38 and s["below_low_battery"] == 0.0
     assert s["energy_mean_sd"][0] == pytest.approx(np.mean(m["energy"]))
+
+
+def test_team_agreement_and_auc():
+    """validate.teams: the sign agreement of home-minus-away differences, and the AUC."""
+    truth = np.array([1.0, -2.0, 3.0, -4.0])
+    a = agreement(np.array([0.5, -1.0, -1.0, -3.0]), truth)
+    assert a["same_team"] == 0.75 and a["same_team_clear_half"] == 0.5 and a["matches"] == 4
+    assert auc(np.array([3.0, 4.0]), np.array([1.0, 2.0])) == 1.0
+    assert auc(np.array([1.0]), np.array([1.0])) == 0.5

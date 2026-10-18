@@ -3,11 +3,12 @@
 ``python -m secondwind.agents.verifier_suite [--llm] [--json docs/verifier_report.json]``
 
 Four sets:
-- ``VALID`` (29) and ``BLOCKED`` (34): v1, the register's wordings and the blocked claims of
-  synthesis §5.3; the rules must get all of them right (tests/test_verifier.py).
-- ``PARAPHRASES`` (16): blocked claims in other words, written before the rules were run on
+- ``VALID`` (35) and ``BLOCKED`` (38): v1 plus claims 35–38, the register's wordings and
+  the blocked claims of synthesis §5.3; the rules must get all of them right
+  (tests/test_verifier.py).
+- ``PARAPHRASES`` (21): blocked claims in other words, written before the rules were run on
   them and never used to tune the rules. What the rules miss here is what the LLM pass is for.
-- ``CONTEXT`` (25): sentences with a moment's context (rule 2, claim 13) or facts (N1): a 3–0
+- ``CONTEXT`` (26): sentences with a moment's context (rule 2, claim 13) or facts (N1): a 3–0
   lead, the start of the second half, just subbed on, a long stoppage, possession, a low
   first-half load, and numbers that are or are not in the data. Each says whether it should pass.
 
@@ -71,6 +72,17 @@ VALID = [
     ("His high-speed running is 30% below his match average.", "fan"),
     ("His second red-zone spell in five minutes.", "fan"),
     ("He covered 11.4 km, the most on his team.", "fan"),
+    # Added 2026-10-17 with claims 35–38: team running and top speed as measured facts.
+    ("Albion have done 26% more high-speed running per ball-in-play minute than Ravensholt in "
+     "the first hour.", "fan"),
+    ("Without the ball, Ravensholt are covering more ground per minute than with it.", "fan"),
+    ("Top speed hardly drops over a match: in the Premier League, players' fastest runs late on "
+     "are almost as fast as their fastest early on.", "fan"),
+    ("Flat-out running is rare: Premier League players cover only about 20–30 m a match above 85% "
+     "of their season top speed.", "fan"),
+    ("His fastest second of the match: 8.6 m/s (31 km/h), 97% of his top speed so far.", "fan"),
+    ("He ran back at 5.8 m/s (21 km/h), 70% of his top speed today, and the gap grew from 4 to "
+     "9 m.", "fan"),
 ]  # fmt: skip
 
 # (sentence, mode, the claim it must be blocked under): synthesis §5.3 and the unbaselined %.
@@ -110,6 +122,10 @@ BLOCKED = [
     ("He has little left in the tank.", "fan", "G2"),
     ("He's in the red.", "fan", "G2"),
     ("He has used 60% of his reserve.", "fan", "G9"),
+    ("Albion are the fresher team now.", "fan", "35"),
+    ("Ravensholt look tired as a side.", "fan", "35"),
+    ("He didn't bother chasing his man.", "fan", "38"),
+    ("He jogged back when he should have sprinted.", "fan", "38"),
 ]  # fmt: skip
 
 # Blocked claims in other words (held out from the rules).
@@ -130,6 +146,12 @@ PARAPHRASES = [
     ("The burn in his thighs tells you the acid is building.", "fan", "25"),
     ("After that sprint he has no burst left at all.", "fan", "23"),
     ("He's clearly feeling Wednesday's trip in his legs.", "fan", "26"),
+    # Added 2026-10-17 with claims 35 and 38, before their rules were written.
+    ("Ravensholt have run out of legs as a side.", "fan", "35"),
+    ("You can see which XI has more left in the tank: it's Albion.", "fan", "35"),
+    ("He didn't fancy chasing that one.", "fan", "38"),
+    ("He's not putting the yards in to get back.", "fan", "38"),
+    ("A lack of desire to track his runner cost them there.", "fan", "38"),
 ]  # fmt: skip
 
 LEAD = {"code": "big_lead", "text": "his team leads by 3 (3–0)"}
@@ -191,6 +213,14 @@ CONTEXT = [
      "short-term reserve.", "fan", FACTS, "11", False),
     ("He reached 6.1 m/s (22 km/h) on that recovery run.", "analyst", FACTS, None, True),
     ("He reached 7.4 m/s (27 km/h) on that recovery run.", "analyst", FACTS, None, False),
+    # Found in the second agent feed (2026-10-17): a percentage turned round (196 vs 160 m is
+    # 22% more, but 160 is 18% less, not 22%; F1, LLM pass only).
+    ("Westerlyn cover 196 m of high-speed running per ball-in-play minute while their opponents "
+     "cover 160 m, roughly 22% less.", "analyst",
+     {"facts": {"team_hsr_per_in_play_min": {"value": 196.0, "unit": "m"},
+                "opponent_hsr_per_in_play_min": {"value": 160.0, "unit": "m"},
+                "vs_opponent": {"value": 22.0, "unit": "% above (+) or below (−) the opponent"}}},
+     None, False),
     # A large drop vs his match average is fine when it is the measured figure (claim 24 is
     # about unsourced ones, usually vs the peak).
     ("His high-speed running in the last 5 minutes was 86% below his match average.", "fan",

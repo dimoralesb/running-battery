@@ -54,7 +54,7 @@ STATE = r"(tired|exhausted|fatigued|knackered|spent|shattered|out on his feet|do
 BASELINE = (
     r"\b(than|vs\.?|versus|compared (?:with|to)|match average|average|normal|usual|peak|"
     r"first 15|kick-off|first half|reserve|typical professional|of the time|chance|earlier|"
-    r"of the (last|first|next) \d+ min\w*|team-?mates)\b"
+    r"of the (last|first|next) \d+ min\w*|team-?mates|top speed|opponents?)\b"
 )
 NEGATED_LACTIC = r"\b(isn'?t|is not|not|no|nothing to do with)\b[^.]{0,25}\blactic"
 # Wording that blames fatigue, for the context check (rule 2).
@@ -167,6 +167,22 @@ RULES: tuple[Rule, ...] = (
          r"\b(ran|covered|running|distance)\b[^.]*(\b(so|which means|shows?|proves?)\b|:)[^.]*"
          r"\b(fitter|fittest|unfit|fitness)\b|\b(fitter|fittest|unfit)\b[^.]*"
          r"(\b(because|as)\b|:)[^.]*\b(ran|covered|running|distance)\b"),
+    # 35, 38: team-level fatigue, and effort or intent read from speed.
+    Rule("35", "Which team is more tired is not measurable from positions (claim 35); compare "
+         "the running per ball-in-play minute instead",
+         r"\b(fresher|more tired|tireder|less tired|wearier|fitter|more exhausted)\s+(team|side|"
+         r"of the two|XI)\b|\b(team|side|XI)s?\b[^.]{0,40}\b(is|are|look|looks|seem|seems)\s+"
+         r"(\w+\s+)?(tired|tiring|fresher|exhausted|fatigued|fitter|leggy|spent)\b|"
+         r"\b(tired|tiring|exhausted|fatigued|leggy)\s+(team|side|XI)\b|"
+         r"\b(look|looks|are|is|seem|seems)\s+(\w+\s+)?(tired|tiring|exhausted|fatigued|leggy|"
+         r"spent)\s+as an? (team|side|unit)\b"),
+    Rule("38", "Speed shows what a player did, not whether he tried (claim 38); give the speed "
+         "and the gap",
+         r"\b(didn'?t|did not|never|couldn'?t be bothered to|not)\s+(try|trying|bother|bothered|"
+         r"track back|run back|chase|interested)\b|\bgave up\b|\bgiving up\b|\blazy\b|"
+         r"\blaziness\b|\bjogg(ed|ing) back\b|\bwalk(ed|ing) back\b|\bshould have (sprinted|"
+         r"run|chased|tracked|gone)\b|\bwork-?shy\b|\bno effort\b|\bhalf-?hearted\w*\b|"
+         r"\black of (effort|commitment|intensity)\b"),
     # Qualified claims used without their qualifier.
     Rule("10", "Top speed barely changes in matches; only \"a bit slower than earlier\" "
          "(claim 10)", r"lost (his|her) (pace|speed|legs)|no pace left|no legs left"),

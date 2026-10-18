@@ -146,3 +146,14 @@ button, select {
 .blocked-list { border: 1px dashed var(--axis); border-radius: 8px; padding: 6px 8px; }
 .entry.blocked { border-left-color: var(--axis); }
 .entry.blocked .reason { color: var(--ink-2); }
+.team-chart { margin-top: 10px; }
+.team-chart .legend { margin: 2px 4px 4px; }
+.swatch { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+.swatch.home { background: var(--home); }
+.swatch.away { background: var(--away); }
+.team-line { fill: none; stroke-width: 2; stroke-linejoin: round; }
+.team-line.home { stroke: var(--home); }
+.team-line.away { stroke: var(--away); }
+.chart .marker.home { fill: var(--home); }
+.chart .marker.away { fill: var(--away); }
+.chart .direct { font-size: 11px; fill: var(--ink-2); }

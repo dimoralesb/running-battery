@@ -75,7 +75,25 @@ MOMENT_KINDS = {
     "not_tired_tactical": ("His running dropped while a non-fatigue reason fits (lead, stoppage, "
                            "possession, start of a half, just on) [Bradley2013; Morgans2025]",
                            ["13", "14", "9b"]),
+    "tug_of_war": ("Team level: one team's high-speed running per ball-in-play minute over a "
+                   "15-min block is well above the other's, or a gap that was there has closed "
+                   "(synthesis §9.1 idea 8) [Allen2026a; Allen2026b]", ["9a", "9b", "7", "30"]),
+    "flat_out": ("A run at or near the player's top speed so far in the match (his fastest "
+                 "second), measured [Kavanagh2024; Bradley2009]", ["36", "37", "10"]),
 }  # fmt: skip
+TEAM_KINDS = {"tug_of_war"}
+BLOCK_S = 900.0  # 15-min blocks, as the published end-of-match comparisons [Bradley2009]
+TEAM_GAP = 15.0  # % between the teams for a tug-of-war moment (our assumption)
+GAP_CLOSED = 7.5  # % below which a gap counts as closed (our assumption)
+MIN_IN_PLAY_S = 300.0  # a block needs 5 min of ball in play to compare
+FLAT_OUT_SHARE = 0.9  # a flat-out run: ≥ 90% of his top speed so far (our assumption)
+FLAT_OUT_MIN_SPEED = 7.0  # m/s (25.2 km/h): about the sprint threshold [Bradley2009, p.162]
+FLAT_OUT_FROM_S = 600.0  # from the 10th minute, so that "his top speed so far" means something
+MAX_PLAUSIBLE_SPEED = 11.0  # m/s; faster seconds are tracking errors (our assumption)
+# Published match peak speed by position, Brazil, 10 Hz GNSS [SilvaH2025, Table 1]; DM and AM
+# use the central midfielders' value.
+MATCH_PEAK = {"CB": 8.09, "FB": 8.79, "DM": 8.41, "CM": 8.41, "AM": 8.41, "WM": 8.52,
+              "CF": 8.29}  # fmt: skip
 REASONS = {
     "big_lead": "his team leads by {lead} ({score})",
     "start_of_half": "the first {minutes:.0f} min of the half",
@@ -251,6 +269,59 @@ class MatchData:
     def sub_off(self) -> dict[str, tuple[int, float, str]]:
         return {s.player_out: (s.period, s.t, s.player_in) for s in self.metadata.substitutions}
 
+    @cached_property
+    def team_seconds(self) -> dict[int, dict[str, np.ndarray]]:
+        """Per period, per second: each team's high-speed metres and metres (outfield players on
+        the pitch), with ball status and possession from the tracking."""
+        out = {}
+        for per, alive in self.alive.items():
+            n = len(alive)
+            d = {f"{k}_{team}": np.zeros(n) for team in self.teams for k in ("hsr", "dist")}
+            for pid, s in self.series.items():
+                info = self.players[pid]
+                if info["position"] == "GK":
+                    continue
+                rows = np.flatnonzero(s.period == per)
+                k = np.clip(np.floor(s.t[rows]).astype(int), 0, n - 1)
+                speed = s.cols["speed"][rows]
+                np.add.at(d[f"dist_{info['team']}"], k, speed)
+                np.add.at(d[f"hsr_{info['team']}"], k, np.where(speed > EP.HI_SPEED, speed, 0.0))
+            d["alive"] = alive
+            d["poss"] = np.array([x or "" for x in self.possession[per]])
+            out[per] = d
+        return out
+
+    def team_rates(self, period: int, a: float, b: float) -> dict[str, dict[str, float]]:
+        """Each team's running per ball-in-play minute between a and b seconds of a period."""
+        d = self.team_seconds[period]
+        w = slice(int(a), int(min(b, len(d["alive"]))))
+        alive, poss = d["alive"][w], d["poss"][w]
+        out = {}
+        for team in self.teams:
+            other = next(t for t in self.teams if t != team)
+            hsr, dist = d[f"hsr_{team}"][w], d[f"dist_{team}"][w]
+            mine, theirs = alive & (poss == team), alive & (poss == other)
+
+            def rate(x, mask):
+                return float(x[mask].sum() / mask.sum() * 60.0) if mask.sum() else float("nan")
+
+            out[team] = {"hsr": rate(hsr, alive), "hsr_with_ball": rate(hsr, mine),
+                         "hsr_without_ball": rate(hsr, theirs), "dist": rate(dist, alive),
+                         "possession": float(mine.sum() / max(alive.sum(), 1)),
+                         "in_play_s": float(alive.sum())}  # fmt: skip
+        return out
+
+    def blocks(self) -> list[tuple[int, float, float]]:
+        """15-min blocks per period (added time in the last one): (period, start, end) s."""
+        out = []
+        for per, dur in self.durations.items():
+            a = 0.0
+            while a < dur:
+                b = a + BLOCK_S if a + 2 * BLOCK_S <= dur + BLOCK_S / 2 else dur
+                out.append((per, a, min(b, dur)))
+                a = b
+        return out
+
     def hsr_per_s(self, pid: str) -> np.ndarray:
         """Metres above HI_SPEED in each second (the per-second mean speed)."""
         speed = self.series[pid].cols["speed"]
@@ -264,6 +335,10 @@ class MatchData:
 
 HSR_SRC = "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch"
 VS_AVG = "% above (+) or below (−) his match average"
+HSR_TEAM = "m of high-speed running (> 5.5 m/s) per ball-in-play minute, team total"
+HSR_WITH = "m of high-speed running per minute with the ball, team total"
+HSR_WITHOUT = "m of high-speed running per minute without the ball, team total"
+DIST_TEAM = "m of total distance per ball-in-play minute, team total"
 
 
 class MatchTools:
@@ -507,6 +582,62 @@ class MatchTools:
                        "claim 13).")  # fmt: skip
         return ctx
 
+    # --- team_running ------------------------------------------------------------------------
+
+    def team_running(self, start: str | float | None = None, end: str | float | None = None
+                     ) -> dict[str, Any]:  # fmt: skip
+        """Both teams' running per ball-in-play minute, with and without the ball (G5), over a
+        window (default the whole match) and in 15-min blocks. Measured, never "who is more
+        tired" (claim 35)."""
+        m = self.m
+        a = parse_time(start) if start is not None else (1, 0.0)
+        b = (
+            parse_time(end)
+            if end is not None
+            else (max(m.durations), m.durations[max(m.durations)])
+        )
+        src = "signals.players[].series.speed (outfield) and tracking ball_status, possession_team"
+
+        def pack(r: dict) -> dict:
+            return {team: {
+                "hsr_per_in_play_min": q(x["hsr"], HSR_TEAM, src, 0),
+                "hsr_per_min_with_ball": q(x["hsr_with_ball"], HSR_WITH, src,
+                                           0),
+                "hsr_per_min_without_ball": q(x["hsr_without_ball"], HSR_WITHOUT, src, 0),
+                "distance_per_in_play_min": q(x["dist"], DIST_TEAM, src, 0),
+                "possession": q(x["possession"], "share of ball-in-play time", src),
+            } for team, x in r.items()}  # fmt: skip
+
+        blocks = []
+        for per, lo, hi in m.blocks():
+            if (per, hi) <= a or (per, lo) >= b:
+                continue
+            r = m.team_rates(per, lo, hi)
+            blocks.append({"from": m.when(per, lo)["clock"], "to": m.when(per, hi)["clock"],
+                           "period": per, "teams": pack(r)})  # fmt: skip
+        totals = {team: {"hsr": 0.0, "hsr_with_ball": 0.0, "hsr_without_ball": 0.0, "dist": 0.0}
+                  for team in m.teams}  # fmt: skip
+        window = {}
+        for per in m.durations:
+            lo = a[1] if per == a[0] else (0.0 if per > a[0] else None)
+            hi = b[1] if per == b[0] else (m.durations[per] if per < b[0] else None)
+            if lo is None or hi is None or hi <= lo:
+                continue
+            window[per] = m.team_rates(per, lo, hi)
+        for team in totals:  # weighted by ball-in-play time
+            w = sum(r[team]["in_play_s"] for r in window.values()) or 1.0
+            for k in totals[team]:
+                vals = [(r[team][k], r[team]["in_play_s"]) for r in window.values()
+                        if r[team][k] == r[team][k]]  # fmt: skip
+                totals[team][k] = sum(v * n for v, n in vals) / max(sum(n for _, n in vals), 1)
+            totals[team]["possession"] = sum(r[team]["possession"] * r[team]["in_play_s"]
+                                             for r in window.values()) / w  # fmt: skip
+        return {"window": [m.when(*a)["clock"], m.when(*b)["clock"]], "teams": pack(totals),
+                "blocks": blocks,
+                "note": "Team totals of the outfield players per minute of that phase (G5). Both "
+                        "teams' running rises and falls together (claim 9a); who is more tired is "
+                        "not measurable from positions (claim 35)."}  # fmt: skip
+
     # --- find_moments ------------------------------------------------------------------------
 
     def find_moments(self, kind: str, limit: int = 10, player: str | None = None) -> dict:
@@ -516,7 +647,7 @@ class MatchTools:
         found = getattr(self, f"_moments_{kind}")()
         if player:
             pid = self.m.player(player)["id"]
-            found = [x for x in found if x["player"]["id"] == pid]
+            found = [x for x in found if x["player"] and x["player"]["id"] == pid]
         found.sort(key=lambda x: -x["score"])
         for r, x in enumerate(found, start=1):
             x["rank"] = r
@@ -531,6 +662,156 @@ class MatchTools:
             "player": self.m.players[pid], "score": round(float(score), 3),
             "facts": facts, "claims": MOMENT_KINDS[kind][1], "why": why,
         }  # fmt: skip
+
+    def _team_moment(self, team, period, t, score, facts, why) -> dict[str, Any]:
+        info = self.m.teams[team]
+        return {
+            "id": f"tug_of_war:{team}:{period}:{int(t)}", "kind": "tug_of_war",
+            **self.m.when(period, t),
+            "player": None, "team": {"id": team, "name": info.name},
+            "score": round(float(score), 3), "facts": facts,
+            "claims": MOMENT_KINDS["tug_of_war"][1], "why": why,
+        }  # fmt: skip
+
+    def _moments_tug_of_war(self) -> list[dict]:
+        m, out = self.m, []
+        src = "signals.players[].series.speed (outfield) and tracking ball_status, possession_team"
+        first: dict[str, float] = {}
+        widest = 0.0  # the widest gap so far (signed, home minus away), until it closes
+        for per, lo, hi in m.blocks():
+            r = m.team_rates(per, lo, hi)
+            if min(x["in_play_s"] for x in r.values()) < MIN_IN_PLAY_S:
+                continue
+            home, away = r["home"]["hsr"], r["away"]["hsr"]
+            for team in r:
+                first.setdefault(team, r[team]["hsr"])
+            gap = pct(home, away)
+            if not gap == gap:
+                continue
+            before = widest
+            closed = abs(before) >= TEAM_GAP and abs(gap) < GAP_CLOSED
+            widest = 0.0 if closed else (gap if abs(gap) > abs(widest) else widest)
+            if abs(gap) < TEAM_GAP and not closed:
+                continue
+            lead = ("home" if before > 0 else "away") if closed else ("home" if gap > 0 else "away")
+            other = "away" if lead == "home" else "home"
+            t = hi - 1.0
+            facts = {
+                "block": f"{m.when(per, lo)['clock']}–{m.when(per, hi)['clock']}",
+                "team_hsr_per_in_play_min": q(r[lead]["hsr"], HSR_TEAM, src, 0),
+                "opponent_hsr_per_in_play_min": q(r[other]["hsr"], HSR_TEAM, src, 0),
+                "vs_opponent": q(
+                    pct(r[lead]["hsr"], r[other]["hsr"]),
+                    "% above (+) or below (−) the opponent in this block",
+                    src,
+                    0,
+                ),
+                "team_vs_own_first_15": q(
+                    pct(r[lead]["hsr"], first[lead]),
+                    "% above (+) or below (−) his team's first 15 min",
+                    src,
+                    0,
+                ),
+                "opponent_vs_own_first_15": q(
+                    pct(r[other]["hsr"], first[other]),
+                    "% above (+) or below (−) their first 15 min",
+                    src,
+                    0,
+                ),
+                "team_possession": q(r[lead]["possession"], "share of ball-in-play time", src),
+                "team_hsr_per_min_without_ball": q(
+                    r[lead]["hsr_without_ball"], HSR_WITHOUT, src, 0
+                ),
+                "team_hsr_per_min_with_ball": q(r[lead]["hsr_with_ball"], HSR_WITH, src, 0),
+                "score": m.score(per, t),
+                "pattern": "gap closed" if closed else "ran harder",
+            }
+            if closed:
+                facts["earlier_gap_vs_opponent"] = q(
+                    abs(before), "% (the widest gap earlier, before it closed)", src, 0
+                )
+            score = abs(gap) / 100.0 + (1.0 if closed else 0.0)
+            why = (
+                "the gap in running between the teams has closed"
+                if closed
+                else "one team ran much harder per ball-in-play minute"
+            )
+            out.append(self._team_moment(lead, per, t, score, facts, why))
+        return out
+
+    def _moments_flat_out(self) -> list[dict]:
+        m, out = self.m, []
+        sig = "signals.players[].series.speed (fastest second)"
+        best_in_match = 0.0
+        found = []
+        for pid, s in m.series.items():
+            info = m.players[pid]
+            if info["position"] == "GK":
+                continue
+            v = np.where(s.cols["speed"] <= MAX_PLAUSIBLE_SPEED, s.cols["speed"], 0.0)
+            top_before = np.maximum.accumulate(np.r_[0.0, v[:-1]])
+            video = s.t + np.where(s.period == 2, m.durations[1], 0.0)
+            hot = (
+                (v >= FLAT_OUT_SHARE * top_before)
+                & (top_before >= FLAT_OUT_MIN_SPEED)
+                & (video >= FLAT_OUT_FROM_S)
+            )
+            late_top = v[video < 75 * 60].max() if (video < 75 * 60).any() else 0.0
+            for a, b in runs(hot):
+                i = a + int(np.argmax(v[a : b + 1]))
+                found.append((float(video[i]), pid, i, float(v[i]), float(top_before[a]), late_top))
+        found.sort()
+        for vid, pid, i, peak, top, late_top in found:
+            s, info = m.series[pid], m.players[pid]
+            per, t = int(s.period[i]), float(s.t[i])
+            fastest = peak > best_in_match
+            best_in_match = max(best_in_match, peak)
+            facts = {
+                "peak_speed": q(peak, "m/s", sig, 1),
+                "peak_speed_kmh": q(peak * 3.6, "km/h", sig, 0),
+                "top_speed_so_far": q(top, "m/s (his fastest second before this run)", sig, 1),
+                "share_of_top_speed": q(100.0 * peak / top, "% of his top speed so far", sig, 0),
+                "new_personal_best": peak > top,
+                "fastest_in_match_so_far": fastest,
+                "published_match_peak_for_position": q(MATCH_PEAK[info["position"]], "m/s, "
+                                                       "mean match peak for his position",
+                                                       "SilvaH2025, Table 1 (Brazil, GNSS)", 2),
+            }  # fmt: skip
+            if vid >= 75 * 60 and late_top > 0:
+                facts["share_of_top_before_75"] = q(
+                    100.0 * peak / late_top,
+                    "% of his fastest second before the 75th minute",
+                    sig,
+                    0,
+                )
+            direction = self._direction(pid, per, t)
+            if direction:
+                facts["running"] = direction
+            score = peak / 10.0 + 0.5 * (peak > top) + 1.0 * fastest + 0.3 * (vid >= 75 * 60)
+            out.append(
+                self._moment(
+                    "flat_out", pid, per, t, score, facts, "a run at or near his top speed so far"
+                )
+            )
+        return out
+
+    def _direction(self, pid: str, period: int, t: float) -> str | None:
+        """What the run looked like (measured): towards which goal, and who had the ball."""
+        m = self.m
+        k = m.second(period, t)
+        xy = m.xy[period][:, m.col[pid]]
+        a, b = max(k - 2, 0), min(k + 1, len(xy) - 1)
+        if np.isnan(xy[a, 0]) or np.isnan(xy[b, 0]):
+            return None
+        team = m.players[pid]["team"]
+        forward = m.teams[team].attacks_positive_x_in_period_1 == (period == 1)
+        dx = (xy[b, 0] - xy[a, 0]) * (1 if forward else -1)
+        holder = m.possession[period][k]
+        if dx < 0 and holder and holder != team:
+            return "towards his own goal while the opponents had the ball"
+        if dx > 0 and holder == team:
+            return "towards the opponents' goal with his team on the ball"
+        return None
 
     def _spells(self, pid: str) -> list[tuple[int, int]]:
         s = self.m.series[pid]

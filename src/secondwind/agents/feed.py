@@ -41,8 +41,8 @@ from secondwind.agents.tools import MOMENT_KINDS, MatchTools
 
 FEED = "feed.json"
 MODES = ("fan", "analyst")
-PER_KIND = {"red_zone": 3, "exposed_on_turnover": 3, "second_wind": 2, "fresh_legs": 2,
-            "not_tired_tactical": 2}  # fmt: skip
+PER_KIND = {"tug_of_war": 2, "red_zone": 3, "exposed_on_turnover": 3, "flat_out": 2,
+            "second_wind": 2, "fresh_legs": 2, "not_tired_tactical": 2}  # fmt: skip
 MIN_GAP_S = 180.0  # moments at least 3 min apart (our assumption, for a readable feed)
 MAX_PER_PLAYER = 3
 ORDINAL = {1: "first", 2: "second", 3: "third", 4: "fourth", 5: "fifth", 6: "sixth"}
@@ -60,6 +60,11 @@ def candidates(tools: MatchTools, limit: int = 8) -> dict[str, dict]:
     return out
 
 
+def who(mo: dict) -> str:
+    """A moment's subject: the player's id, or "team:<id>" for a team moment."""
+    return mo["player"]["id"] if mo.get("player") else f"team:{mo['team']['id']}"
+
+
 def pick_offline(found: dict[str, dict], favourite: str | None = None) -> list[str]:
     """The best-ranked moments of each kind, at least MIN_GAP_S apart and at most
     MAX_PER_PLAYER per player; a favourite player's moments are tried first."""
@@ -67,17 +72,17 @@ def pick_offline(found: dict[str, dict], favourite: str | None = None) -> list[s
     per_player: dict[str, int] = {}
 
     def fits(mo: dict) -> bool:
-        if per_player.get(mo["player"]["id"], 0) >= MAX_PER_PLAYER:
+        if per_player.get(who(mo), 0) >= MAX_PER_PLAYER:
             return False
         return all(abs(mo["video_s"] - c["video_s"]) >= MIN_GAP_S for c in chosen)
 
-    order = sorted(found.values(), key=lambda m: (m["player"]["id"] != favourite, m["rank"]))
+    order = sorted(found.values(), key=lambda m: (who(m) != favourite, m["rank"]))
     for kind, n in PER_KIND.items():
         taken = 0
         for mo in order:
             if mo["kind"] == kind and taken < n and fits(mo):
                 chosen.append(mo)
-                per_player[mo["player"]["id"]] = per_player.get(mo["player"]["id"], 0) + 1
+                per_player[who(mo)] = per_player.get(who(mo), 0) + 1
                 taken += 1
     return [m["id"] for m in sorted(chosen, key=lambda m: m["video_s"])]
 
@@ -94,11 +99,12 @@ class Picks(BaseModel):
 TACTICAL = """You are the Tactical analyst of Second Wind. Using only the tools, pick the 10 to 14
 moments of this synthetic match that best tell the story of who did the most hard running and
 when it cost them. Call match_summary once, then find_moments for each kind (red_zone,
-exposed_on_turnover, second_wind, fresh_legs, not_tired_tactical) with limit 6. Prefer variety
-(every kind if it exists, several players and both teams), moments at least 3 minutes apart,
-the story arc (a high press, a defender exposed on turnovers, a fresh substitute, a drop that is
-tactical rather than fatigue). {favourite}Return the moment ids exactly as the tools gave
-them, in match order, each with a one-line reason."""
+exposed_on_turnover, second_wind, fresh_legs, not_tired_tactical, tug_of_war, flat_out) with
+limit 6; team_running shows how the two teams' running compares. Prefer variety (every kind if
+it exists, several players and both teams), moments at least 3 minutes apart, the story arc (a
+high press and whether the gap in running closed, a defender exposed on turnovers, a fresh
+substitute, a drop that is tactical rather than fatigue, the fastest runs). {favourite}Return
+the moment ids exactly as the tools gave them, in match order, each with a one-line reason."""
 
 
 async def pick_llm(folder: Path, found: dict[str, dict], favourite: str | None) -> list[str]:
@@ -126,11 +132,12 @@ async def pick_llm(folder: Path, found: dict[str, dict], favourite: str | None) 
 def brief(tools: MatchTools, mo: dict) -> dict[str, Any]:
     """What the Narrator and the Verifier get for one moment: its facts, the player's signals
     over the 5 min before it, the context and the claims it may use."""
-    pid, per, t = mo["player"]["id"], mo["period"], mo["t"]
-    ctx = tools.context_at(per, t, pid)
+    per, t = mo["period"], mo["t"]
+    pid = mo["player"]["id"] if mo.get("player") else None
+    ctx = tools.context_at(per, t, pid, None if pid else mo["team"]["id"])
     end = ctx["clock"]
     start = max(t - 300.0, 0.0)
-    sig = tools.player_signals(pid, _clock(tools, per, start), _clock(tools, per, t))
+    sig = tools.player_signals(pid, _clock(tools, per, start), _clock(tools, per, t)) if pid else {}
     facts = dict(mo["facts"])
     if sig.get("on_pitch"):
         b, h = sig["battery"], sig["hsr"]
@@ -150,7 +157,7 @@ def brief(tools: MatchTools, mo: dict) -> dict[str, Any]:
                                                   "wording", "sources")})  # fmt: skip
     return {
         "moment_id": mo["id"], "kind": mo["kind"], "what": MOMENT_KINDS[mo["kind"]][0],
-        "clock": end, "player": mo["player"], "facts": facts,
+        "clock": end, "player": mo.get("player"), "team": mo.get("team"), "facts": facts,
         "non_fatigue_reasons": ctx["non_fatigue_reasons"],
         "context": {k: ctx[k] for k in ("score", "ball_in_play", "possession", "lead",
                                         "team_just_lost_ball", "team_just_won_ball",
@@ -167,7 +174,11 @@ def _clock(tools: MatchTools, period: int, t: float) -> str:
 
 def verifier_context(b: dict) -> dict[str, Any]:
     return {"non_fatigue_reasons": b["non_fatigue_reasons"], "facts": b["facts"],
-            "context": b["context"], "player": b["player"]["name"]}  # fmt: skip
+            "context": b["context"], "subject": _name(b)}  # fmt: skip
+
+
+def _name(b: dict) -> str:
+    return b["player"]["name"] if b.get("player") else b["team"]["name"]
 
 
 # --- Narrator (templates) --------------------------------------------------------------------
@@ -184,7 +195,7 @@ def _v(b: dict, key: str, scale: float = 1.0, digits: int = 0):
 
 def template(b: dict, mode: str) -> list[tuple[str, str]]:
     """(claim id, sentence) for a moment, from the register's wordings and the facts."""
-    name, kind = b["player"]["name"], b["kind"]
+    name, kind = _name(b), b["kind"]
     bat = _v(b, "typical_pro_battery_now", 100)
     pro = (
         ("11", f"That running would leave a typical professional at about {bat}% of their "
@@ -283,6 +294,91 @@ def template(b: dict, mode: str) -> list[tuple[str, str]]:
             else f"is doing {-pct}% less high-speed running than his match average"
         )
         out.append(("13", f"{name} {drop}, but {reason}, so this is likely not fatigue."))
+    elif kind == "tug_of_war":
+        f = b["facts"]
+        block, vs = f["block"], _v(b, "vs_opponent")
+        mine, theirs = _v(b, "team_hsr_per_in_play_min"), _v(b, "opponent_hsr_per_in_play_min")
+        if f.get("pattern") == "gap closed":
+            earlier, own = _v(b, "earlier_gap_vs_opponent"), _v(b, "team_vs_own_first_15")
+            out.append(
+                (
+                    "fact",
+                    f"The gap has closed: {name} had done up to {earlier}% more "
+                    "high-speed running per ball-in-play minute than their "
+                    f"opponents, and in {block} it was level ({mine} m vs {theirs} "
+                    "m).",
+                )
+            )
+            if own is not None and own < 0:
+                out.append(
+                    (
+                        "fact",
+                        f"{name}'s high-speed running per ball-in-play minute in "
+                        f"{block} is {-own}% below their first 15 minutes.",
+                    )
+                )
+        else:
+            out.append(
+                (
+                    "fact",
+                    f"{name} did {vs}% more high-speed running per ball-in-play "
+                    f"minute than their opponents in {block} ({mine} m vs {theirs} "
+                    "m).",
+                )
+            )
+        if mode == "fan":
+            out.append(
+                (
+                    "9a",
+                    "When one side raises the tempo, the other has to match it: in the "
+                    "Premier League the two teams' running totals move closely "
+                    "together.",
+                )
+            )
+    elif kind == "flat_out":
+        f = b["facts"]
+        v, kmh, share = (
+            _v(b, "peak_speed", digits=1),
+            _v(b, "peak_speed_kmh"),
+            _v(b, "share_of_top_speed"),
+        )
+        run = f", {f['running']}" if f.get("running") else ""
+        if f.get("fastest_in_match_so_far"):
+            out.append(
+                (
+                    "fact",
+                    f"{name} reaches {v} m/s ({kmh} km/h){run}: the fastest second "
+                    "of anyone in the match so far.",
+                )
+            )
+        elif f.get("new_personal_best"):
+            out.append(
+                ("fact", f"{name}'s fastest run of the match so far: {v} m/s ({kmh} km/h){run}.")
+            )
+        else:
+            out.append(
+                (
+                    "fact",
+                    f"{name} reaches {v} m/s ({kmh} km/h){run}, {share}% of his top speed so far.",
+                )
+            )
+        if f.get("share_of_top_before_75"):
+            out.append(
+                (
+                    "36",
+                    "Top speed hardly drops over a match: in the Premier League, "
+                    "players' fastest runs late on are almost as fast as their fastest "
+                    "early on.",
+                )
+            )
+        elif mode == "analyst":
+            out.append(
+                (
+                    "37",
+                    "Flat-out running is rare: Premier League players cover only "
+                    "about 20–30 m a match above 85% of their season top speed.",
+                )
+            )
     return [x for x in out if x and not re.search(r"\bNone\b", x[1])]  # a fact was missing
 
 
@@ -320,6 +416,17 @@ Rules (a Verifier blocks anything else):
 - Say something specific to each moment; use a general register sentence at most twice in the
   whole feed. For not_tired_tactical moments, say what fits instead of fatigue (the reason).
 - Write "hardly any" rather than "0.0 m/min".
+- Never say or imply that a team is more tired, fresher or fitter than the other (claim 35):
+  compare their measured running per ball-in-play minute instead. Never read effort or intent
+  from speed ("didn't try", "gave up", "jogged back", "should have sprinted"; claim 38): give the
+  speed, the share of his top speed so far and what happened.
+- Team numbers are high-speed running (> 5.5 m/s), team totals: say "high-speed running", never
+  "covered", which reads as total distance. vs_opponent is how much more (+) or less (−) the
+  team ran than the opponent: say "X% more than their opponents", never turn it round.
+- Never write field names such as vs_opponent or top_speed_so_far; write plain English.
+- Claim 7 (the last 15 minutes vs kick-off) only fits the last block of the match.
+- Claim 36 (top speed hardly drops) only fits a run after the 75th minute (the moment has
+  share_of_top_before_75); otherwise give the speed and the share of his top speed so far.
 - Claim 1's "after that 5-minute spell" only fits a spell that lasted about 5 minutes (the
   moment's duration); otherwise say "after a spell like that".
 - m/s first, km/h in brackets. Plain English.
@@ -401,7 +508,10 @@ async def entries_for(b: dict, mode: str, lines: list[tuple[str, str]], agent) -
 def _entry(b, mode, claim, sentence, v: FullVerdict, verdict=None, original=None) -> dict:
     when = {k: b["_when"][k] for k in ("t", "period", "clock", "video_s")}
     e = when | {
-        "player": {k: b["player"][k] for k in ("id", "name", "shirt", "team")},
+        "player": {k: b["player"][k] for k in ("id", "name", "shirt", "team")}
+        if b.get("player") else None,
+        "team": b["player"]["team"] if b.get("player") else b["team"]["id"],
+        "team_name": b["player"]["team_name"] if b.get("player") else b["team"]["name"],
         "kind": b["kind"], "moment_id": b["moment_id"], "sentence": sentence, "claim": claim,
         "sources": sources(b, claim), "mode": mode,
         "verdict": verdict or ("pass" if v.ok else "blocked"), "shown": True,

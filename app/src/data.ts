@@ -24,7 +24,16 @@ export interface Meta {
   teams: { id: string; name: string; side: string; formation: string }[];
   players: Player[];
   goals: { video_s: number; team: string; scorer: string; clock: string }[];
+  team_running: TeamBlock[];
   substitutions: { video_s: number; team: string; off: string; on: string; clock: string }[];
+}
+
+export interface TeamBlock {
+  video_start: number;
+  video_end: number;
+  clock: string;
+  home: { hsr: number | null; possession: number; in_play_s: number };
+  away: { hsr: number | null; possession: number; in_play_s: number };
 }
 
 export interface Signals {
@@ -34,6 +43,7 @@ export interface Signals {
   hi: number[] | null;
   low_chance: number[] | null;
   hsr_1min: number[];
+  speed: number[]; // decimetres per second
   red_zone: number[];
   post_peak: number[];
 }
@@ -49,7 +59,9 @@ export interface Entry {
   period: number;
   clock: string;
   video_s: number;
-  player: { id: string; name: string; shirt: number; team: string };
+  player: { id: string; name: string; shirt: number; team: string } | null;
+  team: string;
+  team_name: string;
   kind: string;
   moment_id: string;
   sentence: string;

@@ -9,7 +9,7 @@ interface Props {
   showBlocked: boolean;
   blockedNote: string;
   onShowBlocked: (b: boolean) => void;
-  onSeek: (v: number, player: string) => void;
+  onSeek: (v: number, player: string | null) => void;
 }
 
 const VERDICT: Record<Entry["verdict"], string> = {
@@ -58,7 +58,7 @@ export function Feed({ feed, now, mode, favourite, showBlocked, blockedNote, onS
           {blocked.length === 0 && <p className="muted small">Nothing blocked so far.</p>}
           {blocked.map((e, k) => (
             <div key={k} className="entry blocked">
-              <div className="meta"><span>{e.clock}</span> <span>{e.player.name}</span></div>
+              <div className="meta"><span>{e.clock}</span> <span>{e.player?.name ?? e.team_name}</span></div>
               <p><s>{e.sentence}</s></p>
               {e.verifier.findings.map((f, j) => (
                 <p key={j} className="small reason">
@@ -75,11 +75,11 @@ export function Feed({ feed, now, mode, favourite, showBlocked, blockedNote, onS
       )}
       {shown.map((e, k) => (
         <article key={`${e.moment_id}-${k}`}
-                 className={`entry ${e.player.team}${e.player.id === favourite ? " fav" : ""}`}>
-          <button className="meta" onClick={() => onSeek(e.video_s - 3, e.player.id)}>
+                 className={`entry ${e.team}${e.player && e.player.id === favourite ? " fav" : ""}`}>
+          <button className="meta" onClick={() => onSeek(e.video_s - 3, e.player?.id ?? null)}>
             <span>{e.clock}</span>
-            <span className={`dot ${e.player.team}`} aria-hidden="true" />
-            <span>{e.player.name}</span>
+            <span className={`dot ${e.team}`} aria-hidden="true" />
+            <span>{e.player ? e.player.name : `${e.team_name} (team)`}</span>
           </button>
           <p>{e.sentence}</p>
           <div className="foot">

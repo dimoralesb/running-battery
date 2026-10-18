@@ -8,7 +8,9 @@
   decimetres; ``MISSING`` when a player is off the pitch or not seen.
 - ``signals.json``: per player, per second on the pitch from ``start`` (video_s): the battery
   for a typical professional and its 10–90% band, the typical-pro chance, high-speed running
-  in the last minute, red-zone and post-peak flags (shares as whole percentages).
+  in the last minute, speed (decimetres per second), red-zone and post-peak flags (shares as
+  whole percentages). ``match.json`` also has both teams' running per ball-in-play minute in
+  5-min blocks.
 - ``feed.json``: the agents' feed, copied as it is.
 
 Reads what the agents read (``agents.tools.MatchData``), never the truth file.
@@ -28,7 +30,27 @@ from secondwind.agents.tools import MatchData
 from secondwind.io import TRACKING
 
 POS_HZ = 5
+TEAM_BLOCK_S = 300.0  # 5-min blocks for the tug-of-war chart
 MISSING = -32768
+
+
+def team_running(m: MatchData) -> list[dict]:
+    """Both teams' high-speed running per ball-in-play minute in ``TEAM_BLOCK_S`` blocks (team
+    totals of the outfield players; the tug-of-war chart)."""
+    out = []
+    for per, dur in m.durations.items():
+        a = 0.0
+        while a < dur - 30.0:
+            b = min(a + TEAM_BLOCK_S, dur)
+            r = m.team_rates(per, a, b)
+            out.append({"video_start": m.video_s(per, a), "video_end": m.video_s(per, b),
+                        "clock": m.when(per, a)["clock"], **{
+                            team: {"hsr": None if x["hsr"] != x["hsr"] else round(x["hsr"]),
+                                   "possession": round(x["possession"], 2),
+                                   "in_play_s": x["in_play_s"]}
+                            for team, x in r.items()}})  # fmt: skip
+            a = b
+    return out
 
 
 def export(folder: Path, out: Path) -> dict:
@@ -65,6 +87,7 @@ def export(folder: Path, out: Path) -> dict:
             "hi": pct(c["battery_hi"]) if "battery_hi" in c else None,
             "low_chance": pct(c["low_chance"]) if "low_chance" in c else None,
             "hsr_1min": np.round(c["hsr_1min"]).astype(int).tolist(),
+            "speed": np.round(10 * c["speed"]).astype(int).tolist(),  # decimetres per second
             "red_zone": c["red_zone"].astype(int).tolist(),
             "post_peak": c["post_peak"].astype(int).tolist(),
         }
@@ -90,6 +113,7 @@ def export(folder: Path, out: Path) -> dict:
             for t in m.metadata.teams
         ],  # fmt: skip
         "players": [m.players[pid] for pid in ids],
+        "team_running": team_running(m),
         "goals": [
             m.when(g.period, g.t) | {"team": g.team_id, "scorer": g.player_id} for g in m.goals
         ],  # fmt: skip
