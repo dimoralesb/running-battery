@@ -1,5 +1,8 @@
 import { useMemo } from "react";
-import { type MatchData, type Mode, type Signals, fanLevel, position, signalIndex } from "./data";
+import {
+  type Highlight, type MatchData, type Mode, type Signals, fanLevel, highlightValue, position,
+  signalIndex,
+} from "./data";
 
 // Pitch 105 × 68 m, centre origin (schema). y is drawn upwards.
 const L = 105;
@@ -22,6 +25,8 @@ const REACH_A = (1 - Math.exp(-ALPHA)) / ALPHA;
 const REACH_R = VMAX * (1 - REACH_A);
 const REACH_WINDOW = 6; // shown from 6 s before to 6 s after a feed moment
 const REACH_OPPONENTS = 2;
+const TRAIL_STEP = 0.2; // s between trail points (the positions are at 5 Hz)
+const TRAIL_AFTER = 6; // the trail stays this many seconds after the run
 
 interface Props {
   data: MatchData;
@@ -30,6 +35,7 @@ interface Props {
   selected: string | null;
   favourite: string | null;
   allBatteries: boolean;
+  highlight: Highlight | null;
   reachLabel: string;
   flatLabel: string;
   onSelect: (id: string) => void;
@@ -116,8 +122,35 @@ export function Legend({ mode, text, allBatteries, onAllBatteries }: {
   );
 }
 
-export function Pitch({ data, now, mode, selected, favourite, allBatteries, reachLabel, flatLabel,
-                        onSelect }: Props) {
+/** The path of a highlight's player from its start to now: thin, with the high-speed runs
+ * (its segments) drawn thick, and its value at the end once it is over. */
+function Trail({ data, h, now, j }: { data: MatchData; h: Highlight; now: number; j: number }) {
+  if (now < h.start_video_s - 3 || now > h.end_video_s + TRAIL_AFTER) return null;
+  const until = Math.min(now, h.end_video_s);
+  const pts: [number, number, number][] = [];
+  for (let v = h.start_video_s; v <= until + 1e-6; v += TRAIL_STEP) {
+    const p = position(data, j, v);
+    if (p) pts.push([p[0], -p[1], v]);
+  }
+  if (pts.length < 2) return null;
+  const d = (ps: [number, number, number][]) =>
+    ps.map(([x, y], k) => `${k ? "L" : "M"}${x.toFixed(2)},${y.toFixed(2)}`).join("");
+  const runs = h.segments.map(([a, b]) => pts.filter(([, , v]) => v >= a - 1e-6 && v <= b + 1e-6))
+    .filter((ps) => ps.length > 1);
+  const [ex, ey] = pts[pts.length - 1];
+  return (
+    <g className={`trail ${h.player.team}`}>
+      <path d={d(pts)} className="trail-path" />
+      {runs.map((ps, k) => <path key={k} d={d(ps)} className="trail-run" />)}
+      {now >= h.end_video_s && (
+        <text x={ex + 2.4} y={ey - 2.4} className="trail-label">{highlightValue(h)}</text>
+      )}
+    </g>
+  );
+}
+
+export function Pitch({ data, now, mode, selected, favourite, allBatteries, highlight, reachLabel,
+                        flatLabel, onSelect }: Props) {
   const { meta } = data;
   const ball = position(data, meta.ids.length, now);
   const peaks = useMemo(
@@ -166,6 +199,9 @@ export function Pitch({ data, now, mode, selected, favourite, allBatteries, reac
          role="img" aria-label="Replay of the synthetic match">
       <rect x={-L / 2 - 2} y={-W / 2 - 2} width={L + 4} height={W + 4} className="grass" />
       <Markings />
+      {highlight && highlight.player.id in col && (
+        <Trail data={data} h={highlight} now={now} j={col[highlight.player.id]} />
+      )}
       {reach.map((r) => (
         <g key={`reach-${r.id}`} className={`reach ${r.team}`}>
           <circle cx={r.cx} cy={r.cy} r={REACH_R} />

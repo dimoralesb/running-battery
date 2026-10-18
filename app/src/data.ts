@@ -82,8 +82,24 @@ export interface Feed {
   entries: Entry[];
 }
 
+/** A physical highlight (agents/highlights.py, decision 28): measured, with its caption. */
+export interface Highlight {
+  kind: "top_speed" | "longest_run" | "back_to_back" | "busiest_minute";
+  value: number;
+  player: { id: string; name: string; shirt: number; team: string; position: string };
+  clock: string;
+  video_s: number;
+  start_video_s: number;
+  end_video_s: number;
+  segments: [number, number][];
+  caption: string;
+  facts: Record<string, { value: number; unit: string; source: string } | string>;
+  sources: string[];
+}
+
 export interface MatchData {
   meta: Meta;
+  highlights: Highlight[];
   pos: Int16Array;
   signals: Record<string, Signals>;
   feed: Feed;
@@ -97,14 +113,17 @@ export const MATCHES = [
 
 export async function loadMatch(id: string): Promise<MatchData> {
   const base = `${import.meta.env.BASE_URL}data/${id}/`;
-  const [meta, buf, signals, feed] = await Promise.all([
+  const [meta, buf, signals, feed, highlights] = await Promise.all([
     fetch(base + "match.json").then((r) => r.json() as Promise<Meta>),
     fetch(base + "positions.bin").then((r) => r.arrayBuffer()),
     fetch(base + "signals.json").then((r) => r.json() as Promise<Record<string, Signals>>),
     fetch(base + "feed.json").then((r) => r.json() as Promise<Feed>),
+    fetch(base + "highlights.json")
+      .then((r) => (r.ok ? (r.json() as Promise<Highlight[]>) : []))
+      .catch(() => []),
   ]);
   const duration = meta.periods.reduce((s, p) => s + p.duration_s, 0);
-  return { meta, pos: new Int16Array(buf), signals, feed, duration };
+  return { meta, highlights, pos: new Int16Array(buf), signals, feed, duration };
 }
 
 /** The broadcast clock label for a replay time ("45+2:10", "67:12"). */
@@ -153,4 +172,27 @@ export function score(meta: Meta, v: number): { home: number; away: number } {
 /** The 5-level fan icon (synthesis §9.3). */
 export function fanLevel(batteryPct: number): number {
   return Math.min(Math.max(Math.ceil(batteryPct / 20), 1), 5);
+}
+
+/** A highlight's value as the panel shows it. */
+export function highlightValue(h: Highlight): string {
+  const f = (k: string) => {
+    const x = h.facts[k];
+    return typeof x === "string" ? x : x?.value;
+  };
+  if (h.kind === "top_speed") return `${Number(f("top_speed")).toFixed(1)} m/s`;
+  if (h.kind === "longest_run") return `${f("metres")} m`;
+  if (h.kind === "back_to_back") return `${f("runs")} runs in ${f("seconds")} s`;
+  return `${f("metres_in_one_minute")} m`;
+}
+
+/** The top n so far of one kind, one per player (the best of each), best first. */
+export function topSoFar(all: Highlight[], kind: Highlight["kind"], now: number, n = 3): Highlight[] {
+  const best = new Map<string, Highlight>();
+  for (const h of all) {
+    if (h.kind !== kind || h.video_s > now) continue;
+    const b = best.get(h.player.id);
+    if (!b || h.value > b.value) best.set(h.player.id, h);
+  }
+  return [...best.values()].sort((a, b) => b.value - a.value).slice(0, n);
 }

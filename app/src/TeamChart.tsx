@@ -5,17 +5,19 @@ import { type Meta } from "./data";
 // in 5-min blocks, drawn as the blocks finish. Two series on one axis: a legend plus direct
 // labels at the line ends.
 const WIDTH = 640;
-const HEIGHT = 150;
-const PAD = { l: 44, r: 96, t: 12, b: 22 };
+const HEIGHT = 170;
+const PAD = { l: 44, r: 96, t: 26, b: 22 };
 
 interface Props {
   meta: Meta;
   now: number;
   title: string;
+  sub: string;
+  yTitle: string;
   onSeek: (v: number) => void;
 }
 
-export function TeamChart({ meta, now, title, onSeek }: Props) {
+export function TeamChart({ meta, now, title, sub, yTitle, onSeek }: Props) {
   const [hover, setHover] = useState<number | null>(null);
   const blocks = meta.team_running;
   const end = blocks.length ? blocks[blocks.length - 1].video_end : 1;
@@ -44,7 +46,7 @@ export function TeamChart({ meta, now, title, onSeek }: Props) {
   };
   return (
     <figure className="chart team-chart card">
-      <figcaption>{title}</figcaption>
+      <figcaption><strong>{title}</strong><span className="sub">{sub}</span></figcaption>
       <div className="legend">
         <span><i className="swatch home" />{home.name}</span>
         <span><i className="swatch away" />{away.name}</span>
@@ -55,9 +57,11 @@ export function TeamChart({ meta, now, title, onSeek }: Props) {
         {[0, max / 2, max].map((t) => (
           <g key={t}>
             <line x1={PAD.l} x2={WIDTH - PAD.r} y1={y(t)} y2={y(t)} className="grid" />
-            <text x={PAD.l - 6} y={y(t) + 4} className="axis" textAnchor="end">{t} m</text>
+            <text x={PAD.l - 6} y={y(t) + 4} className="axis" textAnchor="end">{t}</text>
           </g>
         ))}
+        <text x={PAD.l - 6} y={12} className="axis axis-title" textAnchor="start"
+              transform={`translate(${-(PAD.l - 6) + 4} 0)`}>{yTitle}</text>
         {[0, 900, 1800].map((c) => (
           <text key={c} x={x(c)} y={HEIGHT - 6} className="axis" textAnchor="middle">{c / 60}:00</text>
         ))}
@@ -105,13 +109,12 @@ export function TeamChart({ meta, now, title, onSeek }: Props) {
         {h ? (
           <>
             <strong>from {h.clock}</strong>
-            <span>{home.name} {h.home.hsr ?? "–"} m</span>
-            <span>{away.name} {h.away.hsr ?? "–"} m</span>
+            <span>{home.name} {h.home.hsr ?? "–"} m a minute</span>
+            <span>{away.name} {h.away.hsr ?? "–"} m a minute</span>
             <span className="muted">ball in play {Math.round(h.home.in_play_s / 60)} min</span>
           </>
         ) : (
-          <span className="muted">Team totals of the outfield players per minute the ball was
-            in play. Hover for values.</span>
+          <span className="muted">Hover for values; click to jump there. Dashed: half-time.</span>
         )}
       </div>
     </figure>

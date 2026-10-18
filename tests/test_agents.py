@@ -367,3 +367,27 @@ def test_general_sentences_at_most_twice_per_mode():
     assert entries[0]["verdict"] == "repeat" and feed_mod.MAX_GENERAL == 2
     assert feed_mod.unlabel("fact: he had 0 touches.") == "He had 0 touches."
     assert feed_mod.unlabel("Factually level.") == "Factually level."
+
+
+def test_highlights_are_measured_ranked_and_verified(folder):
+    """Decision 28: H04's two 60-s runs at 7.5 m/s top the longest-run and top-speed lists;
+    every kept event was among the top 3 players when it happened; captions pass the rules."""
+    from secondwind.agents import highlights as hl
+
+    m = MatchTools(folder).m
+    out = hl.highlights(m)
+    assert out and {h["kind"] for h in out} <= set(hl.KINDS)
+    longest = [h for h in out if h["kind"] == "longest_run"]
+    assert longest[0]["player"]["id"] == "H04" and longest[0]["facts"]["metres"]["value"] > 300
+    # The 1-Hz Butterworth filter overshoots a step from standing to 7.5 m/s by about 0.5 m/s.
+    assert abs(longest[0]["facts"]["top_speed"]["value"] - 7.5) < 0.6
+    for h in out:
+        assert verify(h["caption"], "fan", {"facts": h["facts"]}).ok, h["caption"]
+        assert h["start_video_s"] <= h["video_s"] <= h["end_video_s"] and h["sources"]
+        _numbers_have_units(h["facts"])
+    # Ranking: a later, smaller event of the same player is not kept.
+    ev = [{"kind": "top_speed", "player": p, "period": 1, "t": t, "value": v}
+          for p, t, v in [("A", 1, 8.0), ("B", 2, 7.0), ("C", 3, 6.0), ("D", 4, 5.0),
+                          ("A", 5, 7.5), ("D", 6, 9.0)]]  # fmt: skip
+    kept = [(e["player"], e["t"]) for e in hl.ranked(ev)]
+    assert kept == [("A", 1), ("B", 2), ("C", 3), ("D", 6)]

@@ -12,6 +12,8 @@
   whole percentages). ``match.json`` also has both teams' running per ball-in-play minute in
   5-min blocks.
 - ``feed.json``: the agents' feed, copied as it is.
+- ``highlights.json``: the physical highlights (``agents.highlights``, decision 28), with their
+  captions (checked by the Verifier's rules) and the run's times for the trail on the pitch.
 
 Reads what the agents read (``agents.tools.MatchData``), never the truth file.
 """
@@ -26,6 +28,7 @@ from pathlib import Path
 import numpy as np
 
 from secondwind.agents.feed import FEED
+from secondwind.agents.highlights import highlights
 from secondwind.agents.tools import MatchData
 from secondwind.io import TRACKING
 
@@ -123,6 +126,7 @@ def export(folder: Path, out: Path) -> dict:
         ],  # fmt: skip
     }
     (out / "match.json").write_text(json.dumps(meta, indent=1, ensure_ascii=False))
+    (out / "highlights.json").write_text(json.dumps(highlights(m), indent=1, ensure_ascii=False))
     if (folder / FEED).exists():
         shutil.copyfile(folder / FEED, out / FEED)
     return meta

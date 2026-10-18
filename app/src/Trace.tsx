@@ -4,13 +4,14 @@ import { type Meta, type Signals, clockLabel } from "./data";
 // Two charts on one time axis (never two y-scales on one chart): the battery for a typical
 // professional with its 10–90% band, and high-speed running in the last minute.
 const WIDTH = 640;
-const PAD = { l: 40, r: 12, t: 10, b: 22 };
+const PAD = { l: 40, r: 12, t: 24, b: 22 };
 
 interface Props {
   signals: Signals;
   meta: Meta;
   now: number;
   name: string;
+  text: Record<string, string>;
   onSeek: (v: number) => void;
 }
 
@@ -22,10 +23,10 @@ function path(values: number[], x: (i: number) => number, y: (v: number) => numb
   return d;
 }
 
-function Chart({ s, meta, now, height, values, max, unit, title, band, hover, setHover,
+function Chart({ s, meta, now, height, values, max, unit, title, yTitle, band, hover, setHover,
                  onSeek }: {
   s: Signals; meta: Meta; now: number; height: number; values: number[]; max: number;
-  unit: string; title: string; band?: [number[], number[]]; hover: number | null;
+  unit: string; title: string; yTitle: string; band?: [number[], number[]]; hover: number | null;
   setHover: (i: number | null) => void; onSeek: (v: number) => void;
 }) {
   const n = values.length;
@@ -67,6 +68,7 @@ function Chart({ s, meta, now, height, values, max, unit, title, band, hover, se
             <text x={PAD.l - 6} y={y(t) + 4} className="axis" textAnchor="end">{t}{unit}</text>
           </g>
         ))}
+        <text x={4} y={12} className="axis axis-title">{yTitle}</text>
         {xTicks.map(([k, label]) => (
           <text key={k} x={x(k)} y={height - 6} className="axis" textAnchor="middle">
             {label}
@@ -96,7 +98,7 @@ function Chart({ s, meta, now, height, values, max, unit, title, band, hover, se
   );
 }
 
-export function Trace({ signals: s, meta, now, name, onSeek }: Props) {
+export function Trace({ signals: s, meta, now, name, text, onSeek }: Props) {
   const [hover, setHover] = useState<number | null>(null);
   const band = s.lo && s.hi ? ([s.lo, s.hi] as [number[], number[]]) : undefined;
   const maxHsr = Math.max(80, Math.ceil(Math.max(...s.hsr_1min) / 20) * 20);
@@ -104,10 +106,10 @@ export function Trace({ signals: s, meta, now, name, onSeek }: Props) {
   return (
     <div className="trace">
       <Chart s={s} meta={meta} now={now} height={170} values={s.battery} max={100} unit="%"
-             title={`${name}: battery for a typical professional, with its 10–90% band`}
+             title={text.traceBattery.replace("{name}", name)} yTitle={text.traceBatteryAxis}
              band={band} hover={hover} setHover={setHover} onSeek={onSeek} />
       <Chart s={s} meta={meta} now={now} height={120} values={s.hsr_1min} max={maxHsr}
-             unit=" m" title="High-speed running (> 5.5 m/s, 19.8 km/h) in the last minute"
+             unit=" m" title={text.traceHsr.replace("{name}", name)} yTitle={text.traceHsrAxis}
              hover={hover} setHover={setHover} onSeek={onSeek} />
       <div className="tooltip" aria-live="polite">
         {h !== null ? (

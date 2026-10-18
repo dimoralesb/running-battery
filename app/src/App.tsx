@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import copy from "./copy.json";
 import {
+  type Highlight,
   MATCHES,
   type MatchData,
   type Mode,
@@ -8,8 +9,10 @@ import {
   loadMatch,
   score,
   signalIndex,
+  topSoFar,
 } from "./data";
 import { Feed } from "./Feed";
+import { Highlights, reel } from "./Highlights";
 import { Legend, Pitch } from "./Pitch";
 import { TeamChart } from "./TeamChart";
 import { Trace } from "./Trace";
@@ -37,6 +40,8 @@ export default function App() {
   const [favourite, setFavourite] = useState<string | null>(null);
   const [showBlocked, setShowBlocked] = useState(false);
   const [allBatteries, setAllBatteries] = useState(QUERY.get("batteries") === "all");
+  const [active, setActive] = useState<Highlight | null>(null);
+  const [reelList, setReelList] = useState<Highlight[] | null>(null);
 
   useEffect(() => {
     setData(null);
@@ -44,11 +49,21 @@ export default function App() {
     loadMatch(matchId)
       .then((d) => {
         setData(d);
+        setActive(null);
+        setReelList(null);
         const t = Number(QUERY.get("t"));
         setNow(Number.isFinite(t) && t > 0 ? t : d.feed.moments[0]?.video_s ?? 0);
         setSelected(QUERY.get("player") ?? d.feed.favourite
                     ?? d.feed.entries.find((e) => e.player)?.player?.id ?? null);
         setFavourite(QUERY.get("favourite") ?? d.feed.favourite ?? null);
+        // ?hl=longest_run: open the match's top highlight of that kind (links, video capture).
+        const hl = QUERY.get("hl") as Highlight["kind"] | null;
+        const top = hl ? topSoFar(d.highlights, hl, d.duration, 1)[0] : undefined;
+        if (top) {
+          setActive(top);
+          setSelected(top.player.id);
+          if (!(Number.isFinite(t) && t > 0)) setNow(top.end_video_s);
+        }
       })
       .catch((e) => setError(String(e)));
   }, [matchId]);
@@ -72,6 +87,37 @@ export default function App() {
       last.current = null;
     };
   }, [playing, speed, data]);
+
+  // Watch a highlight: from 3 s before it, at 1×, with its player selected.
+  const watch = (h: Highlight) => {
+    setActive(h);
+    setSelected(h.player.id);
+    setNow(Math.max(h.start_video_s - 3, 0));
+    setSpeed(1);
+    setPlaying(true);
+  };
+  // The reel: when one highlight is over, go to the next; stop after the last.
+  useEffect(() => {
+    if (!reelList || !active || now < active.end_video_s + 3) return;
+    const k = reelList.indexOf(active);
+    if (k >= 0 && k + 1 < reelList.length) watch(reelList[k + 1]);
+    else {
+      setReelList(null);
+      setPlaying(false);
+    }
+  }, [now, reelList, active]);
+  const toggleReel = () => {
+    if (reelList) {
+      setReelList(null);
+      setPlaying(false);
+      return;
+    }
+    const list = data ? reel(data.highlights, data.duration) : [];
+    if (list.length) {
+      setReelList(list);
+      watch(list[0]);
+    }
+  };
 
   const players = useMemo(
     () => (data ? Object.fromEntries(data.meta.players.map((p) => [p.id, p])) : {}),
@@ -133,9 +179,17 @@ export default function App() {
 
       <main className="grid">
         <section className="left">
-          <Pitch data={data} now={now} mode={mode} selected={selected} favourite={favourite}
-                 allBatteries={allBatteries} reachLabel={copy.reachLabel}
-                 flatLabel={copy.flatLabel} onSelect={setSelected} />
+          <div className="pitch-wrap">
+            <Pitch data={data} now={now} mode={mode} selected={selected} favourite={favourite}
+                   allBatteries={allBatteries} highlight={active} reachLabel={copy.reachLabel}
+                   flatLabel={copy.flatLabel} onSelect={setSelected} />
+            {active && now >= active.start_video_s - 3 && now <= active.end_video_s + 6 && (
+              <div className="hl-caption" aria-live="polite">
+                <strong>{(copy as Record<string, string>)[`hl_${active.kind}`]}</strong>
+                <span>{active.caption}</span>
+              </div>
+            )}
+          </div>
           <Legend mode={mode} text={copy} allBatteries={allBatteries}
                   onAllBatteries={setAllBatteries} />
           <div className="transport">
@@ -159,6 +213,11 @@ export default function App() {
               </button>
             ))}
           </div>
+          <Highlights all={data.highlights} meta={data.meta} now={now} active={active}
+                      reelOn={reelList !== null} text={copy} onPick={(h) => {
+                        setReelList(null);
+                        watch(h);
+                      }} onReel={toggleReel} />
           <div className="card player-card">
             {sel ? (
               i === null || !s ? (
@@ -184,9 +243,11 @@ export default function App() {
               <p className="muted">Click a player on the pitch.</p>
             )}
           </div>
-          <TeamChart meta={data.meta} now={now} title={copy.teamChart} onSeek={setNow} />
+          <TeamChart meta={data.meta} now={now} title={copy.teamChart} sub={copy.teamChartSub}
+                     yTitle={copy.teamChartAxis} onSeek={setNow} />
           {mode === "analyst" && sel && s && (
-            <Trace signals={s} meta={data.meta} now={now} name={sel.name} onSeek={setNow} />
+            <Trace signals={s} meta={data.meta} now={now} name={sel.name} text={copy}
+                   onSeek={setNow} />
           )}
           <p className="muted small">{copy.disclaimer}</p>
         </section>

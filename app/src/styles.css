@@ -172,3 +172,28 @@ button, select {
 .chart .marker.away { fill: var(--away); }
 .chart .direct { font-size: 11px; fill: var(--ink-2); }
 .sources code { overflow-wrap: anywhere; }
+
+.chart figcaption strong { display: block; color: var(--ink); font-size: 0.95rem; }
+.chart figcaption .sub { display: block; }
+.chart .axis-title { fill: var(--ink-2); }
+.pitch-wrap { position: relative; }
+.hl-caption { display: flex; flex-direction: column; gap: 2px; margin-top: 6px;
+  background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--ink); border-radius: 6px;
+  padding: 6px 10px; font-size: 0.9rem; }
+.highlights { margin-bottom: 8px; }
+.hl-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.hl-head h3 { margin: 0; font-size: 1rem; }
+.hl-head p { margin: 2px 0 6px; }
+.hl-head button.on { background: var(--ink); color: var(--surface); }
+.hl-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px 14px; }
+.hl-kind h4 { margin: 4px 0; font-size: 0.85rem; color: var(--ink-2); font-weight: 600; }
+.hl-kind ol { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 3px; }
+.hl-item { width: 100%; display: grid; grid-template-columns: 10px minmax(0, 1fr) auto auto; gap: 6px;
+  align-items: center; text-align: left; font-size: 0.82rem; padding: 3px 6px; }
+.hl-item.on { border-color: var(--ink); }
+.hl-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.trail-path { fill: none; stroke-width: 0.35; stroke-dasharray: 0.8 0.6; }
+.trail-run { fill: none; stroke-width: 0.9; stroke-linecap: round; stroke-linejoin: round; }
+.trail.home .trail-path, .trail.home .trail-run { stroke: var(--home); }
+.trail.away .trail-path, .trail.away .trail-run { stroke: var(--away); }
+.trail-label { font-size: 2px; font-weight: 700; fill: var(--ink); paint-order: stroke; stroke: var(--pitch); stroke-width: 0.6px; }

@@ -75,6 +75,20 @@ chart, "who's doing the running". Each feed line shows its claim, sources and th
 shows what the Verifier blocked. The overlay's own fixed sentences (`app/src/copy.json`) pass
 the Verifier too. Light and dark mode; phone layout with a 16 px gutter and no sideways scroll.
 
+**Highlights** show the physical side of the match, measured from positions and named as
+football names them: **top speed** (against the average match top speed for his position
+[SilvaH2025, Table 1]), the **longest run** above 5.5 m/s (19.8 km/h) in one go and where it
+went (a typical high-speed run is about 19 m [Fang2024, Table 2; DiSalvo2007, p.224]),
+**back-to-back runs** (three or more with 20 s or less between them, our threshold; Premier
+League players usually get 51–101 s between high-speed runs, by position [Bradley2009,
+Table I]) and the **busiest minute** (against a published average best minute of 62 m
+[Leifsson2024, Table 1]). The panel shows the top 3 so far, one per player; a click plays the
+moment at normal speed with the run's path drawn on the pitch, and "Play highlights" plays the
+match's best moments back to back. Captions come from fixed templates and pass the Verifier;
+they describe what the player did, never how hard he tried (claim 38). The team chart, "Who's
+doing the running", is the metres each team's outfield players ran above 5.5 m/s per minute the
+ball was in play, one point per 5 minutes.
+
 The demo feeds are in [docs/feeds/](docs/feeds/): the story match (seed 2028, a high press that
 fades, a full-back caught on the break again and again, a fresh substitute), the same match with that full-back
 as the favourite (the one the site and the video use), and a natural match (seed 2031). Story
@@ -251,6 +265,7 @@ Agents (`uv sync --extra agents`; Foundry settings in `.env`, keyless auth via `
 uv run python scripts/foundry_smoke.py                                  # model access, quota, latency
 uv run python -m secondwind.agents.mcp_server data/synthetic/demo/story # MCP server (stdio)
 uv run python -m secondwind.agents.feed data/synthetic/demo/story --favourite H04  # feed.json (add --offline)
+uv run python -m secondwind.agents.highlights data/synthetic/demo/story # physical highlights
 uv run python -m secondwind.agents.verifier_suite --llm --json docs/verifier_report.json
 scripts/demo.sh                                                         # both demo matches + feeds
 ```
