@@ -8,7 +8,7 @@ Four sets:
   (tests/test_verifier.py).
 - ``PARAPHRASES`` (21): blocked claims in other words, written before the rules were run on
   them and never used to tune the rules. What the rules miss here is what the LLM pass is for.
-- ``CONTEXT`` (37): sentences with a moment's context (rule 2, claim 13) or facts (N1): a 3–0
+- ``CONTEXT`` (38): sentences with a moment's context (rule 2, claim 13) or facts (N1): a 3–0
   lead, the start of the second half, just subbed on, a long stoppage, possession, a low
   first-half load, and numbers that are or are not in the data. Each says whether it should pass.
 
@@ -284,6 +284,14 @@ CONTEXT = [
      "recovery for intense work.", "analyst",
      {"facts": {"minutes_after_spell": {"value": 6.5, "unit": "min"},
                 "spell_duration": {"value": 76, "unit": "s"}}}, "2", False),
+    # Found on the deployed site (story_h04, 24:37): claim 11 followed by "may not be only
+    # fatigue", which says he is partly fatigued, his own state (claim 33, G9).
+    ("He has done running that would leave a typical professional at about 83% of their "
+     "short-term reserve, and his team had the ball 75% of the last 5 minutes so this may not be "
+     "only fatigue.", "fan",
+     {"non_fatigue_reasons": [{"code": "team_in_possession",
+                               "text": "his team had the ball 75% of the last 5 min"}],
+      "facts": {"typical_pro_battery_now": {"value": 0.83, "unit": "share"}}}, "11", False),
     # Claims used where they do not fit (decision 25): claim 36 at 12:29, claim 7 at 45+2.
     ("Top speed hardly drops over a match: in the Premier League, players' fastest runs late on "
      "are almost as fast as their fastest early on.", "fan",

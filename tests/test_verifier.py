@@ -24,7 +24,10 @@ RULES_MISS = {"He likely faded after the break.",
               "opportunity to run rather than the player's own fatigue.",
               "Short bursts are shaken off in a minute or two, while a five-minute spell takes "
               "about five minutes to recover from; he is 6.5 min out from his 76 s spell, so this "
-              "fits the longer recovery for intense work."}  # fmt: skip
+              "fits the longer recovery for intense work.",
+              "He has done running that would leave a typical professional at about 83% of their "
+              "short-term reserve, and his team had the ball 75% of the last 5 minutes so this "
+              "may not be only fatigue."}  # fmt: skip
 
 
 @pytest.mark.parametrize(("sentence", "mode"), VALID)

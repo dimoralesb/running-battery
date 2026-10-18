@@ -45,18 +45,18 @@ It runs fixed rules first, then an LLM pass that can only block, against the cla
 (synthesis §5) and the moment's context: a sentence that blames fatigue while the team is 3–0
 up, the ball is out of play or the player has just come on must say so, and every number must be
 one of the facts. The paraphrases are blocked claims in other words, written before the rules
-that could catch them and never used to tune them. On 131 test sentences
+that could catch them and never used to tune them. On 132 test sentences
 ([docs/verifier_report.json](docs/verifier_report.json)):
 
 | | Unsupported sentences caught | Valid sentences blocked |
 |---|---|---|
-| Rules alone | 55 / 79 (paraphrases 2 / 21) | 0 / 52 |
-| Rules + LLM | 77 / 79 (paraphrases 21 / 21) | 2 / 52 |
+| Rules alone | 55 / 80 (paraphrases 2 / 21) | 0 / 52 |
+| Rules + LLM | 78 / 80 (paraphrases 21 / 21) | 2 / 52 |
 
-The two the LLM let through both disagree with the facts (a percentage turned round, and a
-second wind put down to "less opportunity to run"); it caught the first in earlier runs. The two
-valid sentences it blocked are strict readings of claim 15's qualifier and of the typical-pro
-wording. The rules never block a valid sentence; the LLM pass varies from run to run.
+The two the LLM let through came from our own feeds: a second wind put down to "less
+opportunity to run", and a line on the deployed site that followed the typical-pro wording with
+"so this may not be only fatigue" (his own state); the feed was regenerated without it. The two
+valid sentences it blocked are strict readings of claims 15 and 3. The rules never block a valid sentence; the LLM pass varies from run to run.
 
 The LLM prompt has been revised three times, each reported in PLAN §3.4: twice on the first
 suite, and once after the fourth demo feeds, where it blocked "catching breath after a red-zone

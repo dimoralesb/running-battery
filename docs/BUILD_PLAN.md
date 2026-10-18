@@ -63,4 +63,18 @@ Buffer: Sunday 25 and Monday 26 each have about half a day of slack.
 6. ~~Club mode~~ (decided 2026-10-15: broadcast is the only product mode; club data stays as one validation run).
 7. Shorter realism table: keep position totals, post-peak curves, end-of-match decline and running by phase.
 
+## 6. Video plan (Mon 26, under 2 min)
+
+Captured from the public site with the start-state URL (`?match=story&t=<video_s>&mode=…`; the story feed is `docs/feeds/story_h04.json`, favourite H04). Voice-over in the register's words; every on-screen sentence is the feed's.
+
+| Time | Shot (URL state) | Says |
+|---|---|---|
+| 0:00–0:12 | Title, then the story match playing at 5× (`t=850`) | The scoreline doesn't tell who has done the hard running, or what it costs. Synthetic match, generated from published sports science. |
+| 0:12–0:30 | Tug of war at 14:59 (`t=899`), chart and team line | Albion did 30% more high-speed running per ball-in-play minute than Ravensholt: measured, never "the fresher team" (claim 35). |
+| 0:30–0:55 | H04 at 24:37 (`t=1477&player=H04`), batteries and the "model" circles | The third time his team lost the ball while he was catching breath after a red-zone spell; the battery is what this running would leave a *typical* professional, with its band (analyst toggle, 2 s). |
+| 0:55–1:10 | The Verifier toggle at 24:37, a blocked line and its rule | Every sentence is checked: rules, then an LLM that can only block (132 test sentences, README table). |
+| 1:10–1:25 | 74:59 gap closed (`t=4564`), then 75:59 fresh legs (`t=4624&player=H16`) | The gap has closed; the substitute who came on for him did 49% more high-speed running per minute than his team-mates. |
+| 1:25–1:45 | Estimator-vs-truth and no-fatigue charts (README) | Tested against the generator's hidden truth: what positions can and cannot tell, and what we therefore don't claim. |
+| 1:45–1:55 | Architecture line: generator → estimator → MCP → four agents on Foundry → Static Web Apps | Microsoft Foundry, Agent Framework, MCP, Azure. Link. |
+
 **Never cut:** the no-fatigue control, the estimator-vs-truth chart, the real-data conclusion check on IDSSE (PLAN §2.6), and the rule-based Verifier. If the LLM Verifier slips, the fixed rule checks still block unsupported claims.

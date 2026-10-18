@@ -46,7 +46,8 @@ export default function App() {
         setData(d);
         const t = Number(QUERY.get("t"));
         setNow(Number.isFinite(t) && t > 0 ? t : d.feed.moments[0]?.video_s ?? 0);
-        setSelected(QUERY.get("player") ?? d.feed.entries.find((e) => e.player)?.player?.id ?? null);
+        setSelected(QUERY.get("player") ?? d.feed.favourite
+                    ?? d.feed.entries.find((e) => e.player)?.player?.id ?? null);
         setFavourite(QUERY.get("favourite") ?? d.feed.favourite ?? null);
       })
       .catch((e) => setError(String(e)));
