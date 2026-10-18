@@ -70,7 +70,7 @@ Captured from the public site with the start-state URL (`?match=story&t=<video_s
 | Time | Shot (URL state) | Says |
 |---|---|---|
 | 0:00–0:12 | Title, then the story match playing at 5× (`t=850`) | The scoreline doesn't tell who has done the hard running, or what it costs. Synthetic match, generated from published sports science. |
-| 0:12–0:30 | Tug of war at 14:59 (`t=899`), chart and team line | Albion did 30% more high-speed running per ball-in-play minute than Ravensholt: measured, never "the fresher team" (claim 35). |
+| 0:12–0:30 | Who's doing the running at 14:59 (`t=899`), chart and team line | Albion did 30% more high-speed running per ball-in-play minute than Ravensholt: measured, never "the fresher team" (claim 35). |
 | 0:30–0:55 | H04 at 24:37 (`t=1477&player=H04`), batteries and the "model" circles | The third time his team lost the ball while he was catching breath after a red-zone spell; the battery is what this running would leave a *typical* professional, with its band (analyst toggle, 2 s). |
 | 0:55–1:10 | The Verifier toggle at 24:37, a blocked line and its rule | Every sentence is checked: rules, then an LLM that can only block (132 test sentences, README table). |
 | 1:10–1:25 | 74:59 gap closed (`t=4564`), then 75:59 fresh legs (`t=4624&player=H16`) | The gap has closed; the substitute who came on for him did 49% more high-speed running per minute than his team-mates. |

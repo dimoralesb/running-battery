@@ -83,7 +83,7 @@ MOMENT_KINDS = {
 }  # fmt: skip
 TEAM_KINDS = {"tug_of_war"}
 BLOCK_S = 900.0  # 15-min blocks, as the published end-of-match comparisons [Bradley2009]
-TEAM_GAP = 15.0  # % between the teams for a tug-of-war moment (our assumption)
+TEAM_GAP = 15.0  # % between the teams for a team-running moment (our assumption)
 GAP_CLOSED = 7.5  # % below which a gap counts as closed (our assumption)
 MIN_IN_PLAY_S = 300.0  # a block needs 5 min of ball in play to compare
 FLAT_OUT_SHARE = 0.9  # a flat-out run: ≥ 90% of his top speed so far (our assumption)

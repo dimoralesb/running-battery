@@ -1262,7 +1262,7 @@ This is a methods contribution no published paper makes. It is the strongest rig
 5. **"The legs drop, the passing doesn't."** Analyst chart: HSR per 15-min block next to a flat pass-completion line [Carling2011]. This shows the Verifier's honesty visually.
 6. **"Not tired, tactical."** When running drops but the context check explains it ("3–0 up, sitting deep"), the agent says so. This is a responsible-AI moment judges can see.
 7. **Reachable-area bubble.** Draw a circle each defender can reach in 1–2 s [Narizuka2023]. It shrinks slightly when tired, and shows clearly when the attacker is outside it.
-8. **"Tug of war."** Both teams' running per minute on one live chart. Fans see one side raise the tempo and the other follow (r ≈ 0.7) [Allen2026a].
+8. **"Tug of war"** (on screen since 2026-10-18 as "Who's doing the running", the phrase English football uses; PLAN decision 27). Both teams' running per minute on one live chart. Fans see one side raise the tempo and the other follow (r ≈ 0.7) [Allen2026a].
 9. **"Work without the ball."** Live pressing meter: out-of-possession vs in-possession running per minute (TOOP/TIP), against the league range 0.99–1.23 [Allen2026b, Table 2].
 10. **"Expected running."** Pre-match forecast of each team's distance from opponent, venue and expected possession, then live actual vs forecast [Castellano2024, Eq. 1, LaLiga coefficients, labelled "model"].
 11. **"Turns."** Count of sharp changes of direction per player [Deutsch2025]; fan-friendly and easy to compute.

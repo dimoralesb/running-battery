@@ -30,13 +30,13 @@ from secondwind.agents.tools import MatchData
 from secondwind.io import TRACKING
 
 POS_HZ = 5
-TEAM_BLOCK_S = 300.0  # 5-min blocks for the tug-of-war chart
+TEAM_BLOCK_S = 300.0  # 5-min blocks for the team-running chart
 MISSING = -32768
 
 
 def team_running(m: MatchData) -> list[dict]:
     """Both teams' high-speed running per ball-in-play minute in ``TEAM_BLOCK_S`` blocks (team
-    totals of the outfield players; the tug-of-war chart)."""
+    totals of the outfield players; the "who's doing the running" chart)."""
     out = []
     for per, dur in m.durations.items():
         a = 0.0

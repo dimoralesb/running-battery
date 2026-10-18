@@ -27,9 +27,9 @@ Four agents on Microsoft Foundry (Agent Framework, gpt-5-mini) turn a match into
 verified feed (`feed.json`, synced to the replay or a video by `video_s`). They see the match
 only through an MCP server with seven read-only tools, and every number comes back with its unit
 and the field it came from; nothing in `agents/` can read the hidden truth. **Tactical** picks
-the moments (red-zone spells, a defender exposed on the turnover, second wind, fresh legs, a drop
-that is tactical rather than fatigue, flat-out runs near a player's top speed, and the tug of war
-between the two teams' running); **Narrator** writes from the claims register's wordings;
+the moments (red-zone spells, a defender caught on the break, second wind, fresh legs, a quiet spell
+that is likely tactical rather than fatigue, flat-out runs near a player's top speed, and who's doing
+the running between the two teams); **Narrator** writes from the claims register's wordings;
 **Personalization** sets the fan or analyst style and puts a favourite player (and whoever came
 on for him) first; **Verifier** checks every sentence before it reaches the screen.
 
@@ -70,13 +70,13 @@ player's battery trace with its band and his high-speed running. A ring pulses w
 flat out (90% or more of his top speed so far), and around each feed moment dashed circles show
 where the player and his two nearest opponents could get to in one second, labelled "model"
 (the Fujimura–Sugihara motion model with Narizuka's fit at Δt = 1 s, radius 6.2 m
-[Narizuka2023, p.5–6]). Both teams' high-speed running per ball-in-play minute is drawn as a
-tug of war. Each feed line shows its claim, sources and the Verifier's verdict, and a toggle
+[Narizuka2023, p.5–6]). Both teams' high-speed running per ball-in-play minute is drawn as one
+chart, "who's doing the running". Each feed line shows its claim, sources and the Verifier's verdict, and a toggle
 shows what the Verifier blocked. The overlay's own fixed sentences (`app/src/copy.json`) pass
 the Verifier too. Light and dark mode; phone layout with a 16 px gutter and no sideways scroll.
 
 The demo feeds are in [docs/feeds/](docs/feeds/): the story match (seed 2028, a high press that
-fades, a full-back exposed on turnovers, a fresh substitute), the same match with that full-back
+fades, a full-back caught on the break again and again, a fresh substitute), the same match with that full-back
 as the favourite (the one the site and the video use), and a natural match (seed 2031). Story
 matches are never used for validation numbers.
 
@@ -95,7 +95,7 @@ synthetic matches, it does not hold up from positions, and the Verifier blocks i
   short-term tiredness 47–58% of the time (chance) and the team with more late-match wear at most
   68% (60 matches, [validate/teams.py](src/secondwind/validate/teams.py)). We show the measured
   running instead: team totals per ball-in-play minute, and how a gap changed (claim 35).
-- **"He ran slower than he could when it mattered."** After a turnover, a slow defender had no
+- **"He ran slower than he could when it mattered."** After his team lost the ball, a slow defender had no
   run asked by his role in 94% of cases and skipped one in 5%; speed tells a skipped run from no
   run asked no better than chance (AUC 0.45). We give the speed, its share of his top speed and
   what happened (claim 38).

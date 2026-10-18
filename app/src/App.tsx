@@ -208,12 +208,9 @@ function topSpeed(name: string, speed: number[], i: number) {
   return { name, v: (top / 10).toFixed(1), kmh: Math.round(top * 0.36) };
 }
 
-export const KIND: Record<string, string> = {
-  red_zone: "Red zone",
-  exposed_on_turnover: "Exposed on the turnover",
-  second_wind: "Second wind",
-  fresh_legs: "Fresh legs",
-  not_tired_tactical: "Not tired, tactical",
-  tug_of_war: "Tug of war",
-  flat_out: "Flat out",
-};
+// Moment names on screen, in the words English football uses (copy.json "kind_*"; the
+// Verifier checks them with the rest of the copy).
+const COPY: Record<string, string> = copy;
+export const KIND: Record<string, string> = Object.fromEntries(
+  Object.entries(COPY).filter(([k]) => k.startsWith("kind_")).map(([k, v]) => [k.slice(5), v]),
+);
