@@ -29,8 +29,9 @@ RULES_MISS = {"He likely faded after the break.",
               # finding used as the reason for a spell it does not cover.
               "In the Premier League players make about a third fewer high-speed recovery runs "
               "after a peak, and our estimate says he may have had less in the tank here.",
-              "Five minutes after his 197 s spell his last 2 min high-speed running was 10.9 m/min, "
-              "which fits the idea that short bursts are shaken off in a minute or two.",
+              "Five minutes after his 197 s spell his last 2 min high-speed running was "
+              "10.9 m/min, which fits the idea that short bursts are shaken off in a minute or "
+              "two.",
 }  # fmt: skip
 
 
