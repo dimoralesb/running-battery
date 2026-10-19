@@ -64,12 +64,12 @@ BATTERY_NOTE = (
     "the player's own CS and D′ are unknown. Source: PLAN §3.3, decision 14."
 )
 MOMENT_KINDS = {
-    "red_zone": ("A red-zone spell: 1-, 2- or 5-min high-speed running at ≥ 90% of his best so "
+    "red_zone": ("An intense spell: 1-, 2- or 5-min high-speed running at ≥ 90% of his best so "
                  "far and of the published peak [Leifsson2024, Table 1]", ["1", "2", "11", "19c"]),
-    "exposed_on_turnover": ("His team loses the ball while he (a defender) is in or just after a "
-                            "red-zone spell [Ju2022; Bortnik2022]", ["4", "3", "11"]),
-    "second_wind": ("His high-speed running is back to his own match average 2–10 min after a "
-                    "red-zone spell [Leifsson2024]", ["1", "2"]),
+    "exposed_on_turnover": ("His team loses the ball while he (a defender) is in or just after an "
+                            "intense spell [Ju2022; Bortnik2022]", ["4", "3", "11"]),
+    "second_wind": ("His high-speed running is back to his own match average 2–10 min after an "
+                    "intense spell [Leifsson2024]", ["1", "2"]),
     "fresh_legs": ("A substitute's high-speed running per minute vs the player he replaced and "
                    "his team-mates [Bradley2013; Hills2018]", ["6"]),
     "not_tired_tactical": ("His running dropped while a non-fatigue reason fits (lead, stoppage, "
@@ -118,6 +118,7 @@ def q(value: float | int, unit: str, source: str, digits: int = 2) -> dict[str, 
     """A number with its unit and the field it came from."""
     if isinstance(value, float | np.floating):
         v = round(float(value), digits) if math.isfinite(value) else None  # JSON has no NaN
+        v = int(v) if v is not None and digits == 0 else v  # "32 km/h", not "32.0"
     else:
         v = int(value)
     return {"value": v, "unit": unit, "source": source}
@@ -489,12 +490,12 @@ class MatchTools:
                 "threshold": q(EP.HI_SPEED, "m/s (19.8 km/h)", "engine.hi_speed"),
             },
             "flags": {
-                "red_zone_now": bool(red[-1]),
-                "post_peak_now": bool(post[-1]),
-                "red_zone_s": q(int(red.sum()), "s", sig + "red_zone"),
-                "red_zone_spells": q(len(runs(red)), "spells", sig + "red_zone"),
-                "post_peak_s": q(int(post.sum()), "s", sig + "post_peak"),
-                "post_peak_wording": "neutral only: catching breath after a red-zone spell",
+                "intense_spell_now": bool(red[-1]),
+                "just_after_intense_spell_now": bool(post[-1]),
+                "intense_spell_s": q(int(red.sum()), "s", sig + "red_zone"),
+                "intense_spells": q(len(runs(red)), "spells", sig + "red_zone"),
+                "just_after_intense_spell_s": q(int(post.sum()), "s", sig + "post_peak"),
+                "post_peak_wording": "neutral only: just after an intense spell",
             },
             "in_play": {
                 "last_1min": q(c["in_play_1min"][i], "share", sig + "in_play_1min"),
@@ -798,13 +799,15 @@ class MatchTools:
                 "peak_speed": q(peak, "m/s", sig, 1),
                 "peak_speed_kmh": q(peak * 3.6, "km/h", sig, 0),
                 "top_speed_so_far": q(top, "m/s (his fastest second before this run)", sig, 1),
-                "share_of_top_speed": q(100.0 * peak / top, "% of his top speed so far", sig, 0),
                 "new_personal_best": peak > top,
                 "fastest_in_match_so_far": fastest,
                 "published_match_peak_for_position": q(MATCH_PEAK[info["position"]], "m/s, "
                                                        "mean match peak for his position",
                                                        "SilvaH2025, Table 1 (Brazil, GNSS)", 2),
             }  # fmt: skip
+            if peak <= top:  # a new best is his fastest so far, not "108% of his top speed"
+                facts["share_of_top_speed"] = q(100.0 * peak / top, "% of his top speed so far",
+                                                sig, 0)  # fmt: skip
             if vid >= 75 * 60 and late_top > 0:
                 facts["share_of_top_before_75"] = q(
                     100.0 * peak / late_top,
@@ -953,7 +956,7 @@ class MatchTools:
                     "mean_speed_next_8s": q(
                         float(spd.mean()) if len(spd) else 0.0, "m/s", sig + "speed", 1
                     ),
-                    "red_zone_spells_so_far": q(
+                    "intense_spells_so_far": q(
                         sum(1 for x in self._spells(pid) if x[0] <= i), "spells", sig + "red_zone"
                     ),
                     "last_5min_hsr": q(s.cols["hsr_5min"][i], "m", sig + "hsr_5min", 0),
@@ -970,7 +973,7 @@ class MatchTools:
                 }
                 exposed[pid] = exposed.get(pid, 0) + 1
                 facts["times_exposed_so_far"] = q(
-                    exposed[pid], "turnovers so far while he was in or just after a red-zone "
+                    exposed[pid], "turnovers so far while he was in or just after an intense "
                     "spell, this one included", "events.jsonl positive_transition and "
                     "signals.players[].series.red_zone, post_peak",
                 )  # fmt: skip
@@ -990,7 +993,7 @@ class MatchTools:
                         e.t,
                         score,
                         facts,
-                        "his team lost the ball while he was catching breath",
+                        "his team lost the ball just after his intense spell",
                     )
                 )
         return out
@@ -1006,7 +1009,7 @@ class MatchTools:
             for a, b in self._spells(pid):
                 per, end = s.period[b], s.t[b]
                 after = np.flatnonzero((s.period == per) & (s.t >= end + lo) & (s.t <= end + hi))
-                calm = after[~s.cols["post_peak"][after].astype(bool)]  # catching breath is over
+                calm = after[~s.cols["post_peak"][after].astype(bool)]  # post-peak window over
                 back = [i for i in calm if rate2[i] >= avg[b] >= MIN_HSR_PER_MIN]
                 if not back:
                     continue

@@ -21,6 +21,8 @@ TIMEOUT_S = 60.0
 
 
 class LLMVerdict(BaseModel):
+    # Written before the verdict (prompt revision 4): each statement set against the facts.
+    fact_check: str = ""
     verdict: Literal["pass", "block"]
     rule: str | None = None  # register id of the claim or global rule it breaks
     reason: str
@@ -34,6 +36,7 @@ class FullVerdict:
     stage: str  # "rules", "llm", "rules (llm unavailable: …)"
     findings: list[dict] = field(default_factory=list)
     rewrite: str | None = None
+    fact_check: str = ""  # the LLM's reading of the facts (prompt revision 4)
 
 
 def instructions() -> str:
@@ -58,10 +61,10 @@ sports science (the claims register). A fixed rule checker has already passed th
 you catch what patterns miss: paraphrases, implications and context.
 
 What the system can know: from player positions alone it measures the running (distance,
-high-speed running, energy, red-zone spells, output vs the player's own match average, ball in
+high-speed running, energy, intense spells, output vs the player's own match average, ball in
 play) and estimates what that running would cost a TYPICAL PROFESSIONAL (a "battery" share of a
-typical professional's short-term reserve, and the chance a typical professional would be in the
-red). It can NEVER know how tired this particular player is, his fitness, his physiology, his
+typical professional's short-term reserve, and the chance a typical professional would be below
+half of it). It can NEVER know how tired this particular player is, his fitness, his physiology, his
 intentions or his mental state.
 
 Global rules:
@@ -72,7 +75,15 @@ Global rules:
 - F1: what the sentence says must agree with the facts given: "the lowest point of his match"
   needs the current value to be the lowest so far, "more than his team-mates" needs the facts to
   show more, and a moment of recovery must not be described as a drop. Block a sentence the
-  facts contradict.
+  facts contradict. Before the verdict, write "fact_check": take each statement in the sentence
+  and set it against the facts: the direction of every comparison (above or below, more or
+  less, faster or slower, nearer or further, dropped or recovered), every superlative ("fastest
+  so far", "most", "lowest") and every reason given for a change. A reason offered for a change
+  the facts do not show contradicts them. Saying fatigue is part of the reason ("not only
+  fatigue", "partly fatigue") is a statement about the player's own state (claim 33). With no
+  facts, write "no facts". F1 blocks only what the facts contradict: a statement the facts do
+  not mention is not a contradiction (unsourced numbers are N1's job), and the moment's own
+  name for its window ("just after an intense spell") needs no fact.
 - G3 in practice: if the context lists non-fatigue reasons, a sentence that blames fatigue
   ("tired", "fatigue", "in the red", "his legs have gone", "running out of steam"...) must name
   one of them, or use neutral words.
@@ -97,11 +108,11 @@ How to read the rules (do not block for these):
 - Ruling fatigue out ("not fatigue", "rather than fatigue") because a non-fatigue reason fits is
   what claim 13 asks for; it is not a claim about the player's own state.
 - G5 is about phases of play (with or without the ball, ball in play), not halves or minutes.
-- "Catching breath after a red-zone spell" is the system's neutral name for a measured window
-  (the minutes after his most intense running, the post-peak flag; decision 12), not a claim
-  about his physiology or his own tiredness.
+- "An intense spell" and "just after an intense spell" are the system's neutral names for
+  measured windows (his high-speed running at its peak, and the minutes after it, the post-peak
+  flag; decision 12), not claims about his physiology or his own tiredness.
 - Measured facts about one player's running (distance, high-speed running vs his own match
-  average or peak, red-zone spells, speeds, energy used) are facts, not physiology.
+  average or peak, intense spells, speeds, energy used) are facts, not physiology.
 
 Pass (verdict "pass") sentences that state measured facts as facts, general findings in the
 register's words, or the typical-professional wording, even if they are plain. Do not block for
@@ -147,8 +158,8 @@ async def verify_full(
         return FullVerdict(sentence, True, "rules (llm unavailable: no answer)")
     if lv.verdict == "block":
         finding = {"claim": lv.rule or "?", "message": lv.reason, "stage": "llm"}
-        return FullVerdict(sentence, False, "llm", [finding], lv.rewrite)
-    return FullVerdict(sentence, True, "llm")
+        return FullVerdict(sentence, False, "llm", [finding], lv.rewrite, lv.fact_check)
+    return FullVerdict(sentence, True, "llm", fact_check=lv.fact_check)
 
 
 def verifier_agent():

@@ -50,15 +50,16 @@ def build(folder: Path | str) -> FastMCP:
         "20:00", "45+2:00" or "67:30"; default his whole time on the pitch): battery for a
         typical professional with its band, the typical-pro chance with its calibration note,
         energy, high-speed running in the last 1/2/5 min and vs his own peak and match average,
-        red-zone and post-peak flags. ``player``: id ("H04"), name, or "home 3"."""
+        intense-spell and post-peak ("just after an intense spell") flags. ``player``: id
+        ("H04"), name, or "home 3"."""
         return tools.player_signals(player, start, end)
 
     @server.tool(annotations=READ_ONLY)
     def find_moments(kind: Kind, limit: int = 10, player: str | None = None) -> dict[str, Any]:
-        """Story moments, ranked best first: red_zone (a red-zone spell), exposed_on_turnover (a
-        defender catching breath when his team loses the ball), second_wind (back to normal
-        after a spell), fresh_legs (a substitute's first minutes), not_tired_tactical (running
-        dropped while a non-fatigue reason fits), tug_of_war (team level: one team ran much
+        """Story moments, ranked best first: red_zone (an intense spell), exposed_on_turnover (a
+        defender just after an intense spell when his team loses the ball), second_wind (back to
+        normal after a spell), fresh_legs (a substitute's first minutes), not_tired_tactical
+        (running dropped while a non-fatigue reason fits), tug_of_war (team level: one team ran much
         harder per ball-in-play minute, or a gap closed), flat_out (a run at or near a player's
         top speed so far). Each moment lists its facts and the claims register rows that may
         describe it; team moments have a team instead of a player."""

@@ -1,13 +1,12 @@
 import { useMemo } from "react";
 import {
-  type Highlight, type MatchData, type Mode, type Signals, fanLevel, highlightValue, position,
+  type Item, type MatchData, type Mode, type Signals, fanLevel, highlightValue, position,
   signalIndex,
 } from "./data";
 
 // Pitch 105 × 68 m, centre origin (schema). y is drawn upwards.
 const L = 105;
 const W = 68;
-const LOWEST = 5; // battery icons: selected, favourite and the five lowest (unless "all")
 // Flat out (decision 24, as agents/tools.py): a second at ≥ 90% of his top speed so far, from
 // the 10th minute, top so far ≥ 7.0 m/s; faster than 11 m/s is a tracking error.
 const FLAT_SHARE = 0.9;
@@ -23,19 +22,25 @@ const ALPHA = 1.23;
 const VMAX = 14.53;
 const REACH_A = (1 - Math.exp(-ALPHA)) / ALPHA;
 const REACH_R = VMAX * (1 - REACH_A);
-const REACH_WINDOW = 6; // shown from 6 s before to 6 s after a feed moment
+const REACH_WINDOW = 6; // shown from 6 s before to 6 s after the clip's key second
 const REACH_OPPONENTS = 2;
 const TRAIL_STEP = 0.2; // s between trail points (the positions are at 5 Hz)
-const TRAIL_AFTER = 6; // the trail stays this many seconds after the run
+const LAPSE_STEP = 2; // s between trail points for a whole match (most ground covered)
+
+// Three views (decision 29): the full match, and a clip's Watch and Replay-with-details steps,
+// which show only the clip's player path (and the reachable areas at a turnover).
+export type View = "full" | "watch" | "replay";
 
 interface Props {
   data: MatchData;
   now: number;
   mode: Mode;
+  view: View;
   selected: string | null;
   favourite: string | null;
   allBatteries: boolean;
-  highlight: Highlight | null;
+  item: Item | null; // the clip (watch and replay)
+  focus: string | null; // full match: the player of the feed moment on screen
   reachLabel: string;
   flatLabel: string;
   onSelect: (id: string) => void;
@@ -98,59 +103,63 @@ export function Legend({ mode, text, allBatteries, onAllBatteries }: {
   onAllBatteries: (b: boolean) => void;
 }) {
   return (
-    <div className="legend">
-      <span><svg viewBox="-1.2 -1.2 2.4 2.4" className="key"><circle r={0.9} className="redzone-key" /></svg>
-        Red-zone spell</span>
-      <span><svg viewBox="-1.2 -1.2 2.4 2.4" className="key"><circle r={0.9} className="flat-key" /></svg>
-        {text.legendFlatOut}</span>
-      <span><svg viewBox="-1.2 -1.2 2.4 2.4" className="key"><circle r={0.9} className="reach-key" /></svg>
-        {text.legendReach}</span>
-      {mode === "fan" && (
-        <>
-          <span><svg viewBox="-3 -0.4 6 1.8" className="key wide"><BatteryIcon pct={60} x={0} y={0} /></svg>
-            {text.legendBattery}</span>
-          <label className="check">
-            <input type="checkbox" checked={allBatteries}
-                   onChange={(e) => onAllBatteries(e.target.checked)} />
-            {allBatteries ? text.batteriesAll : text.batteriesSome}
-          </label>
-        </>
-      )}
-      <span><svg viewBox="-1.2 -1.2 2.4 2.4" className="key"><circle r={0.8} className="fav-key" /></svg>
-        Favourite player</span>
-    </div>
+    <details className="legend-box">
+      <summary>{text.key}</summary>
+      <div className="legend">
+        <span><svg viewBox="-1.2 -1.2 2.4 2.4" className="key"><circle r={0.9} className="focus-key" /></svg>
+          {text.legendFocus}</span>
+        <span><svg viewBox="-1.2 -1.2 2.4 2.4" className="key"><circle r={0.9} className="redzone-key" /></svg>
+          {text.legendRedZone}</span>
+        <span><svg viewBox="-1.2 -1.2 2.4 2.4" className="key"><circle r={0.9} className="flat-key" /></svg>
+          {text.legendFlatOut}</span>
+        {mode === "fan" && (
+          <>
+            <span><svg viewBox="-3 -0.4 6 1.8" className="key wide"><BatteryIcon pct={60} x={0} y={0} /></svg>
+              {text.legendBattery}</span>
+            <label className="check">
+              <input type="checkbox" checked={allBatteries}
+                     onChange={(e) => onAllBatteries(e.target.checked)} />
+              {allBatteries ? text.batteriesAll : text.batteriesSome}
+            </label>
+          </>
+        )}
+        <span><svg viewBox="-1.2 -1.2 2.4 2.4" className="key"><circle r={0.8} className="fav-key" /></svg>
+          {text.legendFavourite}</span>
+      </div>
+    </details>
   );
 }
 
-/** The path of a highlight's player from its start to now: thin, with the high-speed runs
- * (its segments) drawn thick, and its value at the end once it is over. */
-function Trail({ data, h, now, j }: { data: MatchData; h: Highlight; now: number; j: number }) {
-  if (now < h.start_video_s - 3 || now > h.end_video_s + TRAIL_AFTER) return null;
-  const until = Math.min(now, h.end_video_s);
+/** The clip's player path from its start to now: thin, with his high-speed runs (the clip's
+ * segments) drawn thick, and a highlight's value at the end once it is over. */
+function Trail({ data, item, now, j }: { data: MatchData; item: Item; now: number; j: number }) {
+  if (now < item.start - 3) return null;
+  const until = Math.min(now, item.end);
+  const step = item.lapse ? LAPSE_STEP : TRAIL_STEP;
   const pts: [number, number, number][] = [];
-  for (let v = h.start_video_s; v <= until + 1e-6; v += TRAIL_STEP) {
+  for (let v = item.start; v <= until + 1e-6; v += step) {
     const p = position(data, j, v);
     if (p) pts.push([p[0], -p[1], v]);
   }
   if (pts.length < 2) return null;
   const d = (ps: [number, number, number][]) =>
     ps.map(([x, y], k) => `${k ? "L" : "M"}${x.toFixed(2)},${y.toFixed(2)}`).join("");
-  const runs = h.segments.map(([a, b]) => pts.filter(([, , v]) => v >= a - 1e-6 && v <= b + 1e-6))
+  const runs = item.segments.map(([a, b]) => pts.filter(([, , v]) => v >= a - 1e-6 && v <= b + 1e-6))
     .filter((ps) => ps.length > 1);
   const [ex, ey] = pts[pts.length - 1];
   return (
-    <g className={`trail ${h.player.team}`}>
+    <g className={`trail ${item.team}${item.lapse ? " lapse" : ""}`}>
       <path d={d(pts)} className="trail-path" />
       {runs.map((ps, k) => <path key={k} d={d(ps)} className="trail-run" />)}
-      {now >= h.end_video_s && (
-        <text x={ex + 2.4} y={ey - 2.4} className="trail-label">{highlightValue(h)}</text>
+      {item.h && now >= item.end && (
+        <text x={ex + 3.2} y={ey - 3.2} className="trail-label">{highlightValue(item.h)}</text>
       )}
     </g>
   );
 }
 
-export function Pitch({ data, now, mode, selected, favourite, allBatteries, highlight, reachLabel,
-                        flatLabel, onSelect }: Props) {
+export function Pitch({ data, now, mode, view, selected, favourite, allBatteries, item, focus,
+                        reachLabel, flatLabel, onSelect }: Props) {
   const { meta } = data;
   const ball = position(data, meta.ids.length, now);
   const peaks = useMemo(
@@ -158,28 +167,23 @@ export function Pitch({ data, now, mode, selected, favourite, allBatteries, high
     [data],
   );
   const col = useMemo(() => Object.fromEntries(meta.players.map((p, j) => [p.id, j])), [meta]);
+  const clip = view !== "full" && item ? item : null;
 
-  // Where everyone is, and which batteries to draw.
+  // Where everyone is. In the full match only the players in focus (selected, favourite, the
+  // feed moment's player) get rings and pulses, so there is one obvious place to look.
   const here = meta.players.map((p, j) => {
     const xy = position(data, j, now);
     const s = data.signals[p.id];
     return { p, xy, s, i: xy ? signalIndex(s, now) : null };
   });
-  const lowest = new Set(
-    here.filter((h) => h.i !== null && h.p.position !== "GK")
-      .sort((a, b) => a.s.battery[a.i!] - b.s.battery[b.i!])
-      .slice(0, LOWEST).map((h) => h.p.id),
-  );
-  const showBattery = (id: string) =>
-    allBatteries || id === selected || id === favourite || lowest.has(id);
+  const inFocus = (id: string) => id === selected || id === favourite || id === focus;
+  const showBattery = (id: string) => allBatteries || id === selected || id === favourite;
 
-  // Reachable areas around the nearest feed moment with a player (and his nearest opponents).
-  const moment = data.feed.moments.find((m) => Math.abs(m.video_s - now) <= REACH_WINDOW
-                                               && m.moment_id.split(":")[1] in col);
+  // Reachable areas (model) at a clip's turnover: the player and his nearest opponents.
   const reach: { id: string; team: string; cx: number; cy: number; main: boolean }[] = [];
-  if (moment) {
-    const pid = moment.moment_id.split(":")[1];
-    const me = here[col[pid]];
+  if (clip && clip.reach && clip.player && clip.player in col
+      && Math.abs(now - clip.at) <= REACH_WINDOW) {
+    const me = here[col[clip.player]];
     if (me.xy) {
       const others = here
         .filter((h) => h.xy && h.p.team !== me.p.team)
@@ -195,12 +199,12 @@ export function Pitch({ data, now, mode, selected, favourite, allBatteries, high
   }
 
   return (
-    <svg className="pitch" viewBox={`${-L / 2 - 2} ${-W / 2 - 2} ${L + 4} ${W + 4}`}
+    <svg className={`pitch view-${view}`} viewBox={`${-L / 2 - 2} ${-W / 2 - 2} ${L + 4} ${W + 4}`}
          role="img" aria-label="Replay of the synthetic match">
       <rect x={-L / 2 - 2} y={-W / 2 - 2} width={L + 4} height={W + 4} className="grass" />
       <Markings />
-      {highlight && highlight.player.id in col && (
-        <Trail data={data} h={highlight} now={now} j={col[highlight.player.id]} />
+      {clip && clip.player && clip.player in col && (
+        <Trail data={data} item={clip} now={now} j={col[clip.player]} />
       )}
       {reach.map((r) => (
         <g key={`reach-${r.id}`} className={`reach ${r.team}`}>
@@ -211,11 +215,14 @@ export function Pitch({ data, now, mode, selected, favourite, allBatteries, high
       {here.map(({ p, xy, s, i }) => {
         if (!xy) return null;
         const [x, y] = [xy[0], -xy[1]];
-        const red = i !== null && s.red_zone[i] === 1;
         const isSel = p.id === selected;
-        const since = (peaks[p.id] ?? []).map((v) => now - v).find((d) => d >= 0 && d < PULSE_S);
+        const star = clip ? p.id === clip.player : inFocus(p.id);
+        const dim = clip ? !star && !(clip.reach && reach.some((r) => r.id === p.id)) : false;
+        const red = !clip && star && i !== null && s.red_zone[i] === 1;
+        const since = clip || !star ? undefined
+          : (peaks[p.id] ?? []).map((v) => now - v).find((d) => d >= 0 && d < PULSE_S);
         return (
-          <g key={p.id} className={`player ${p.team}${isSel ? " sel" : ""}`}
+          <g key={p.id} className={`player ${p.team}${isSel ? " sel" : ""}${dim ? " dim" : ""}`}
              onClick={() => onSelect(p.id)} role="button" aria-label={`${p.shirt} ${p.name}`}>
             <circle cx={x} cy={y} r={3} className="hit" />
             {since !== undefined && (
@@ -226,10 +233,12 @@ export function Pitch({ data, now, mode, selected, favourite, allBatteries, high
               </>
             )}
             {red && <circle cx={x} cy={y} r={2.3} className="redzone" />}
-            {p.id === favourite && <circle cx={x} cy={y} r={2.0} className="fav" />}
+            {!clip && p.id === focus && <circle cx={x} cy={y} r={2.9} className="focus" />}
+            {clip && star && <circle cx={x} cy={y} r={2.3} className="focus" />}
+            {!clip && p.id === favourite && <circle cx={x} cy={y} r={2.0} className="fav" />}
             <circle cx={x} cy={y} r={1.45} className="dot" />
             <text x={x} y={y + 0.55} className="shirt">{p.shirt}</text>
-            {mode === "fan" && i !== null && p.position !== "GK" && showBattery(p.id) && (
+            {!clip && mode === "fan" && i !== null && p.position !== "GK" && showBattery(p.id) && (
               <BatteryIcon pct={s.battery[i]} x={x} y={y - 3.6} />
             )}
           </g>

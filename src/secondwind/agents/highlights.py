@@ -4,7 +4,7 @@ measured from positions and told in football's words, with fixed captions the Ve
 ``python -m secondwind.agents.highlights <match folder>`` prints them; ``secondwind.export``
 writes ``highlights.json`` for the overlay.
 
-Four kinds, each ranked one entry per player:
+Six kinds, each ranked one entry per player:
 - **top_speed**: the fastest second of a run, against the published match top speed for his
   position [SilvaH2025, Table 1].
 - **longest_run**: one continuous run above 5.5 m/s (19.8 km/h), in metres, and where it went,
@@ -13,6 +13,11 @@ Four kinds, each ranked one entry per player:
   them (our assumption), against the usual gap for his position, 51–101 s [Bradley2009, Table I].
 - **busiest_minute**: high-speed metres in one minute, against the published mean best minute,
   62 m [Leifsson2024, Table 1].
+- **most_ground**: total distance at the final whistle (whole-match players), against the
+  Premier League average for his position group [Kavanagh2024, Table 2; by position in
+  Bradley2009, Table I].
+- **recovery_run**: the longest high-speed run back towards his own goal that starts within
+  ``RECOVERY_WITHIN_S`` of his team losing the ball (our assumption); speed and distance only.
 
 Kept: each event that entered the top ``TOP`` players of its kind when it happened, so the top
 ``TOP`` so far at any moment are among them (the overlay picks them live). Measured facts only:
@@ -39,6 +44,13 @@ BACK_TO_BACK_MIN = 3
 BUSY_MIN_M = 40.0  # a minute counts from 40 m of high-speed running (our assumption)
 TYPICAL_RUN_M = 19  # [Fang2024, Table 2: 19.2 m; DiSalvo2007, p.224: 19.3 m]
 BEST_MINUTE_M = 62  # [Leifsson2024, Table 1]
+RECOVERY_WITHIN_S = 10  # a recovery run starts within 10 s of the loss (our assumption)
+# Premier League total distance per match by position group [Kavanagh2024, Table 2: defenders
+# 9,966, midfielders 11,594, forwards 10,710 m]; Bradley2009, Table I by position agrees within
+# 1–8% (CB 9,885, FB 10,710, CM 11,450, WM 11,535, A 10,314 m).
+GROUP_DISTANCE_M = {"defender": 9966, "midfielder": 11594, "forward": 10710}
+GROUP = {"CB": "defender", "FB": "defender", "DM": "midfielder", "CM": "midfielder",
+         "AM": "midfielder", "WM": "midfielder", "CF": "forward"}  # fmt: skip
 # Usual time between high-speed (> 5.5 m/s) runs by position, Premier League [Bradley2009,
 # Table I]; DM and AM take the central midfielders' value.
 USUAL_GAP_S = {"CB": 101, "FB": 74, "DM": 62, "CM": 62, "AM": 62, "WM": 51, "CF": 73}
@@ -50,6 +62,8 @@ KINDS = {
     "longest_run": "Longest run",
     "back_to_back": "Back-to-back runs",
     "busiest_minute": "Busiest minute",
+    "most_ground": "Most ground covered",
+    "recovery_run": "Recovery run",
 }
 SRC = "signals.players[].series.speed (1-s mean)"
 SOURCES = {
@@ -57,6 +71,8 @@ SOURCES = {
     "longest_run": ["Fang2024", "DiSalvo2007"],
     "back_to_back": ["Bradley2009"],
     "busiest_minute": ["Leifsson2024"],
+    "most_ground": ["Kavanagh2024", "Bradley2009"],
+    "recovery_run": ["Fang2024", "DiSalvo2007"],
 }
 
 
@@ -108,13 +124,52 @@ def _player_runs(m: MatchData, pid: str) -> list[dict]:
     return out
 
 
+def losses(m: MatchData, team: str) -> dict[int, np.ndarray]:
+    """Per period, the seconds at which ``team`` lost the ball: the opponents have it and the
+    last team seen with it (dead-ball seconds skipped) was ``team``."""
+    out = {}
+    for per, poss in m.possession.items():
+        last, ks = None, []
+        for k, holder in enumerate(poss):
+            if holder and holder != team and last == team:
+                ks.append(k)
+            last = holder or last
+        out[per] = np.array(ks, dtype=int)
+    return out
+
+
+def _whole_match(m: MatchData, pid: str) -> bool:
+    s = m.series[pid]
+    return bool(m.players[pid]["starter"] and pid not in m.sub_off and s.period[-1] == 2
+                and s.t[-1] >= m.durations[2] - 5.0)  # fmt: skip
+
+
 def candidates(m: MatchData) -> list[dict]:
     """Every event of every kind, unranked."""
     out = []
+    lost = {team: losses(m, team) for team in m.teams}
+    ground = []
     for pid, s in m.series.items():
         info = m.players[pid]
         if info["position"] == "GK":
             continue
+        if _whole_match(m, pid):
+            v = np.where(s.cols["speed"] <= MAX_PLAUSIBLE_SPEED, s.cols["speed"], 0.0)
+            metres = float(v.sum())  # 1-s mean speeds, so metres
+            group = GROUP[info["position"]]
+            ground.append({
+                "kind": "most_ground", "player": pid, "period": 2, "t0": 0.0,
+                "t1": float(s.t[-1]), "t": float(s.t[-1]), "value": metres,
+                "segments": [],
+                "facts": {
+                    "km": q(metres / 1000.0, "km", SRC, 1),
+                    "metres": q(metres, "m", SRC, 0),
+                    "published_for_position": q(GROUP_DISTANCE_M[group] / 1000.0,
+                                                f"km, Premier League {group}s' average",
+                                                "Kavanagh2024, Table 2", 1),
+                    "group": f"{group}s",
+                },
+            })  # fmt: skip
         rs = _player_runs(m, pid)
         for r in rs:
             per = r["period"]
@@ -145,6 +200,21 @@ def candidates(m: MatchData) -> list[dict]:
                 run["ball"] = "his team" if holder == info["team"] else "the opponents"
             out.append(ev | {"kind": "longest_run", "t": r["t1"], "value": r["metres"],
                              "facts": run})  # fmt: skip
+            # A recovery run: back towards his own goal, starting just after his team lost it.
+            ks = lost[info["team"]][per]
+            before = ks[(ks <= k0) & (ks >= k0 - RECOVERY_WITHIN_S)]
+            if went == "back towards his own goal" and before.size:
+                a, b = zone(m, pid, per, k0), zone(m, pid, per, k1)
+                rec = {k: run[k] for k in ("metres", "seconds", "top_speed", "typical_run")}
+                rec |= {
+                    "top_speed_kmh": q(top * 3.6, "km/h", SRC, 0),
+                    "seconds_after_loss": q(k0 - int(before[-1]), "s after his team lost the "
+                                            "ball", "tracking.possession_team", 0),
+                    "metres_back": q(a[1] - b[1], "m back towards his own goal",
+                                     "tracking positions", 0),
+                }  # fmt: skip
+                out.append(ev | {"kind": "recovery_run", "t": r["t1"], "value": r["metres"],
+                                 "facts": rec})  # fmt: skip
         # Back-to-back: runs whose gaps (end of one to start of the next) are all short.
         bout: list[dict] = []
         for r in [*rs, None]:
@@ -192,7 +262,8 @@ def candidates(m: MatchData) -> list[dict]:
                                                    "Leifsson2024, Table 1", 0),
                     },
                 })  # fmt: skip
-    return out
+    # All at the final whistle: only the top TOP.
+    return out + sorted(ground, key=lambda e: -e["value"])[:TOP]
 
 
 def ranked(events: list[dict]) -> list[dict]:
@@ -245,6 +316,18 @@ def caption(m: MatchData, e: dict) -> str:
             f"{name} makes {v('runs')} high-speed runs in {v('seconds')} seconds, never more "
             f"than {v('longest_gap')} seconds apart; {a_pos} usually gets about "
             f"{v('usual_gap_for_position')} seconds between them."
+        )
+    if e["kind"] == "most_ground":
+        return (
+            f"{name} covered {v('km')} km over the match; Premier League {f['group']} average "
+            f"about {v('published_for_position')} km."
+        )
+    if e["kind"] == "recovery_run":
+        s = v("seconds_after_loss")
+        return (
+            f"{name} runs {v('metres')} m above 5.5 m/s back towards his own goal, up to "
+            f"{v('top_speed')} m/s ({v('top_speed_kmh')} km/h), starting {s} "
+            f"second{'' if s == 1 else 's'} after his team lost the ball."
         )
     return (
         f"{name} covers {v('metres_in_one_minute')} m above 5.5 m/s (19.8 km/h) in one "

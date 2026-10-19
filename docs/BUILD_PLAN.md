@@ -1,6 +1,6 @@
 # Second Wind: Build Plan
 
-**Status (2026-10-18):** approved and in progress, about four days ahead. Done: Wed 14 to Tue 20, Wed 21 (MCP server, claims register, Verifier v1 and v2), Thu 22 (agents and the feed, on Foundry: decision 18), Fri 23 (overlay: replay, batteries for the selected, favourite and five lowest players, flat-out pulse, reachable-area circles labelled "model", traces, tug of war, the verified feed; light, dark and phone checked), Sat 24 (public site on Azure Static Web Apps, Free: decision 26) and most of Sun 25 (README: data card, realism table, charts, Verifier table, what we don't claim). The feed holds to its prompts in code (decision 25). Next: Mon 26 (video, clean-clone test). Science frozen (decision 17).
+**Status (2026-10-18, evening):** approved and in progress, about seven days ahead. Done: Wed 14 to Tue 20, Wed 21 (MCP server, claims register, Verifier v1 and v2), Thu 22 (agents and the feed, on Foundry: decision 18), Fri 23 (overlay: replay, batteries, flat-out pulse, reachable-area circles labelled "model", traces, the team chart, the verified feed; light, dark and phone checked), Sat 24 (public site on Azure Static Web Apps, Free: decision 26), Sun 25 (README: data card, realism table with the † rows re-run, charts, Verifier table, what we don't claim). The feed holds to its prompts in code (decision 25); physical highlights (decision 28); the Highlights view as the default, football's words for our terms ("intense spell") and two more highlights (decision 29). The unused test Container App and its environment are deleted. Next: Mon 26 (video from the Highlights view, §6; pitch text; clean-clone test). Science frozen (decision 17).
 Deadline: October 27, 2026, 11:59 pm PT. Design and sources are in [PLAN.md](PLAN.md). Numbers and targets are in [RESEARCH_SYNTHESIS.md](RESEARCH_SYNTHESIS.md) ("synthesis §x").
 Solo developer. Python 3.12 for everything except the front end (React + Vite + TypeScript). English only. Azure free account ($200 credit); Foundry access confirmed on October 17 (gpt-5-mini; PLAN decision 18).
 
@@ -12,7 +12,7 @@ Solo developer. Python 3.12 for everything except the front end (React + Vite + 
 | **`engine/` Estimator** | Butterworth 1 Hz + central differences. Metabolic power. Battery (k, broadcast mode with a per-player update of CS and D′ from the shared prior: ~200 draws, median + 10–90% band; one-way D′ correction as fallback; club test values only in a validation run; PLAN §7, decision 9). Rolling 1/2/5-min intensity and post-peak flags. Tired-moment detection. Pitch control at event moments. | tracking + events + metadata → per-player, per-second signals and moments (JSON) |
 | **`validate/`** | Realism checks, the no-fatigue control, estimator vs truth, sensitivity runs, Verifier test suite. Writes charts and tables for the README. | batches of synthetic matches → report |
 | **`agents/`** | MCP server over the engine. Four agents on Foundry + Agent Framework: Tactical, Narrator, Personalization, Verifier. The claims register (synthesis §5) is a data file; the Verifier runs fixed rule checks first, then the LLM. | engine signals → checked, sourced sentences |
-| **`app/` Overlay** | Pitch replay, battery icons (fan) or traces with bands (analyst), story cards, explanation feed, favourite player. Timestamped JSON output for video sync. Azure Container Apps; Event Hubs for the live stream. | shared match state → web UI |
+| **`app/` Overlay** | Highlights view (Watch, then Replay with details) and the full-match replay: battery icons (fan) or traces with bands (analyst), explanation feed, favourite player. Timestamped JSON output for video sync. Azure Static Web Apps (decision 26). | exported match files → web UI |
 
 ## 2. Data schema (synthesis §7; PLAN §2.3)
 
@@ -65,16 +65,21 @@ Buffer: Sunday 25 and Monday 26 each have about half a day of slack.
 
 ## 6. Video plan (Mon 26, under 2 min)
 
-Captured from the public site with the start-state URL (`?match=story&t=<video_s>&mode=…`; the story feed is `docs/feeds/story_h04.json`, favourite H04). Voice-over in the register's words; every on-screen sentence is the feed's.
+Captured from the public site in the **Highlights view** (decision 29), one clip per shot: each
+link opens a clip in its Watch step, or with `&step=replay` in Replay with details, so every shot
+can be recorded again from its link. Story match, favourite H04 (the site's feed is
+`docs/feeds/story_h04.json`). Voice-over in the register's words; every sentence on screen is the
+feed's or a highlight caption, all checked by the Verifier. Base URL:
+`https://happy-bay-06ca1e90f.3.azurestaticapps.net/?match=story`.
 
-| Time | Shot (URL state) | Says |
+| Time | Shot (add to the base URL) | Says |
 |---|---|---|
-| 0:00–0:12 | Title, then the story match playing at 5× (`t=850`) | The scoreline doesn't tell who has done the hard running, or what it costs. Synthetic match, generated from published sports science. |
-| 0:12–0:30 | Who's doing the running at 14:59 (`t=899`), chart and team line | Albion did 30% more high-speed running per ball-in-play minute than Ravensholt: measured, never "the fresher team" (claim 35). |
-| 0:30–0:55 | H04 at 24:37 (`t=1477&player=H04`), batteries and the "model" circles | The third time his team lost the ball while he was catching breath after a red-zone spell; the battery is what this running would leave a *typical* professional, with its band (analyst toggle, 2 s). |
-| 0:55–1:10 | The Verifier toggle at 24:37, a blocked line and its rule | Every sentence is checked: rules, then an LLM that can only block (132 test sentences, README table). |
-| 1:10–1:25 | 74:59 gap closed (`t=4564`), then 75:59 fresh legs (`t=4624&player=H16`) | The gap has closed; the substitute who came on for him did 49% more high-speed running per minute than his team-mates. |
+| 0:00–0:08 | The site opening on the Highlights view (no extra parameters) | The scoreline doesn't tell you who did the hard running, or what it cost. This match is synthetic, generated from published sports science. |
+| 0:08–0:30 | Recovery run, Watch then Replay with details (`&hl=recovery_run`, then `&step=replay`) | Luca Ashock, 54:18: 50 m above 5.5 m/s back towards his own goal, up to 9.1 m/s (33 km/h), starting 3 seconds after his team lost the ball. The numbers grow with the run; a typical high-speed run is about 19 m. Measured from positions: what he did, never how hard he tried. |
+| 0:30–0:55 | H04 caught on the break at 24:37, Watch then Replay with details (`&moment=exposed_on_turnover:H04:1:1477`, then `&step=replay`) | The third time his team lost the ball just after an intense spell of his. The circles show where he and his two nearest opponents could get to in a second (a published motion model). His running would leave a typical professional at about 83% of their short-term reserve: about the running, never "he's tired". |
+| 0:55–1:10 | The same clip's lines with their sources and verdicts, then the gap closing at 74:59 (`&moment=tug_of_war:home:2:1799&step=replay`) with a line the Verifier blocked and rewrote | Every sentence is checked: fixed rules, then an LLM that can only block and now writes down its fact check first (145 test sentences, README table). |
+| 1:10–1:25 | Fresh legs at 75:59 (`&moment=fresh_legs:H16:2:1859`) and the score bar's fastest player per team | The substitute who came on for him has done 49% more high-speed running per minute than his team-mates over the same minutes. |
 | 1:25–1:45 | Estimator-vs-truth and no-fatigue charts (README) | Tested against the generator's hidden truth: what positions can and cannot tell, and what we therefore don't claim. |
-| 1:45–1:55 | Architecture line: generator → estimator → MCP → four agents on Foundry → Static Web Apps | Microsoft Foundry, Agent Framework, MCP, Azure. Link. |
+| 1:45–1:55 | Architecture line: generator → estimator → MCP → four agents on Foundry → Static Web Apps; then "Full match" for two seconds | Microsoft Foundry, Agent Framework, MCP, Azure. Link. |
 
 **Never cut:** the no-fatigue control, the estimator-vs-truth chart, the real-data conclusion check on IDSSE (PLAN §2.6), and the rule-based Verifier. If the LLM Verifier slips, the fixed rule checks still block unsupported claims.

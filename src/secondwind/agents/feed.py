@@ -276,7 +276,7 @@ def template(b: dict, mode: str) -> list[tuple[str, str]]:
             out.append(
                 (
                     "fact",
-                    f"{name}'s {nth} red-zone spell: {peak} m of high-speed running "
+                    f"{name}'s {nth} intense spell: {peak} m of high-speed running "
                     "in one minute, against a published average peak of 62 m.",
                 )
             )
@@ -284,7 +284,7 @@ def template(b: dict, mode: str) -> list[tuple[str, str]]:
             out.append(
                 (
                     "fact",
-                    f"{name}: red-zone spell {n}, a 1-min peak of {peak} m above "
+                    f"{name}: intense spell {n}, a 1-min peak of {peak} m above "
                     "5.5 m/s (19.8 km/h), against a published mean peak of 62 m "
                     "[Leifsson2024].",
                 )
@@ -296,8 +296,8 @@ def template(b: dict, mode: str) -> list[tuple[str, str]]:
         out.append(
             (
                 "fact",
-                f"{team} lose the ball while {name} is catching breath after a "
-                f"red-zone spell: {d0} m from the ball, then {d8} m eight seconds "
+                f"{team} lose the ball just after {name}'s intense spell: {d0} m "
+                f"from the ball, then {d8} m eight seconds "
                 "later.",
             )
         )
@@ -319,7 +319,7 @@ def template(b: dict, mode: str) -> list[tuple[str, str]]:
         out.append(
             (
                 "fact",
-                f"Second wind for {name}: {mins} minutes after his red-zone spell, "
+                f"Second wind for {name}: {mins} minutes after his intense spell, "
                 f"his high-speed running is back to his match average ({rate} m per "
                 f"minute vs {avg}).",
             )
@@ -476,21 +476,24 @@ class Lines(BaseModel):
 NARRATOR = """You are the Narrator of Second Wind, live commentary on a synthetic football match
 for {audience}. For each moment write one or two sentences, each a separate line with the
 claim id it uses: a register claim id from the moment's "claims", or "fact" for a measured fact
-from its "facts" (distances, high-speed running, red-zone spells, energy, speeds).
+from its "facts" (distances, high-speed running, intense spells, energy, speeds).
 
 Rules (a Verifier blocks anything else):
 - Never say a player is tired, exhausted, empty, unfit or fitter, or blame an error, a miss, a
   decision or a result on fatigue. The battery and low_chance describe the RUNNING relative to a
   typical professional: "running that would leave a typical professional at about X% of their
   short-term reserve", never "he is at X%" or "his battery".
-- Use the register's wordings, adapted to the moment; keep their qualifiers. Use only the claim
+- Use the register's wordings, adapted to the moment; keep their qualifiers. Use a wording only
+  for what it says, never as a lead-in to a different fact ("the other has to match it: they
+  ran more without the ball" mixes two findings). Use only the claim
   ids in the moment's "claims"; a sentence that gives the moment's own numbers (its facts) is
   "fact", even next to a general finding.
 - Every number must be one of the moment's facts (you may round it) or in the claim's wording.
   Every percentage says what it is compared with (his match average, his peak, his team-mates).
 - If the moment lists non_fatigue_reasons, a sentence that mentions fatigue must name the reason
   and hedge ("likely", "may be").
-- The post-peak window is neutral: "catching breath after a red-zone spell".
+- The post-peak window is neutral: "just after an intense spell" (it says when, nothing about
+  his body).
 - The numbers in the wordings of claims 11, 12 and 13 are examples: for claim 11 use the
   moment's typical_pro_battery_now (0.62 is "about 62%"). What you say must agree with the facts.
 - Say something specific to each moment; use a general register sentence at most twice in the
@@ -514,7 +517,11 @@ Rules (a Verifier blocks anything else):
 - Claim 14 ("fewer touches") only if the moment's claims include it; then give the touch
   counts from the facts (touches_last_5min against touches_per_5min_so_far).
 - An exposed_on_turnover moment with times_exposed_so_far above 1: say it is the second (third…)
-  time his team lost the ball while he was catching breath after a red-zone spell.
+  time his team lost the ball just after an intense spell of his, in those words ("This is the
+  third time his team have lost the ball just after an intense spell of his"), not "exposed".
+- A flat_out run with new_personal_best: say it is his fastest of the match so far, never a
+  share of his top speed above 100%.
+- A gap that closed: say the two sides were level, never "0% more".
 - Claims 1 (after a 5-minute spell), 7 (the last 15 minutes) and 36 (top speed late on) are
   offered only where they fit; the Verifier blocks them elsewhere.
 - m/s first, km/h in brackets. Plain English.
@@ -545,12 +552,19 @@ def unlabel(sentence: str) -> str:
     return s[:1].upper() + s[1:]
 
 
+def narrator_view(b: dict) -> dict:
+    """A moment as the Narrator gets it: no "what", and the facts without their source fields,
+    whose code names ("series.red_zone") it copied into sentences (decision 29)."""
+    facts = {k: {x: y for x, y in v.items() if x != "source"} if isinstance(v, dict) else v
+             for k, v in b["facts"].items()}  # fmt: skip
+    return {k: v for k, v in b.items() if k != "what"} | {"facts": facts}
+
+
 async def narrate_llm(briefs: list[dict], mode: str, favourite: str | None) -> list[Line]:
     from secondwind.agents import foundry
 
     agent = foundry.agent("Narrator", personalize(mode, favourite), "main")
-    payload = json.dumps([{k: v for k, v in b.items() if k != "what"} for b in briefs],
-                         ensure_ascii=False)  # fmt: skip
+    payload = json.dumps([narrator_view(b) for b in briefs], ensure_ascii=False)
     r = await agent.run(f"Moments (JSON):\n{payload}", options={"response_format": Lines})
     return r.value.lines if r.value else []
 
@@ -580,9 +594,17 @@ async def check(
 
 def as_fact(b: dict, claim: str, sentence: str) -> str:
     """A team moment's comparison (MUST_SAY) is a measured fact, whatever claim the Narrator
-    tagged it with (it tagged them 9a and 9b, which then counted as general sentences)."""
+    tagged it with (it tagged them 9a and 9b, which then counted as general sentences). So is a
+    line tagged with a general claim whose numbers all come from the moment's facts, not from
+    the claim's wording ("Theo Galdcott has done 12.2 m/min since coming on", tagged 6;
+    decision 29)."""
     need = MUST_SAY.get(b["facts"].get("pattern")) if b["kind"] in TEAM_KINDS else None
-    return "fact" if need and re.search(need, sentence, re.I) else claim
+    if need and re.search(need, sentence, re.I):
+        return "fact"
+    if claim in ("fact", None) or claim in SPECIFIC:
+        return claim
+    row = next((c for c in b["claims"] if c["id"] == claim), None) or {}
+    return "fact" if verifier.from_facts(sentence, b["facts"], row.get("wording") or "") else claim
 
 
 async def entries_for(b: dict, mode: str, lines: list[tuple[str, str]], agent) -> list[dict]:

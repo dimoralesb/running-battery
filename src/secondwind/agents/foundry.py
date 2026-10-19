@@ -1,7 +1,9 @@
 """Models on Microsoft Foundry through Agent Framework (decision 2; ``scripts/foundry_smoke.py``).
 
-Settings come from ``.env`` (git-ignored): ``AZURE_OPENAI_ENDPOINT``, ``MODEL_MAIN`` (the
-agents) and ``MODEL_FAST`` (the Verifier's LLM pass). Auth is keyless: the az login or a managed
+Settings come from ``.env`` (git-ignored): ``AZURE_OPENAI_ENDPOINT`` and ``MODEL_MAIN`` (every
+agent and the Verifier's LLM pass). ``MODEL_FAST`` is only compared in
+``scripts/foundry_smoke.py``: it passed "He looks absolutely shattered" (decision 18), so
+nothing uses it. Auth is keyless: the az login or a managed
 identity through ``DefaultAzureCredential``. Nothing here prints endpoints or tokens.
 """
 
@@ -51,8 +53,9 @@ def client(model: str):
 
 
 def model(role: str = "main") -> str:
+    """The deployment for ``role``; every role uses MODEL_MAIN (decision 18)."""
     load_env()
-    return os.environ["MODEL_FAST" if role == "fast" else "MODEL_MAIN"]
+    return os.environ["MODEL_MAIN"]
 
 
 def agent(name: str, instructions: str, role: str = "main", tools: Any = None):

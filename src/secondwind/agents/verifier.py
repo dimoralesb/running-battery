@@ -59,7 +59,9 @@ STATE = r"(tired|exhausted|fatigued|knackered|spent|shattered|out on his feet|do
 BASELINE = (
     r"\b(than|vs\.?|versus|compared (?:with|to)|match average|average|normal|usual|peak|"
     r"first 15|kick-off|first half|reserve|typical professional|of the time|chance|earlier|"
-    r"of the (last|first|next) \d+ min\w*|team-?mates|top speed|opponents?|"
+    r"of the (last|first|next) (\d+|one|two|three|five|ten|fifteen) min\w*|team-?mates|"
+    r"of (that|the|this) (period|time|spell|block|window)|"
+    r"top speed|opponents?|"
     r"(the )?player he replaced)\b"
 )
 NEGATED_LACTIC = r"\b(isn'?t|is not|not|no|nothing to do with)\b[^.]{0,25}\blactic"
@@ -124,6 +126,14 @@ RULES: tuple[Rule, ...] = (
          r"(about\s+)?\d+\s*(%|percent)"),
     Rule("33", "The player's battery; say what the running would leave a typical professional",
          r"\b(his|her|their)\s+battery\b", unless=r"typical professional"),
+    # Found on the deployed site (2026-10-18): "so this may not be only fatigue" says he is partly
+    # fatigued; the LLM pass read it as a hedge in every run (decision 29).
+    Rule("33", "Fatigue as part of the reason is a statement about the player's own state",
+         r"\b(not|isn'?t|is not|wasn'?t)\s+(be\s+)?(only|just|entirely|purely|all|simply)\s+"
+         r"(down to\s+)?(fatigue|tiredness|being tired)\b|\bpartly\s+(fatigue|tiredness|tired)\b|"
+         r"\b(some|a bit of|an element of)\s+(fatigue|tiredness)\b"),
+    # G10 (decision 29): field names the LLM copied from the facts ("times_exposed_so_far = 3").
+    Rule("G10", "A field name on screen; write plain English", r"\b[a-z]+(?:_[a-z0-9]+)+\b"),
     Rule("33", "\"Running on empty\" is about the player's own state",
          r"running on empty|out of gas|on fumes|nothing left in the tank"),
     Rule("19c", "Never \"empty\" or \"exhausted\" from the battery (claim 19c)",
@@ -273,6 +283,16 @@ def _all_traced(text: str, context: dict) -> bool:
     known = numbers_in(context)
     bare = re.sub(WINDOW, " ", text, flags=FLAGS)
     return all(_traced(float(x.replace(",", ".")), known) for x in re.findall(NUMBER, bare))
+
+
+def from_facts(text: str, facts: dict, wording: str = "") -> bool:
+    """The sentence gives numbers, every one of them from the facts and not all of them in the
+    claim's ``wording``: a measured fact, whatever claim it was tagged with (decision 29)."""
+    bare = re.sub(WINDOW, " ", text, flags=FLAGS)
+    found = [float(x.replace(",", ".")) for x in re.findall(NUMBER, bare)]
+    own = numbers_in(wording)
+    return (bool(found) and _all_traced(text, {"facts": facts})
+            and not all(_traced(x, own) for x in found))  # fmt: skip
 
 
 def context_findings(text: str, context: dict, claim_id: str | None) -> list[Finding]:

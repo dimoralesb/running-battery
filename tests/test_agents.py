@@ -44,7 +44,7 @@ DEAD = (300.0, 360.0)  # period 2: a one-minute stoppage
 
 
 def _speed(pid: str, period: int, t: float) -> float:
-    """Who runs, when: H04 (left-back) a red-zone minute at 7.5 m/s, then another later (back
+    """Who runs, when: H04 (left-back) an intense minute at 7.5 m/s, then another later (back
     to his normal, and near his top speed); A04 (the away left-back) a minute at
     6 m/s; H12 (the substitute) two minutes at 6 m/s."""
     if pid == "H04" and period == 1 and (60.0 <= t < 120.0):
@@ -179,7 +179,7 @@ def test_player_signals_shape(tools):
     assert p["on_pitch"] and p["player"]["position"] == "FB"
     assert set(p) >= {"battery", "low_chance", "energy", "hsr", "flags", "in_play"}
     assert 0.0 <= p["battery"]["typical_pro_at_end"]["value"] <= 1.0
-    assert p["flags"]["red_zone_spells"]["value"] >= 1
+    assert p["flags"]["intense_spells"]["value"] >= 1
     assert "typical professional" in p["battery"]["note"]
     assert "calibration" in p["low_chance"]["calibration"].lower()
     _numbers_have_units(p)
@@ -391,3 +391,43 @@ def test_highlights_are_measured_ranked_and_verified(folder):
                           ("A", 5, 7.5), ("D", 6, 9.0)]]  # fmt: skip
     kept = [(e["player"], e["t"]) for e in hl.ranked(ev)]
     assert kept == [("A", 1), ("B", 2), ("C", 3), ("D", 6)]
+
+
+def test_most_ground_and_recovery_runs(folder, monkeypatch):
+    """Decision 29: most ground covered at the final whistle (whole-match players only, the
+    top 3), and a recovery run (back towards his own goal within 10 s of his team losing it)."""
+    from secondwind.agents import highlights as hl
+
+    m = MatchTools(folder).m
+    lost = hl.losses(m, "home")
+    assert lost[1].tolist() == [200] and lost[2].size == 0
+    assert hl.losses(m, "away")[1].tolist() == [260]
+    out = hl.highlights(m)
+    ground = [h for h in out if h["kind"] == "most_ground"]
+    assert len(ground) == hl.TOP and ground[0]["player"]["id"] == "H04"
+    assert all(h["player"]["id"] not in ("H11", "H12") for h in ground)  # subbed off / on
+    assert abs(ground[0]["facts"]["metres"]["value"] - 900) < 60  # two 60-s runs at 7.5 m/s
+    assert "km over the match" in ground[0]["caption"]
+    # No run in the constructed match starts just after a loss; make H04's second run one.
+    poss = list(m.possession[1])
+    poss[695:700] = ["home"] * 4 + ["away"]
+    monkeypatch.setitem(m.possession, 1, poss)
+    monkeypatch.setattr(hl, "where", lambda *a: "back towards his own goal")
+    monkeypatch.setattr(hl, "zone", lambda m, pid, per, k: ("his own half", -k / 20.0))
+    rec = [e for e in hl.candidates(m) if e["kind"] == "recovery_run"]
+    assert [e["player"] for e in rec] == ["H04"]
+    f = rec[0]["facts"]
+    assert f["seconds_after_loss"]["value"] <= hl.RECOVERY_WITHIN_S and f["metres"]["value"] > 300
+    text = hl.caption(m, rec[0])
+    assert "back towards his own goal" in text and verify(text, "fan", {"facts": f}).ok
+
+
+def test_general_claims_with_only_measured_numbers_are_facts():
+    """Decision 29: a line the Narrator tagged with a general claim (6, 9b) but whose numbers
+    all come from the moment's facts is a measured fact."""
+    b = {"kind": "fresh_legs", "facts": {"sub_hsr_per_min": {"value": 12.2, "unit": "m/min"}},
+         "claims": [{"id": "6", "wording": "Fresh legs: substitutes typically do 15–25% more "
+                     "high-intensity running per minute than players who started."}]}  # fmt: skip
+    assert feed_mod.as_fact(b, "6", "Theo Galdcott has done 12.2 m/min since coming on.") == "fact"
+    assert feed_mod.as_fact(b, "6", b["claims"][0]["wording"]) == "6"
+    assert feed_mod.as_fact(b, "11", "That would leave a typical professional at 12%.") == "11"

@@ -12,7 +12,7 @@ interface Props {
   onSeek: (v: number, player: string | null) => void;
 }
 
-const VERDICT: Record<Entry["verdict"], string> = {
+export const VERDICT: Record<Entry["verdict"], string> = {
   pass: "Verified",
   rewritten: "Rewritten by the Verifier",
   fallback: "Template (the agent's line was blocked)",
@@ -21,7 +21,7 @@ const VERDICT: Record<Entry["verdict"], string> = {
   blocked: "Blocked",
 };
 
-function Sources({ e }: { e: Entry }) {
+export function Sources({ e }: { e: Entry }) {
   const cites = e.sources.filter((s) => !s.includes(".") && !s.includes(" "));
   const fields = e.sources.filter((s) => !cites.includes(s));
   return (

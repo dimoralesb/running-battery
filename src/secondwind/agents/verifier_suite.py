@@ -2,8 +2,8 @@
 
 ``python -m secondwind.agents.verifier_suite [--llm] [--json docs/verifier_report.json]``
 
-Four sets:
-- ``VALID`` (35) and ``BLOCKED`` (38): v1 plus claims 35–38, the register's wordings and
+Five sets:
+- ``VALID`` (36) and ``BLOCKED`` (38): v1 plus claims 35–38, the register's wordings and
   the blocked claims of synthesis §5.3; the rules must get all of them right
   (tests/test_verifier.py).
 - ``PARAPHRASES`` (21): blocked claims in other words, written before the rules were run on
@@ -11,6 +11,8 @@ Four sets:
 - ``CONTEXT`` (38): sentences with a moment's context (rule 2, claim 13) or facts (N1): a 3–0
   lead, the start of the second half, just subbed on, a long stoppage, possession, a low
   first-half load, and numbers that are or are not in the data. Each says whether it should pass.
+- ``FACT_CHECKS`` (10): F1, sentences that do or do not agree with their facts, held out like
+  the paraphrases (written before prompt revision 4, never used to tune it).
 
 The report gives caught (blocked sentences that were blocked) and false blocks (valid sentences
 that were blocked) for the rules alone and for rules + LLM.
@@ -33,8 +35,7 @@ VALID = [
     ("Short bursts are shaken off in a minute or two. A five-minute spell takes about five "
      "minutes, and sprinting takes longer.", "fan"),
     ("In the Premier League, players make about a third fewer high-speed recovery runs right "
-     "after their most intense spell than they normally do. Our estimate says he had less in "
-     "the tank for this one.", "fan"),
+     "after their most intense spell than they normally do.", "fan"),
     ("Losing the ball forces the hardest running of the game. This is where tired legs get "
      "exposed.", "fan"),
     ("His runs after that spell are shorter, and he's receiving the ball at lower speed.", "fan"),
@@ -53,6 +54,8 @@ VALID = [
     ("He has done running that would leave a typical professional at about 40% of their "
      "short-term reserve.", "fan"),
     ("A typical professional would be in the red after this about one time in three.", "fan"),
+    ("A typical professional would be below half their short-term reserve after this about one "
+     "time in three.", "fan"),
     ("About 11 km, an effort roughly like 13 km of steady running (model estimate).", "fan"),
     ("His running dropped while his team sat on a 3–0 lead, so this may be tactical rather than "
      "fatigue.", "fan"),
@@ -70,7 +73,7 @@ VALID = [
     ("He's still making short bursts, but fewer long high-speed runs.", "fan"),
     ("Both teams ran a similar amount; the difference was in what they did with it.", "fan"),
     ("His high-speed running is 30% below his match average.", "fan"),
-    ("His second red-zone spell in five minutes.", "fan"),
+    ("His second intense spell in five minutes.", "fan"),
     ("He covered 11.4 km, the most on his team.", "fan"),
     # Added 2026-10-17 with claims 35–38: team running and top speed as measured facts.
     ("Albion have done 26% more high-speed running per ball-in-play minute than Ravensholt in "
@@ -251,8 +254,10 @@ CONTEXT = [
      False),
     # Found in the fourth feeds (2026-10-18). The LLM blocked the post-peak window's neutral
     # name (decision 12) as physiology, 7 times in three feeds (prompt revision 3 after this).
-    ("This is the third time his team have lost the ball while he was catching breath after a "
-     "red-zone spell.", "fan",
+    # Reworded with the name itself on 2026-10-18 (decision 29: "catching breath after a red-zone
+    # spell" became "just after an intense spell"; prompt revision 4).
+    ("This is the third time his team have lost the ball just after an intense spell of his.",
+     "fan",
      {"facts": {"times_exposed_so_far": {"value": 3, "unit": "turnovers"}}}, None, True),
     # A rewrite both passes let through: a second wind (running back above his average) put down
     # to "less opportunity to run" (F1, LLM pass only).
@@ -292,6 +297,31 @@ CONTEXT = [
      {"non_fatigue_reasons": [{"code": "team_in_possession",
                                "text": "his team had the ball 75% of the last 5 min"}],
       "facts": {"typical_pro_battery_now": {"value": 0.83, "unit": "share"}}}, "11", False),
+    # Found in the seventh feeds (2026-10-18, decision 29): a rules false block, a baseline in
+    # words ("of the last five minutes") …
+    ("The ball was in play only 25% of the last five minutes.", "fan",
+     {"facts": {"in_play_last_5min": {"value": 0.25, "unit": "share"}}}, None, True),
+    # (and one more in the eighth feeds: "of that period")
+    ("He had 0 touches in the last 5 min while the ball was in play only 25% of that period.",
+     "analyst", {"facts": {"touches_last_5min": {"value": 0, "unit": "touches"},
+                           "in_play_last_5min": {"value": 0.25, "unit": "share"}}}, None, True),
+    # … and a field name copied into the sentence (G10; both passes let it through).
+    ("This is the third time his team lost the ball just after an intense spell of his "
+     "(times_exposed_so_far = 3).", "analyst",
+     {"facts": {"times_exposed_so_far": {"value": 3, "unit": "turnovers"}}}, None, False),
+    # Found in the eighth feeds (2026-10-18). Claim 3's wording ended "our estimate says he had
+    # less in the tank for this one", his own state (decision 14); the LLM blocked it once and
+    # passed this at 24:37 on the site's feed. The wording now stops at the finding.
+    ("In the Premier League players make about a third fewer high-speed recovery runs after a "
+     "peak, and our estimate says he may have had less in the tank here.", "fan",
+     {"facts": {"times_exposed_so_far": {"value": 3, "unit": "turnovers"}}}, "3", False),
+    # A general finding used as the reason for something it does not cover: a 197 s spell is not
+    # a short burst (claim 2), and five minutes on is not "a minute or two" (F1).
+    ("Five minutes after his 197 s spell his last 2 min high-speed running was 10.9 m/min, which "
+     "fits the idea that short bursts are shaken off in a minute or two.", "analyst",
+     {"facts": {"spell_duration": {"value": 197, "unit": "s"},
+                "minutes_after_spell": {"value": 5.0, "unit": "min"},
+                "last_2min_hsr_per_min": {"value": 10.9, "unit": "m/min"}}}, None, False),
     # Claims used where they do not fit (decision 25): claim 36 at 12:29, claim 7 at 45+2.
     ("Top speed hardly drops over a match: in the Premier League, players' fastest runs late on "
      "are almost as fast as their fastest early on.", "fan",
@@ -299,6 +329,56 @@ CONTEXT = [
     ("In the last 15 minutes, players typically do about a fifth less hard running than at "
      "kick-off, with longer breaks between efforts.", "fan",
      {"facts": {}, "claims_offered": ["9a", "9b", "7", "30"]}, "7", True),
+]  # fmt: skip
+
+
+# F1, held out (2026-10-18): sentences that do or do not agree with their facts, written before
+# prompt revision 4 and never used to tune the prompt or the rules. A baseline run on revision 3
+# came first (see the report). The first version gave the percentages a bare "%" unit, which the
+# LLM read as "12% of his average"; the units are now the ones the tools send (sentences and
+# labels unchanged).
+F1_UP = {
+    "facts": {
+        "hsr_last_5min_vs_match_average": {
+            "value": 12.0,
+            "unit": "% above (+) or below (−) his match average",
+        }
+    }
+}
+F1_SUB = {"facts": {"sub_hsr_per_min": {"value": 13.1, "unit": "m/min"},
+                    "vs_teammates": {"value": 35.0, "unit": "% above (+) or below (−) his "
+                                     "team-mates over the same minutes"}}}  # fmt: skip
+F1_BALL = {"facts": {"distance_to_ball_at_turnover": {"value": 6, "unit": "m"},
+                     "distance_to_ball_8s_later": {"value": 14, "unit": "m"}}}  # fmt: skip
+F1_RUN = {"facts": {"peak_speed": {"value": 8.4, "unit": "m/s"},
+                    "peak_speed_kmh": {"value": 30, "unit": "km/h"},
+                    "share_of_top_speed": {"value": 93, "unit": "% of his top speed so far"},
+                    "new_personal_best": False}}  # fmt: skip
+F1_BEST = {"facts": F1_RUN["facts"] | {"share_of_top_speed": {"value": 100,
+                                                              "unit": "% of his top speed so far"},
+                                       "new_personal_best": True}}  # fmt: skip
+F1_BACK = {"facts": {"last_2min_hsr_per_min": {"value": 14.0, "unit": "m/min"},
+                     "match_average_per_min": {"value": 10.1, "unit": "m/min"},
+                     "minutes_after_spell": {"value": 5.0, "unit": "min"}}}  # fmt: skip
+FACT_CHECKS = [
+    ("His high-speed running in the last 5 minutes is well below his match average.", "fan",
+     F1_UP, None, False),
+    ("His high-speed running in the last 5 minutes is 12% above his match average.", "fan",
+     F1_UP, None, True),
+    ("Since coming on he has done less high-speed running per minute than his team-mates.",
+     "fan", F1_SUB, None, False),
+    ("Since coming on he has done 35% more high-speed running per minute than his team-mates.",
+     "fan", F1_SUB, None, True),
+    ("He was 6 m from the ball when his team lost it, and closer still eight seconds later.",
+     "fan", F1_BALL, None, False),
+    ("He was 6 m from the ball when his team lost it, and 14 m eight seconds later.", "fan",
+     F1_BALL, None, True),
+    ("His fastest run of the match so far: 8.4 m/s (30 km/h).", "fan", F1_RUN, None, False),
+    ("His fastest run of the match so far: 8.4 m/s (30 km/h).", "fan", F1_BEST, None, True),
+    ("Five minutes after his spell his high-speed running is still below his match average.",
+     "fan", F1_BACK, None, False),
+    ("His running has dropped since the restart, likely because his team kept the ball.", "fan",
+     F1_UP | {"non_fatigue_reasons": [POSS]}, "13", False),
 ]  # fmt: skip
 
 
@@ -312,6 +392,8 @@ def cases() -> list[dict]:
             for s, m, c in PARAPHRASES]  # fmt: skip
     out += [dict(set="context", sentence=s, mode=m, context=x, claim=c, should_pass=ok)
             for s, m, x, c, ok in CONTEXT]  # fmt: skip
+    out += [dict(set="facts", sentence=s, mode=m, context=x, claim=c, should_pass=ok)
+            for s, m, x, c, ok in FACT_CHECKS]  # fmt: skip
     return out
 
 
@@ -347,6 +429,7 @@ async def run_llm(rows: list[dict], concurrency: int = 8) -> None:
         r["llm_ok"] = v.ok
         r["llm_stage"] = v.stage
         r["llm_findings"] = v.findings
+        r["llm_fact_check"] = v.fact_check
 
     await asyncio.gather(*(one(r) for r in rows))
 
@@ -356,7 +439,7 @@ def report(rows: list[dict]) -> dict:
     keys = ["rules_ok"] + (["llm_ok"] if "llm_ok" in rows[0] else [])
     for key in keys:
         out[key.removesuffix("_ok")] = rates(rows, key)
-    for name in ("valid", "blocked", "paraphrase", "context"):
+    for name in ("valid", "blocked", "paraphrase", "context", "facts"):
         sub = [r for r in rows if r["set"] == name]
         out["by_set"][name] = {k.removesuffix("_ok"): rates(sub, k) for k in keys}
     return out

@@ -1,5 +1,5 @@
 /* Tokens: the dataviz reference palette (team colours = categorical slots 1 and 2, validated in
-   both modes; red zone = status "warning", always with its legend label). */
+   both modes; intense spell = status "warning", always with its legend label). */
 :root {
   color-scheme: light;
   --page: #f9f9f7;
@@ -197,3 +197,63 @@ button, select {
 .trail.home .trail-path, .trail.home .trail-run { stroke: var(--home); }
 .trail.away .trail-path, .trail.away .trail-run { stroke: var(--away); }
 .trail-label { font-size: 2px; font-weight: 700; fill: var(--ink); paint-order: stroke; stroke: var(--pitch); stroke-width: 0.6px; }
+
+/* Score bar: each team's fastest second so far under its name. */
+.scoreline { flex-wrap: wrap; }
+.scoreline .side { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 0; }
+.scoreline .side.away { align-items: flex-end; text-align: right; }
+.scoreline .score { align-self: flex-start; }
+.scoreline .fastest { font-size: 0.78rem; overflow-wrap: anywhere; }
+.scoreline .clock { flex-basis: auto; align-self: flex-start; }
+@media (max-width: 520px) { .scoreline .clock { flex-basis: 100%; margin-left: 0; text-align: center; } }
+
+/* Full match: one obvious place to look; the key folded away. */
+.player .focus, .focus-key { fill: none; stroke: var(--ink); stroke-width: 0.5; }
+.player.dim { opacity: 0.35; }
+.legend-box { margin-top: 6px; font-size: 0.85rem; color: var(--ink-2); }
+.legend-box summary { cursor: pointer; }
+.clip-caption { margin: 6px 0; background: var(--surface); border: 1px solid var(--border);
+  border-left: 4px solid var(--ink); border-radius: 6px; padding: 6px 10px; font-size: 0.95rem;
+  line-height: 1.4; }
+.clip-caption.home { border-left-color: var(--home); }
+.clip-caption.away { border-left-color: var(--away); }
+
+/* Highlights view: Watch, then Replay with details, then Next. */
+.clip-head { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; margin-bottom: 6px; }
+.clip-head strong { font-size: 1.05rem; }
+.step-chip { margin-left: auto; font-size: 0.8rem; border: 1px solid var(--border); border-radius: 999px;
+  padding: 1px 10px; color: var(--ink-2); }
+.step-chip.replay { border-color: var(--ink); color: var(--ink); }
+.clip-controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0; }
+.clip-controls .next { margin-left: auto; }
+.clip-controls .next.ready { background: var(--ink); color: var(--surface); }
+.clip-controls button:disabled { opacity: 0.4; cursor: default; }
+.up-next h3, .replay h3 { margin: 0 0 6px; font-size: 1rem; }
+.up-next ol { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 3px;
+  max-height: calc(100vh - 200px); overflow-y: auto; }
+.up-item { width: 100%; display: grid; grid-template-columns: 10px minmax(0, 1.2fr) minmax(0, 1fr) auto;
+  gap: 8px; align-items: center; text-align: left; font-size: 0.82rem; padding: 4px 8px; }
+.up-item.on { border-color: var(--ink); }
+.up-label, .up-who { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.replay { display: flex; flex-direction: column; gap: 10px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin: 0; }
+.stats div { border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; }
+.stats dt { font-size: 0.75rem; color: var(--ink-2); }
+.stats dd { margin: 2px 0 0; font-size: 1.15rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.speed-chart .line.home { stroke: var(--home); }
+.speed-chart .line.away { stroke: var(--away); }
+.chart .threshold { stroke: var(--ink-2); stroke-width: 1; stroke-dasharray: 4 3; }
+.chart .zone.run { fill: var(--ink); opacity: 0.07; }
+.compare { margin: 0; }
+.compare figcaption { font-size: 0.9rem; margin-bottom: 4px; }
+.cmp-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) auto; gap: 8px;
+  align-items: center; font-size: 0.82rem; margin: 3px 0; }
+.cmp-label { overflow-wrap: anywhere; }
+.cmp-track { height: 10px; }
+.cmp-bar { display: block; height: 10px; border-radius: 0 4px 4px 0; }
+.cmp-bar.home { background: var(--home); }
+.cmp-bar.away { background: var(--away); }
+.cmp-bar.published { background: var(--axis); }
+.cmp-value { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.trail.lapse .trail-path { stroke-width: 0.18; stroke-dasharray: none; opacity: 0.45; }
+.stats dd .muted { font-size: 0.78rem; font-weight: 400; white-space: nowrap; }

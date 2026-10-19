@@ -1,9 +1,10 @@
 import { type Highlight, type Meta, highlightValue, topSoFar } from "./data";
 
-// The physical highlights so far (decision 28): per kind, the top 3 players, best first. A click
-// plays that moment at 1×; "Play highlights" plays the whole match's best moments back to back.
-export const KINDS: Highlight["kind"][] = ["top_speed", "longest_run", "back_to_back",
-                                          "busiest_minute"];
+// The physical highlights so far (decisions 28–29): per kind, the top 3 players, best first. A
+// click opens that moment in the Highlights view; "Play highlights" plays the whole match's best
+// moments back to back.
+export const KINDS: Highlight["kind"][] = ["top_speed", "longest_run", "recovery_run",
+                                          "back_to_back", "busiest_minute", "most_ground"];
 
 interface Props {
   all: Highlight[];
@@ -35,7 +36,9 @@ export function Highlights({ all, now, active, reelOn, text, onPick, onReel }: P
           return (
             <div key={kind} className="hl-kind">
               <h4>{text[`hl_${kind}`]}</h4>
-              {top.length === 0 && <p className="muted small">{text.hlNone}</p>}
+              {top.length === 0 && (
+                <p className="muted small">{kind === "most_ground" ? text.hlAtEnd : text.hlNone}</p>
+              )}
               <ol>
                 {top.map((h) => (
                   <li key={`${h.player.id}-${h.video_s}`}>
@@ -57,13 +60,21 @@ export function Highlights({ all, now, active, reelOn, text, onPick, onReel }: P
   );
 }
 
-/** The reel: the whole match's top 2 of each kind, in match order, overlapping moments merged. */
+// When clips overlap (one run can be the longest, the fastest and the busiest minute), the one
+// whose kind comes first here is kept.
+const PRIORITY: Highlight["kind"][] = ["longest_run", "recovery_run", "top_speed", "back_to_back",
+                                      "busiest_minute"];
+
+/** The reel: the whole match's top 2 of each kind, in match order, overlapping clips merged
+ * (by PRIORITY); the most ground covered (the whole match) comes last. */
 export function reel(all: Highlight[], end: number): Highlight[] {
-  const picks = KINDS.flatMap((k) => topSoFar(all, k, end, 2));
+  const picks = PRIORITY.flatMap((k) => topSoFar(all, k, end, 2));
   const out: Highlight[] = [];
-  for (const h of [...picks].sort((a, b) => a.start_video_s - b.start_video_s)) {
-    const last = out[out.length - 1];
-    if (!last || h.start_video_s > last.end_video_s + 3) out.push(h);
+  for (const h of picks) {
+    if (!out.some((o) => h.start_video_s <= o.end_video_s + 3 && o.start_video_s <= h.end_video_s + 3)) {
+      out.push(h);
+    }
   }
-  return out;
+  return [...out.sort((a, b) => a.start_video_s - b.start_video_s),
+          ...topSoFar(all, "most_ground", end, 1)];
 }

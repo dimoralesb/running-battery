@@ -7,7 +7,8 @@ Second Wind measures from tracking data how much hard running each football play
 All match data is **synthetic**: we built a generator whose players get tired according to published sports science, with a hidden "true" fatigue we use to test our estimator.
 
 **Try it:** https://happy-bay-06ca1e90f.3.azurestaticapps.net/?match=story (the story match, fan mode; the favourite is the left-back the story is about).
-Add `?match=natural`, `&mode=analyst`, `&t=<seconds>` or `&theme=dark` to the address.
+It opens on the **Highlights**: each clip plays once as it happened (Watch), then again at half speed with its numbers (Replay with details); "Full match" is the whole replay.
+Add `?match=natural`, `&mode=analyst`, `&view=full&t=<seconds>`, `&hl=<kind>&step=replay` or `&theme=dark` to the address.
 
 - Project plan: [docs/PLAN.md](docs/PLAN.md)
 - Build plan: [docs/BUILD_PLAN.md](docs/BUILD_PLAN.md)
@@ -17,7 +18,7 @@ Add `?match=natural`, `&mode=analyst`, `&t=<seconds>` or `&theme=dark` to the ad
 ## How it works
 
 1. **Generator** (`sim/`): a 10 Hz match with events, a sprint motion model [Narizuka2023], role behaviours and a hidden physiology (two short-term pools and a whole-match tank) that changes which hard runs players make.
-2. **Estimator** (`engine/`): from positions alone, per player and second, the running (high-speed distance, red-zone spells, energy) and what it would leave a typical professional (a battery with a 10–90% band, and a calibrated chance of being in the red).
+2. **Estimator** (`engine/`): from positions alone, per player and second, the running (high-speed distance, intense spells, energy) and what it would leave a typical professional (a battery with a 10–90% band, and a calibrated chance of falling below half of it).
 3. **Agents** (`agents/`): an MCP server with seven read-only tools, four agents on Foundry, and a Verifier that checks every sentence against a register of published claims.
 4. **Overlay** (`app/`): the replay, the batteries, the charts and the verified feed, as static files on Azure.
 
@@ -27,7 +28,7 @@ Four agents on Microsoft Foundry (Agent Framework, gpt-5-mini) turn a match into
 verified feed (`feed.json`, synced to the replay or a video by `video_s`). They see the match
 only through an MCP server with seven read-only tools, and every number comes back with its unit
 and the field it came from; nothing in `agents/` can read the hidden truth. **Tactical** picks
-the moments (red-zone spells, a defender caught on the break, second wind, fresh legs, a quiet spell
+the moments (intense spells, a defender caught on the break, second wind, fresh legs, a quiet spell
 that is likely tactical rather than fatigue, flat-out runs near a player's top speed, and who's doing
 the running between the two teams); **Narrator** writes from the claims register's wordings;
 **Personalization** sets the fan or analyst style and puts a favourite player (and whoever came
@@ -37,57 +38,82 @@ Plain code holds the agents to what the prompts ask: each moment offers only the
 it (the "after a 5-minute spell" figure only after a spell that long, "top speed hardly drops"
 only after the 75th minute), a team moment always says how the two teams compare, each general
 finding is shown at most twice per feed, and "fewer touches" needs measured touch counts
-(PLAN decision 25).
+(PLAN decision 25). A line tagged with a general finding whose numbers all come from the moment's
+facts counts as a measured fact (decision 29).
 
 ### The Verifier
 
 It runs fixed rules first, then an LLM pass that can only block, against the claims register
 (synthesis §5) and the moment's context: a sentence that blames fatigue while the team is 3–0
 up, the ball is out of play or the player has just come on must say so, and every number must be
-one of the facts. The paraphrases are blocked claims in other words, written before the rules
-that could catch them and never used to tune them. On 132 test sentences
+one of the facts. The paraphrases are blocked claims in other words, and the fact checks are
+sentences that do or do not agree with their facts (F1); both were written before the rules or
+the prompt that could catch them and never used to tune them. On 148 test sentences
 ([docs/verifier_report.json](docs/verifier_report.json)):
 
 | | Unsupported sentences caught | Valid sentences blocked |
 |---|---|---|
-| Rules alone | 55 / 80 (paraphrases 2 / 21) | 0 / 52 |
-| Rules + LLM | 78 / 80 (paraphrases 21 / 21) | 2 / 52 |
+| Rules alone | 57 / 89 (paraphrases 2 / 21, fact checks 0 / 6) | 0 / 59 |
+| Rules + LLM | 86 / 89 (paraphrases 21 / 21, fact checks 5 / 6) | 2 / 59 |
 
-The two the LLM let through came from our own feeds: a second wind put down to "less
-opportunity to run", and a line on the deployed site that followed the typical-pro wording with
-"so this may not be only fatigue" (his own state); the feed was regenerated without it. The two
-valid sentences it blocked are strict readings of claims 15 and 3. The rules never block a valid sentence; the LLM pass varies from run to run.
+The LLM still misses some sentences that contradict their facts: a second wind put down to "less
+opportunity to run", a general finding about short bursts used to explain a 197-second spell, and
+"his fastest run so far" for a run that was not. Before prompt revision 4 it caught 2 of the 6
+fact checks. The two valid sentences it blocked use "in the red", the old name for the
+typical-pro chance. The rules never block a valid sentence; the LLM pass varies by a sentence or
+two from run to run. In the regenerated feeds the fact check caught real slips: numbers from an
+earlier 15-minute block reused at 74:59, a "3–0 lead" copied from claim 13's example when the
+score was 3–1, and "level" for a 6% difference.
 
-The LLM prompt has been revised three times, each reported in PLAN §3.4: twice on the first
-suite, and once after the fourth demo feeds, where it blocked "catching breath after a red-zone
-spell" (the neutral name of the post-peak window, decision 12) as physiology seven times.
+The LLM prompt has been revised four times, each reported in PLAN §3.4: twice on the first
+suite; once after the fourth demo feeds, where it blocked the neutral name of the post-peak window
+as physiology seven times; and once (decision 29) for the new names and a fact check it writes
+before each verdict. Rules added from reading the feeds: no field names on screen ("G10"),
+"not only fatigue" as a statement about the player's own state (claim 33), and baselines in
+words ("of the last five minutes").
 
 ## The overlay
 
-`app/` replays the match with, in fan mode, a battery icon for the selected and favourite players
-and the five lowest batteries (a tick shows all of them), and in analyst mode the selected
-player's battery trace with its band and his high-speed running. A ring pulses when a player runs
-flat out (90% or more of his top speed so far), and around each feed moment dashed circles show
-where the player and his two nearest opponents could get to in one second, labelled "model"
-(the Fujimura–Sugihara motion model with Narizuka's fit at Δt = 1 s, radius 6.2 m
-[Narizuka2023, p.5–6]). Both teams' high-speed running per ball-in-play minute is drawn as one
-chart, "who's doing the running". Each feed line shows its claim, sources and the Verifier's verdict, and a toggle
-shows what the Verifier blocked. The overlay's own fixed sentences (`app/src/copy.json`) pass
-the Verifier too. Light and dark mode; phone layout with a 16 px gutter and no sideways scroll.
+`app/` opens on the **Highlights** (decision 29): one clip at a time, in match order, from the
+match's best physical moments and the feed's moments. Each clip plays twice. **Watch** is the
+moment as it happened, at normal speed, with only that player's path on the pitch (the others
+dimmed), the dashed circles where a turnover matters, and one line of caption. **Replay with
+details** plays it again at half speed with numbers that grow with the run (speed now, top speed,
+distance, metres above 5.5 m/s, the gap timer between back-to-back runs), the run's speed second
+by second, his number against the published one once the clip is over, and what the feed says
+about it with each line's sources and the Verifier's verdict. Then "Next". The circles show where
+the player and his two nearest opponents could get to in one second, labelled "model" (the
+Fujimura–Sugihara motion model with Narizuka's fit at Δt = 1 s, radius 6.2 m [Narizuka2023,
+p.5–6]). The score bar shows each team's fastest second so far.
 
-**Highlights** show the physical side of the match, measured from positions and named as
-football names them: **top speed** (against the average match top speed for his position
-[SilvaH2025, Table 1]), the **longest run** above 5.5 m/s (19.8 km/h) in one go and where it
-went (a typical high-speed run is about 19 m [Fang2024, Table 2; DiSalvo2007, p.224]),
-**back-to-back runs** (three or more with 20 s or less between them, our threshold; Premier
-League players usually get 51–101 s between high-speed runs, by position [Bradley2009,
-Table I]) and the **busiest minute** (against a published average best minute of 62 m
-[Leifsson2024, Table 1]). The panel shows the top 3 so far, one per player; a click plays the
-moment at normal speed with the run's path drawn on the pitch, and "Play highlights" plays the
-match's best moments back to back. Captions come from fixed templates and pass the Verifier;
-they describe what the player did, never how hard he tried (claim 38). The team chart, "Who's
-doing the running", is the metres each team's outfield players ran above 5.5 m/s per minute the
-ball was in play, one point per 5 minutes.
+**Full match** is the whole replay. In fan mode it shows a battery icon for the selected and
+favourite players (a tick shows all of them); in analyst mode the selected player's battery trace
+with its band and his high-speed running. To keep one obvious place to look, the player the
+current feed line is about gets a ring and that line sits under the pitch; the flat-out pulse
+(90% or more of his top speed so far) and the intense-spell ring show only for him, the selected
+and the favourite player, and the key is folded away. Both teams' high-speed running per
+ball-in-play minute is one chart, "who's doing the running". Each feed line shows its claim,
+sources and the Verifier's verdict, and a toggle shows what the Verifier blocked. The overlay's
+own fixed sentences (`app/src/copy.json`) pass the Verifier too. Light and dark mode; phone
+layout with a 16 px gutter and no sideways scroll.
+
+**Highlights** are measured from positions and named as football names them: **top speed**
+(against the average match top speed for his position [SilvaH2025, Table 1]), the **longest
+run** above 5.5 m/s (19.8 km/h) in one go and where it went (a typical high-speed run is about
+19 m [Fang2024, Table 2; DiSalvo2007, p.224]), the **recovery run** (the longest high-speed run
+back towards his own goal starting within 10 s of his team losing the ball, our threshold; speed
+and distance only), **back-to-back runs** (three or more with 20 s or less between them, our
+threshold; Premier League players usually get 51–101 s between high-speed runs, by position
+[Bradley2009, Table I]), the **busiest minute** (against a published average best minute of
+62 m [Leifsson2024, Table 1]) and, at the final whistle, the **most ground covered** by
+whole-match players (against the Premier League average for defenders, midfielders or forwards,
+9.97 / 11.59 / 10.71 km [Kavanagh2024, Table 2]; Bradley2009, Table I agrees by position within
+1–8%). The story match is short (92.8 min with added time, against a usual 99.5 [Allen2025,
+Table 2]), and its most ground covered is 10.2 km. The panel shows the top 3 so far, one per
+player; a click opens the clip, and "Play highlights" plays the clips one after another.
+Captions come from fixed templates and pass the Verifier; they describe what the player did,
+never how hard he tried (claim 38). Hardest accelerations and stops are left out: tracking
+systems count them about 10-fold apart (claim 32).
 
 The demo feeds are in [docs/feeds/](docs/feeds/): the story match (seed 2028, a high press that
 fades, a full-back caught on the break again and again, a fresh substitute), the same match with that full-back
@@ -137,8 +163,9 @@ end-of-match decline is all fatigue.
 
 **Realism.** 240 default synthetic matches (seeds 1–240) with fatigue on, and the same matches
 with fatigue off in brackets, against published numbers. Our pass bands are proposals (synthesis
-§6.1). Rows marked † come from the 240-seed batch of commit 7c387c7, before the professional prior
-(decision 13), and were not re-run after it.
+§6.1). The ball-in-play, running-by-phase and home-away rows were re-run on the same 240 seeds on
+2026-10-18 (before, they came from commit 7c387c7, before the professional prior; they moved by
+at most 0.06 in r and 1 m/min).
 
 | Check | Published (source) | Synthetic (no fatigue) | |
 |---|---|---|---|
@@ -153,9 +180,9 @@ with fatigue off in brackets, against published numbers. Our pass bands are prop
 | Hard runs after a peak: length, duration, speed | −23%, −32%, −3% [Fang2024, Table 2] | −20%, −18%, −2% (−18%, −16%, −2%) | shorter but not enough |
 | Distance, high-speed and sprint per position | 2024/25 targets ±5% [Allen2024, Table 4; Allen2025] | all within ±5% except full-back high-intensity −5.1% and sprint distance FB +9.1, DM +6.9, CM +6.8, CF +5.2%; team sprint +8.1% | accepted gap (decision 11) |
 | Time in speed bands vs real tracking (IDSSE) | ±3 points [Bassek2025; Osgnach2010] | within 0.9 points | pass |
-| Ball in play† | 50–63% [Kavanagh2024, p.80; Allen2026b, Table 2] | 59.0% | pass |
-| Running by phase, per player slot† | 133 / 145 / 63 m/min with the ball / without / stopped [Allen2026b, Table 5] | 125 / 140 / 57 (−5.7 / −3.7 / −9.0%) | pass (±10%) |
-| Home and away teams move together† | r = 0.68–0.75 [Allen2026a, Fig. 2] | high-speed 0.72, high-intensity 0.77, sprint 0.69; total distance 0.96 | total distance above (decision 11) |
+| Ball in play | 50–63% [Kavanagh2024, p.80; Allen2026b, Table 2] | 58.9% | pass |
+| Running by phase, per player slot | 133 / 145 / 63 m/min with the ball / without / stopped [Allen2026b, Table 5] | 125 / 139 / 58 (−6.1 / −4.2 / −8.4%) | pass (±10%) |
+| Home and away teams move together | r = 0.68–0.75 [Allen2026a, Fig. 2]; pass 0.5–0.85 | high-speed 0.66, high-intensity 0.77, sprint 0.74; total distance 0.96 | total distance above (decision 11) |
 | Energy per player and match | 61.1 ± 6.6 kJ/kg [Osgnach2010, p.174] | 58.5 ± 5.0 kJ/kg (dev seeds 1–60); real IDSSE 57.6 ± 4.5 | close |
 
 **Same conclusions on real data.** We ran the estimator offline on the 7 real IDSSE matches

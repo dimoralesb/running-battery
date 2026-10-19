@@ -25,9 +25,13 @@ RULES_MISS = {"He likely faded after the break.",
               "Short bursts are shaken off in a minute or two, while a five-minute spell takes "
               "about five minutes to recover from; he is 6.5 min out from his 76 s spell, so this "
               "fits the longer recovery for intense work.",
-              "He has done running that would leave a typical professional at about 83% of their "
-              "short-term reserve, and his team had the ball 75% of the last 5 minutes so this "
-              "may not be only fatigue."}  # fmt: skip
+              # Decision 29, from the feeds: his own state in hedged words, and a general
+              # finding used as the reason for a spell it does not cover.
+              "In the Premier League players make about a third fewer high-speed recovery runs "
+              "after a peak, and our estimate says he may have had less in the tank here.",
+              "Five minutes after his 197 s spell his last 2 min high-speed running was 10.9 m/min, "
+              "which fits the idea that short bursts are shaken off in a minute or two.",
+}  # fmt: skip
 
 
 @pytest.mark.parametrize(("sentence", "mode"), VALID)
@@ -107,7 +111,8 @@ def test_report_covers_this_suite():
     assert [r["sentence"] for r in rep["rows"]] == [c["sentence"] for c in cases()]
     assert [r["rules_ok"] for r in rep["rows"]] == [r["rules_ok"] for r in run_rules()]
     # The LLM pass varies from run to run (README, Limitations): 1.0 on the suites of
-    # 2026-10-17, 76/78 on 2026-10-18 (it missed two F1 cases that disagree with the facts).
+    # 2026-10-17, 76/78 on 2026-10-18 (it missed two F1 cases that disagree with the facts),
+    # 86/89 with the held-out fact checks (decision 29).
     assert rep["report"]["llm"]["caught_rate"] >= 0.95
 
 

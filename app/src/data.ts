@@ -84,7 +84,8 @@ export interface Feed {
 
 /** A physical highlight (agents/highlights.py, decision 28): measured, with its caption. */
 export interface Highlight {
-  kind: "top_speed" | "longest_run" | "back_to_back" | "busiest_minute";
+  kind: "top_speed" | "longest_run" | "back_to_back" | "busiest_minute" | "most_ground"
+    | "recovery_run";
   value: number;
   player: { id: string; name: string; shirt: number; team: string; position: string };
   clock: string;
@@ -183,7 +184,79 @@ export function highlightValue(h: Highlight): string {
   if (h.kind === "top_speed") return `${Number(f("top_speed")).toFixed(1)} m/s`;
   if (h.kind === "longest_run") return `${f("metres")} m`;
   if (h.kind === "back_to_back") return `${f("runs")} runs in ${f("seconds")} s`;
+  if (h.kind === "most_ground") return `${Number(f("km")).toFixed(1)} km`;
+  if (h.kind === "recovery_run") return `${f("metres")} m back`;
   return `${f("metres_in_one_minute")} m`;
+}
+
+/** One clip of the Highlights view (decision 29): a highlight or a feed moment, shown first
+ * as it happened (Watch) and then slowed down with its numbers (Replay with details). */
+export interface Item {
+  id: string;
+  source: "highlight" | "moment";
+  kind: string; // highlight kind or moment kind
+  player: string | null; // null for a team moment
+  team: string;
+  clock: string;
+  at: number; // the key second (video_s)
+  start: number; // the clip, video_s
+  end: number;
+  segments: [number, number][]; // his high-speed runs in the clip
+  caption: string;
+  h?: Highlight;
+  momentId?: string;
+  reach: boolean; // reachable-area circles near `at` (a turnover)
+  lapse: boolean; // the whole match at once (most ground covered)
+}
+
+const MOMENT_BEFORE = 8; // a moment's clip: from 8 s before to 4 s after (our choice)
+const MOMENT_AFTER = 4;
+const HI_SPEED = 55; // decimetres per second: 5.5 m/s, where high-speed running starts
+
+/** The seconds above 5.5 m/s in [a, b] for one player, as runs. */
+export function fastSegments(s: Signals | undefined, a: number, b: number): [number, number][] {
+  const out: [number, number][] = [];
+  if (!s) return out;
+  for (let v = Math.ceil(a); v <= b; v++) {
+    const i = v - s.start;
+    const fast = i >= 0 && i < s.speed.length && s.speed[i] > HI_SPEED && s.speed[i] <= 110;
+    const last = out[out.length - 1];
+    if (fast && last && last[1] === v) last[1] = v + 1;
+    else if (fast) out.push([v, v + 1]);
+  }
+  return out;
+}
+
+export function itemOfHighlight(h: Highlight): Item {
+  const lapse = h.kind === "most_ground";
+  return {
+    id: `hl:${h.kind}:${h.player.id}:${h.video_s}`, source: "highlight", kind: h.kind,
+    player: h.player.id, team: h.player.team, clock: h.clock,
+    at: h.kind === "recovery_run" ? h.start_video_s : h.video_s,
+    start: lapse ? 0 : h.start_video_s, end: h.end_video_s, segments: h.segments,
+    caption: h.caption, h, reach: h.kind === "recovery_run", lapse,
+  };
+}
+
+/** The Highlights view's clips in match order: the match's best highlights (as the reel) and
+ * the feed's moments, each with its first verified line in this mode. */
+export function queue(d: MatchData, mode: Mode, best: Highlight[]): Item[] {
+  const items = best.map(itemOfHighlight);
+  for (const m of d.feed.moments) {
+    const lines = d.feed.entries.filter((e) => e.moment_id === m.moment_id && e.mode === mode
+                                               && e.shown);
+    if (!lines.length) continue;
+    const e = lines[0];
+    const pid = e.player?.id ?? null;
+    const [start, end] = [Math.max(m.video_s - MOMENT_BEFORE, 0), m.video_s + MOMENT_AFTER];
+    items.push({
+      id: m.moment_id, source: "moment", kind: m.kind, player: pid, team: e.team,
+      clock: m.clock, at: m.video_s, start, end,
+      segments: pid ? fastSegments(d.signals[pid], start, end) : [], caption: e.sentence,
+      momentId: m.moment_id, reach: m.kind === "exposed_on_turnover", lapse: false,
+    });
+  }
+  return items.sort((a, b) => a.at - b.at);
 }
 
 /** The top n so far of one kind, one per player (the best of each), best first. */

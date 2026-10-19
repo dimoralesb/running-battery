@@ -71,7 +71,8 @@ def main() -> int:
     caps = quota()
     print(f"region {os.environ['AZURE_LOCATION']}")
     failed = False
-    for deployment in dict.fromkeys([os.environ["MODEL_MAIN"], os.environ["MODEL_FAST"]]):
+    models = [os.environ["MODEL_MAIN"], os.environ.get("MODEL_FAST")]
+    for deployment in dict.fromkeys(filter(None, models)):
         times, model, tokens = [], None, 0
         try:
             for _ in range(3):
