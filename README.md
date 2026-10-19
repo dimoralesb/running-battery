@@ -108,6 +108,13 @@ the player and his two nearest opponents could get to in one second, labelled "m
 Fujimura–Sugihara motion model with Narizuka's fit at Δt = 1 s, radius 6.2 m [Narizuka2023,
 p.5–6]). The score bar shows each team's fastest second so far.
 
+**The battery in every view** (decision 32). Under the pitch, a broadcast lower third names the
+clip or moment and its player and shows his battery as the clip plays: what his running so far
+would leave a typical professional, in five cells for fans and as a value with its 10–90% band
+for analysts, with the percentage. A team sheet under the controls lists both line-ups with each
+player's battery, live; a click follows that player in the full match. Goalkeepers get none. The
+look is broadcast graphics: a score bug, a condensed face (Barlow Condensed), a mown-stripe pitch.
+
 **Full match** is the whole replay. In fan mode it shows a battery icon for the selected and
 favourite players (a tick shows all of them); in analyst mode the selected player's battery trace
 with its band and his high-speed running. To keep one obvious place to look, the player the

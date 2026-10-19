@@ -26,6 +26,7 @@ const REACH_WINDOW = 6; // shown from 6 s before to 6 s after the clip's key sec
 const REACH_OPPONENTS = 2;
 const TRAIL_STEP = 0.2; // s between trail points (the positions are at 5 Hz)
 const LAPSE_STEP = 2; // s between trail points for a whole match (most ground covered)
+const STRIPES = 12; // mown stripes across the pitch, as on a broadcast
 
 // Three views (decision 29): the full match, and a clip's Watch and Replay-with-details steps,
 // which show only the clip's player path (and the reachable areas at a turnover).
@@ -202,6 +203,10 @@ export function Pitch({ data, now, mode, view, selected, favourite, allBatteries
     <svg className={`pitch view-${view}`} viewBox={`${-L / 2 - 2} ${-W / 2 - 2} ${L + 4} ${W + 4}`}
          role="img" aria-label="Replay of the synthetic match">
       <rect x={-L / 2 - 2} y={-W / 2 - 2} width={L + 4} height={W + 4} className="grass" />
+      {Array.from({ length: STRIPES }, (_, k) => (
+        <rect key={k} x={-L / 2 + (k * L) / STRIPES} y={-W / 2 - 2} width={L / STRIPES} height={W + 4}
+              className={k % 2 ? "stripe" : "stripe alt"} />
+      ))}
       <Markings />
       {clip && clip.player && clip.player in col && (
         <Trail data={data} item={clip} now={now} j={col[clip.player]} />
@@ -238,7 +243,8 @@ export function Pitch({ data, now, mode, view, selected, favourite, allBatteries
             {!clip && p.id === favourite && <circle cx={x} cy={y} r={2.0} className="fav" />}
             <circle cx={x} cy={y} r={1.45} className="dot" />
             <text x={x} y={y + 0.55} className="shirt">{p.shirt}</text>
-            {!clip && mode === "fan" && i !== null && p.position !== "GK" && showBattery(p.id) && (
+            {i !== null && p.position !== "GK"
+             && (clip ? star : mode === "fan" && showBattery(p.id)) && (
               <BatteryIcon pct={s.battery[i]} x={x} y={y - 3.6} />
             )}
           </g>

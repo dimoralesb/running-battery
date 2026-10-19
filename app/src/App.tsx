@@ -13,6 +13,7 @@ import {
   signalIndex,
   topSoFar,
 } from "./data";
+import { LowerThird, TeamSheet, reading } from "./Battery";
 import { Feed } from "./Feed";
 import { Highlights, reel } from "./Highlights";
 import { Legend, Pitch } from "./Pitch";
@@ -270,16 +271,18 @@ export default function App() {
       </header>
 
       <div className="scoreline">
-        <span className="side home">
-          <span className="team home">{home.name}</span>
-          {fastest(home.id)}
-        </span>
-        <span className="score">{sc.home}–{sc.away}</span>
-        <span className="side away">
-          <span className="team away">{away.name}</span>
-          {fastest(away.id)}
-        </span>
-        <span className="clock">{clockLabel(data.meta, now)}</span>
+        <div className="bug" aria-label={`${home.name} ${sc.home}, ${away.name} ${sc.away}`}>
+          <span className="bug-team home"><span className="full">{home.name}</span>
+            <span className="code">{code(home.name)}</span></span>
+          <span className="bug-score">{sc.home}<span className="bug-dash">–</span>{sc.away}</span>
+          <span className="bug-team away"><span className="full">{away.name}</span>
+            <span className="code">{code(away.name)}</span></span>
+          <span className="bug-clock">{clockLabel(data.meta, now)}</span>
+        </div>
+        <div className="fastest-strip">
+          <span className="side home">{fastest(home.id)}</span>
+          <span className="side away">{fastest(away.id)}</span>
+        </div>
       </div>
 
       {view === "highlights" && cur ? (
@@ -296,7 +299,10 @@ export default function App() {
                      favourite={favourite} allBatteries={false} item={cur} focus={null}
                      reachLabel={copy.reachLabel} flatLabel={copy.flatLabel} onSelect={setSelected} />
             </div>
-            <p className={`clip-caption ${cur.team}`}>{cur.caption}</p>
+            <LowerThird tag={label(cur)} team={cur.team} clock={cur.clock} who={who(cur) ?? ""}
+                        player={cur.player ? players[cur.player] : undefined} caption={cur.caption}
+                        r={reading(data, cur.player ? players[cur.player] : undefined, now)}
+                        mode={mode} text={TEXT} />
             {cur.reach && <p className="muted small">{copy.legendReach}</p>}
             <div className="clip-controls">
               <button onClick={() => prev && start(prev, "watch")} disabled={!prev}>{copy.prev}</button>
@@ -314,6 +320,8 @@ export default function App() {
               <button className={`next${!playing && step === "replay" ? " ready" : ""}`}
                       onClick={() => next && start(next, "watch")} disabled={!next}>{copy.next}</button>
             </div>
+            <TeamSheet data={data} now={now} mode={mode} on={cur.player} favourite={favourite}
+                       text={TEXT} onSelect={(id) => { setSelected(id); setView("full"); setAuto(false); }} />
           </section>
           <aside className="right">
             {step === "replay" ? (
@@ -361,10 +369,18 @@ export default function App() {
                      favourite={favourite} allBatteries={allBatteries} item={null} focus={focus}
                      reachLabel={copy.reachLabel} flatLabel={copy.flatLabel} onSelect={setSelected} />
             </div>
-            {momentLine && (
-              <p className={`clip-caption ${momentLine.team}`} aria-live="polite">
-                <strong>{KIND[momentLine.kind] ?? momentLine.kind}</strong> {momentLine.sentence}
-              </p>
+            {momentLine ? (
+              <LowerThird tag={KIND[momentLine.kind] ?? momentLine.kind} team={momentLine.team}
+                          clock={momentLine.clock} who={momentLine.team_name}
+                          player={momentLine.player ? players[momentLine.player.id] : undefined}
+                          caption={momentLine.sentence}
+                          r={reading(data, momentLine.player ? players[momentLine.player.id] : undefined, now)}
+                          mode={mode} text={TEXT} />
+            ) : sel && (
+              <LowerThird tag={copy.ltFollow} team={sel.team} clock={clockLabel(data.meta, now)}
+                          who={sel.name} player={sel} r={reading(data, sel, now)}
+                          caption={i === null ? fill(copy.offPitch, { name: sel.name }) : null}
+                          mode={mode} text={TEXT} />
             )}
             <div className="transport">
               <button onClick={() => setPlaying((p) => !p)} aria-label={playing ? "Pause" : "Play"}>
@@ -382,6 +398,8 @@ export default function App() {
             </div>
             <Legend mode={mode} text={TEXT} allBatteries={allBatteries}
                     onAllBatteries={setAllBatteries} />
+            <TeamSheet data={data} now={now} mode={mode} on={selected} favourite={favourite}
+                       text={TEXT} onSelect={setSelected} />
             <div className="moments">
               {data.feed.moments.map((m) => (
                 <button key={m.moment_id} className="chip" onClick={() => setNow(m.video_s - 3)}>
@@ -442,6 +460,11 @@ export default function App() {
       <p className="muted small">{copy.disclaimer}</p>
     </div>
   );
+}
+
+/** A team's three-letter code for the score bug on a phone ("Westerlyn Albion" → "WES"). */
+function code(name: string) {
+  return name.slice(0, 3).toUpperCase();
 }
 
 function topSpeed(name: string, speed: number[], i: number) {
