@@ -367,6 +367,24 @@ def test_general_sentences_at_most_twice_per_mode():
     assert entries[0]["verdict"] == "repeat" and feed_mod.MAX_GENERAL == 2
     assert feed_mod.unlabel("fact: he had 0 touches.") == "He had 0 touches."
     assert feed_mod.unlabel("Factually level.") == "Factually level."
+    # Decision 31: a bare claim id ("11: He has done…"), never a clock.
+    assert feed_mod.unlabel("9a: Albion did more.") == "Albion did more."
+    assert feed_mod.unlabel("60:00–75:00 — level.") == "60:00–75:00 — level."
+
+
+def test_moments_say_what_they_are_for():
+    """Decision 31: a substitute against his team-mates, the favourite caught on the break with
+    the typical-pro line, and a team moment's comparison; the others need nothing."""
+    bat = {"typical_pro_battery_now": {"value": 0.83, "unit": "share"}}
+    exposed = {"kind": "exposed_on_turnover", "player": {"id": "H04"}, "facts": bat}
+    assert feed_mod.needs(exposed, "H04") == feed_mod.FAVOURITE_EXPOSED_SAYS
+    assert feed_mod.needs(exposed, "H11") is None and feed_mod.needs(exposed) is None
+    sub = {"kind": "fresh_legs", "player": {"id": "H16"},
+           "facts": {"vs_teammates": {"value": 49, "unit": "%"}}}  # fmt: skip
+    assert feed_mod.needs(sub) == feed_mod.FRESH_LEGS_SAYS
+    team = {"kind": "tug_of_war", "facts": {"pattern": "gap closed"}}
+    assert feed_mod.needs(team) == feed_mod.MUST_SAY["gap closed"]
+    assert feed_mod._pro(exposed)[1].startswith("That running would leave a typical professional")
 
 
 def test_highlights_are_measured_ranked_and_verified(folder):

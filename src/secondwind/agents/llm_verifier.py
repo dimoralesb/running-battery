@@ -111,6 +111,11 @@ How to read the rules (do not block for these):
 - "His hardest minutes (so far)" and "just after his hardest minutes (so far)" are the system's
   neutral names for measured windows (his high-speed running at its peak, and the minutes after
   it, the post-peak flag; decision 12), not claims about his physiology or his own tiredness.
+- The moments' names are football's names for kinds of moment, not claims about anyone's body
+  or tiredness (prompt revision 6): "second wind" (his running back up after his hardest
+  minutes), "fresh legs" (a substitute's running against his team-mates'), "caught on the
+  break" (his team lost the ball just after his hardest minutes), "quiet spell" (little running,
+  with the reason given), "hardest minutes", "flat out" and "who's doing the running".
 - Measured facts about one player's running (distance, high-speed running vs his own match
   average or peak, his hardest minutes, speeds, energy used) are facts, not physiology.
 

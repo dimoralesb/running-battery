@@ -16,7 +16,9 @@ Four agents, each with a plain-code fallback so the feed never has a gap:
    the template, else left out. Blocked sentences stay in the feed with ``shown: false``.
 
 Then plain code makes sure of two things the prompts ask for (decision 25): a team moment says
-how the two teams compare (``MUST_SAY``; else the verified template line is added), and each
+how the two teams compare (``MUST_SAY``; else the verified template line is added; decision 31
+adds a substitute against his team-mates and, for the favourite caught on the break, what his
+running would leave a typical professional), and each
 general register sentence is shown at most ``MAX_GENERAL`` times per mode (later ones stay in
 the feed with ``verdict: "repeat"``, ``shown: false``); a moment left with no line gets its
 verified template line.
@@ -66,6 +68,11 @@ MUST_SAY = {
     "ran harder": r"\d+\s*%\s*more\b[^.]*\bthan\b",
     "gap closed": r"\bgap\b[^.]*\b(closed|gone)\b|\blevel\b|\bthe same\b",
 }
+# Decision 31: the point of a fresh-legs moment is the comparison with his team-mates, and the
+# favourite's caught-on-the-break moment says what his running would cost (claim 11); the
+# Narrator left both out of a regenerated feed.
+FRESH_LEGS_SAYS = r"\bteam-?mates\b"
+FAVOURITE_EXPOSED_SAYS = r"\btypical professional\b"
 ORDINAL = {1: "first", 2: "second", 3: "third", 4: "fourth", 5: "fifth", 6: "sixth",
            7: "seventh", 8: "eighth", 9: "ninth", 10: "tenth"}  # fmt: skip
 
@@ -227,7 +234,8 @@ def brief(tools: MatchTools, mo: dict) -> dict[str, Any]:
     return {
         "moment_id": mo["id"], "kind": mo["kind"], "what": MOMENT_KINDS[mo["kind"]][0],
         "clock": end, "player": mo.get("player"), "team": mo.get("team"),
-        "opponent": mo.get("opponent"), "facts": facts,
+        "opponent": mo.get("opponent"), "team_names": [t.name for t in tools.m.teams.values()],
+        "facts": facts,
         "non_fatigue_reasons": ctx["non_fatigue_reasons"],
         "context": {k: ctx[k] for k in ("score", "ball_in_play", "possession", "lead",
                                         "team_just_lost_ball", "team_just_won_ball",
@@ -244,7 +252,7 @@ def _clock(tools: MatchTools, period: int, t: float) -> str:
 
 def verifier_context(b: dict) -> dict[str, Any]:
     return {"non_fatigue_reasons": b["non_fatigue_reasons"], "facts": b["facts"],
-            "context": b["context"], "subject": _name(b),
+            "context": b["context"], "subject": _name(b), "team_names": b.get("team_names"),
             "claims_offered": [c["id"] for c in b["claims"]],
             "team_moment": b["kind"] in TEAM_KINDS}  # fmt: skip
 
@@ -265,14 +273,19 @@ def _v(b: dict, key: str, scale: float = 1.0, digits: int = 0):
     return int(round(x)) if digits == 0 else round(x, digits)
 
 
+def _pro(b: dict) -> tuple[str, str] | None:
+    """Claim 11's line for the moment, from typical_pro_battery_now."""
+    bat = _v(b, "typical_pro_battery_now", 100)
+    if bat is None:
+        return None
+    return ("11", f"That running would leave a typical professional at about {bat}% of their "
+                  "short-term reserve, by our estimate.")  # fmt: skip
+
+
 def template(b: dict, mode: str) -> list[tuple[str, str]]:
     """(claim id, sentence) for a moment, from the register's wordings and the facts."""
     name, kind = _name(b), b["kind"]
-    bat = _v(b, "typical_pro_battery_now", 100)
-    pro = (
-        ("11", f"That running would leave a typical professional at about {bat}% of their "
-               "short-term reserve, by our estimate.") if bat is not None else None
-    )  # fmt: skip
+    pro = _pro(b)
     out: list[tuple[str, str] | None] = []
     if kind == "red_zone":
         n = _v(b, "hardest_minutes_count")
@@ -547,22 +560,26 @@ Rules (a Verifier blocks anything else):
 - Never write field names such as vs_opponent or top_speed_so_far; write plain English.
 - Team moments (tug_of_war) also say where the running happened, from possession and the ball's
   position only (team_hsr_share_after_ball_changed_hands with time_share_after_ball_changed_hands,
-  or metres per minute of a situation, never raw totals): "43% of Albion's high-speed running
-  came in the first 10 seconds after the ball changed hands, in 29% of the time the ball was in
-  play". Situations say where, never why: no "pressing", "pressed", "closing down" or other
-  purposes (claim 39), no tiredness. From claim 4 use only its first sentence ("Losing the ball
-  forces the hardest running of the game"); "tired legs" would be about the team (claim 35).
+  or metres per minute of a situation, never raw totals): "In 0:00–15:00, 43% of Westerlyn
+  Albion's high-speed running came in the first 10 seconds after the ball changed hands, in 29%
+  of the time the ball was in play". Name the block once. Situations say where, never why: no
+  "pressing", "pressed", "closing down" or other purposes (claim 39), no tiredness. From claim 4
+  use only its first sentence ("Losing the ball forces the hardest running of the game"); "tired
+  legs" would be about the team (claim 35).
 - Team moments (tug_of_war): the first sentence compares the two teams by name, as the
-  comparison is the point: "Albion did 30% more high-speed running per ball-in-play minute than
-  Ravensholt in 0:00–15:00" (vs_opponent). For pattern "gap closed" say "the gap has closed",
-  that the two sides were level in that block, and how big the gap was earlier
+  comparison is the point: "Westerlyn Albion did 30% more high-speed running per ball-in-play
+  minute than Ravensholt Albion in 0:00–15:00" (vs_opponent). For pattern "gap closed" say "the
+  gap has closed", that the two sides were level in that block, and how big the gap was earlier
   (earlier_gap_vs_opponent). In fan mode that comparison is the one number.
+- Name every team in full ("team_names"), every time: when the two names share a word (Westerlyn
+  Albion, Ravensholt Albion), that word alone does not say which team.
 - Claim 14 ("fewer touches") only if the moment's claims include it; then give the touch
   counts from the facts (touches_last_5min against touches_per_5min_so_far).
 - An exposed_on_turnover moment with times_exposed_so_far above 1: say it is the second (third…)
   time his team lost the ball just after his hardest minutes so far, in those words ("This is
-  the third time his team have lost the ball just after his hardest minutes so far"), not
-  "exposed".
+  the third time his team have lost the ball just after his hardest minutes so far"; for the
+  favourite: "This is the third time <his name>'s team have lost the ball…"), not "exposed"
+  and not "he is facing".
 - A flat_out run with new_personal_best: say it is his fastest of the match so far, never a
   share of his top speed above 100%.
 - A gap that closed: say the two sides were level, never "0% more".
@@ -585,14 +602,16 @@ def personalize(mode: str, favourite: str | None) -> str:
     if favourite:
         style += (
             f" The viewer follows {favourite}: in his moments, name him in the first sentence "
-            "(as its subject, not as a label before a colon)."
+            '(as its subject, or as in "<his name>\'s team"; never as a label before a colon).'
         )
     return NARRATOR.format(audience="casual fans" if mode == "fan" else "analysts", style=style)
 
 
 def unlabel(sentence: str) -> str:
-    """Drop a label the Narrator put before a sentence ("fact: he had 0 touches…")."""
-    s = re.sub(r"^\s*(fact|claim\s*[\w.]+)\s*:\s*", "", sentence, flags=re.I)
+    """Drop a label the Narrator put before a sentence ("fact: he had 0 touches…", or a bare
+    claim id, "11: He has done running…", in the decision 31 feed; "60:00–75:00" stays)."""
+    s = re.sub(r"^\s*(fact|claim\s*[\w.]+)\s*:\s*|^\s*(\d{1,2}[a-d]?|G\d{1,2})\s*:\s+", "",
+               sentence, flags=re.I)  # fmt: skip
     return s[:1].upper() + s[1:]
 
 
@@ -693,13 +712,29 @@ async def entries_for(b: dict, mode: str, lines: list[tuple[str, str]], agent) -
     return out
 
 
-async def must_say(b: dict, mode: str, chunk: list[dict], agent) -> list[dict]:
-    """A team moment's comparison (MUST_SAY): if no shown line says it, the verified template
+def needs(b: dict, favourite: str | None = None) -> str | None:
+    """What a moment's lines must say, as a pattern: a team moment's comparison (MUST_SAY), a
+    substitute's against his team-mates, the favourite's typical-pro line when caught on the
+    break (decision 31)."""
+    if b["kind"] in TEAM_KINDS:
+        return MUST_SAY.get(b["facts"].get("pattern"))
+    if b["kind"] == "fresh_legs" and b["facts"].get("vs_teammates") is not None:
+        return FRESH_LEGS_SAYS
+    if (b["kind"] == "exposed_on_turnover" and favourite and b.get("player")
+            and b["player"]["id"] == favourite and _pro(b)):  # fmt: skip
+        return FAVOURITE_EXPOSED_SAYS
+    return None
+
+
+async def must_say(
+    b: dict, mode: str, chunk: list[dict], agent, favourite: str | None = None
+) -> list[dict]:
+    """What the moment must say (``needs``): if no shown line says it, the verified template
     line that does, first."""
-    need = MUST_SAY.get(b["facts"].get("pattern")) if b["kind"] in TEAM_KINDS else None
+    need = needs(b, favourite)
     if not need or any(e["shown"] and re.search(need, e["sentence"], re.I) for e in chunk):
         return chunk
-    for claim, sentence in template(b, mode):
+    for claim, sentence in [x for x in template(b, mode) + [_pro(b)] if x]:
         if re.search(need, sentence, re.I):
             v, _ = await check(b, mode, claim, sentence, agent)
             if v.ok:
@@ -804,7 +839,7 @@ async def build(
     for b in briefs:  # after the cap, so a comparison is never held back as a repeat
         for mode in MODES:
             mine = [e for e in entries if e["moment_id"] == b["moment_id"] and e["mode"] == mode]
-            entries += [e for e in await must_say(b, mode, mine, agent) if e not in mine]
+            entries += [e for e in await must_say(b, mode, mine, agent, fav) if e not in mine]
     entries += await refill(briefs, entries, agent)
     entries.sort(key=lambda e: (e["video_s"], e["mode"]))
     return {

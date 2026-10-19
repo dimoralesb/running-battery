@@ -12,7 +12,8 @@
     {"id": "G4", "rule": "No claims about an individual's physiology (lactate, glycogen); only estimates from movement.", "source": "synthesis §5, rule 4"},
     {"id": "G5", "rule": "Compare phases per minute of that phase, never as raw totals.", "source": "synthesis §5, rule 5; PLAN §3.4, rule 3"},
     {"id": "G9", "rule": "The battery and the low-battery chance describe the running, relative to a typical professional, never the player's own state.", "source": "PLAN §3.4, rule 9; decision 14"},
-    {"id": "G10", "rule": "Plain English on screen: no field names or code identifiers (times_exposed_so_far, vs_opponent).", "source": "PLAN decision 29 (the Narrator's prompt, decision 25)"}
+    {"id": "G10", "rule": "Plain English on screen: no field names or code identifiers (times_exposed_so_far, vs_opponent), and \"level\" rather than \"0% more\".", "source": "PLAN decision 29 (the Narrator's prompt, decision 25)"},
+    {"id": "G11", "rule": "Name each team so the viewer can tell which is meant: in full when the two names share a word (Westerlyn Albion, Ravensholt Albion), never the shared word alone. A team named through its player (\"Marco Tarvsall's team\", \"his team\") is clear.", "source": "PLAN decision 31 (the site's feed, 2026-10-19)"}
   ],
   "claims": [
     {"id": "1", "status": "supported", "mode": "fan", "pattern": "After his hardest minutes, high-speed running drops for a few minutes and then recovers", "sources": ["Leifsson2024", "Schimpchen2020", "Ju2022", "Fang2024"], "wording": "After a player's hardest 5 minutes, high-speed running in the next minute is typically about 40% below their match average. It comes back over about 5 minutes."},

@@ -1,6 +1,6 @@
 # Second Wind: Build Plan
 
-**Status (2026-10-19):** approved and in progress, about seven days ahead. Done: Wed 14 to Tue 20, Wed 21 (MCP server, claims register, Verifier v1 and v2), Thu 22 (agents and the feed, on Foundry: decision 18), Fri 23 (overlay: replay, batteries, flat-out pulse, reachable-area circles labelled "model", traces, the team chart, the verified feed; light, dark and phone checked), Sat 24 (public site on Azure Static Web Apps, Free: decision 26), Sun 25 (README: data card, realism table with the † rows re-run, charts, Verifier table, what we don't claim). The feed holds to its prompts in code (decision 25); physical highlights (decision 28); the Highlights view as the default, football's words for our terms ("intense spell") and two more highlights (decision 29); "his hardest minutes" for that window and where each team's running happened, with pressing tested against the hidden truth and left out (decision 30). The unused test Container App and its environment are deleted. Next: Mon 26 (video from the Highlights view, §6; pitch text; clean-clone test). Science frozen (decision 17).
+**Status (2026-10-19):** approved and in progress, about seven days ahead. Done: Wed 14 to Tue 20, Wed 21 (MCP server, claims register, Verifier v1 and v2), Thu 22 (agents and the feed, on Foundry: decision 18), Fri 23 (overlay: replay, batteries, flat-out pulse, reachable-area circles labelled "model", traces, the team chart, the verified feed; light, dark and phone checked), Sat 24 (public site on Azure Static Web Apps, Free: decision 26), Sun 25 (README: data card, realism table with the † rows re-run, charts, Verifier table, what we don't claim). The feed holds to its prompts in code (decision 25); physical highlights (decision 28); the Highlights view as the default, football's words for our terms ("intense spell") and two more highlights (decision 29); "his hardest minutes" for that window and where each team's running happened, with pressing tested against the hidden truth and left out (decision 30); team names in full, "level", and the lines the video's moments need, with the site's feed regenerated (decision 31). Mon 26's pitch text ([PITCH.md](PITCH.md)) and clean-clone test are done (§7). The unused test Container App and its environment are deleted. Next (the user's call, 2026-10-19: more changes first): the video (§6) and making the repository public (§7). Science frozen (decision 17).
 Deadline: October 27, 2026, 11:59 pm PT. Design and sources are in [PLAN.md](PLAN.md). Numbers and targets are in [RESEARCH_SYNTHESIS.md](RESEARCH_SYNTHESIS.md) ("synthesis §x").
 Solo developer. Python 3.12 for everything except the front end (React + Vite + TypeScript). English only. Azure free account ($200 credit); Foundry access confirmed on October 17 (gpt-5-mini; PLAN decision 18).
 
@@ -76,10 +76,39 @@ feed's or a highlight caption, all checked by the Verifier. Base URL:
 |---|---|---|
 | 0:00–0:08 | The site opening on the Highlights view (no extra parameters) | The scoreline doesn't tell you who did the hard running, or what it cost. This match is synthetic, generated from published sports science. |
 | 0:08–0:30 | Recovery run, Watch then Replay with details (`&hl=recovery_run`, then `&step=replay`) | Luca Ashock, 54:18: 50 m above 5.5 m/s back towards his own goal, up to 9.1 m/s (33 km/h), starting 3 seconds after his team lost the ball. The numbers grow with the run; a typical high-speed run is about 19 m. Measured from positions: what he did, never how hard he tried. |
-| 0:30–0:55 | H04 caught on the break at 24:37, Watch then Replay with details (`&moment=exposed_on_turnover:H04:1:1477`, then `&step=replay`) | The third time his team lost the ball just after his hardest minutes so far. The circles show where he and his two nearest opponents could get to in a second (a published motion model). His running would leave a typical professional at about 83% of their short-term reserve: about the running, never "he's tired". |
-| 0:55–1:10 | The same clip's lines with their sources and verdicts, then the gap closing at 74:59 (`&moment=tug_of_war:home:2:1799&step=replay`) with a line the Verifier blocked and rewrote | Every sentence is checked: fixed rules, then an LLM that can only block and now writes down its fact check first (157 test sentences, README table). The team moment's Replay also shows where each team's running happened: in 0:00–15:00 Albion did 433 m of high-speed running per minute in the 10 s after losing the ball; by 60:00–75:00, 160. |
-| 1:10–1:25 | Fresh legs at 75:59 (`&moment=fresh_legs:H16:2:1859`) and the score bar's fastest player per team | The substitute who came on for him has done 49% more high-speed running per minute than his team-mates over the same minutes. |
+| 0:30–0:55 | H04 caught on the break at 24:37, Watch then Replay with details (`&moment=exposed_on_turnover:H04:1:1477`, then `&step=replay`). Watch caption: "This is the third time Marco Tarvsall's team have lost the ball just after his hardest minutes so far." Replay: that line, claim 3, and the typical-pro line (83%, the verified template, decision 31) | The third time his team lost the ball just after his hardest minutes so far. The circles show where he and his two nearest opponents could get to in a second (a published motion model [Narizuka2023]). His running would leave a typical professional at about 83% of their short-term reserve: about the running, never "he's tired". |
+| 0:55–1:10 | The same clip's lines with their sources and verdicts, then the gap closing at 74:59 (`&moment=tug_of_war:home:2:1799&step=replay`): in fan mode a line the rules blocked (a share of the running without the share of the time, G5) and the verified template that replaced it; with `&mode=analyst`, a line the LLM blocked (G1) and the Verifier's rewrite. Then "Where the running happened" below it | Every sentence is checked: fixed rules, then an LLM that can only block and writes down its fact check first (174 test sentences, README table). The team moment's Replay also shows where each team's running happened: in 0:00–15:00 Westerlyn Albion did 433 m of high-speed running per minute in the 10 s after losing the ball; by 60:00–75:00, 160 (`match.json` `team_situations`). |
+| 1:10–1:25 | Fresh legs at 75:59 (`&moment=fresh_legs:H16:2:1859`; Watch caption: "Felix Morrmere has done 49% more high-speed running per minute than his team-mates over the same minutes.") and the score bar's fastest player per team | The substitute who came on for him has done 49% more high-speed running per minute than his team-mates over the same minutes. |
 | 1:25–1:45 | Estimator-vs-truth and no-fatigue charts (README) | Tested against the generator's hidden truth: what positions can and cannot tell, and what we therefore don't claim. |
 | 1:45–1:55 | Architecture line: generator → estimator → MCP → four agents on Foundry → Static Web Apps; then "Full match" for two seconds | Microsoft Foundry, Agent Framework, MCP, Azure. Link. |
 
 **Never cut:** the no-fatigue control, the estimator-vs-truth chart, the real-data conclusion check on IDSSE (PLAN §2.6), and the rule-based Verifier. If the LLM Verifier slips, the fixed rule checks still block unsupported claims.
+
+## 7. Submission checklist (Tue 27, morning; OFFICIAL RULES §4.4)
+
+Checked on 2026-10-19 unless marked open.
+
+- [ ] **Repository public.** The rules: "Your repository must be public for your entry to be
+  considered." It is private now; the user makes it public when the last changes are in
+  (`gh repo edit dimoralesb/second-wind --visibility public --accept-visibility-change-consequences`).
+  History checked: one author; no `.env`, keys, endpoint or subscription id, IDSSE data, papers
+  or rules text in any commit (only our IDSSE loader scripts).
+- [ ] **Project pitch** in the form: [PITCH.md](PITCH.md), short or full version. The rules set
+  no length; check the form's own limit on the day. Every sentence passes the Verifier's rules
+  (`tests/test_pitch.py`).
+- [ ] **Video** under 2 min, public on YouTube or Vimeo, no third-party trademarks or
+  copyrighted music (team and player names are generated); its URL on the project page. Open:
+  recording and voice-over (§6).
+- [x] **Working project for judges**: https://happy-bay-06ca1e90f.3.azurestaticapps.net/?match=story,
+  no login, free until judging ends on 2026-11-10 (Static Web Apps Free plan, $0).
+- [x] **Licence**: MIT ([LICENSE](../LICENSE)); third-party data (IDSSE, CC BY 4.0) is not
+  redistributed.
+- [x] **Clean clone** (of 87d02cd, 2026-10-19): README "Development" from a fresh clone, no `.env`: `uv sync`, 287 tests
+  passed (1 skipped without IDSSE), ruff clean, `npm ci && npm run build`, the story match, an
+  offline feed and the export.
+- [x] **Azure credit**: about $11.73 used of $200 (Cost Management, 1–19 Oct: Foundry Models
+  $10.64, Event Hubs $1.10 before it was deleted). The site costs nothing; Foundry is only used when
+  feeds or the suite are regenerated. The Foundry resource and its resource group stay.
+- [ ] **English**: all materials are in English.
+- [ ] On the day: CI green on the submitted commit; the site serves `docs/feeds/story_h04.json`
+  from that commit.

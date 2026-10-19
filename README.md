@@ -38,7 +38,9 @@ Plain code holds the agents to what the prompts ask: each moment offers only the
 it (the "after a player's hardest 5 minutes" figure only after a stretch that long, "top speed hardly drops"
 only after the 75th minute), a team moment always says how the two teams compare, each general
 finding is shown at most twice per feed, and "fewer touches" needs measured touch counts
-(PLAN decision 25). A line tagged with a general finding whose numbers all come from the moment's
+(PLAN decision 25). A substitute's moment always compares him with his team-mates, and the
+favourite's caught-on-the-break moment says what his running would leave a typical professional
+(decision 31). A line tagged with a general finding whose numbers all come from the moment's
 facts counts as a measured fact (decision 29). A team moment also says where the team's
 high-speed running happened, as measured facts per minute of each situation (decision 30, below);
 claim 4 ("losing the ball forces the hardest running of the game") may go with it, but not its
@@ -51,31 +53,32 @@ It runs fixed rules first, then an LLM pass that can only block, against the cla
 up, the ball is out of play or the player has just come on must say so, and every number must be
 one of the facts. The paraphrases are blocked claims in other words, and the fact checks are
 sentences that do or do not agree with their facts (F1); both were written before the rules or
-the prompt that could catch them and never used to tune them. On 166 test sentences
-([docs/verifier_report.json](docs/verifier_report.json), prompt revision 5):
+the prompt that could catch them and never used to tune them. On 174 test sentences
+([docs/verifier_report.json](docs/verifier_report.json), prompt revision 6):
 
 | | Unsupported sentences caught | Valid sentences blocked |
 |---|---|---|
-| Rules alone | 69 / 104 (paraphrases 2 / 23, fact checks 0 / 6) | 0 / 62 |
-| Rules + LLM | 97 / 104 (paraphrases 23 / 23, fact checks 3 / 6) | 2 / 62 |
+| Rules alone | 75 / 108 (paraphrases 2 / 23, fact checks 0 / 6) | 0 / 66 |
+| Rules + LLM | 106 / 108 (paraphrases 23 / 23, fact checks 5 / 6) | 2 / 66 |
 
-The LLM still misses sentences that mislead without a wrong number: a general finding about short
-bursts used to explain a 76- or 197-second spell, claim 3 ("about a third fewer recovery runs
-right after their hardest minutes") used as the lead-in to a defender's own speed after a
-turnover, "the lowest point of his match" when it was not, and in this run three of the six
-held-out fact checks ("well below his match average", "less than his team-mates" and "his fastest
-run so far", each contradicting its facts). The same prompt caught 5 of the 6 in the runs before
-(97–99 caught of 101–104 across five runs on 2026-10-19), so the LLM pass is a second net, not a
-guarantee. The two valid sentences it blocked are claim 10's own wording ("his last few sprints
-were a bit slower") and the typical-pro chance worded with "in the red". The rules never block a valid sentence; the LLM pass
-varies by a sentence or two from run to run. In the regenerated feeds the fact check caught real slips: numbers from an
-earlier 15-minute block reused at 74:59, a "3–0 lead" copied from claim 13's example when the
-score was 3–1, and "level" for a 6% difference.
+The LLM still misses sentences that mislead without a wrong number: claim 3 ("about a third fewer
+recovery runs right after their hardest minutes") used as the lead-in to a defender's own speed
+after a turnover, and one of the six held-out fact checks ("his fastest run so far" when it was
+not). With prompt revision 5 (166 sentences, 97/104) it also missed "the lowest point of his
+match" when it was not and three of the six held-out fact checks, so the LLM pass is a second net,
+not a guarantee. A general finding about short bursts used to explain a 76- or 197-second spell,
+which it missed in every run, is now blocked by a rule (claim 2, below). The two valid sentences it
+blocked are the typical-pro chance worded with "in the red" and "He ran less after the break than
+before it" (claim 15). The rules never block a valid sentence; the LLM pass varies by a sentence
+or two from run to run (the first run of revision 6, on 173 sentences: 106/108, 1/65, with one
+LLM check timed out).
 
-The LLM prompt has been revised five times, each reported in PLAN §3.4: twice on the first
+The LLM prompt has been revised six times, each reported in PLAN §3.4: twice on the first
 suite; once after the fourth demo feeds, where it blocked the neutral name of the post-peak window
 as physiology seven times; once (decision 29) for the new names and a fact check it writes
-before each verdict; and once (decision 30) for "his hardest minutes". Rules added from reading
+before each verdict; once (decision 30) for "his hardest minutes"; and once (decision 31) to read
+the moments' names ("second wind", "fresh legs", "caught on the break", "quiet spell") as
+football's names for kinds of moment, after it once read "Second wind" as physiology. Rules added from reading
 the feeds: no field names on screen ("G10"), "not only fatigue" as a statement about the
 player's own state (claim 33), and baselines in words ("of the last five minutes"). With the
 running split (decision 30): "pressing" and "closing down" are blocked (claim 39, below), on a
@@ -84,7 +87,12 @@ running in a situation must give the share of the time too (G5). From reading th
 "his typical-pro battery" (claim 33), "spell" for his hardest minutes, a reason pinned to the
 typical-pro wording ("the two-goal lead may explain some of it"), percentages spelled out
 ("forty-three percent", which the numbers check cannot read) and claim 4 pinned on a player
-("…one of those moments for Marco Tarvsall", while he ran at about 1 m/s).
+("…one of those moments for Marco Tarvsall", while he ran at about 1 m/s). From the site's feed
+(decision 31): "0% more" for two sides that were level (G10), a word both team names share
+standing for one team ("Albion's", when both teams are "… Albion"; G11, a new global rule), and
+claim 2 ("short bursts are shaken off in a minute or two") in a sentence that gives his own
+stretch's length in seconds or minutes. Its held-out cases were written before the rule: the rules
+caught 0 of 2 before it and 2 of 2 after, with both valid ones passing.
 
 ## The overlay
 
@@ -294,6 +302,26 @@ used offline for calibration only.
 
 ## Development
 
+From a clean clone, without any Azure settings (checked on 2026-10-19 from a fresh clone, Python
+3.12 with [uv](https://docs.astral.sh/uv/), Node 20+):
+
+```bash
+uv sync --all-extras && uv run pytest              # 1 test skips without the IDSSE data
+uv run ruff check . && uv run ruff format --check .
+(cd app && npm ci && npm run build)                # the overlay, into app/dist
+D=data/synthetic/demo/story
+uv run python -m secondwind.sim --seed 2028 --story press-fade --out $D   # the story match
+uv run python -m secondwind.engine $D                                     # signals.json
+uv run --extra agents python -m secondwind.agents.feed $D --favourite H04 --offline --out $D/feed.json
+uv run python -m secondwind.export $D --out app/public/data/story --feed $D/feed.json
+cd app && npm run dev                              # http://localhost:5173/?match=story
+```
+
+`--offline` uses the template Narrator and the rules-only Verifier. The LLM agents, the suite's
+`--llm` pass, `scripts/foundry_smoke.py` and `scripts/deploy_site.sh` need a `.env` (copy
+`.env.example`) and `az login`. The export overwrites the committed demo data in
+`app/public/data/story` with this machine's match (`git checkout app/public/data` restores it).
+
 ```bash
 uv sync --all-extras                 # Python 3.12 environment
 uv run pytest                        # tests
@@ -336,7 +364,7 @@ scripts/demo.sh                                                         # both d
 Overlay (React + Vite, Node 20+) and deployment (Azure Static Web Apps, Free plan):
 
 ```bash
-cd app && npm install && npm run dev   # http://localhost:5173/?match=story&mode=analyst&player=H04&t=3500
+cd app && npm ci && npm run dev       # http://localhost:5173/?match=story&mode=analyst&player=H04&t=3500
 scripts/deploy_site.sh                 # build app/ and deploy the committed data
 ```
 

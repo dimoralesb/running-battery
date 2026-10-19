@@ -22,6 +22,10 @@ from) two more checks run (v2, 2026-10-17):
 - **Claims offered** (decision 25): with ``claims_offered`` (the register ids the moment offers,
   ``find_moments``), a sentence citing any other claim is blocked: claim 1 only after a spell of
   about 5 min, claim 36 only after the 75th minute, claim 7 only in the last block.
+- **Team names** (G11): with ``team_names``, a word both names share ("Albion") must not stand
+  for one team.
+- **Claim 2 as his own** (2026-10-19): claim 2's finding in a sentence that gives his own
+  stretch's length in digits.
 The rules can only block. The LLM pass (``agents.llm_verifier``) runs after them.
 """
 
@@ -107,6 +111,9 @@ SPELLED = (
     r"hundred"
 )
 WINDOW = r"(?<![\w.])(1|2|5|10|15|30|45|60|90)\s*(-|\s)?(min\w*|second\w*|s\b|metres?)"
+# Claim 2's finding, in its own words, and a length of time in digits ("82 s", "4 min").
+CLAIM_2 = r"short bursts?|shaken off|five-minute spell takes|sprinting takes longer"
+DURATION = r"(?<![\w.])\d+(?:\.\d+)?\s*(s|secs?|seconds?|mins?|minutes?)\b"
 
 
 @dataclass(frozen=True)
@@ -167,6 +174,11 @@ RULES: tuple[Rule, ...] = (
          r"\d+\s*%[^.]*\bhigh-speed running\b[^.]*\b(came|happened|was done)\b[^.]*\bafter\b",
          unless=r"\bof the time\b|\btime the ball was in play\b|\bball-in-play time\b|"
          r"\bper minute\b"),
+    # Found on the site's feed (story_h04, 74:59): "Albion doing 0% more high-speed running" for
+    # two teams that were level.
+    Rule("G10", "A 0% difference is \"level\"; say so in words",
+         r"(?<![\d.,])0\s*(%|percent|per cent)\s*(more|less|fewer|above|below|higher|lower|"
+         r"ahead|behind|up|down|difference)\b"),
     Rule("33", "\"Running on empty\" is about the player's own state",
          r"running on empty|out of gas|on fumes|nothing left in the tank"),
     Rule("19c", "Never \"empty\" or \"exhausted\" from the battery (claim 19c)",
@@ -353,6 +365,25 @@ def context_findings(text: str, context: dict, claim_id: str | None) -> list[Fin
     if context.get("team_moment") and _found(FATIGUE, text) and not _found(NOT_FATIGUE, text):
         out.append(Finding("35", "A team moment: fatigue words read as the team's own state "
                            "(claim 35); give the measured running instead"))  # fmt: skip
+    # G11 (found on the site's feed, story_h04): "45% of Albion's high-speed running" when both
+    # teams are "… Albion"; a word the two names share does not say which team.
+    names = context.get("team_names") or []
+    if len(names) == 2:
+        shared = set(names[0].split()) & set(names[1].split())
+        bare = re.sub("|".join(map(re.escape, names)), " ", text)
+        if any(re.search(rf"\b{re.escape(w)}\b", bare) for w in shared):
+            out.append(Finding("G11", f"Name the team in full: {' and '.join(names)} share a "
+                               "word, so it alone does not say which team (G11)"))  # fmt: skip
+    # Claim 2 is about published 1- and 5-min peaks in general; given as the reason for one
+    # player's running after a stretch of his own (a 76 s and a 197 s one in the feeds), it is
+    # a general finding used as his, which only the LLM pass caught, sometimes.
+    if (
+        (str(claim_id) == "2" or _found(CLAIM_2, text))
+        and _found(PERSON, text)
+        and _found(DURATION, text)
+    ):
+        out.append(Finding("2", "Claim 2 is a general finding about 1- and 5-minute peaks; give "
+                           "his own numbers on their own, not as its example"))  # fmt: skip
     offered = context.get("claims_offered")
     if offered is not None and claim_id and str(claim_id) not in offered:
         out.append(Finding(str(claim_id), f"Claim {claim_id} is not offered for this moment "

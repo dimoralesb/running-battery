@@ -8,7 +8,7 @@ Five sets:
   (tests/test_verifier.py).
 - ``PARAPHRASES`` (23): blocked claims in other words, written before the rules were run on
   them and never used to tune the rules. What the rules miss here is what the LLM pass is for.
-- ``CONTEXT`` (56): sentences with a moment's context (rule 2, claim 13) or facts (N1): a 3–0
+- ``CONTEXT`` (64): sentences with a moment's context (rule 2, claim 13) or facts (N1): a 3–0
   lead, the start of the second half, just subbed on, a long stoppage, possession, a low
   first-half load, and numbers that are or are not in the data. Each says whether it should pass.
 - ``FACT_CHECKS`` (10): F1, sentences that do or do not agree with their facts, held out like
@@ -408,6 +408,53 @@ CONTEXT = [
      {"facts": {"mean_speed_next_8s": {"value": 3.7, "unit": "m/s"},
                 "distance_to_ball_8s_later": {"value": 44, "unit": "m"},
                 "window_after_turnover": {"value": 8, "unit": "s"}}}, None, False),
+    # Found on the site's feed (story_h04, 74:59, 2026-10-19): "0% more" for two teams that were
+    # level (G10; the Narrator's prompt forbids it, no rule did), and "Albion's" when both teams
+    # are "… Albion" (G11; both passes let them through).
+    ("Westerlyn Albion and Ravensholt Albion were level in 60:00–75:00, with Albion doing 0% more "
+     "high-speed running per ball-in-play minute in that block; earlier the gap was 35%.",
+     "analyst", {"team_moment": True, "team_names": ["Westerlyn Albion", "Ravensholt Albion"],
+                 "facts": {"vs_opponent": {"value": 0.4, "unit": "%"},
+                           "earlier_gap_vs_opponent": {"value": 35, "unit": "%"},
+                           "block": "60:00–75:00"}}, None, False),
+    ("In 60:00–75:00, 45% of Albion's high-speed running came in the first 10 s after the ball "
+     "changed hands, in 34% of the time the ball was in play.", "fan",
+     {"team_moment": True, "team_names": ["Westerlyn Albion", "Ravensholt Albion"],
+      "facts": {"team_hsr_share_after_ball_changed_hands": {"value": 45, "unit": "%"},
+                "time_share_after_ball_changed_hands": {"value": 34, "unit": "%"},
+                "block": "60:00–75:00"}}, None, False),
+    ("In 60:00–75:00, 45% of Westerlyn Albion's high-speed running came in the first 10 s after "
+     "the ball changed hands, in 34% of the time the ball was in play.", "fan",
+     {"team_moment": True, "team_names": ["Westerlyn Albion", "Ravensholt Albion"],
+      "facts": {"team_hsr_share_after_ball_changed_hands": {"value": 45, "unit": "%"},
+                "time_share_after_ball_changed_hands": {"value": 34, "unit": "%"},
+                "block": "60:00–75:00"}}, None, True),
+    # Found in the decision 31 feed: the LLM read G11 into a team named through its player and
+    # rewrote it as "Marco Tarvsall has been involved in a turnover" (24:37, a video moment); the
+    # register's G11 now says such a name is clear.
+    ("This is the third time Marco Tarvsall's team have lost the ball just after his hardest "
+     "minutes so far.", "fan",
+     {"team_names": ["Westerlyn Albion", "Ravensholt Albion"],
+      "facts": {"times_exposed_so_far": {"value": 3, "unit": "turnovers"}}}, None, True),
+    # Held out (2026-10-19, written before the claim 2 rule and never used to tune it): claim 2
+    # is about published 1- and 5-min peaks in general; as the reason for one player's own
+    # running after a stretch of a given length it is a general finding used as his (blocked),
+    # while the wording alone and his own numbers alone are fine.
+    ("He is 4 min after his 82 s burst of high-speed running, and short bursts like that are "
+     "shaken off in a minute or two, so he should be back to his usual running.", "analyst",
+     {"facts": {"hardest_minutes_duration": {"value": 82, "unit": "s"},
+                "minutes_after_hardest_minutes": {"value": 4.0, "unit": "min"}}}, "2", False),
+    ("A longer effort takes longer to recover from, which is why his running only picked up "
+     "3.5 min after his 150 s of hardest minutes.", "fan",
+     {"facts": {"hardest_minutes_duration": {"value": 150, "unit": "s"},
+                "minutes_after_hardest_minutes": {"value": 3.5, "unit": "min"}}}, "2", False),
+    ("Short bursts are shaken off in a minute or two. A five-minute spell takes about five "
+     "minutes, and sprinting takes longer.", "fan",
+     {"facts": {"hardest_minutes_duration": {"value": 82, "unit": "s"}}}, "2", True),
+    ("He is 9 min after his hardest minutes so far, and his last 2 min of high-speed running "
+     "was 13.4 m/min.", "analyst",
+     {"facts": {"minutes_after_hardest_minutes": {"value": 9.0, "unit": "min"},
+                "last_2min_hsr_per_min": {"value": 13.4, "unit": "m/min"}}}, None, True),
 ]  # fmt: skip
 
 

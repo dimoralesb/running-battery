@@ -26,16 +26,11 @@ RULES_MISS = {"He likely faded after the break.",
               "opponents cover 160 m, roughly 22% less.",
               # (the "less opportunity to run" line of decision 29 is now blocked by the rules
               # for its old name, "red-zone spell", G10 of decision 30)
-              "Short bursts are shaken off in a minute or two, while a five-minute spell takes "
-              "about five minutes to recover from; he is 6.5 min out from his 76 s spell, so this "
-              "fits the longer recovery for intense work.",
-              # Decision 29, from the feeds: his own state in hedged words, and a general
-              # finding used as the reason for a spell it does not cover.
+              # (the 76 s and 197 s spells explained by claim 2 are now blocked by the rules, the
+              # claim 2 rule of 2026-10-19)
+              # Decision 29, from the feeds: his own state in hedged words.
               "In the Premier League players make about a third fewer high-speed recovery runs "
               "after a peak, and our estimate says he may have had less in the tank here.",
-              "Five minutes after his 197 s spell his last 2 min high-speed running was "
-              "10.9 m/min, which fits the idea that short bursts are shaken off in a minute or "
-              "two.",
 }  # fmt: skip
 
 
@@ -118,7 +113,9 @@ def test_report_covers_this_suite():
     # The LLM pass varies from run to run (README, Limitations): 1.0 on the suites of
     # 2026-10-17, 76/78 on 2026-10-18 (it missed two F1 cases that disagree with the facts),
     # 86/89 with the held-out fact checks (decision 29); with decision 30's cases, runs of the
-    # same prompt gave 92/96, 98/101, 98/102, 99/103 and 97/104 (held-out F1 3/6 in the last).
+    # same prompt gave 92/96, 98/101, 98/102, 99/103 and 97/104 (held-out F1 3/6 in the last);
+    # prompt revision 6 with decision 31's cases, 106/108 (F1 5/6; one LLM call timed out),
+    # then with G11's wording made clear on 174 sentences, 106/108 (F1 5/6).
     assert rep["report"]["llm"]["caught_rate"] >= 0.93
 
 
