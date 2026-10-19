@@ -180,11 +180,6 @@ export function score(meta: Meta, v: number): { home: number; away: number } {
   };
 }
 
-/** The 5-level fan icon (synthesis §9.3). */
-export function fanLevel(batteryPct: number): number {
-  return Math.min(Math.max(Math.ceil(batteryPct / 20), 1), 5);
-}
-
 /** A highlight's value as the panel shows it. */
 export function highlightValue(h: Highlight): string {
   const f = (k: string) => {

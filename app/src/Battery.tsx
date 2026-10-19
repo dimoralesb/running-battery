@@ -1,8 +1,8 @@
-import { type MatchData, type Mode, type Player, fanLevel, signalIndex } from "./data";
+import { type MatchData, type Mode, type Player, signalIndex } from "./data";
 
 // The battery (decision 14, decision 32): what a player's running so far would leave a typical
-// professional, never his own state. Fan mode shows five levels; analyst mode the value and its
-// 10–90% band. Goalkeepers get none, as on the pitch.
+// professional, never his own state. A continuous fill (decision 33: five levels hid every change
+// within a level), with the percentage; analyst mode adds the 10–90% band. Goalkeepers get none, as on the pitch.
 const POSITIONS = ["GK", "CB", "FB", "DM", "CM", "WM", "AM", "CF"];
 
 const fill = (t: string, v: Record<string, string | number>) =>
@@ -23,28 +23,21 @@ export function reading(data: MatchData, p: Player | undefined, now: number): Re
   return { pct: s.battery[i], lo: s.lo ? s.lo[i] : null, hi: s.hi ? s.hi[i] : null };
 }
 
-/** A battery-shaped gauge: five cells (fan) or a fill with its band (analyst). */
+/** A battery-shaped gauge: a continuous fill, and in analyst mode its 10–90% band. */
 export function Gauge({ r, mode, label, size = "big" }: {
   r: Reading;
   mode: Mode;
   label: string;
   size?: "big" | "small";
 }) {
-  const level = fanLevel(r.pct);
   const at = (v: number) => `calc(2px + (100% - 4px) * ${Math.min(Math.max(v, 0), 100) / 100})`;
   return (
     <span className={`gauge ${size}`} role="img" aria-label={label} title={label}>
       <span className="gauge-shell">
-        {mode === "analyst" ? (
-          <>
-            <span className="gauge-fill" style={{ width: `calc(${at(r.pct)} - 2px)` }} />
-            {r.lo !== null && r.hi !== null && (
-              <span className="gauge-band"
-                    style={{ left: at(r.lo), width: `calc(${at(r.hi)} - ${at(r.lo)})` }} />
-            )}
-          </>
-        ) : (
-          [0, 1, 2, 3, 4].map((k) => <span key={k} className={`gauge-cell${k < level ? " full" : ""}`} />)
+        <span className="gauge-fill" style={{ width: `calc(${at(r.pct)} - 2px)` }} />
+        {mode === "analyst" && r.lo !== null && r.hi !== null && (
+          <span className="gauge-band"
+                style={{ left: at(r.lo), width: `calc(${at(r.hi)} - ${at(r.lo)})` }} />
         )}
       </span>
       <span className="gauge-nub" />

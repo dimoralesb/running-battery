@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import {
-  type Item, type MatchData, type Mode, type Signals, fanLevel, highlightValue, position,
+  type Item, type MatchData, type Mode, type Signals, highlightValue, position,
   signalIndex,
 } from "./data";
 
@@ -64,16 +64,15 @@ function Markings() {
   );
 }
 
-/** Five cells; filled cells = the fan level of the typical-pro battery. */
+/** The typical-pro battery as a continuous fill (decision 33). */
 function BatteryIcon({ pct, x, y }: { pct: number; x: number; y: number }) {
-  const level = fanLevel(pct);
+  const w = 5.0 * Math.min(Math.max(pct, 0), 100) / 100;
   return (
     <g transform={`translate(${x - 2.6} ${y})`} className="battery">
       <rect x={-0.15} y={-0.15} width={5.3} height={1.3} rx={0.3} className="shell" />
-      {[0, 1, 2, 3, 4].map((k) => (
-        <rect key={k} x={k * 1.04 + 0.05} y={0.05} width={0.9} height={0.9} rx={0.15}
-              className={k < level ? "cell full" : "cell"} />
-      ))}
+      <rect x={0.05} y={0.05} width={5.0} height={0.9} rx={0.15} className="cell" />
+      {w > 0 && <rect x={0.05} y={0.05} width={w} height={0.9} rx={0.15} className="cell full" />}
+      <rect x={5.2} y={0.3} width={0.25} height={0.5} className="nub" />
     </g>
   );
 }

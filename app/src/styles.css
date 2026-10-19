@@ -145,6 +145,8 @@ h2, h3, h4 { font-family: var(--display); text-transform: uppercase; letter-spac
 .pitch .battery .shell { fill: rgba(0, 0, 0, 0.6); stroke: #fff; stroke-width: 0.14; }
 .pitch .battery .cell { fill: rgba(255, 255, 255, 0.22); }
 .pitch .battery .cell.full { fill: #fff; }
+.pitch .battery .nub { fill: #fff; }
+.legend .battery .nub { fill: var(--ink-2); }
 .legend .battery .shell { fill: var(--surface); stroke: var(--ink-2); stroke-width: 0.12; }
 .legend .battery .cell { fill: var(--grid); }
 .legend .battery .cell.full { fill: var(--ink); }
@@ -363,17 +365,18 @@ h2, h3, h4 { font-family: var(--display); text-transform: uppercase; letter-spac
   .lt-battery { margin-left: 0; flex-basis: 100%; justify-content: flex-end; }
 }
 
-/* The battery as a gauge: five cells (fan), or a fill with its 10–90% band (analyst). */
+/* The battery as a gauge: a continuous fill (decision 33); analyst mode adds its 10–90% band. */
 .gauge { display: inline-flex; align-items: center; color: inherit; }
 .gauge-shell { position: relative; display: flex; gap: 2px; padding: 2px; border: 2px solid currentColor;
   border-radius: 3px; width: 72px; height: 24px; }
 .gauge.small .gauge-shell { width: 42px; height: 13px; border-width: 1.5px; gap: 1px; padding: 1px; border-radius: 2px; }
-.gauge-cell { flex: 1; background: currentColor; opacity: 0.18; border-radius: 1px; }
-.gauge-cell.full { opacity: 1; background: var(--team-c, currentColor); }
 .gauge-nub { width: 3px; height: 9px; background: currentColor; border-radius: 0 2px 2px 0; }
 .gauge.small .gauge-nub { width: 2px; height: 5px; }
-.gauge-fill { position: absolute; left: 2px; top: 2px; bottom: 2px; background: var(--team-c, currentColor);
+.gauge-shell::before { content: ""; position: absolute; inset: 2px; background: currentColor; opacity: 0.15;
   border-radius: 1px; }
+.gauge.small .gauge-shell::before { inset: 1px; }
+.gauge-fill { position: absolute; left: 2px; top: 2px; bottom: 2px; background: var(--team-c, currentColor);
+  border-radius: 1px; transition: width 0.25s linear; }
 .gauge.small .gauge-fill { left: 1px; top: 1px; bottom: 1px; }
 .gauge-band { position: absolute; top: -4px; bottom: -4px; border-left: 2px solid currentColor;
   border-right: 2px solid currentColor; opacity: 0.85; }

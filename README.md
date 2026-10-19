@@ -110,8 +110,8 @@ p.5–6]). The score bar shows each team's fastest second so far.
 
 **The battery in every view** (decision 32). Under the pitch, a broadcast lower third names the
 clip or moment and its player and shows his battery as the clip plays: what his running so far
-would leave a typical professional, in five cells for fans and as a value with its 10–90% band
-for analysts, with the percentage. A team sheet under the controls lists both line-ups with each
+would leave a typical professional, as a continuous fill with the percentage (decision 33), and
+for analysts with its 10–90% band. A team sheet under the controls lists both line-ups with each
 player's battery, live; a click follows that player in the full match. Goalkeepers get none. The
 look is broadcast graphics: a score bug, a condensed face (Barlow Condensed), a mown-stripe pitch.
 
