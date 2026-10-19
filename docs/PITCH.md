@@ -18,9 +18,9 @@ and cannot tell.
 ## Full version
 
 **What it is.** Second Wind is an overlay and a team of AI agents that explain the running in a
-football match. It opens on the match's highlights: each clip plays as it happened, then again
-at half speed with its numbers, and with what the agents say about it, each line with its sources
-and the Verifier's verdict.
+football match. It opens on the match's highlights: each clip plays as it happened, then shows
+its numbers and what the agents say about it, each line with its sources and the Verifier's
+verdict; a replay button plays it again in slow motion.
 
 **The problem.** Broadcasts show distance covered, but not when the hard running happened, what
 it would cost, or whether the story told about it holds up. Fatigue talk is easy to get wrong.

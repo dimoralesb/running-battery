@@ -2,9 +2,9 @@ import { useState } from "react";
 import { type Entry, type Item, type MatchData, type Mode, clockLabel } from "./data";
 import { Sources, VERDICT } from "./Feed";
 
-// "Replay with details" (decision 29): the clip again at half speed, with numbers that grow
-// with it, the run's speed second by second, the published number it is compared with, and the
-// feed's lines for the moment with their sources and the Verifier's verdict.
+// The clip's details (decisions 29 and 34): shown when the clip is over, and growing with the
+// run during the slow-motion replay; the numbers, the run's speed second by second, the published
+// number it is compared with, and the feed's lines with their sources and the Verifier's verdict.
 const WIDTH = 640;
 const HEIGHT = 170;
 const PAD = { l: 40, r: 12, t: 26, b: 22 };

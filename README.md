@@ -7,8 +7,8 @@ Second Wind measures from tracking data how much hard running each football play
 All match data is **synthetic**: we built a generator whose players get tired according to published sports science, with a hidden "true" fatigue we use to test our estimator.
 
 **Try it:** https://happy-bay-06ca1e90f.3.azurestaticapps.net/?match=story (the story match, fan mode; the favourite is the left-back the story is about).
-It opens on the **Highlights**: each clip plays once as it happened (Watch), then again at half speed with its numbers (Replay with details); "Full match" is the whole replay.
-Add `?match=natural`, `&mode=analyst`, `&view=full&t=<seconds>`, `&hl=<kind>&step=replay` or `&theme=dark` to the address.
+It opens on the **Highlights**: each clip plays once as it happened, then shows its details (numbers, sources and the Verifier's verdicts); "Replay" plays it again in slow motion, and "Full match" is the whole replay.
+Add `?match=natural`, `&mode=analyst`, `&view=full&t=<seconds>`, `&hl=<kind>&step=details` (or `&step=replay` for the slow-motion replay) or `&theme=dark` to the address.
 
 - Project plan: [docs/PLAN.md](docs/PLAN.md)
 - Build plan: [docs/BUILD_PLAN.md](docs/BUILD_PLAN.md)
@@ -97,13 +97,14 @@ caught 0 of 2 before it and 2 of 2 after, with both valid ones passing.
 ## The overlay
 
 `app/` opens on the **Highlights** (decision 29): one clip at a time, in match order, from the
-match's best physical moments and the feed's moments. Each clip plays twice. **Watch** is the
-moment as it happened, at normal speed, with only that player's path on the pitch (the others
-dimmed), the dashed circles where a turnover matters, and one line of caption. **Replay with
-details** plays it again at half speed with numbers that grow with the run (speed now, top speed,
-distance, metres above 5.5 m/s, the gap timer between back-to-back runs), the run's speed second
-by second, his number against the published one once the clip is over, and what the feed says
-about it with each line's sources and the Verifier's verdict. Then "Next". The circles show where
+match's best physical moments and the feed's moments. Each clip plays once, as it happened, at
+normal speed, with only that player's path on the pitch (the others dimmed), the dashed circles
+where a turnover matters, and one line of caption. When it is over it stops on its last frame and
+shows its **details** (decision 34): the numbers (top speed, distance, metres above 5.5 m/s, the
+gap timer between back-to-back runs), the run's speed second by second, his number against the
+published one, and what the feed says about it with each line's sources and the Verifier's
+verdict. **Replay** plays it again at half speed, with the numbers growing with the run; then
+"Next". "Play highlights" leaves the details up for 6 s before the next clip. The circles show where
 the player and his two nearest opponents could get to in one second, labelled "model" (the
 Fujimura–Sugihara motion model with Narizuka's fit at Δt = 1 s, radius 6.2 m [Narizuka2023,
 p.5–6]). The score bar shows each team's fastest second so far.

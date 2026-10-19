@@ -23,22 +23,25 @@ import { TeamChart } from "./TeamChart";
 import { Trace } from "./Trace";
 
 const SPEEDS = [1, 5, 20];
-const REPLAY_SPEED = 0.5; // "Replay with details" plays the clip at half speed
+const REPLAY_SPEED = 0.5; // the Replay button plays the clip again at half speed (slow motion)
 const LAPSE_SPEED = 120; // most ground covered: the whole match in under a minute
-const LAPSE_WATCH_MS = 4000; // its Watch step is a still of the whole path, held this long
+const AUTO_DETAILS_MS = 6000; // "Play highlights": the details stay this long before the next clip
 const FOCUS_BEFORE = 8; // full match: a feed moment is in focus from 8 s before to 6 s after
 const FOCUS_AFTER = 6;
 // Start state from the URL (for links and video capture): ?view=full&match=story&t=3500&
 // mode=analyst&player=H04; the Highlights view takes ?hl=<kind> (the match's best of a kind),
-// ?moment=<kind or moment id> (with &player=), or ?item=<n>, then &step=watch|replay and &auto=1
-// (play the clips one after another).
+// ?moment=<kind or moment id> (with &player=), or ?item=<n>, then &step=watch|details|replay
+// (plays it, opens it finished with its details, or plays the slow replay) and &auto=1 (play the
+// clips one after another).
 const QUERY = new URLSearchParams(window.location.search);
 // ?theme=light|dark overrides the system setting (for screenshots).
 const THEME = QUERY.get("theme");
 if (THEME === "light" || THEME === "dark") document.documentElement.dataset.theme = THEME;
 
 type View = "highlights" | "full";
-type Step = "watch" | "replay";
+// Each clip plays once (watch), then shows its details on its last frame; Replay plays it
+// again at half speed with the details growing (decision 34).
+type Step = "watch" | "details" | "replay";
 const TEXT: Record<string, string> = copy;
 
 export function fill(text: string, values: Record<string, string | number>): string {
@@ -84,14 +87,14 @@ export default function App() {
     [data, mode],
   );
 
-  // Play a clip from the start of a step.
+  // Play a clip (watch, replay), or open it finished with its details.
   const start = (it: Item, st: Step) => {
     setCur(it);
     setStep(st);
     setView("highlights");
     if (it.player) setSelected(it.player);
-    if (it.lapse && st === "watch") {
-      setNow(it.end);
+    if (st === "details") {
+      setNow(it.lapse ? it.end : it.end + 2);
       setPlaying(false);
     } else {
       setNow(it.lapse ? 0 : Math.max(it.start - 3, 0));
@@ -115,7 +118,8 @@ export default function App() {
         const list = queue(d, mode, reel(d.highlights, d.duration));
         const it = view === "highlights" ? itemFromUrl(d, list) ?? list[0] : undefined;
         if (it) {
-          start(it, QUERY.get("step") === "replay" ? "replay" : "watch");
+          const st = QUERY.get("step");
+          start(it, st === "replay" || st === "details" ? st : "watch");
           if (hasT) setNow(t);
         }
       })
@@ -147,27 +151,22 @@ export default function App() {
   const next = cur ? (ix >= 0 ? items[ix + 1] : items.find((i) => i.at > cur.at)) : items[0];
   const prev = cur && ix > 0 ? items[ix - 1] : undefined;
 
-  // Watch, then Replay with details; after the replay, pause on the numbers (or, with "Play
-  // highlights", go on to the next clip).
+  // When the clip (or its replay) is over, stop on its last frame with the details.
   useEffect(() => {
     if (view !== "highlights" || !cur || !playing || !data) return;
     const end = Math.min(cur.lapse ? cur.end : cur.end + 2, data.duration - 1);
     if (now < end) return;
-    if (step === "watch") start(cur, "replay");
-    else if (auto && next) start(next, "watch");
-    else {
-      setPlaying(false);
-      if (auto) setAuto(false);
-    }
+    setPlaying(false);
+    setStep("details");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [now, playing]);
-  // The whole-match path is a still in its Watch step.
+  // "Play highlights": the details stay a few seconds, then the next clip.
   useEffect(() => {
-    if (view !== "highlights" || !cur?.lapse || step !== "watch") return;
-    const id = setTimeout(() => start(cur, "replay"), LAPSE_WATCH_MS);
+    if (view !== "highlights" || !auto || step !== "details") return;
+    const id = setTimeout(() => (next ? start(next, "watch") : setAuto(false)), AUTO_DETAILS_MS);
     return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cur, step, view]);
+  }, [auto, step, cur, view]);
 
   const players = useMemo(
     () => (data ? Object.fromEntries(data.meta.players.map((p) => [p.id, p])) : {}),
@@ -289,13 +288,16 @@ export default function App() {
         <main className="grid">
           <section className="left">
             <div className="clip-head">
-              <span className="clip-count muted small">{ix >= 0 ? `${ix + 1} / ${items.length}` : ""}</span>
+              {ix >= 0 && <span className="clip-count muted small">{ix + 1} / {items.length}</span>}
               <strong>{label(cur)}</strong>
               <span className="muted">{cur.clock} · {who(cur)}</span>
-              <span className={`step-chip ${step}`}>{step === "watch" ? copy.stepWatch : copy.stepReplay}</span>
+              <span className={`step-chip ${step}`}>
+                {step === "watch" ? copy.stepWatch : step === "replay" ? copy.stepReplay : copy.stepDetails}
+              </span>
             </div>
             <div className="pitch-wrap">
-              <Pitch data={data} now={now} mode={mode} view={step} selected={selected}
+              <Pitch data={data} now={now} mode={mode} view={step === "watch" ? "watch" : "replay"}
+                     selected={selected}
                      favourite={favourite} allBatteries={false} item={cur} focus={null}
                      reachLabel={copy.reachLabel} flatLabel={copy.flatLabel} onSelect={setSelected} />
             </div>
@@ -306,25 +308,21 @@ export default function App() {
             {cur.reach && <p className="muted small">{copy.legendReach}</p>}
             <div className="clip-controls">
               <button onClick={() => prev && start(prev, "watch")} disabled={!prev}>{copy.prev}</button>
-              <div className="toggle" role="group" aria-label="Step">
-                <button className={step === "watch" ? "on" : ""} onClick={() => start(cur, "watch")}>
-                  {copy.stepWatch}
+              <button className={`replay-btn${step === "details" ? " ready" : ""}`}
+                      onClick={() => start(cur, "replay")}>{copy.replayButton}</button>
+              {step !== "details" && (
+                <button onClick={() => setPlaying((p) => !p)} aria-label={playing ? "Pause" : "Play"}>
+                  {playing ? "Pause" : "Play"}
                 </button>
-                <button className={step === "replay" ? "on" : ""} onClick={() => start(cur, "replay")}>
-                  {copy.stepReplay}
-                </button>
-              </div>
-              <button onClick={() => setPlaying((p) => !p)} aria-label={playing ? "Pause" : "Play"}>
-                {playing ? "Pause" : "Play"}
-              </button>
-              <button className={`next${!playing && step === "replay" ? " ready" : ""}`}
+              )}
+              <button className={`next${step === "details" ? " ready" : ""}`}
                       onClick={() => next && start(next, "watch")} disabled={!next}>{copy.next}</button>
             </div>
             <TeamSheet data={data} now={now} mode={mode} on={cur.player} favourite={favourite}
                        text={TEXT} onSelect={(id) => { setSelected(id); setView("full"); setAuto(false); }} />
           </section>
           <aside className="right">
-            {step === "replay" ? (
+            {step !== "watch" ? (
               <>
                 <Replay data={data} item={cur} now={now} mode={mode} name={who(cur) ?? ""}
                         text={TEXT} onSeek={(v) => { setNow(v); setPlaying(false); }} />

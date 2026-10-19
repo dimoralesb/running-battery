@@ -513,7 +513,6 @@ class MatchTools:
                 else None,
                 "lowest_in_window": q(c["battery"][w].min(), "share", sig + "battery"),
                 "lowest_in_match_so_far": q(c["battery"][: i + 1].min(), "share", sig + "battery"),
-                "fan_level": q(fan_level(c["battery"][i]), "of 5", sig + "battery"),
                 "note": BATTERY_NOTE,
             },
             "low_chance": {
@@ -1367,11 +1366,6 @@ def situation_split(spans: list[dict[str, dict[str, dict]]]) -> dict[str, dict[s
 
 def pct(x: float, base: float) -> float:
     return 100.0 * (x / base - 1.0) if base > 0 else float("nan")
-
-
-def fan_level(battery: float) -> int:
-    """The fan icon: 5 levels of 20% (synthesis §9.3)."""
-    return int(min(max(math.ceil(battery * 5.0), 1), 5))
 
 
 def signals_capacity(m: MatchData, pid: str, name: str) -> float:

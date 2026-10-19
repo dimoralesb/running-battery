@@ -195,7 +195,8 @@ export function highlightValue(h: Highlight): string {
 }
 
 /** One clip of the Highlights view (decision 29): a highlight or a feed moment, shown first
- * as it happened (Watch) and then slowed down with its numbers (Replay with details). */
+ * as it happened, then its details on the last frame; a Replay button plays it again slowed down
+ * (decision 34). */
 export interface Item {
   id: string;
   source: "highlight" | "moment";
