@@ -64,12 +64,13 @@ BATTERY_NOTE = (
     "the player's own CS and D′ are unknown. Source: PLAN §3.3, decision 14."
 )
 MOMENT_KINDS = {
-    "red_zone": ("An intense spell: 1-, 2- or 5-min high-speed running at ≥ 90% of his best so "
-                 "far and of the published peak [Leifsson2024, Table 1]", ["1", "2", "11", "19c"]),
-    "exposed_on_turnover": ("His team loses the ball while he (a defender) is in or just after an "
-                            "intense spell [Ju2022; Bortnik2022]", ["4", "3", "11"]),
-    "second_wind": ("His high-speed running is back to his own match average 2–10 min after an "
-                    "intense spell [Leifsson2024]", ["1", "2"]),
+    "red_zone": ("His hardest minutes so far: 1-, 2- or 5-min high-speed running at ≥ 90% of his "
+                 "best so far and of the published peak [Leifsson2024, Table 1]",
+                 ["1", "2", "11", "19c"]),
+    "exposed_on_turnover": ("His team loses the ball while he (a defender) is in or just after his "
+                            "hardest minutes so far [Ju2022; Bortnik2022]", ["4", "3", "11"]),
+    "second_wind": ("His high-speed running is back to his own match average 2–10 min after his "
+                    "hardest minutes [Leifsson2024]", ["1", "2"]),
     "fresh_legs": ("A substitute's high-speed running per minute vs the player he replaced and "
                    "his team-mates [Bradley2013; Hills2018]", ["6"]),
     "not_tired_tactical": ("His running dropped while a non-fatigue reason fits (lead, stoppage, "
@@ -90,6 +91,20 @@ FLAT_OUT_SHARE = 0.9  # a flat-out run: ≥ 90% of his top speed so far (our ass
 FLAT_OUT_MIN_SPEED = 7.0  # m/s (25.2 km/h): about the sprint threshold [Bradley2009, p.162]
 FLAT_OUT_FROM_S = 600.0  # from the 10th minute, so that "his top speed so far" means something
 MAX_PLAUSIBLE_SPEED = 11.0  # m/s; faster seconds are tracking errors (our assumption)
+# Where each team's running happened (decision 30): situations of play from possession and the
+# ball's position only, ball in play. Situations, not purposes: "pressing" or "recovery runs"
+# are what a player meant to do, which positions do not show (claims 35, 38; validate/purposes).
+TRANSITION_S = 10.0  # the first 10 s after the ball changes hands: transitions last 9.3–10.9 s
+# on average [Bortnik2022, Table 2]
+THIRD_X = 105.0 / 6.0  # the pitch in thirds: lines 17.5 m either side of halfway (105 m pitch)
+SITUATIONS = {
+    "after_losing": "first 10 s after losing the ball",
+    "after_winning": "first 10 s after winning the ball",
+    "on_ball": "on the ball, after those 10 s",
+    "off_ball_high": "without the ball, with it in the opponents' third",
+    "off_ball_deep": "without the ball, with it in the middle or their own third",
+}
+CHANGED_HANDS = ("after_losing", "after_winning")
 # A touch: an on-ball event of his (our definition; a carry is the run between a reception and
 # the next action, so it is not counted again). Claim 14 needs these counts (decision 25).
 TOUCH_TYPES = ("pass", "reception", "shot", "clearance", "interception", "ball_recovery")
@@ -320,6 +335,49 @@ class MatchData:
                          "in_play_s": float(alive.sum())}  # fmt: skip
         return out
 
+    @cached_property
+    def situations(self) -> dict[int, dict[str, np.ndarray]]:
+        """Per period, per team, per second: its situation of play (``SITUATIONS``), "" with the
+        ball out of play. The team on the ball is the last one seen with it (a loose ball stays
+        with them); a change of possession starts the first ``TRANSITION_S`` s for both teams,
+        as for a recovery run (``highlights.losses``)."""
+        out = {}
+        for per, alive in self.alive.items():
+            holder, since = [], []
+            last, change = "", -1e9
+            for k, x in enumerate(self.possession[per]):
+                if x and x != last:
+                    change = k if last else change  # the first holder of the half is no change
+                    last = x
+                holder.append(last)
+                since.append(k - change)
+            holder_, fresh = np.array(holder), np.array(since) < TRANSITION_S
+            out[per] = {}
+            for team, info in self.teams.items():
+                forward = info.attacks_positive_x_in_period_1 == (per == 1)
+                x = self.ball[per][:, 0] * (1.0 if forward else -1.0)  # towards their goal
+                mine = holder_ == team
+                s = np.where(
+                    mine,
+                    np.where(fresh, "after_winning", "on_ball"),
+                    np.where(fresh, "after_losing",
+                             np.where(x >= THIRD_X, "off_ball_high", "off_ball_deep")),
+                )  # fmt: skip
+                out[per][team] = np.where(alive & (holder_ != ""), s, "")
+        return out
+
+    def team_situations(self, period: int, a: float, b: float) -> dict[str, dict[str, dict]]:
+        """Each team's metres above 5.5 m/s (outfield team total) and ball-in-play seconds per
+        situation between a and b seconds of a period."""
+        d, sit = self.team_seconds[period], self.situations[period]
+        w = slice(int(a), int(min(b, len(d["alive"]))))
+        out = {}
+        for team in self.teams:
+            hsr, s = d[f"hsr_{team}"][w], sit[team][w]
+            out[team] = {k: {"hsr": float(hsr[s == k].sum()), "in_play_s": float((s == k).sum())}
+                         for k in SITUATIONS}  # fmt: skip
+        return out
+
     def blocks(self) -> list[tuple[int, float, float]]:
         """15-min blocks per period (added time in the last one): (period, start, end) s."""
         out = []
@@ -490,12 +548,14 @@ class MatchTools:
                 "threshold": q(EP.HI_SPEED, "m/s (19.8 km/h)", "engine.hi_speed"),
             },
             "flags": {
-                "intense_spell_now": bool(red[-1]),
-                "just_after_intense_spell_now": bool(post[-1]),
-                "intense_spell_s": q(int(red.sum()), "s", sig + "red_zone"),
-                "intense_spells": q(len(runs(red)), "spells", sig + "red_zone"),
-                "just_after_intense_spell_s": q(int(post.sum()), "s", sig + "post_peak"),
-                "post_peak_wording": "neutral only: just after an intense spell",
+                "in_hardest_minutes_now": bool(red[-1]),
+                "just_after_hardest_minutes_now": bool(post[-1]),
+                "hardest_minutes_s": q(int(red.sum()), "s", sig + "red_zone"),
+                "hardest_minutes_count": q(
+                    len(runs(red)), "times at his hardest minutes so far", sig + "red_zone"
+                ),
+                "just_after_hardest_minutes_s": q(int(post.sum()), "s", sig + "post_peak"),
+                "post_peak_wording": "neutral only: just after his hardest minutes so far",
             },
             "in_play": {
                 "last_1min": q(c["in_play_1min"][i], "share", sig + "in_play_1min"),
@@ -611,8 +671,10 @@ class MatchTools:
     def team_running(self, start: str | float | None = None, end: str | float | None = None
                      ) -> dict[str, Any]:  # fmt: skip
         """Both teams' running per ball-in-play minute, with and without the ball (G5), over a
-        window (default the whole match) and in 15-min blocks. Measured, never "who is more
-        tired" (claim 35)."""
+        window (default the whole match) and in 15-min blocks, and where it happened: per
+        situation of play (``SITUATIONS``), metres above 5.5 m/s, ball-in-play minutes, metres
+        per minute of that situation (G5) and shares. Measured, never "who is more tired"
+        (claim 35)."""
         m = self.m
         a = parse_time(start) if start is not None else (1, 0.0)
         b = (
@@ -637,17 +699,19 @@ class MatchTools:
             if (per, hi) <= a or (per, lo) >= b:
                 continue
             r = m.team_rates(per, lo, hi)
+            split = situation_split([m.team_situations(per, lo, hi)])
             blocks.append({"from": m.when(per, lo)["clock"], "to": m.when(per, hi)["clock"],
-                           "period": per, "teams": pack(r)})  # fmt: skip
+                           "period": per, "teams": pack(r), "situations": split})  # fmt: skip
         totals = {team: {"hsr": 0.0, "hsr_with_ball": 0.0, "hsr_without_ball": 0.0, "dist": 0.0}
                   for team in m.teams}  # fmt: skip
-        window = {}
+        window, spans = {}, []
         for per in m.durations:
             lo = a[1] if per == a[0] else (0.0 if per > a[0] else None)
             hi = b[1] if per == b[0] else (m.durations[per] if per < b[0] else None)
             if lo is None or hi is None or hi <= lo:
                 continue
             window[per] = m.team_rates(per, lo, hi)
+            spans.append(m.team_situations(per, lo, hi))
         for team in totals:  # weighted by ball-in-play time
             w = sum(r[team]["in_play_s"] for r in window.values()) or 1.0
             for k in totals[team]:
@@ -657,10 +721,12 @@ class MatchTools:
             totals[team]["possession"] = sum(r[team]["possession"] * r[team]["in_play_s"]
                                              for r in window.values()) / w  # fmt: skip
         return {"window": [m.when(*a)["clock"], m.when(*b)["clock"]], "teams": pack(totals),
-                "blocks": blocks,
+                "situations": situation_split(spans), "blocks": blocks,
                 "note": "Team totals of the outfield players per minute of that phase (G5). Both "
                         "teams' running rises and falls together (claim 9a); who is more tired is "
-                        "not measurable from positions (claim 35)."}  # fmt: skip
+                        "not measurable from positions (claim 35). Situations come from "
+                        "possession and the ball's position only: where the running happened, "
+                        "never why (claim 38)."}  # fmt: skip
 
     # --- find_moments ------------------------------------------------------------------------
 
@@ -753,6 +819,7 @@ class MatchTools:
                 "score": m.score(per, t),
                 "pattern": "gap closed" if closed else "ran harder",
             }
+            facts |= self._split_facts(m.team_situations(per, lo, hi), lead, other)
             if closed:
                 facts["earlier_gap_vs_opponent"] = q(
                     abs(before), "% (the widest gap earlier, before it closed)", src, 0
@@ -765,8 +832,46 @@ class MatchTools:
             )
             last = per == max(m.durations) and hi >= m.durations[per]
             claims = [c for c in MOMENT_KINDS["tug_of_war"][1] if c != "7" or last]
+            claims.insert(0, "4")  # where the running came (decision 30); claim 4's first sentence
             out.append(self._team_moment(lead, per, t, score, facts, why, claims))
         return out
+
+    @staticmethod
+    def _split_facts(sit: dict, lead: str, other: str) -> dict[str, Any]:
+        """Where a team moment's running happened (decision 30): the share that came in the first
+        10 s after the ball changed hands (either way), in what share of the time, and metres per
+        minute of each situation (G5). Measured: situations, never purposes (claims 38, 39)."""
+
+        def rate(x: dict, keys) -> float:
+            n = sum(x[k]["in_play_s"] for k in keys)
+            return sum(x[k]["hsr"] for k in keys) / n * 60.0 if n else float("nan")
+
+        def share(x: dict, field: str) -> float:
+            tot = sum(v[field] for v in x.values())
+            return 100.0 * sum(x[k][field] for k in CHANGED_HANDS) / tot if tot else float("nan")
+
+        rest = [k for k in SITUATIONS if k != "after_losing"]
+        per_min = "m of high-speed running per minute of that situation, team total"
+        return {
+            "team_hsr_share_after_ball_changed_hands": q(
+                share(sit[lead], "hsr"), "% of the team's high-speed running in this block that "
+                "came in the first 10 s after the ball changed hands (either way)", SIT_SRC, 0),
+            "opponent_hsr_share_after_ball_changed_hands": q(
+                share(sit[other], "hsr"), "% of the opponents' high-speed running in this block "
+                "that came in the first 10 s after the ball changed hands", SIT_SRC, 0),
+            "time_share_after_ball_changed_hands": q(
+                share(sit[lead], "in_play_s"), "% of this block's ball-in-play time that was in "
+                "the first 10 s after the ball changed hands", SIT_SRC, 0),
+            "team_hsr_per_min_after_losing": q(rate(sit[lead], ["after_losing"]),
+                                               per_min + " (first 10 s after losing the ball)",
+                                               SIT_SRC, 0),
+            "team_hsr_per_min_after_winning": q(rate(sit[lead], ["after_winning"]),
+                                                per_min + " (first 10 s after winning the ball)",
+                                                SIT_SRC, 0),
+            "team_hsr_per_min_rest": q(rate(sit[lead], rest), per_min + " (the rest of the time "
+                                       "the ball was in play, after winning it included)",
+                                       SIT_SRC, 0),
+        }  # fmt: skip
 
     def _moments_flat_out(self) -> list[dict]:
         m, out = self.m, []
@@ -873,7 +978,11 @@ class MatchTools:
                 i = a + int(np.argmax(s.cols["hsr_1min"][a : b + 1]))
                 low = float(s.cols["battery"][a : b + 1].min())
                 facts = {
-                    "spell_number": q(n, "spells so far", sig + "red_zone"),
+                    "hardest_minutes_count": q(
+                        n,
+                        "times at his hardest minutes so far, this one included",
+                        sig + "red_zone",
+                    ),
                     "duration": q(float(s.t[b] - s.t[a] + 1), "s", sig + "red_zone", 0),
                     "peak_1min_hsr": q(peak, "m in 1 min", sig + "hsr_1min", 0),
                     "published_mean_peak_1min": q(
@@ -897,7 +1006,11 @@ class MatchTools:
                     for x in self._spells(pid)[: n - 1]
                     if s.period[x[1]] == s.period[a] and s.t[a] - s.t[x[1]] <= 300
                 ]
-                facts["spells_in_last_5min"] = q(len(recent) + 1, "spells", sig + "red_zone")
+                facts["hardest_minutes_in_last_5min"] = q(
+                    len(recent) + 1,
+                    "times at his hardest minutes in the last 5 min",
+                    sig + "red_zone",
+                )
                 score = peak / 62.0 + (1.0 - low) + 0.3 * len(recent)
                 long = s.t[b] - s.t[a] + 1 >= LONG_SPELL_S
                 claims = [c for c in MOMENT_KINDS["red_zone"][1] if c != "1" or long]
@@ -956,8 +1069,10 @@ class MatchTools:
                     "mean_speed_next_8s": q(
                         float(spd.mean()) if len(spd) else 0.0, "m/s", sig + "speed", 1
                     ),
-                    "intense_spells_so_far": q(
-                        sum(1 for x in self._spells(pid) if x[0] <= i), "spells", sig + "red_zone"
+                    "hardest_minutes_so_far": q(
+                        sum(1 for x in self._spells(pid) if x[0] <= i),
+                        "times at his hardest minutes so far",
+                        sig + "red_zone",
                     ),
                     "last_5min_hsr": q(s.cols["hsr_5min"][i], "m", sig + "hsr_5min", 0),
                     "typical_pro_battery": q(
@@ -973,8 +1088,8 @@ class MatchTools:
                 }
                 exposed[pid] = exposed.get(pid, 0) + 1
                 facts["times_exposed_so_far"] = q(
-                    exposed[pid], "turnovers so far while he was in or just after an intense "
-                    "spell, this one included", "events.jsonl positive_transition and "
+                    exposed[pid], "turnovers so far while he was in or just after his hardest "
+                    "minutes so far, this one included", "events.jsonl positive_transition and "
                     "signals.players[].series.red_zone, post_peak",
                 )  # fmt: skip
                 score = (
@@ -993,7 +1108,7 @@ class MatchTools:
                         e.t,
                         score,
                         facts,
-                        "his team lost the ball just after his intense spell",
+                        "his team lost the ball just after his hardest minutes so far",
                     )
                 )
         return out
@@ -1015,7 +1130,7 @@ class MatchTools:
                     continue
                 i = back[0]
                 facts = {
-                    "minutes_after_spell": q(
+                    "minutes_after_hardest_minutes": q(
                         (s.t[i] - end) / 60.0, "min", "signals.players[].series.red_zone", 1
                     ),
                     "last_2min_hsr_per_min": q(
@@ -1025,11 +1140,13 @@ class MatchTools:
                     "vs_match_average": q(pct(rate2[i], avg[b]), VS_AVG, HSR_SRC, 0),
                 }
                 peak = float(s.cols["hsr_1min"][a : b + 1].max())
-                facts["spell_peak_1min_hsr"] = q(
+                facts["hardest_minutes_peak_1min_hsr"] = q(
                     peak, "m in 1 min", "signals.players[].series.hsr_1min", 0
                 )
                 dur = float(s.t[b] - s.t[a] + 1)
-                facts["spell_duration"] = q(dur, "s", "signals.players[].series.red_zone", 0)
+                facts["hardest_minutes_duration"] = q(
+                    dur, "s", "signals.players[].series.red_zone", 0
+                )
                 score = peak / 62.0 + 0.5 * (hi - (s.t[i] - end)) / hi
                 claims = [c for c in MOMENT_KINDS["second_wind"][1]
                           if c != "1" or dur >= LONG_SPELL_S]  # fmt: skip
@@ -1218,6 +1335,34 @@ def runs(flag: np.ndarray) -> list[tuple[int, int]]:
         return []
     d = np.diff(np.r_[0, flag.astype(int), 0])
     return list(zip(np.flatnonzero(d == 1), np.flatnonzero(d == -1) - 1, strict=True))
+
+
+SIT_SRC = (
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team, ball x"
+)
+
+
+def situation_split(spans: list[dict[str, dict[str, dict]]]) -> dict[str, dict[str, dict]]:
+    """``MatchData.team_situations`` of one or more spans added up, per team and situation:
+    metres, ball-in-play minutes, metres per minute of that situation and the shares."""
+    out = {}
+    for team in spans[0] if spans else {}:
+        tot = {k: [sum(s[team][k][x] for s in spans) for x in ("hsr", "in_play_s")]
+               for k in SITUATIONS}  # fmt: skip
+        hsr, sec = sum(v[0] for v in tot.values()), sum(v[1] for v in tot.values())
+        out[team] = {k: {
+            "what": SITUATIONS[k],
+            "hsr": q(h, "m above 5.5 m/s, team total", SIT_SRC, 0),
+            "in_play_min": q(n / 60.0, "min of ball in play", SIT_SRC, 1),
+            "hsr_per_min": q(h / n * 60.0 if n else float("nan"),
+                             "m of high-speed running per minute of this situation, team total",
+                             SIT_SRC, 0),
+            "share_of_hsr": q(100.0 * h / hsr if hsr else float("nan"),
+                              "% of the team's high-speed running in this window", SIT_SRC, 0),
+            "share_of_time": q(100.0 * n / sec if sec else float("nan"),
+                               "% of the ball-in-play time in this window", SIT_SRC, 0),
+        } for k, (h, n) in tot.items()}  # fmt: skip
+    return out
 
 
 def pct(x: float, base: float) -> float:

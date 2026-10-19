@@ -61,7 +61,7 @@ sports science (the claims register). A fixed rule checker has already passed th
 you catch what patterns miss: paraphrases, implications and context.
 
 What the system can know: from player positions alone it measures the running (distance,
-high-speed running, energy, intense spells, output vs the player's own match average, ball in
+high-speed running, energy, his hardest minutes, output vs the player's own match average, ball in
 play) and estimates what that running would cost a TYPICAL PROFESSIONAL (a "battery" share of a
 typical professional's short-term reserve, and the chance a typical professional would be below
 half of it). It can NEVER know how tired this particular player is, his fitness, his physiology, his
@@ -83,7 +83,7 @@ Global rules:
   fatigue", "partly fatigue") is a statement about the player's own state (claim 33). With no
   facts, write "no facts". F1 blocks only what the facts contradict: a statement the facts do
   not mention is not a contradiction (unsourced numbers are N1's job), and the moment's own
-  name for its window ("just after an intense spell") needs no fact.
+  name for its window ("just after his hardest minutes so far") needs no fact.
 - G3 in practice: if the context lists non-fatigue reasons, a sentence that blames fatigue
   ("tired", "fatigue", "in the red", "his legs have gone", "running out of steam"...) must name
   one of them, or use neutral words.
@@ -108,11 +108,11 @@ How to read the rules (do not block for these):
 - Ruling fatigue out ("not fatigue", "rather than fatigue") because a non-fatigue reason fits is
   what claim 13 asks for; it is not a claim about the player's own state.
 - G5 is about phases of play (with or without the ball, ball in play), not halves or minutes.
-- "An intense spell" and "just after an intense spell" are the system's neutral names for
-  measured windows (his high-speed running at its peak, and the minutes after it, the post-peak
-  flag; decision 12), not claims about his physiology or his own tiredness.
+- "His hardest minutes (so far)" and "just after his hardest minutes (so far)" are the system's
+  neutral names for measured windows (his high-speed running at its peak, and the minutes after
+  it, the post-peak flag; decision 12), not claims about his physiology or his own tiredness.
 - Measured facts about one player's running (distance, high-speed running vs his own match
-  average or peak, intense spells, speeds, energy used) are facts, not physiology.
+  average or peak, his hardest minutes, speeds, energy used) are facts, not physiology.
 
 Pass (verdict "pass") sentences that state measured facts as facts, general findings in the
 register's words, or the typical-professional wording, even if they are plain. Do not block for

@@ -10,7 +10,8 @@
   for a typical professional and its 10–90% band, the typical-pro chance, high-speed running
   in the last minute, speed (decimetres per second), red-zone and post-peak flags (shares as
   whole percentages). ``match.json`` also has both teams' running per ball-in-play minute in
-  5-min blocks.
+  5-min blocks, and where it happened (decision 30): per 15-min block, metres above 5.5 m/s
+  and ball-in-play seconds per situation of play (``tools.SITUATIONS``).
 - ``feed.json``: the agents' feed, copied as it is.
 - ``highlights.json``: the physical highlights (``agents.highlights``, decision 28), with their
   captions (checked by the Verifier's rules) and the run's times for the trail on the pitch.
@@ -29,7 +30,7 @@ import numpy as np
 
 from secondwind.agents.feed import FEED
 from secondwind.agents.highlights import highlights
-from secondwind.agents.tools import MatchData
+from secondwind.agents.tools import SITUATIONS, MatchData
 from secondwind.io import TRACKING
 
 POS_HZ = 5
@@ -53,6 +54,20 @@ def team_running(m: MatchData) -> list[dict]:
                                    "in_play_s": x["in_play_s"]}
                             for team, x in r.items()}})  # fmt: skip
             a = b
+    return out
+
+
+def team_situations(m: MatchData) -> list[dict]:
+    """Where each team's high-speed running happened (decision 30), per 15-min block
+    (``MatchData.blocks``): [metres above 5.5 m/s, ball-in-play seconds] per situation, team
+    totals of the outfield players. Additive, so the overlay sums the blocks it needs."""
+    out = []
+    for per, a, b in m.blocks():
+        r = m.team_situations(per, a, b)
+        out.append({"video_start": m.video_s(per, a), "video_end": m.video_s(per, b),
+                    "from": m.when(per, a)["clock"], "to": m.when(per, b)["clock"],
+                    **{team: {k: [round(x[k]["hsr"]), round(x[k]["in_play_s"])] for k in SITUATIONS}
+                       for team, x in r.items()}})  # fmt: skip
     return out
 
 
@@ -117,6 +132,8 @@ def export(folder: Path, out: Path) -> dict:
         ],  # fmt: skip
         "players": [m.players[pid] for pid in ids],
         "team_running": team_running(m),
+        "situations": list(SITUATIONS),
+        "team_situations": team_situations(m),
         "goals": [
             m.when(g.period, g.t) | {"team": g.team_id, "scorer": g.player_id} for g in m.goals
         ],  # fmt: skip

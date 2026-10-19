@@ -3,12 +3,12 @@
 ``python -m secondwind.agents.verifier_suite [--llm] [--json docs/verifier_report.json]``
 
 Five sets:
-- ``VALID`` (36) and ``BLOCKED`` (38): v1 plus claims 35–38, the register's wordings and
+- ``VALID`` (37) and ``BLOCKED`` (40): v1 plus claims 35–39, the register's wordings and
   the blocked claims of synthesis §5.3; the rules must get all of them right
   (tests/test_verifier.py).
-- ``PARAPHRASES`` (21): blocked claims in other words, written before the rules were run on
+- ``PARAPHRASES`` (23): blocked claims in other words, written before the rules were run on
   them and never used to tune the rules. What the rules miss here is what the LLM pass is for.
-- ``CONTEXT`` (38): sentences with a moment's context (rule 2, claim 13) or facts (N1): a 3–0
+- ``CONTEXT`` (56): sentences with a moment's context (rule 2, claim 13) or facts (N1): a 3–0
   lead, the start of the second half, just subbed on, a long stoppage, possession, a low
   first-half load, and numbers that are or are not in the data. Each says whether it should pass.
 - ``FACT_CHECKS`` (10): F1, sentences that do or do not agree with their facts, held out like
@@ -30,12 +30,12 @@ from secondwind.agents.verifier import verify
 # (sentence, mode): the register's own wordings (synthesis §5.1–5.2), the alternatives it offers
 # for blocked claims (§5.3), and measured facts stated as facts.
 VALID = [
-    ("After that 5-minute spell, players typically cover about 40% less high-speed distance in "
-     "the next minute than their match average. It comes back over about 5 minutes.", "fan"),
+    ("After a player's hardest 5 minutes, high-speed running in the next minute is typically "
+     "about 40% below their match average. It comes back over about 5 minutes.", "fan"),
     ("Short bursts are shaken off in a minute or two. A five-minute spell takes about five "
      "minutes, and sprinting takes longer.", "fan"),
     ("In the Premier League, players make about a third fewer high-speed recovery runs right "
-     "after their most intense spell than they normally do.", "fan"),
+     "after their hardest minutes of the match than they normally do.", "fan"),
     ("Losing the ball forces the hardest running of the game. This is where tired legs get "
      "exposed.", "fan"),
     ("His runs after that spell are shorter, and he's receiving the ball at lower speed.", "fan"),
@@ -73,7 +73,7 @@ VALID = [
     ("He's still making short bursts, but fewer long high-speed runs.", "fan"),
     ("Both teams ran a similar amount; the difference was in what they did with it.", "fan"),
     ("His high-speed running is 30% below his match average.", "fan"),
-    ("His second intense spell in five minutes.", "fan"),
+    ("His hardest minutes so far, for the second time in five minutes.", "fan"),
     ("He covered 11.4 km, the most on his team.", "fan"),
     # Added 2026-10-17 with claims 35–38: team running and top speed as measured facts.
     ("Albion have done 26% more high-speed running per ball-in-play minute than Ravensholt in "
@@ -86,6 +86,9 @@ VALID = [
     ("His fastest second of the match: 8.6 m/s (31 km/h), 97% of his top speed so far.", "fan"),
     ("He ran back at 5.8 m/s (21 km/h), 70% of his top speed today, and the gap grew from 4 to "
      "9 m.", "fan"),
+    # Added 2026-10-19 with claim 39 (decision 30): where the running happened, measured.
+    ("Without the ball, with it in the opponents' third, Albion did 146 m of high-speed running "
+     "per minute of that situation.", "fan"),
 ]  # fmt: skip
 
 # (sentence, mode, the claim it must be blocked under): synthesis §5.3 and the unbaselined %.
@@ -129,6 +132,8 @@ BLOCKED = [
     ("Ravensholt look tired as a side.", "fan", "35"),
     ("He didn't bother chasing his man.", "fan", "38"),
     ("He jogged back when he should have sprinted.", "fan", "38"),
+    ("Albion pressed high for the whole first half.", "fan", "39"),
+    ("He closed the full-back down at 7 m/s.", "fan", "39"),
 ]  # fmt: skip
 
 # Blocked claims in other words (held out from the rules).
@@ -155,6 +160,9 @@ PARAPHRASES = [
     ("He didn't fancy chasing that one.", "fan", "38"),
     ("He's not putting the yards in to get back.", "fan", "38"),
     ("A lack of desire to track his runner cost them there.", "fan", "38"),
+    # Added 2026-10-19 with claim 39 (decision 30), before its rule was written.
+    ("Albion's front three hunted the ball down deep in Ravensholt's half.", "fan", "39"),
+    ("They swarmed the man on the ball to win it back high up the pitch.", "fan", "39"),
 ]  # fmt: skip
 
 LEAD = {"code": "big_lead", "text": "his team leads by 3 (3–0)"}
@@ -174,6 +182,14 @@ TOUCHES = {"facts": {"touches_last_5min": {"value": 2, "unit": "touches"},
 MORE_TOUCHES = {"facts": {"touches_last_5min": {"value": 7, "unit": "touches"},
                           "touches_per_5min_so_far": {"value": 6.4, "unit": "touches per 5 min"},
                           "fewer_touches_than_usual": False}}  # fmt: skip
+
+SPLIT = {"team_moment": True, "facts": {
+    "team_hsr_share_after_ball_changed_hands": {"value": 43, "unit": "% of the team's high-speed "
+                                                "running in this block"},
+    "time_share_after_ball_changed_hands": {"value": 29, "unit": "% of this block's ball-in-play "
+                                            "time"},
+    "team_hsr_per_min_after_losing": {"value": 433, "unit": "m per minute of that situation"},
+    "block": "0:00–15:00"}}  # fmt: skip
 
 HIGH = {
     "facts": {
@@ -255,8 +271,9 @@ CONTEXT = [
     # Found in the fourth feeds (2026-10-18). The LLM blocked the post-peak window's neutral
     # name (decision 12) as physiology, 7 times in three feeds (prompt revision 3 after this).
     # Reworded with the name itself on 2026-10-18 (decision 29: "catching breath after a red-zone
-    # spell" became "just after an intense spell"; prompt revision 4).
-    ("This is the third time his team have lost the ball just after an intense spell of his.",
+    # spell" became "just after an intense spell"; prompt revision 4), and again on 2026-10-19
+    # (decision 30: "just after his hardest minutes so far"; prompt revision 5).
+    ("This is the third time his team have lost the ball just after his hardest minutes so far.",
      "fan",
      {"facts": {"times_exposed_so_far": {"value": 3, "unit": "turnovers"}}}, None, True),
     # A rewrite both passes let through: a second wind (running back above his average) put down
@@ -306,7 +323,7 @@ CONTEXT = [
      "analyst", {"facts": {"touches_last_5min": {"value": 0, "unit": "touches"},
                            "in_play_last_5min": {"value": 0.25, "unit": "share"}}}, None, True),
     # … and a field name copied into the sentence (G10; both passes let it through).
-    ("This is the third time his team lost the ball just after an intense spell of his "
+    ("This is the third time his team lost the ball just after his hardest minutes so far "
      "(times_exposed_so_far = 3).", "analyst",
      {"facts": {"times_exposed_so_far": {"value": 3, "unit": "turnovers"}}}, None, False),
     # Found in the eighth feeds (2026-10-18). Claim 3's wording ended "our estimate says he had
@@ -329,6 +346,68 @@ CONTEXT = [
     ("In the last 15 minutes, players typically do about a fifth less hard running than at "
      "kick-off, with longer breaks between efforts.", "fan",
      {"facts": {}, "claims_offered": ["9a", "9b", "7", "30"]}, "7", True),
+    # Added 2026-10-19 with the running split (decision 30), on a team moment: claim 4's "tired
+    # legs" would be about the team (35); the split as a measured fact; "most" for 43% (F1, the
+    # LLM pass only); and a purpose read from it (39).
+    ("Losing the ball forces the hardest running of the game. This is where tired legs get "
+     "exposed.", "fan", {"facts": {}, "team_moment": True, "claims_offered": ["4", "9a"]}, "4",
+     False),
+    ("43% of Albion's high-speed running in 0:00–15:00 came in the first 10 seconds after the "
+     "ball changed hands, in 29% of the time the ball was in play.", "fan", SPLIT, None, True),
+    ("Most of Albion's high-speed running in 0:00–15:00 came in the first 10 seconds after the "
+     "ball changed hands.", "fan", SPLIT, None, False),
+    ("Albion did 433 m of high-speed running per minute in the 10 seconds after losing the ball, "
+     "pressing to win it back.", "fan", SPLIT, None, False),
+    # Found in the decision 30 feeds (2026-10-19). A share of the running without the share of
+    # the time (G5; the rules had blocked it as a % without a baseline) …
+    ("43% of Albion's high-speed running in that block came in the first 10 s after the ball "
+     "changed hands.", "fan", SPLIT, None, False),
+    # … the field name typical_pro_battery_now as his battery (claim 33; both passes let it
+    # through) and "spell" for his hardest minutes (G10; both passes let it through) …
+    ("His typical-pro battery now is about 66% of a typical professional's short-term reserve.",
+     "analyst", {"facts": {"typical_pro_battery_now": {"value": 0.66, "unit": "share"}}}, None,
+     False),
+    ("His hardest-minute peak was 86 m in 1 min, with that hardest spell lasting 35 s.", "analyst",
+     {"facts": {"hardest_minutes_peak_1min_hsr": {"value": 86, "unit": "m in 1 min"},
+                "hardest_minutes_duration": {"value": 35, "unit": "s"}}}, None, False),
+    # … a non-fatigue reason pinned to the typical-pro wording (G9; both passes let it through) …
+    ("He has done running that would leave a typical professional at about 56% of their "
+     "short-term reserve, but the two-goal lead may explain some of it.", "fan",
+     {"non_fatigue_reasons": [{"code": "big_lead", "text": "his team leads by 2 (3–1)"}],
+      "facts": {"typical_pro_battery_now": {"value": 0.56, "unit": "share"}}}, "11", False),
+    # … a percentage spelled out, which the numbers check cannot read (both passes let it
+    # through, tagged with claim 9b; G1) …
+    ("Forty-three percent of Albion's high-speed running in that block came in the first 10 s "
+     "after the ball changed hands.", "fan", SPLIT, "9b", False),
+    # … a rules false block in the last feeds (G5 did not read "ball-in-play time") …
+    ("62% of Albion's high-speed running in this block came in the first 10 s after the ball "
+     "changed hands, in 28% of the block's ball-in-play time.", "analyst",
+     {"team_moment": True, "facts": {
+         "team_hsr_share_after_ball_changed_hands": {"value": 62, "unit": "% of the team's "
+                                                     "high-speed running in this block"},
+         "time_share_after_ball_changed_hands": {"value": 28, "unit": "% of this block's "
+                                                 "ball-in-play time"}}}, None, True),
+    # … claim 4 pinned on the player at 24:37 on the site's feed, while his own speed in the clip
+    # was about 1 m/s (both passes let it through) …
+    ("Losing the ball forces the hardest running of the game, and this is one of those moments "
+     "for Marco Tarvsall.", "fan",
+     {"facts": {"mean_speed_next_8s": {"value": 3.1, "unit": "m/s"}},
+      "claims_offered": ["4", "3", "11"]}, "4", False),
+    # … the player's own state as a share, in an LLM rewrite on the site's feed (claim 33; the
+    # rule read only percentages) …
+    ("Earlier in the match he fell to about 0.64 of a typical professional's short-term reserve; "
+     "right now he's at about 0.68, by our estimate.", "analyst",
+     {"facts": {"typical_pro_battery_now": {"value": 0.68, "unit": "share"},
+                "lowest_typical_pro_battery_so_far": {"value": 0.64, "unit": "share"}}}, "19c",
+     False),
+    # … and claim 3 used as the lead-in to his own speed after a turnover, which reads as fewer
+    # recovery runs from him because of his hardest minutes (the LLM rewrote it into this).
+    ("In the Premier League, players make about a third fewer high-speed recovery runs right "
+     "after their hardest minutes than they normally do; here his mean speed in the next 8 s was "
+     "3.7 m/s and he was 44 m from the ball 8 s later.", "analyst",
+     {"facts": {"mean_speed_next_8s": {"value": 3.7, "unit": "m/s"},
+                "distance_to_ball_8s_later": {"value": 44, "unit": "m"},
+                "window_after_turnover": {"value": 8, "unit": "s"}}}, None, False),
 ]  # fmt: skip
 
 

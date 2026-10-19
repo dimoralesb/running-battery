@@ -179,7 +179,7 @@ def test_player_signals_shape(tools):
     assert p["on_pitch"] and p["player"]["position"] == "FB"
     assert set(p) >= {"battery", "low_chance", "energy", "hsr", "flags", "in_play"}
     assert 0.0 <= p["battery"]["typical_pro_at_end"]["value"] <= 1.0
-    assert p["flags"]["intense_spells"]["value"] >= 1
+    assert p["flags"]["hardest_minutes_count"]["value"] >= 1
     assert "typical professional" in p["battery"]["note"]
     assert "calibration" in p["low_chance"]["calibration"].lower()
     _numbers_have_units(p)
@@ -431,3 +431,103 @@ def test_general_claims_with_only_measured_numbers_are_facts():
     assert feed_mod.as_fact(b, "6", "Theo Galdcott has done 12.2 m/min since coming on.") == "fact"
     assert feed_mod.as_fact(b, "6", b["claims"][0]["wording"]) == "6"
     assert feed_mod.as_fact(b, "11", "That would leave a typical professional at 12%.") == "11"
+
+
+def test_running_split_by_situation(folder, tools):
+    """Decision 30: where each team's high-speed running happened, from possession and the
+    ball's position only. Home lose the ball at 200 s and win it back at 260 s (period 1); A04
+    runs 300–360 s without the ball (ball on the centre spot, so in the middle third)."""
+    from secondwind.agents.tools import SITUATIONS, TRANSITION_S
+    from secondwind.export import team_situations
+
+    m = tools.m
+    sit = m.situations[1]
+    assert set(sit["home"][200:210]) == {"after_losing"} and sit["home"][210] == "off_ball_deep"
+    assert set(sit["away"][200:210]) == {"after_winning"} and sit["away"][210] == "on_ball"
+    assert set(sit["away"][260:270]) == {"after_losing"} and sit["home"][265] == "after_winning"
+    assert sit["home"][0] == "on_ball"  # the half's first holder is no change of possession
+    assert set(m.situations[2]["home"][300:360]) == {""}  # the stoppage: ball out of play
+    r = m.team_situations(1, 0, DURATION[0])
+    assert sum(x["in_play_s"] for x in r["home"].values()) == DURATION[0]
+    assert r["home"]["after_losing"]["in_play_s"] == TRANSITION_S
+    assert r["home"]["off_ball_high"]["in_play_s"] == 0  # the ball never left the middle third
+    away = r["away"]["off_ball_deep"]["hsr"]
+    assert away / sum(x["hsr"] for x in r["away"].values()) > 0.95 and abs(away - 360) < 40
+    split = tools.team_running()["situations"]
+    assert set(split["home"]) == set(SITUATIONS)
+    assert abs(sum(x["share_of_hsr"]["value"] for x in split["away"].values()) - 100) <= 3
+    assert split["away"]["off_ball_deep"]["hsr_per_min"]["value"] > 0
+    _numbers_have_units(split)
+    tug = tools.find_moments("tug_of_war")["moments"][0]
+    assert "4" in tug["claims"] and "team_hsr_share_after_ball_changed_hands" in tug["facts"]
+    blocks = team_situations(m)
+    assert [b["from"] for b in blocks] == ["0:00", "45:00"]
+    assert blocks[0]["away"]["off_ball_deep"][0] == round(away)
+    assert sum(s for _, s in blocks[0]["home"].values()) == DURATION[0]
+
+
+def test_team_moment_lines_never_blame_fatigue():
+    """Decision 30: on a team moment, claim 4's "tired legs" would be about the team (35)."""
+    wording = (
+        "Losing the ball forces the hardest running of the game. This is where tired legs get "
+    )
+    wording += "exposed."
+    ctx = {"facts": {}, "team_moment": True}
+    v = verify(wording, "fan", ctx, "4")
+    assert not v.ok and "35" in {f.claim for f in v.findings}
+    assert verify(wording, "fan", {"facts": {}}, "4").ok  # a player's moment: fine
+    assert verify("Losing the ball forces the hardest running of the game.", "fan", ctx, "4").ok
+
+
+def test_purpose_rules_against_the_truth(folder, monkeypatch):
+    """validate/purposes.py: our runs take the purpose of the truth run they overlap, and the
+    recovery-run rule needs his team without the ball, 10 m back and the wrong side of it."""
+    from types import SimpleNamespace
+
+    from secondwind.agents.tools import MatchData
+    from secondwind.schema import RunPurpose
+    from secondwind.validate import purposes as P
+
+    m = MatchData(folder)
+    xy = m.xy[1].copy()
+    a04 = m.col["A04"]
+    xy[302, a04], xy[360, a04] = (-20.0, 0.0), (8.0, 0.0)  # his run: 302–359 s; 28 m back
+    monkeypatch.setitem(m.xy, 1, xy)
+    monkeypatch.setattr(P, "MatchData", lambda folder: m)
+    run = lambda pid, a, b, why: SimpleNamespace(  # noqa: E731
+        player_id=pid, period=1, t_start=a, t_end=b, purpose=RunPurpose(why), executed=True
+    )
+    truth = [run("A04", 300.5, 359.0, "recovery_run"), run("H04", 60.0, 120.0, "run_with_ball"),
+             run("A08", 10.0, 12.0, "close_down")]  # fmt: skip
+    monkeypatch.setattr(P, "read_truth", lambda folder: SimpleNamespace(runs=truth))
+    runs, totals = P.labelled_runs(folder)
+    a = [r for r in runs if r["purpose"] == "recovery_run"]
+    assert len(a) == 1 and "recovery_ju" in a[0]["labels"] and "press_ju" not in a[0]["labels"]
+    assert "recovery_highlight" not in a[0]["labels"]  # 40 s after his team lost the ball
+    assert all(not r["labels"] for r in runs if r["purpose"] == "run_with_ball")
+    rep = P.score(runs, totals)
+    assert rep["recovery_ju"]["precision"] == 1.0 and rep["recovery_ju"]["recall"] == 1.0
+    assert rep["press_ju"]["recall"] == 0.0  # A08's run is not in our speed: missed
+
+
+def test_favourite_gets_his_best_moment_and_wordings_keep_their_claim():
+    """Decision 30: the favourite's best-ranked turnover joins the feed even when another of his
+    was picked; a register wording tagged "fact" is that claim."""
+
+    def mo(i, kind, pid, v, score):
+        return {"id": i, "kind": kind, "player": {"id": pid}, "video_s": v, "score": score}
+
+    found = {m["id"]: m for m in [mo("a", "exposed_on_turnover", "H04", 100.0, 1.0),
+                                  mo("b", "exposed_on_turnover", "H04", 900.0, 3.0),
+                                  mo("c", "fresh_legs", "H16", 2000.0, 1.0)]}  # fmt: skip
+    assert feed_mod.ensure_favourite(["a"], found, {"H04", "H16"}) == ["a", "b", "c"]
+    assert feed_mod.ensure_favourite(["b", "c"], found, {"H04", "H16"}) == ["b", "c"]
+    w9b = (
+        "Without the ball, Premier League players typically cover about 10% more ground per "
+        "minute than when they have it."
+    )
+    b = {"kind": "tug_of_war", "facts": {}, "claims": [{"id": "9b", "wording": w9b}]}
+    assert feed_mod.as_fact(b, "fact", w9b) == "9b"
+    assert (
+        feed_mod.as_fact(b, "fact", "Albion did 433 m per minute after losing the ball.") == "fact"
+    )

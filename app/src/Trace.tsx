@@ -118,11 +118,11 @@ export function Trace({ signals: s, meta, now, name, text, onSeek }: Props) {
             <span>battery {s.battery[h]}%{band ? ` (${s.lo![h]}–${s.hi![h]}%)` : ""}</span>
             {s.low_chance && <span>typical-pro chance {s.low_chance[h]}%</span>}
             <span>{s.hsr_1min[h]} m in the last minute</span>
-            {s.red_zone[h] ? <span>intense spell</span> : null}
+            {s.red_zone[h] ? <span>his hardest minutes so far</span> : null}
           </>
         ) : (
           <span className="muted">Hover a chart for values; click to jump there. Shaded:
-            intense spells. Dashed: half-time.</span>
+            his hardest minutes. Dashed: half-time.</span>
         )}
       </div>
     </div>

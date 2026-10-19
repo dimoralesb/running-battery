@@ -17,6 +17,7 @@ import { Feed } from "./Feed";
 import { Highlights, reel } from "./Highlights";
 import { Legend, Pitch } from "./Pitch";
 import { Replay } from "./Replay";
+import { SplitChart } from "./SplitChart";
 import { TeamChart } from "./TeamChart";
 import { Trace } from "./Trace";
 
@@ -241,7 +242,7 @@ export default function App() {
           </div>
           <select value={matchId} onChange={(e) => setMatchId(e.target.value)} aria-label="Match">
             {MATCHES.map((m) => (
-              <option key={m.id} value={m.id}>{m.label}</option>
+              <option key={m.id} value={m.id}>{TEXT[`match_${m.id}`] ?? m.id}</option>
             ))}
           </select>
           <div className="toggle" role="group" aria-label="Mode">
@@ -323,6 +324,14 @@ export default function App() {
                   <TeamChart meta={data.meta} now={now} title={copy.teamChart} sub={copy.teamChartSub}
                              yTitle={copy.teamChartAxis} onSeek={setNow} />
                 )}
+                {!cur.player && (() => {
+                  // The team moment's 15-min block (its key second is the block's last).
+                  const b = data.meta.team_situations.find((x) => x.video_start <= cur.at
+                                                                  && cur.at < x.video_end);
+                  return b ? <SplitChart meta={data.meta} blocks={[b]} text={TEXT}
+                                         scope={fill(copy.splitBlock, { block: `${b.from}–${b.to}` })} />
+                    : null;
+                })()}
               </>
             ) : (
               <section className="up-next card">
@@ -414,6 +423,8 @@ export default function App() {
             </div>
             <TeamChart meta={data.meta} now={now} title={copy.teamChart} sub={copy.teamChartSub}
                        yTitle={copy.teamChartAxis} onSeek={setNow} />
+            <SplitChart meta={data.meta} text={TEXT} scope={copy.splitSoFar}
+                        blocks={data.meta.team_situations.filter((b) => b.video_end <= now + 0.5)} />
             {mode === "analyst" && sel && s && (
               <Trace signals={s} meta={data.meta} now={now} name={sel.name} text={TEXT}
                      onSeek={setNow} />

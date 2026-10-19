@@ -61,7 +61,7 @@ BASELINE = (
     r"first 15|kick-off|first half|reserve|typical professional|of the time|chance|earlier|"
     r"of the (last|first|next) (\d+|one|two|three|five|ten|fifteen) min\w*|team-?mates|"
     r"of (that|the|this) (period|time|spell|block|window)|"
-    r"top speed|opponents?|"
+    r"top speed|opponents?|of (his|their|the team's|[A-Z]\w+'s) high-speed running|"
     r"(the )?player he replaced)\b"
 )
 NEGATED_LACTIC = r"\b(isn'?t|is not|not|no|nothing to do with)\b[^.]{0,25}\blactic"
@@ -101,6 +101,11 @@ FEWER_TOUCHES = (
     r"\b(fewer|less|reduced|drop in|fall in)\s+(\w+\s+)?(touch(es)?|on the ball)\b|"
     r"\btouch(es)?\b[^.]*\b(dropped|fell|down)\b"
 )
+SPELLED = (
+    r"one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|"
+    r"sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|"
+    r"hundred"
+)
 WINDOW = r"(?<![\w.])(1|2|5|10|15|30|45|60|90)\s*(-|\s)?(min\w*|second\w*|s\b|metres?)"
 
 
@@ -124,6 +129,11 @@ RULES: tuple[Rule, ...] = (
     Rule("33", "A percentage of the player himself; say what it would leave a typical "
          "professional", r"\b(he|she|he's|she's)\s*(is|'s|’s|was)?\s*(at|down to|on)\s+"
          r"(about\s+)?\d+\s*(%|percent)"),
+    # The same as a share (the decision 30 feeds: "he fell to about 0.64 of a typical
+    # professional's short-term reserve; right now he's at about 0.68").
+    Rule("33", "A share of the player himself; say what the running would leave a typical "
+         "professional", r"\b(he|she|he's|she's)\s*(is|'s|’s|was)?\s*(at|down to|on|fell to|"
+         r"dropped to)\s+(about\s+)?(0?\.\d+|\d+\s*(%|percent))"),
     Rule("33", "The player's battery; say what the running would leave a typical professional",
          r"\b(his|her|their)\s+battery\b", unless=r"typical professional"),
     # Found on the deployed site (2026-10-18): "so this may not be only fatigue" says he is partly
@@ -134,6 +144,29 @@ RULES: tuple[Rule, ...] = (
          r"\b(some|a bit of|an element of)\s+(fatigue|tiredness)\b"),
     # G10 (decision 29): field names the LLM copied from the facts ("times_exposed_so_far = 3").
     Rule("G10", "A field name on screen; write plain English", r"\b[a-z]+(?:_[a-z0-9]+)+\b"),
+    # Found in the decision 30 feeds: the field name typical_pro_battery_now as "his typical-pro
+    # battery", the old names as "that hardest spell", and a reason pinned to the battery wording.
+    Rule("33", "The player's battery, even \"typical-pro\"; say what the running would leave a "
+         "typical professional", r"\b(his|her)\s+typical[- ]pro(fessional)?('s)?\s+battery\b"),
+    Rule("G10", "Our name for the window is \"his hardest minutes\", never a spell (decision 30)",
+         r"\b(hardest|intense|red-zone)\s+spell\b|\bhardest minutes\b[^.]*\bspell\b"),
+    Rule("G9", "The typical-professional wording describes the running done; nothing explains "
+         "it away", r"\breserve\b[^.]*\b(explains?|explained|because of|due to|down to)\b"),
+    # Found in the decision 30 feeds: "Forty-three percent of Albion's high-speed running…", a
+    # number spelled out, which the numbers check (N1) and the baseline rules (G1) cannot read.
+    Rule("G1", "Write percentages in digits, so their baseline and number can be checked",
+         r"\b(" + SPELLED + r")([- ](" + SPELLED + r"))?\s+(percent|per cent)\b"),
+    # Found on the site's feed (decision 30, 24:37): claim 4 pinned on a player who ran at
+    # 1 m/s ("…and this is one of those moments for Marco Tarvsall").
+    Rule("4", "Claim 4 is about transitions in general; it says nothing about this player's "
+         "running (give his measured speed instead)",
+         r"hardest running of the game\b[^.]*\b(for|by|from)\s+(him|[A-Z]\w+)\b|"
+         r"\b(he|[A-Z]\w+)\s+(is|was)\s+(doing|making)\s+the hardest running\b"),
+    # G5 (decision 30): a share of the running in a situation needs the share of the time.
+    Rule("G5", "A share of the running in a situation needs how much of the time it took (G5)",
+         r"\d+\s*%[^.]*\bhigh-speed running\b[^.]*\b(came|happened|was done)\b[^.]*\bafter\b",
+         unless=r"\bof the time\b|\btime the ball was in play\b|\bball-in-play time\b|"
+         r"\bper minute\b"),
     Rule("33", "\"Running on empty\" is about the player's own state",
          r"running on empty|out of gas|on fumes|nothing left in the tank"),
     Rule("19c", "Never \"empty\" or \"exhausted\" from the battery (claim 19c)",
@@ -204,6 +237,12 @@ RULES: tuple[Rule, ...] = (
          r"\blaziness\b|\bjogg(ed|ing) back\b|\bwalk(ed|ing) back\b|\bshould have (sprinted|"
          r"run|chased|tracked|gone)\b|\bwork-?shy\b|\bno effort\b|\bhalf-?hearted\w*\b|"
          r"\black of (effort|commitment|intensity)\b"),
+    # 39 (decision 30): pressing is a purpose. A positions-only rule for it scored precision 0.21
+    # against the generator's hidden purposes (validate/purposes.py), so say where the ball was.
+    Rule("39", "Pressing is what a run meant to do, which positions do not show (claim 39); say "
+         "where the ball was and who had it",
+         r"\b(press|presses|pressed|pressing|presser|high press|counter-?press\w*)\b|"
+         r"\bclos(e|es|ed|ing)\s+([\w'-]+\s+){0,2}down\b", unless=r"\bgenerated with\b"),
     # Qualified claims used without their qualifier.
     Rule("10", "Top speed barely changes in matches; only \"a bit slower than earlier\" "
          "(claim 10)", r"lost (his|her) (pace|speed|legs)|no pace left|no legs left"),
@@ -309,6 +348,11 @@ def context_findings(text: str, context: dict, claim_id: str | None) -> list[Fin
                     "such as 'ran less' (rule 2, claim 13)",
                 )
             )
+    # A team moment (decision 30): fatigue words there read as the team's own state, even in a
+    # general wording such as claim 4's "tired legs get exposed".
+    if context.get("team_moment") and _found(FATIGUE, text) and not _found(NOT_FATIGUE, text):
+        out.append(Finding("35", "A team moment: fatigue words read as the team's own state "
+                           "(claim 35); give the measured running instead"))  # fmt: skip
     offered = context.get("claims_offered")
     if offered is not None and claim_id and str(claim_id) not in offered:
         out.append(Finding(str(claim_id), f"Claim {claim_id} is not offered for this moment "

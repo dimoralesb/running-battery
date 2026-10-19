@@ -25,6 +25,8 @@ export interface Meta {
   players: Player[];
   goals: { video_s: number; team: string; scorer: string; clock: string }[];
   team_running: TeamBlock[];
+  situations: string[]; // situations of play, in order (agents/tools.py SITUATIONS)
+  team_situations: SituationBlock[];
   substitutions: { video_s: number; team: string; off: string; on: string; clock: string }[];
 }
 
@@ -34,6 +36,16 @@ export interface TeamBlock {
   clock: string;
   home: { hsr: number | null; possession: number; in_play_s: number };
   away: { hsr: number | null; possession: number; in_play_s: number };
+}
+
+/** Where the running happened (decision 30), one 15-min block: per team and situation,
+ * [metres above 5.5 m/s, ball-in-play seconds], team totals of the outfield players. */
+export interface SituationBlock {
+  video_start: number;
+  video_end: number;
+  from: string;
+  to: string;
+  [team: string]: Record<string, [number, number]> | number | string;
 }
 
 export interface Signals {
@@ -107,10 +119,8 @@ export interface MatchData {
   duration: number;
 }
 
-export const MATCHES = [
-  { id: "story", label: "Story match: the high press" },
-  { id: "natural", label: "Natural match" },
-];
+// Labels in copy.json ("match_<id>"), checked by the Verifier with the rest of the copy.
+export const MATCHES = [{ id: "story" }, { id: "natural" }];
 
 export async function loadMatch(id: string): Promise<MatchData> {
   const base = `${import.meta.env.BASE_URL}data/${id}/`;

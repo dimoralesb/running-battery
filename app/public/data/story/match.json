@@ -656,6 +656,315 @@
    }
   }
  ],
+ "situations": [
+  "after_losing",
+  "after_winning",
+  "on_ball",
+  "off_ball_high",
+  "off_ball_deep"
+ ],
+ "team_situations": [
+  {
+   "video_start": 0.0,
+   "video_end": 900.0,
+   "from": "0:00",
+   "to": "15:00",
+   "home": {
+    "after_losing": [
+     577,
+     80
+    ],
+    "after_winning": [
+     220,
+     74
+    ],
+    "on_ball": [
+     254,
+     129
+    ],
+    "off_ball_high": [
+     32,
+     2
+    ],
+    "off_ball_deep": [
+     784,
+     254
+    ]
+   },
+   "away": {
+    "after_losing": [
+     417,
+     74
+    ],
+    "after_winning": [
+     301,
+     80
+    ],
+    "on_ball": [
+     429,
+     256
+    ],
+    "off_ball_high": [
+     0,
+     5
+    ],
+    "off_ball_deep": [
+     293,
+     124
+    ]
+   }
+  },
+  {
+   "video_start": 900.0,
+   "video_end": 1800.0,
+   "from": "15:00",
+   "to": "30:00",
+   "home": {
+    "after_losing": [
+     496,
+     67
+    ],
+    "after_winning": [
+     237,
+     75
+    ],
+    "on_ball": [
+     308,
+     193
+    ],
+    "off_ball_high": [
+     6,
+     9
+    ],
+    "off_ball_deep": [
+     343,
+     126
+    ]
+   },
+   "away": {
+    "after_losing": [
+     258,
+     75
+    ],
+    "after_winning": [
+     208,
+     67
+    ],
+    "on_ball": [
+     211,
+     135
+    ],
+    "off_ball_high": [
+     0,
+     0
+    ],
+    "off_ball_deep": [
+     416,
+     193
+    ]
+   }
+  },
+  {
+   "video_start": 1800.0,
+   "video_end": 2765.7,
+   "from": "30:00",
+   "to": "45+1:05",
+   "home": {
+    "after_losing": [
+     603,
+     77
+    ],
+    "after_winning": [
+     365,
+     77
+    ],
+    "on_ball": [
+     297,
+     219
+    ],
+    "off_ball_high": [
+     0,
+     3
+    ],
+    "off_ball_deep": [
+     299,
+     168
+    ]
+   },
+   "away": {
+    "after_losing": [
+     266,
+     77
+    ],
+    "after_winning": [
+     180,
+     77
+    ],
+    "on_ball": [
+     241,
+     171
+    ],
+    "off_ball_high": [
+     0,
+     10
+    ],
+    "off_ball_deep": [
+     476,
+     209
+    ]
+   }
+  },
+  {
+   "video_start": 2765.7,
+   "video_end": 3665.7,
+   "from": "45:00",
+   "to": "60:00",
+   "home": {
+    "after_losing": [
+     359,
+     118
+    ],
+    "after_winning": [
+     675,
+     125
+    ],
+    "on_ball": [
+     159,
+     106
+    ],
+    "off_ball_high": [
+     6,
+     4
+    ],
+    "off_ball_deep": [
+     334,
+     148
+    ]
+   },
+   "away": {
+    "after_losing": [
+     721,
+     125
+    ],
+    "after_winning": [
+     261,
+     118
+    ],
+    "on_ball": [
+     169,
+     152
+    ],
+    "off_ball_high": [
+     0,
+     9
+    ],
+    "off_ball_deep": [
+     240,
+     97
+    ]
+   }
+  },
+  {
+   "video_start": 3665.7,
+   "video_end": 4565.7,
+   "from": "60:00",
+   "to": "75:00",
+   "home": {
+    "after_losing": [
+     246,
+     92
+    ],
+    "after_winning": [
+     308,
+     72
+    ],
+    "on_ball": [
+     234,
+     156
+    ],
+    "off_ball_high": [
+     0,
+     6
+    ],
+    "off_ball_deep": [
+     444,
+     154
+    ]
+   },
+   "away": {
+    "after_losing": [
+     265,
+     72
+    ],
+    "after_winning": [
+     320,
+     92
+    ],
+    "on_ball": [
+     287,
+     160
+    ],
+    "off_ball_high": [
+     11,
+     8
+    ],
+    "off_ball_deep": [
+     342,
+     148
+    ]
+   }
+  },
+  {
+   "video_start": 4565.7,
+   "video_end": 5564.9,
+   "from": "75:00",
+   "to": "90+1:39",
+   "home": {
+    "after_losing": [
+     208,
+     65
+    ],
+    "after_winning": [
+     275,
+     82
+    ],
+    "on_ball": [
+     139,
+     126
+    ],
+    "off_ball_high": [
+     0,
+     6
+    ],
+    "off_ball_deep": [
+     688,
+     293
+    ]
+   },
+   "away": {
+    "after_losing": [
+     451,
+     82
+    ],
+    "after_winning": [
+     150,
+     65
+    ],
+    "on_ball": [
+     408,
+     299
+    ],
+    "off_ball_high": [
+     13,
+     20
+    ],
+    "off_ball_deep": [
+     273,
+     106
+    ]
+   }
+  }
+ ],
  "goals": [
   {
    "period": 1,

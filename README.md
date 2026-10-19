@@ -18,7 +18,7 @@ Add `?match=natural`, `&mode=analyst`, `&view=full&t=<seconds>`, `&hl=<kind>&ste
 ## How it works
 
 1. **Generator** (`sim/`): a 10 Hz match with events, a sprint motion model [Narizuka2023], role behaviours and a hidden physiology (two short-term pools and a whole-match tank) that changes which hard runs players make.
-2. **Estimator** (`engine/`): from positions alone, per player and second, the running (high-speed distance, intense spells, energy) and what it would leave a typical professional (a battery with a 10–90% band, and a calibrated chance of falling below half of it).
+2. **Estimator** (`engine/`): from positions alone, per player and second, the running (high-speed distance, his hardest minutes so far, energy) and what it would leave a typical professional (a battery with a 10–90% band, and a calibrated chance of falling below half of it).
 3. **Agents** (`agents/`): an MCP server with seven read-only tools, four agents on Foundry, and a Verifier that checks every sentence against a register of published claims.
 4. **Overlay** (`app/`): the replay, the batteries, the charts and the verified feed, as static files on Azure.
 
@@ -28,18 +28,21 @@ Four agents on Microsoft Foundry (Agent Framework, gpt-5-mini) turn a match into
 verified feed (`feed.json`, synced to the replay or a video by `video_s`). They see the match
 only through an MCP server with seven read-only tools, and every number comes back with its unit
 and the field it came from; nothing in `agents/` can read the hidden truth. **Tactical** picks
-the moments (intense spells, a defender caught on the break, second wind, fresh legs, a quiet spell
+the moments (a player's hardest minutes, a defender caught on the break, second wind, fresh legs, a quiet spell
 that is likely tactical rather than fatigue, flat-out runs near a player's top speed, and who's doing
-the running between the two teams); **Narrator** writes from the claims register's wordings;
+the running between the two teams, with where it happened); **Narrator** writes from the claims register's wordings;
 **Personalization** sets the fan or analyst style and puts a favourite player (and whoever came
 on for him) first; **Verifier** checks every sentence before it reaches the screen.
 
 Plain code holds the agents to what the prompts ask: each moment offers only the claims that fit
-it (the "after a 5-minute spell" figure only after a spell that long, "top speed hardly drops"
+it (the "after a player's hardest 5 minutes" figure only after a stretch that long, "top speed hardly drops"
 only after the 75th minute), a team moment always says how the two teams compare, each general
 finding is shown at most twice per feed, and "fewer touches" needs measured touch counts
 (PLAN decision 25). A line tagged with a general finding whose numbers all come from the moment's
-facts counts as a measured fact (decision 29).
+facts counts as a measured fact (decision 29). A team moment also says where the team's
+high-speed running happened, as measured facts per minute of each situation (decision 30, below);
+claim 4 ("losing the ball forces the hardest running of the game") may go with it, but not its
+"tired legs", which on a team moment would be about the team (claim 35).
 
 ### The Verifier
 
@@ -48,29 +51,40 @@ It runs fixed rules first, then an LLM pass that can only block, against the cla
 up, the ball is out of play or the player has just come on must say so, and every number must be
 one of the facts. The paraphrases are blocked claims in other words, and the fact checks are
 sentences that do or do not agree with their facts (F1); both were written before the rules or
-the prompt that could catch them and never used to tune them. On 148 test sentences
-([docs/verifier_report.json](docs/verifier_report.json)):
+the prompt that could catch them and never used to tune them. On 166 test sentences
+([docs/verifier_report.json](docs/verifier_report.json), prompt revision 5):
 
 | | Unsupported sentences caught | Valid sentences blocked |
 |---|---|---|
-| Rules alone | 57 / 89 (paraphrases 2 / 21, fact checks 0 / 6) | 0 / 59 |
-| Rules + LLM | 86 / 89 (paraphrases 21 / 21, fact checks 5 / 6) | 2 / 59 |
+| Rules alone | 69 / 104 (paraphrases 2 / 23, fact checks 0 / 6) | 0 / 62 |
+| Rules + LLM | 97 / 104 (paraphrases 23 / 23, fact checks 3 / 6) | 2 / 62 |
 
-The LLM still misses some sentences that contradict their facts: a second wind put down to "less
-opportunity to run", a general finding about short bursts used to explain a 197-second spell, and
-"his fastest run so far" for a run that was not. Before prompt revision 4 it caught 2 of the 6
-fact checks. The two valid sentences it blocked use "in the red", the old name for the
-typical-pro chance. The rules never block a valid sentence; the LLM pass varies by a sentence or
-two from run to run. In the regenerated feeds the fact check caught real slips: numbers from an
+The LLM still misses sentences that mislead without a wrong number: a general finding about short
+bursts used to explain a 76- or 197-second spell, claim 3 ("about a third fewer recovery runs
+right after their hardest minutes") used as the lead-in to a defender's own speed after a
+turnover, "the lowest point of his match" when it was not, and in this run three of the six
+held-out fact checks ("well below his match average", "less than his team-mates" and "his fastest
+run so far", each contradicting its facts). The same prompt caught 5 of the 6 in the runs before
+(97–99 caught of 101–104 across five runs on 2026-10-19), so the LLM pass is a second net, not a
+guarantee. The two valid sentences it blocked are claim 10's own wording ("his last few sprints
+were a bit slower") and the typical-pro chance worded with "in the red". The rules never block a valid sentence; the LLM pass
+varies by a sentence or two from run to run. In the regenerated feeds the fact check caught real slips: numbers from an
 earlier 15-minute block reused at 74:59, a "3–0 lead" copied from claim 13's example when the
 score was 3–1, and "level" for a 6% difference.
 
-The LLM prompt has been revised four times, each reported in PLAN §3.4: twice on the first
+The LLM prompt has been revised five times, each reported in PLAN §3.4: twice on the first
 suite; once after the fourth demo feeds, where it blocked the neutral name of the post-peak window
-as physiology seven times; and once (decision 29) for the new names and a fact check it writes
-before each verdict. Rules added from reading the feeds: no field names on screen ("G10"),
-"not only fatigue" as a statement about the player's own state (claim 33), and baselines in
-words ("of the last five minutes").
+as physiology seven times; once (decision 29) for the new names and a fact check it writes
+before each verdict; and once (decision 30) for "his hardest minutes". Rules added from reading
+the feeds: no field names on screen ("G10"), "not only fatigue" as a statement about the
+player's own state (claim 33), and baselines in words ("of the last five minutes"). With the
+running split (decision 30): "pressing" and "closing down" are blocked (claim 39, below), on a
+team moment any fatigue word is read as the team's own state (claim 35), and a share of the
+running in a situation must give the share of the time too (G5). From reading those feeds:
+"his typical-pro battery" (claim 33), "spell" for his hardest minutes, a reason pinned to the
+typical-pro wording ("the two-goal lead may explain some of it"), percentages spelled out
+("forty-three percent", which the numbers check cannot read) and claim 4 pinned on a player
+("…one of those moments for Marco Tarvsall", while he ran at about 1 m/s).
 
 ## The overlay
 
@@ -90,9 +104,20 @@ p.5–6]). The score bar shows each team's fastest second so far.
 favourite players (a tick shows all of them); in analyst mode the selected player's battery trace
 with its band and his high-speed running. To keep one obvious place to look, the player the
 current feed line is about gets a ring and that line sits under the pitch; the flat-out pulse
-(90% or more of his top speed so far) and the intense-spell ring show only for him, the selected
+(90% or more of his top speed so far) and the hardest-minutes ring show only for him, the selected
 and the favourite player, and the key is folded away. Both teams' high-speed running per
-ball-in-play minute is one chart, "who's doing the running". Each feed line shows its claim,
+ball-in-play minute is one chart, "who's doing the running". Under it, **where the running
+happened** (decision 30) splits each team's high-speed running by situation of play, from who
+had the ball and where it was, as metres per minute of that situation (G5): the first 10 s after
+losing the ball, the first 10 s after winning it (transitions last 9.3–10.9 s on average
+[Bortnik2022, Table 2]), settled on the ball, and without the ball with it in the opponents'
+third or deeper (the pitch in thirds, 17.5 m either side of halfway). Bars per team on one scale,
+the minutes of each situation under its name, and per team the share of its high-speed running
+that came in the 10 s after the ball changed hands; it sums the finished 15-minute blocks so far,
+and a team moment's Replay shows its own block. In the story match's first half, 52% of Westerlyn Albion's
+high-speed running came in those 10 s, in 29% of the time the ball was in play (449 m per minute after losing the ball against 95 settled on the ball). It says where the
+running happened, never why: "pressing" is a purpose, and positions don't show it (below). Each
+feed line shows its claim,
 sources and the Verifier's verdict, and a toggle shows what the Verifier blocked. The overlay's
 own fixed sentences (`app/src/copy.json`) pass the Verifier too. Light and dark mode; phone
 layout with a 16 px gutter and no sideways scroll.
@@ -102,7 +127,8 @@ layout with a 16 px gutter and no sideways scroll.
 run** above 5.5 m/s (19.8 km/h) in one go and where it went (a typical high-speed run is about
 19 m [Fang2024, Table 2; DiSalvo2007, p.224]), the **recovery run** (the longest high-speed run
 back towards his own goal starting within 10 s of his team losing the ball, our threshold; speed
-and distance only), **back-to-back runs** (three or more with 20 s or less between them, our
+and distance only; against the generator's hidden run purposes it is a recovery run 78% of the
+time, base rate 26%, and finds 24% of them, dev seeds 1–60, decision 30), **back-to-back runs** (three or more with 20 s or less between them, our
 threshold; Premier League players usually get 51–101 s between high-speed runs, by position
 [Bradley2009, Table I]), the **busiest minute** (against a published average best minute of
 62 m [Leifsson2024, Table 1]) and, at the final whistle, the **most ground covered** by
@@ -142,6 +168,16 @@ synthetic matches, it does not hold up from positions, and the Verifier blocks i
 - **"He misplaced that pass because he was tired."** Pass completion is the same before and
   after a peak spell (80.3 vs 80.5% [Fang2024, Fig. 1]) and across the match [Carling2011,
   Table I], so the generator has no passing penalty and the Verifier blocks the claim (claim 20).
+- **"Albion pressed high."** Pressing is what a run meant to do. A positions-only rule built on
+  Ju2022's definition of closing down ("runs directly towards opposition player on or receiving
+  the ball" [Ju2022, Table 1]: his team without the ball, the gap to the ball shrinking by 3 m or
+  more and ending within 5 m) matches the generator's hidden close-down runs with precision 0.21
+  (base rate 0.04) and recall 0.25; in the opponents' third, 0.31 and 0.03 (76,527 runs, dev seeds
+  1–60, thresholds fixed before the first run, [validate/purposes.py](src/secondwind/validate/purposes.py)).
+  The split above shows where the running happened instead, and the Verifier blocks "pressing" and
+  "closing down" (claim 39). A recovery-run rule does better (precision 0.68, recall 0.37 with
+  Ju2022's "to be goal side when out of position"), but a recovery-run share would still come out
+  about half the true one, so the split leaves it out.
 - **"They won because they ran more."** Winners outrun losers only slightly (total distance
   +0.7% [Allen2026a, Table 3]) and total distance is unrelated to points [Allen2026b] (claim 30).
 

@@ -1,7 +1,7 @@
 {
  "match_id": "story",
  "synthetic": true,
- "created": "2026-10-18",
+ "created": "2026-10-19",
  "agents": {
   "tactical": "llm",
   "narrator": {
@@ -16,14 +16,6 @@
  },
  "favourite": "H04",
  "moments": [
-  {
-   "moment_id": "red_zone:H11:1:96",
-   "kind": "red_zone",
-   "clock": "1:36",
-   "t": 96.0,
-   "period": 1,
-   "video_s": 96.0
-  },
   {
    "moment_id": "exposed_on_turnover:H06:1:247",
    "kind": "exposed_on_turnover",
@@ -65,12 +57,28 @@
    "video_s": 1477.9
   },
   {
+   "moment_id": "tug_of_war:home:1:1799",
+   "kind": "tug_of_war",
+   "clock": "29:59",
+   "t": 1799.0,
+   "period": 1,
+   "video_s": 1799.0
+  },
+  {
    "moment_id": "second_wind:H04:1:1801",
    "kind": "second_wind",
    "clock": "30:01",
    "t": 1801.0,
    "period": 1,
    "video_s": 1801.0
+  },
+  {
+   "moment_id": "red_zone:H04:1:1959",
+   "kind": "red_zone",
+   "clock": "32:39",
+   "t": 1959.0,
+   "period": 1,
+   "video_s": 1959.0
   },
   {
    "moment_id": "flat_out:A10:1:2101",
@@ -81,20 +89,28 @@
    "video_s": 2101.0
   },
   {
+   "moment_id": "exposed_on_turnover:A06:1:2181",
+   "kind": "exposed_on_turnover",
+   "clock": "36:21",
+   "t": 2181.4,
+   "period": 1,
+   "video_s": 2181.4
+  },
+  {
+   "moment_id": "tug_of_war:home:1:2764",
+   "kind": "tug_of_war",
+   "clock": "45+1:04",
+   "t": 2764.7,
+   "period": 1,
+   "video_s": 2764.7
+  },
+  {
    "moment_id": "exposed_on_turnover:A05:2:787",
    "kind": "exposed_on_turnover",
    "clock": "58:07",
    "t": 787.9,
    "period": 2,
    "video_s": 3553.6
-  },
-  {
-   "moment_id": "fresh_legs:H14:2:1575",
-   "kind": "fresh_legs",
-   "clock": "71:15",
-   "t": 1575.0,
-   "period": 2,
-   "video_s": 4340.7
   },
   {
    "moment_id": "tug_of_war:home:2:1799",
@@ -115,152 +131,6 @@
  ],
  "entries": [
   {
-   "t": 96.0,
-   "period": 1,
-   "clock": "1:36",
-   "video_s": 96.0,
-   "player": {
-    "id": "H11",
-    "name": "Kofi Rasknell",
-    "shirt": 9,
-    "team": "home"
-   },
-   "team": "home",
-   "team_name": "Westerlyn Albion",
-   "kind": "red_zone",
-   "moment_id": "red_zone:H11:1:96",
-   "sentence": "Short bursts are shaken off in a minute or two: this was a 21 s spell with a 1‑minute peak of 112 m.",
-   "claim": "fact",
-   "sources": [
-    "Leifsson2024, Table 1",
-    "engine.hi_speed",
-    "signals.players[].series.battery",
-    "signals.players[].series.energy",
-    "signals.players[].series.hsr_1min",
-    "signals.players[].series.low_chance",
-    "signals.players[].series.red_zone",
-    "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch"
-   ],
-   "mode": "analyst",
-   "verdict": "pass",
-   "shown": true,
-   "verifier": {
-    "stage": "llm",
-    "findings": []
-   }
-  },
-  {
-   "t": 96.0,
-   "period": 1,
-   "clock": "1:36",
-   "video_s": 96.0,
-   "player": {
-    "id": "H11",
-    "name": "Kofi Rasknell",
-    "shirt": 9,
-    "team": "home"
-   },
-   "team": "home",
-   "team_name": "Westerlyn Albion",
-   "kind": "red_zone",
-   "moment_id": "red_zone:H11:1:96",
-   "sentence": "He has done running that would leave a typical professional at about 62% of their short-term reserve (typical‑pro band about 43–75%).",
-   "claim": "11",
-   "sources": [
-    "Skiba2012",
-    "Jones2017",
-    "Modric2020",
-    "Leifsson2024, Table 1",
-    "engine.hi_speed",
-    "signals.players[].series.battery",
-    "signals.players[].series.energy",
-    "signals.players[].series.hsr_1min",
-    "signals.players[].series.low_chance",
-    "signals.players[].series.red_zone",
-    "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch"
-   ],
-   "mode": "analyst",
-   "verdict": "pass",
-   "shown": true,
-   "verifier": {
-    "stage": "llm",
-    "findings": []
-   }
-  },
-  {
-   "t": 96.0,
-   "period": 1,
-   "clock": "1:36",
-   "video_s": 96.0,
-   "player": {
-    "id": "H11",
-    "name": "Kofi Rasknell",
-    "shirt": 9,
-    "team": "home"
-   },
-   "team": "home",
-   "team_name": "Westerlyn Albion",
-   "kind": "red_zone",
-   "moment_id": "red_zone:H11:1:96",
-   "sentence": "He has done running that would leave a typical professional at about 62% of their short-term reserve.",
-   "claim": "11",
-   "sources": [
-    "Skiba2012",
-    "Jones2017",
-    "Modric2020",
-    "Leifsson2024, Table 1",
-    "engine.hi_speed",
-    "signals.players[].series.battery",
-    "signals.players[].series.energy",
-    "signals.players[].series.hsr_1min",
-    "signals.players[].series.low_chance",
-    "signals.players[].series.red_zone",
-    "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch"
-   ],
-   "mode": "fan",
-   "verdict": "pass",
-   "shown": true,
-   "verifier": {
-    "stage": "llm",
-    "findings": []
-   }
-  },
-  {
-   "t": 96.0,
-   "period": 1,
-   "clock": "1:36",
-   "video_s": 96.0,
-   "player": {
-    "id": "H11",
-    "name": "Kofi Rasknell",
-    "shirt": 9,
-    "team": "home"
-   },
-   "team": "home",
-   "team_name": "Westerlyn Albion",
-   "kind": "red_zone",
-   "moment_id": "red_zone:H11:1:96",
-   "sentence": "His peak 1‑min high‑speed running was 112 m.",
-   "claim": "fact",
-   "sources": [
-    "Leifsson2024, Table 1",
-    "engine.hi_speed",
-    "signals.players[].series.battery",
-    "signals.players[].series.energy",
-    "signals.players[].series.hsr_1min",
-    "signals.players[].series.low_chance",
-    "signals.players[].series.red_zone",
-    "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch"
-   ],
-   "mode": "fan",
-   "verdict": "pass",
-   "shown": true,
-   "verifier": {
-    "stage": "llm",
-    "findings": []
-   }
-  },
-  {
    "t": 247.4,
    "period": 1,
    "clock": "4:07",
@@ -275,7 +145,7 @@
    "team_name": "Westerlyn Albion",
    "kind": "exposed_on_turnover",
    "moment_id": "exposed_on_turnover:H06:1:247",
-   "sentence": "This is the second time his team have lost the ball just after an intense spell of his.",
+   "sentence": "This is the second time his team have lost the ball just after his hardest minutes so far.",
    "claim": "fact",
    "sources": [
     "engine.hi_speed",
@@ -314,9 +184,11 @@
    "team_name": "Westerlyn Albion",
    "kind": "exposed_on_turnover",
    "moment_id": "exposed_on_turnover:H06:1:247",
-   "sentence": "Losing the ball forces the hardest running of the game: this turnover produced a 0.47 xG counter that became a goal.",
-   "claim": "fact",
+   "sentence": "Losing the ball forces the hardest running of the game.",
+   "claim": "4",
    "sources": [
+    "Bortnik2022",
+    "Ju2022",
     "engine.hi_speed",
     "events.jsonl positive_transition and signals.players[].series.red_zone, post_peak",
     "events.jsonl shot xg in this possession",
@@ -353,48 +225,10 @@
    "team_name": "Westerlyn Albion",
    "kind": "exposed_on_turnover",
    "moment_id": "exposed_on_turnover:H06:1:247",
-   "sentence": "This is the second time his team have lost the ball just after an intense spell of his.",
-   "claim": "fact",
+   "sentence": "Losing the ball forces the hardest running of the game.",
+   "claim": "4",
    "sources": [
-    "engine.hi_speed",
-    "events.jsonl positive_transition and signals.players[].series.red_zone, post_peak",
-    "events.jsonl shot xg in this possession",
-    "signals.players[].series.battery",
-    "signals.players[].series.energy",
-    "signals.players[].series.hsr_5min",
-    "signals.players[].series.low_chance",
-    "signals.players[].series.red_zone",
-    "signals.players[].series.speed",
-    "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch",
-    "tracking players[].x,y and ball",
-    "tracking, 8 s after the turnover"
-   ],
-   "mode": "fan",
-   "verdict": "pass",
-   "shown": true,
-   "verifier": {
-    "stage": "llm",
-    "findings": []
-   }
-  },
-  {
-   "t": 247.4,
-   "period": 1,
-   "clock": "4:07",
-   "video_s": 247.4,
-   "player": {
-    "id": "H06",
-    "name": "Yusuf Jorraway",
-    "shirt": 6,
-    "team": "home"
-   },
-   "team": "home",
-   "team_name": "Westerlyn Albion",
-   "kind": "exposed_on_turnover",
-   "moment_id": "exposed_on_turnover:H06:1:247",
-   "sentence": "In the Premier League, players make about a third fewer high‑speed recovery runs right after their most intense spell than they normally do.",
-   "claim": "3",
-   "sources": [
+    "Bortnik2022",
     "Ju2022",
     "engine.hi_speed",
     "events.jsonl positive_transition and signals.players[].series.red_zone, post_peak",
@@ -418,6 +252,45 @@
    }
   },
   {
+   "t": 247.4,
+   "period": 1,
+   "clock": "4:07",
+   "video_s": 247.4,
+   "player": {
+    "id": "H06",
+    "name": "Yusuf Jorraway",
+    "shirt": 6,
+    "team": "home"
+   },
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "kind": "exposed_on_turnover",
+   "moment_id": "exposed_on_turnover:H06:1:247",
+   "sentence": "This is the second time his team have lost the ball just after his hardest minutes so far.",
+   "claim": "fact",
+   "sources": [
+    "engine.hi_speed",
+    "events.jsonl positive_transition and signals.players[].series.red_zone, post_peak",
+    "events.jsonl shot xg in this possession",
+    "signals.players[].series.battery",
+    "signals.players[].series.energy",
+    "signals.players[].series.hsr_5min",
+    "signals.players[].series.low_chance",
+    "signals.players[].series.red_zone",
+    "signals.players[].series.speed",
+    "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch",
+    "tracking players[].x,y and ball",
+    "tracking, 8 s after the turnover"
+   ],
+   "mode": "fan",
+   "verdict": "pass",
+   "shown": true,
+   "verifier": {
+    "stage": "llm",
+    "findings": []
+   }
+  },
+  {
    "t": 600.0,
    "period": 1,
    "clock": "10:00",
@@ -432,7 +305,42 @@
    "team_name": "Westerlyn Albion",
    "kind": "not_tired_tactical",
    "moment_id": "not_tired_tactical:H04:1:600",
-   "sentence": "Fewer touches, partly because the ball was out of play more — he had 0 touches in the last 5 min while the ball was in play only 25% of that period.",
+   "sentence": "Marco Tarvsall had hardly any high-speed running in the last 5 min and 0 touches in that period (his match so far is 2.5 touches per 5 min).",
+   "claim": "fact",
+   "sources": [
+    "engine.hi_speed",
+    "events.jsonl (pass, reception, shot, clearance, interception, ball_recovery) by player_id",
+    "signals.players[].series.battery",
+    "signals.players[].series.energy",
+    "signals.players[].series.hsr_5min / 5",
+    "signals.players[].series.low_chance",
+    "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch",
+    "tracking.ball_status"
+   ],
+   "mode": "analyst",
+   "verdict": "pass",
+   "shown": true,
+   "verifier": {
+    "stage": "llm",
+    "findings": []
+   }
+  },
+  {
+   "t": 600.0,
+   "period": 1,
+   "clock": "10:00",
+   "video_s": 600.0,
+   "player": {
+    "id": "H04",
+    "name": "Marco Tarvsall",
+    "shirt": 3,
+    "team": "home"
+   },
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "kind": "not_tired_tactical",
+   "moment_id": "not_tired_tactical:H04:1:600",
+   "sentence": "Fewer touches, partly because the ball was out of play more.",
    "claim": "14",
    "sources": [
     "Cortez2026",
@@ -447,88 +355,6 @@
     "tracking.ball_status"
    ],
    "mode": "analyst",
-   "verdict": "blocked",
-   "shown": false,
-   "verifier": {
-    "stage": "rules",
-    "findings": [
-     {
-      "claim": "24",
-      "message": "A percentage without its baseline (vs his match average, vs his peak, vs the first 15 min)",
-      "stage": "rules"
-     }
-    ]
-   }
-  },
-  {
-   "t": 600.0,
-   "period": 1,
-   "clock": "10:00",
-   "video_s": 600.0,
-   "player": {
-    "id": "H04",
-    "name": "Marco Tarvsall",
-    "shirt": 3,
-    "team": "home"
-   },
-   "team": "home",
-   "team_name": "Westerlyn Albion",
-   "kind": "not_tired_tactical",
-   "moment_id": "not_tired_tactical:H04:1:600",
-   "sentence": "Marco Tarvsall has hardly run at high speed in the last 5 minutes, but the ball was in play only 25% of the last 5 min, so this is likely not fatigue.",
-   "claim": "13",
-   "sources": [
-    "Bradley2013",
-    "Morgans2025",
-    "Cortez2026",
-    "MarquesJimenez2017",
-    "engine.hi_speed",
-    "events.jsonl (pass, reception, shot, clearance, interception, ball_recovery) by player_id",
-    "signals.players[].series.battery",
-    "signals.players[].series.energy",
-    "signals.players[].series.hsr_5min / 5",
-    "signals.players[].series.low_chance",
-    "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch",
-    "tracking.ball_status"
-   ],
-   "mode": "analyst",
-   "verdict": "fallback",
-   "shown": true,
-   "verifier": {
-    "stage": "llm",
-    "findings": []
-   },
-   "original": "Fewer touches, partly because the ball was out of play more — he had 0 touches in the last 5 min while the ball was in play only 25% of that period."
-  },
-  {
-   "t": 600.0,
-   "period": 1,
-   "clock": "10:00",
-   "video_s": 600.0,
-   "player": {
-    "id": "H04",
-    "name": "Marco Tarvsall",
-    "shirt": 3,
-    "team": "home"
-   },
-   "team": "home",
-   "team_name": "Westerlyn Albion",
-   "kind": "not_tired_tactical",
-   "moment_id": "not_tired_tactical:H04:1:600",
-   "sentence": "Without the ball, Premier League players typically cover about 10% more ground per minute than when they have it.",
-   "claim": "9b",
-   "sources": [
-    "Allen2026b",
-    "engine.hi_speed",
-    "events.jsonl (pass, reception, shot, clearance, interception, ball_recovery) by player_id",
-    "signals.players[].series.battery",
-    "signals.players[].series.energy",
-    "signals.players[].series.hsr_5min / 5",
-    "signals.players[].series.low_chance",
-    "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch",
-    "tracking.ball_status"
-   ],
-   "mode": "analyst",
    "verdict": "pass",
    "shown": true,
    "verifier": {
@@ -551,13 +377,9 @@
    "team_name": "Westerlyn Albion",
    "kind": "not_tired_tactical",
    "moment_id": "not_tired_tactical:H04:1:600",
-   "sentence": "Marco Tarvsall's running dropped while his team had the ball 63% of the last 5 minutes, so this may be tactical rather than fatigue.",
-   "claim": "13",
+   "sentence": "Marco Tarvsall did hardly any high-speed running in the last five minutes, 100% below his match average.",
+   "claim": "fact",
    "sources": [
-    "Bradley2013",
-    "Morgans2025",
-    "Cortez2026",
-    "MarquesJimenez2017",
     "engine.hi_speed",
     "events.jsonl (pass, reception, shot, clearance, interception, ball_recovery) by player_id",
     "signals.players[].series.battery",
@@ -590,11 +412,9 @@
    "team_name": "Westerlyn Albion",
    "kind": "not_tired_tactical",
    "moment_id": "not_tired_tactical:H04:1:600",
-   "sentence": "He had 0 touches in the last 5 minutes versus 2.5 per 5 minutes so far, and fewer touches are partly because the ball was out of play more.",
-   "claim": "14",
+   "sentence": "The ball was in play only 25% of the last five minutes.",
+   "claim": "fact",
    "sources": [
-    "Cortez2026",
-    "Carling2011",
     "engine.hi_speed",
     "events.jsonl (pass, reception, shot, clearance, interception, ball_recovery) by player_id",
     "signals.players[].series.battery",
@@ -622,10 +442,11 @@
    "team_name": "Westerlyn Albion",
    "kind": "tug_of_war",
    "moment_id": "tug_of_war:home:1:899",
-   "sentence": "Westerlyn Albion did 30% more high-speed running per ball-in-play minute than Ravensholt Albion in 0:00–15:00 (208 m vs 160 m per in‑play minute).",
+   "sentence": "Westerlyn Albion did 30% more high-speed running per ball-in-play minute than Ravensholt Albion in 0:00–15:00.",
    "claim": "fact",
    "sources": [
-    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team"
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team",
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team, ball x"
    ],
    "mode": "analyst",
    "verdict": "pass",
@@ -645,23 +466,18 @@
    "team_name": "Westerlyn Albion",
    "kind": "tug_of_war",
    "moment_id": "tug_of_war:home:1:899",
-   "sentence": "Without the ball, Premier League players typically cover about 10% more ground per minute than when they have it.",
+   "sentence": "43% of Albion's high-speed running in that block came in the first 10 s after the ball changed hands, in 29% of the time the ball was in play.",
    "claim": "fact",
    "sources": [
-    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team"
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team",
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team, ball x"
    ],
    "mode": "analyst",
-   "verdict": "blocked",
-   "shown": false,
+   "verdict": "pass",
+   "shown": true,
    "verifier": {
-    "stage": "rules",
-    "findings": [
-     {
-      "claim": "N1",
-      "message": "Number(s) 10 not in the data or the cited claim",
-      "stage": "rules"
-     }
-    ]
+    "stage": "llm",
+    "findings": []
    }
   },
   {
@@ -674,10 +490,11 @@
    "team_name": "Westerlyn Albion",
    "kind": "tug_of_war",
    "moment_id": "tug_of_war:home:1:899",
-   "sentence": "Westerlyn Albion did 30% more high‑speed running per ball‑in‑play minute than Ravensholt Albion in 0:00–15:00.",
+   "sentence": "Westerlyn Albion did 30% more high-speed running per ball-in-play minute than Ravensholt Albion in 0:00–15:00.",
    "claim": "fact",
    "sources": [
-    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team"
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team",
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team, ball x"
    ],
    "mode": "fan",
    "verdict": "pass",
@@ -697,113 +514,13 @@
    "team_name": "Westerlyn Albion",
    "kind": "tug_of_war",
    "moment_id": "tug_of_war:home:1:899",
-   "sentence": "Without the ball, Premier League players typically cover about 10% more ground per minute than when they have it.",
+   "sentence": "43% of Albion's high-speed running came in the first 10 s after the ball changed hands, in 29% of the time the ball was in play.",
    "claim": "fact",
    "sources": [
-    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team"
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team",
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team, ball x"
    ],
    "mode": "fan",
-   "verdict": "blocked",
-   "shown": false,
-   "verifier": {
-    "stage": "rules",
-    "findings": [
-     {
-      "claim": "N1",
-      "message": "Number(s) 10 not in the data or the cited claim",
-      "stage": "rules"
-     }
-    ]
-   }
-  },
-  {
-   "t": 899.0,
-   "period": 1,
-   "clock": "14:59",
-   "video_s": 899.0,
-   "player": null,
-   "team": "home",
-   "team_name": "Westerlyn Albion",
-   "kind": "tug_of_war",
-   "moment_id": "tug_of_war:home:1:899",
-   "sentence": "When one side raises the tempo, the other has to match it: in the Premier League the two teams' running totals move closely together.",
-   "claim": "9a",
-   "sources": [
-    "Allen2026a",
-    "Castellano2024",
-    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team"
-   ],
-   "mode": "fan",
-   "verdict": "fallback",
-   "shown": true,
-   "verifier": {
-    "stage": "llm",
-    "findings": []
-   },
-   "original": "Without the ball, Premier League players typically cover about 10% more ground per minute than when they have it."
-  },
-  {
-   "t": 1205.0,
-   "period": 1,
-   "clock": "20:05",
-   "video_s": 1205.0,
-   "player": {
-    "id": "H04",
-    "name": "Marco Tarvsall",
-    "shirt": 3,
-    "team": "home"
-   },
-   "team": "home",
-   "team_name": "Westerlyn Albion",
-   "kind": "flat_out",
-   "moment_id": "flat_out:H04:1:1205",
-   "sentence": "Marco Tarvsall hit 8.9 m/s (32 km/h), his fastest second of the match so far.",
-   "claim": "fact",
-   "sources": [
-    "SilvaH2025, Table 1 (Brazil, GNSS)",
-    "engine.hi_speed",
-    "signals.players[].series.battery",
-    "signals.players[].series.energy",
-    "signals.players[].series.low_chance",
-    "signals.players[].series.speed (fastest second)",
-    "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch"
-   ],
-   "mode": "analyst",
-   "verdict": "pass",
-   "shown": true,
-   "verifier": {
-    "stage": "llm",
-    "findings": []
-   }
-  },
-  {
-   "t": 1205.0,
-   "period": 1,
-   "clock": "20:05",
-   "video_s": 1205.0,
-   "player": {
-    "id": "H04",
-    "name": "Marco Tarvsall",
-    "shirt": 3,
-    "team": "home"
-   },
-   "team": "home",
-   "team_name": "Westerlyn Albion",
-   "kind": "flat_out",
-   "moment_id": "flat_out:H04:1:1205",
-   "sentence": "Flat-out running is rare: Premier League players cover only about 20–30 m a match above 85% of their season top speed.",
-   "claim": "37",
-   "sources": [
-    "Kavanagh2024",
-    "SilvaH2025, Table 1 (Brazil, GNSS)",
-    "engine.hi_speed",
-    "signals.players[].series.battery",
-    "signals.players[].series.energy",
-    "signals.players[].series.low_chance",
-    "signals.players[].series.speed (fastest second)",
-    "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch"
-   ],
-   "mode": "analyst",
    "verdict": "pass",
    "shown": true,
    "verifier": {
@@ -837,6 +554,75 @@
     "signals.players[].series.speed (fastest second)",
     "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch"
    ],
+   "mode": "analyst",
+   "verdict": "pass",
+   "shown": true,
+   "verifier": {
+    "stage": "llm",
+    "findings": []
+   }
+  },
+  {
+   "t": 1205.0,
+   "period": 1,
+   "clock": "20:05",
+   "video_s": 1205.0,
+   "player": {
+    "id": "H04",
+    "name": "Marco Tarvsall",
+    "shirt": 3,
+    "team": "home"
+   },
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "kind": "flat_out",
+   "moment_id": "flat_out:H04:1:1205",
+   "sentence": "Flat-out running is rare: Premier League players cover only about 20–30 m a match above 85% of their season top speed.",
+   "claim": "37",
+   "sources": [
+    "Kavanagh2024",
+    "SilvaH2025, Table 1 (Brazil, GNSS)",
+    "engine.hi_speed",
+    "signals.players[].series.battery",
+    "signals.players[].series.energy",
+    "signals.players[].series.low_chance",
+    "signals.players[].series.speed (fastest second)",
+    "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch"
+   ],
+   "mode": "analyst",
+   "verdict": "pass",
+   "shown": true,
+   "verifier": {
+    "stage": "llm",
+    "findings": []
+   }
+  },
+  {
+   "t": 1205.0,
+   "period": 1,
+   "clock": "20:05",
+   "video_s": 1205.0,
+   "player": {
+    "id": "H04",
+    "name": "Marco Tarvsall",
+    "shirt": 3,
+    "team": "home"
+   },
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "kind": "flat_out",
+   "moment_id": "flat_out:H04:1:1205",
+   "sentence": "Marco Tarvsall hit 8.9 m/s (32 km/h), the fastest of anyone in the match so far.",
+   "claim": "fact",
+   "sources": [
+    "SilvaH2025, Table 1 (Brazil, GNSS)",
+    "engine.hi_speed",
+    "signals.players[].series.battery",
+    "signals.players[].series.energy",
+    "signals.players[].series.low_chance",
+    "signals.players[].series.speed (fastest second)",
+    "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch"
+   ],
    "mode": "fan",
    "verdict": "pass",
    "shown": true,
@@ -860,7 +646,7 @@
    "team_name": "Westerlyn Albion",
    "kind": "flat_out",
    "moment_id": "flat_out:H04:1:1205",
-   "sentence": "Flat‑out running is rare: Premier League players cover only about 20–30 m a match above 85% of their season top speed.",
+   "sentence": "Flat-out running is rare: Premier League players cover only about 20–30 m a match above 85% of their season top speed.",
    "claim": "37",
    "sources": [
     "Kavanagh2024",
@@ -895,7 +681,7 @@
    "team_name": "Westerlyn Albion",
    "kind": "exposed_on_turnover",
    "moment_id": "exposed_on_turnover:H04:1:1477",
-   "sentence": "This is the third time his team have lost the ball just after an intense spell of his.",
+   "sentence": "Marco Tarvsall is facing the third time his team have lost the ball just after his hardest minutes so far.",
    "claim": "fact",
    "sources": [
     "engine.hi_speed",
@@ -934,10 +720,12 @@
    "team_name": "Westerlyn Albion",
    "kind": "exposed_on_turnover",
    "moment_id": "exposed_on_turnover:H04:1:1477",
-   "sentence": "In the Premier League, players make about a third fewer high-speed recovery runs right after their most intense spell than they normally do.",
-   "claim": "3",
+   "sentence": "He has done running that would leave a typical professional at about 83% of their short-term reserve.",
+   "claim": "11",
    "sources": [
-    "Ju2022",
+    "Skiba2012",
+    "Jones2017",
+    "Modric2020",
     "engine.hi_speed",
     "events.jsonl positive_transition and signals.players[].series.red_zone, post_peak",
     "events.jsonl shot xg in this possession",
@@ -974,9 +762,12 @@
    "team_name": "Westerlyn Albion",
    "kind": "exposed_on_turnover",
    "moment_id": "exposed_on_turnover:H04:1:1477",
-   "sentence": "Marco Tarvsall — this is the third time his team have lost the ball just after an intense spell of his.",
-   "claim": "fact",
+   "sentence": "Marco Tarvsall has done running that would leave a typical professional at about 83% of their short-term reserve.",
+   "claim": "11",
    "sources": [
+    "Skiba2012",
+    "Jones2017",
+    "Modric2020",
     "engine.hi_speed",
     "events.jsonl positive_transition and signals.players[].series.red_zone, post_peak",
     "events.jsonl shot xg in this possession",
@@ -1013,10 +804,9 @@
    "team_name": "Westerlyn Albion",
    "kind": "exposed_on_turnover",
    "moment_id": "exposed_on_turnover:H04:1:1477",
-   "sentence": "In the Premier League, players make about a third fewer high‑speed recovery runs right after their most intense spell than they normally do.",
-   "claim": "3",
+   "sentence": "This is the third time his team have lost the ball just after his hardest minutes so far.",
+   "claim": "fact",
    "sources": [
-    "Ju2022",
     "engine.hi_speed",
     "events.jsonl positive_transition and signals.players[].series.red_zone, post_peak",
     "events.jsonl shot xg in this possession",
@@ -1039,31 +829,20 @@
    }
   },
   {
-   "t": 1801.0,
+   "t": 1799.0,
    "period": 1,
-   "clock": "30:01",
-   "video_s": 1801.0,
-   "player": {
-    "id": "H04",
-    "name": "Marco Tarvsall",
-    "shirt": 3,
-    "team": "home"
-   },
+   "clock": "29:59",
+   "video_s": 1799.0,
+   "player": null,
    "team": "home",
    "team_name": "Westerlyn Albion",
-   "kind": "second_wind",
-   "moment_id": "second_wind:H04:1:1801",
-   "sentence": "Short bursts are shaken off in a minute or two: this is 9.0 minutes after his spell, and his last 2‑min HSR per minute is 13.4 m/min.",
+   "kind": "tug_of_war",
+   "moment_id": "tug_of_war:home:1:1799",
+   "sentence": "Westerlyn Albion did 27% more high-speed running per ball-in-play minute than Ravensholt Albion in 15:00–30:00.",
    "claim": "fact",
    "sources": [
-    "engine.hi_speed",
-    "signals.players[].series.battery",
-    "signals.players[].series.energy",
-    "signals.players[].series.hsr_1min",
-    "signals.players[].series.hsr_2min / 2",
-    "signals.players[].series.low_chance",
-    "signals.players[].series.red_zone",
-    "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch"
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team",
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team, ball x"
    ],
    "mode": "analyst",
    "verdict": "pass",
@@ -1074,31 +853,20 @@
    }
   },
   {
-   "t": 1801.0,
+   "t": 1799.0,
    "period": 1,
-   "clock": "30:01",
-   "video_s": 1801.0,
-   "player": {
-    "id": "H04",
-    "name": "Marco Tarvsall",
-    "shirt": 3,
-    "team": "home"
-   },
+   "clock": "29:59",
+   "video_s": 1799.0,
+   "player": null,
    "team": "home",
    "team_name": "Westerlyn Albion",
-   "kind": "second_wind",
-   "moment_id": "second_wind:H04:1:1801",
-   "sentence": "His last 2‑min high-speed running was 13.4 m/min, about 7% above his match average of 12.5 m/min.",
+   "kind": "tug_of_war",
+   "moment_id": "tug_of_war:home:1:1799",
+   "sentence": "53% of Albion's high-speed running in that block came in the first 10 s after the ball changed hands, in 30% of the time the ball was in play.",
    "claim": "fact",
    "sources": [
-    "engine.hi_speed",
-    "signals.players[].series.battery",
-    "signals.players[].series.energy",
-    "signals.players[].series.hsr_1min",
-    "signals.players[].series.hsr_2min / 2",
-    "signals.players[].series.low_chance",
-    "signals.players[].series.red_zone",
-    "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch"
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team",
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team, ball x"
    ],
    "mode": "analyst",
    "verdict": "pass",
@@ -1109,31 +877,44 @@
    }
   },
   {
-   "t": 1801.0,
+   "t": 1799.0,
    "period": 1,
-   "clock": "30:01",
-   "video_s": 1801.0,
-   "player": {
-    "id": "H04",
-    "name": "Marco Tarvsall",
-    "shirt": 3,
-    "team": "home"
-   },
+   "clock": "29:59",
+   "video_s": 1799.0,
+   "player": null,
    "team": "home",
    "team_name": "Westerlyn Albion",
-   "kind": "second_wind",
-   "moment_id": "second_wind:H04:1:1801",
-   "sentence": "Marco Tarvsall's last two minutes averaged 13.4 m/min, about 7% above his match average.",
+   "kind": "tug_of_war",
+   "moment_id": "tug_of_war:home:1:1799",
+   "sentence": "Westerlyn Albion did 27% more high-speed running per ball-in-play minute than Ravensholt Albion in 15:00–30:00.",
    "claim": "fact",
    "sources": [
-    "engine.hi_speed",
-    "signals.players[].series.battery",
-    "signals.players[].series.energy",
-    "signals.players[].series.hsr_1min",
-    "signals.players[].series.hsr_2min / 2",
-    "signals.players[].series.low_chance",
-    "signals.players[].series.red_zone",
-    "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch"
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team",
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team, ball x"
+   ],
+   "mode": "fan",
+   "verdict": "pass",
+   "shown": true,
+   "verifier": {
+    "stage": "llm",
+    "findings": []
+   }
+  },
+  {
+   "t": 1799.0,
+   "period": 1,
+   "clock": "29:59",
+   "video_s": 1799.0,
+   "player": null,
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "kind": "tug_of_war",
+   "moment_id": "tug_of_war:home:1:1799",
+   "sentence": "53% of Albion's high-speed running came in the first 10 s after the ball changed hands, in 30% of the time the ball was in play.",
+   "claim": "fact",
+   "sources": [
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team",
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team, ball x"
    ],
    "mode": "fan",
    "verdict": "pass",
@@ -1158,7 +939,42 @@
    "team_name": "Westerlyn Albion",
    "kind": "second_wind",
    "moment_id": "second_wind:H04:1:1801",
-   "sentence": "Short bursts are shaken off in a minute or two; longer spells take longer to recover.",
+   "sentence": "Marco Tarvsall is 9.0 min after his hardest minutes and his last 2 min high-speed running was 13.4 m/min, about 7% above his match average (12.5 m/min).",
+   "claim": "fact",
+   "sources": [
+    "engine.hi_speed",
+    "signals.players[].series.battery",
+    "signals.players[].series.energy",
+    "signals.players[].series.hsr_1min",
+    "signals.players[].series.hsr_2min / 2",
+    "signals.players[].series.low_chance",
+    "signals.players[].series.red_zone",
+    "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch"
+   ],
+   "mode": "analyst",
+   "verdict": "pass",
+   "shown": true,
+   "verifier": {
+    "stage": "llm",
+    "findings": []
+   }
+  },
+  {
+   "t": 1801.0,
+   "period": 1,
+   "clock": "30:01",
+   "video_s": 1801.0,
+   "player": {
+    "id": "H04",
+    "name": "Marco Tarvsall",
+    "shirt": 3,
+    "team": "home"
+   },
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "kind": "second_wind",
+   "moment_id": "second_wind:H04:1:1801",
+   "sentence": "Short bursts are shaken off in a minute or two; a five-minute spell takes about five minutes, and sprinting takes longer.",
    "claim": "2",
    "sources": [
     "Leifsson2024",
@@ -1167,6 +983,222 @@
     "signals.players[].series.energy",
     "signals.players[].series.hsr_1min",
     "signals.players[].series.hsr_2min / 2",
+    "signals.players[].series.low_chance",
+    "signals.players[].series.red_zone",
+    "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch"
+   ],
+   "mode": "analyst",
+   "verdict": "pass",
+   "shown": true,
+   "verifier": {
+    "stage": "llm",
+    "findings": []
+   }
+  },
+  {
+   "t": 1801.0,
+   "period": 1,
+   "clock": "30:01",
+   "video_s": 1801.0,
+   "player": {
+    "id": "H04",
+    "name": "Marco Tarvsall",
+    "shirt": 3,
+    "team": "home"
+   },
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "kind": "second_wind",
+   "moment_id": "second_wind:H04:1:1801",
+   "sentence": "Marco Tarvsall is nine minutes after his hardest minutes so far.",
+   "claim": "fact",
+   "sources": [
+    "engine.hi_speed",
+    "signals.players[].series.battery",
+    "signals.players[].series.energy",
+    "signals.players[].series.hsr_1min",
+    "signals.players[].series.hsr_2min / 2",
+    "signals.players[].series.low_chance",
+    "signals.players[].series.red_zone",
+    "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch"
+   ],
+   "mode": "fan",
+   "verdict": "pass",
+   "shown": true,
+   "verifier": {
+    "stage": "llm",
+    "findings": []
+   }
+  },
+  {
+   "t": 1801.0,
+   "period": 1,
+   "clock": "30:01",
+   "video_s": 1801.0,
+   "player": {
+    "id": "H04",
+    "name": "Marco Tarvsall",
+    "shirt": 3,
+    "team": "home"
+   },
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "kind": "second_wind",
+   "moment_id": "second_wind:H04:1:1801",
+   "sentence": "His last two minutes' high-speed running was 13.4 m/min.",
+   "claim": "fact",
+   "sources": [
+    "engine.hi_speed",
+    "signals.players[].series.battery",
+    "signals.players[].series.energy",
+    "signals.players[].series.hsr_1min",
+    "signals.players[].series.hsr_2min / 2",
+    "signals.players[].series.low_chance",
+    "signals.players[].series.red_zone",
+    "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch"
+   ],
+   "mode": "fan",
+   "verdict": "pass",
+   "shown": true,
+   "verifier": {
+    "stage": "llm",
+    "findings": []
+   }
+  },
+  {
+   "t": 1959.0,
+   "period": 1,
+   "clock": "32:39",
+   "video_s": 1959.0,
+   "player": {
+    "id": "H04",
+    "name": "Marco Tarvsall",
+    "shirt": 3,
+    "team": "home"
+   },
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "kind": "red_zone",
+   "moment_id": "red_zone:H04:1:1959",
+   "sentence": "Marco Tarvsall is in his hardest minutes so far: a 27 s period with a 1-min peak of 93 m (published mean peak 62 m/min).",
+   "claim": "fact",
+   "sources": [
+    "Leifsson2024, Table 1",
+    "engine.hi_speed",
+    "signals.players[].series.battery",
+    "signals.players[].series.energy",
+    "signals.players[].series.hsr_1min",
+    "signals.players[].series.low_chance",
+    "signals.players[].series.red_zone",
+    "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch"
+   ],
+   "mode": "analyst",
+   "verdict": "pass",
+   "shown": true,
+   "verifier": {
+    "stage": "llm",
+    "findings": []
+   }
+  },
+  {
+   "t": 1959.0,
+   "period": 1,
+   "clock": "32:39",
+   "video_s": 1959.0,
+   "player": {
+    "id": "H04",
+    "name": "Marco Tarvsall",
+    "shirt": 3,
+    "team": "home"
+   },
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "kind": "red_zone",
+   "moment_id": "red_zone:H04:1:1959",
+   "sentence": "He has done running that would leave a typical professional at about 61% of their short-term reserve (band 43–73%).",
+   "claim": "11",
+   "sources": [
+    "Skiba2012",
+    "Jones2017",
+    "Modric2020",
+    "Leifsson2024, Table 1",
+    "engine.hi_speed",
+    "signals.players[].series.battery",
+    "signals.players[].series.energy",
+    "signals.players[].series.hsr_1min",
+    "signals.players[].series.low_chance",
+    "signals.players[].series.red_zone",
+    "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch"
+   ],
+   "mode": "analyst",
+   "verdict": "pass",
+   "shown": true,
+   "verifier": {
+    "stage": "llm",
+    "findings": []
+   }
+  },
+  {
+   "t": 1959.0,
+   "period": 1,
+   "clock": "32:39",
+   "video_s": 1959.0,
+   "player": {
+    "id": "H04",
+    "name": "Marco Tarvsall",
+    "shirt": 3,
+    "team": "home"
+   },
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "kind": "red_zone",
+   "moment_id": "red_zone:H04:1:1959",
+   "sentence": "Marco Tarvsall is in his hardest minutes so far, a 27 s burst.",
+   "claim": "fact",
+   "sources": [
+    "Leifsson2024, Table 1",
+    "engine.hi_speed",
+    "signals.players[].series.battery",
+    "signals.players[].series.energy",
+    "signals.players[].series.hsr_1min",
+    "signals.players[].series.low_chance",
+    "signals.players[].series.red_zone",
+    "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch"
+   ],
+   "mode": "fan",
+   "verdict": "pass",
+   "shown": true,
+   "verifier": {
+    "stage": "llm",
+    "findings": []
+   }
+  },
+  {
+   "t": 1959.0,
+   "period": 1,
+   "clock": "32:39",
+   "video_s": 1959.0,
+   "player": {
+    "id": "H04",
+    "name": "Marco Tarvsall",
+    "shirt": 3,
+    "team": "home"
+   },
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "kind": "red_zone",
+   "moment_id": "red_zone:H04:1:1959",
+   "sentence": "He has done running that would leave a typical professional at about 61% of their short-term reserve.",
+   "claim": "11",
+   "sources": [
+    "Skiba2012",
+    "Jones2017",
+    "Modric2020",
+    "Leifsson2024, Table 1",
+    "engine.hi_speed",
+    "signals.players[].series.battery",
+    "signals.players[].series.energy",
+    "signals.players[].series.hsr_1min",
     "signals.players[].series.low_chance",
     "signals.players[].series.red_zone",
     "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch"
@@ -1194,7 +1226,7 @@
    "team_name": "Ravensholt Albion",
    "kind": "flat_out",
    "moment_id": "flat_out:A10:1:2101",
-   "sentence": "Ivan Morrsall reached 9.1 m/s (33 km/h), his fastest second of the match so far.",
+   "sentence": "Ivan Morrsall ran 9.1 m/s (33 km/h), his fastest of the match so far.",
    "claim": "fact",
    "sources": [
     "SilvaH2025, Table 1 (Brazil, GNSS)",
@@ -1263,7 +1295,7 @@
    "team_name": "Ravensholt Albion",
    "kind": "flat_out",
    "moment_id": "flat_out:A10:1:2101",
-   "sentence": "Ivan Morrsall hit 9.1 m/s (33 km/h), his fastest of the match so far.",
+   "sentence": "Ivan Morrsall hit 9.1 m/s (33 km/h), the fastest of anyone in the match so far.",
    "claim": "fact",
    "sources": [
     "SilvaH2025, Table 1 (Brazil, GNSS)",
@@ -1297,7 +1329,7 @@
    "team_name": "Ravensholt Albion",
    "kind": "flat_out",
    "moment_id": "flat_out:A10:1:2101",
-   "sentence": "Flat‑out running is rare: Premier League players cover only about 20–30 m a match above 85% of their season top speed.",
+   "sentence": "Flat-out running is rare: Premier League players cover only about 20–30 m a match above 85% of their season top speed.",
    "claim": "37",
    "sources": [
     "Kavanagh2024",
@@ -1318,21 +1350,21 @@
    }
   },
   {
-   "t": 787.9,
-   "period": 2,
-   "clock": "58:07",
-   "video_s": 3553.6,
+   "t": 2181.4,
+   "period": 1,
+   "clock": "36:21",
+   "video_s": 2181.4,
    "player": {
-    "id": "A05",
-    "name": "Luca Elmbury",
-    "shirt": 2,
+    "id": "A06",
+    "name": "Dario Cadsall",
+    "shirt": 6,
     "team": "away"
    },
    "team": "away",
    "team_name": "Ravensholt Albion",
    "kind": "exposed_on_turnover",
-   "moment_id": "exposed_on_turnover:A05:2:787",
-   "sentence": "This is the third time his team have lost the ball just after an intense spell while he was in or just after one.",
+   "moment_id": "exposed_on_turnover:A06:1:2181",
+   "sentence": "This is the second time his team have lost the ball just after his hardest minutes so far.",
    "claim": "fact",
    "sources": [
     "engine.hi_speed",
@@ -1357,24 +1389,26 @@
    }
   },
   {
-   "t": 787.9,
-   "period": 2,
-   "clock": "58:07",
-   "video_s": 3553.6,
+   "t": 2181.4,
+   "period": 1,
+   "clock": "36:21",
+   "video_s": 2181.4,
    "player": {
-    "id": "A05",
-    "name": "Luca Elmbury",
-    "shirt": 2,
+    "id": "A06",
+    "name": "Dario Cadsall",
+    "shirt": 6,
     "team": "away"
    },
    "team": "away",
    "team_name": "Ravensholt Albion",
    "kind": "exposed_on_turnover",
-   "moment_id": "exposed_on_turnover:A05:2:787",
-   "sentence": "In the Premier League, players make about a third fewer high-speed recovery runs right after their most intense spell than they normally do.",
-   "claim": "3",
+   "moment_id": "exposed_on_turnover:A06:1:2181",
+   "sentence": "He has done running that would leave a typical professional at about 80% of their short-term reserve.",
+   "claim": "11",
    "sources": [
-    "Ju2022",
+    "Skiba2012",
+    "Jones2017",
+    "Modric2020",
     "engine.hi_speed",
     "events.jsonl positive_transition and signals.players[].series.red_zone, post_peak",
     "events.jsonl shot xg in this possession",
@@ -1397,21 +1431,62 @@
    }
   },
   {
-   "t": 787.9,
-   "period": 2,
-   "clock": "58:07",
-   "video_s": 3553.6,
+   "t": 2181.4,
+   "period": 1,
+   "clock": "36:21",
+   "video_s": 2181.4,
    "player": {
-    "id": "A05",
-    "name": "Luca Elmbury",
-    "shirt": 2,
+    "id": "A06",
+    "name": "Dario Cadsall",
+    "shirt": 6,
     "team": "away"
    },
    "team": "away",
    "team_name": "Ravensholt Albion",
    "kind": "exposed_on_turnover",
-   "moment_id": "exposed_on_turnover:A05:2:787",
-   "sentence": "This is the third time his team have lost the ball just after an intense spell of his.",
+   "moment_id": "exposed_on_turnover:A06:1:2181",
+   "sentence": "Losing the ball forces the hardest running of the game.",
+   "claim": "4",
+   "sources": [
+    "Bortnik2022",
+    "Ju2022",
+    "engine.hi_speed",
+    "events.jsonl positive_transition and signals.players[].series.red_zone, post_peak",
+    "events.jsonl shot xg in this possession",
+    "signals.players[].series.battery",
+    "signals.players[].series.energy",
+    "signals.players[].series.hsr_5min",
+    "signals.players[].series.low_chance",
+    "signals.players[].series.red_zone",
+    "signals.players[].series.speed",
+    "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch",
+    "tracking players[].x,y and ball",
+    "tracking, 8 s after the turnover"
+   ],
+   "mode": "fan",
+   "verdict": "pass",
+   "shown": true,
+   "verifier": {
+    "stage": "llm",
+    "findings": []
+   }
+  },
+  {
+   "t": 2181.4,
+   "period": 1,
+   "clock": "36:21",
+   "video_s": 2181.4,
+   "player": {
+    "id": "A06",
+    "name": "Dario Cadsall",
+    "shirt": 6,
+    "team": "away"
+   },
+   "team": "away",
+   "team_name": "Ravensholt Albion",
+   "kind": "exposed_on_turnover",
+   "moment_id": "exposed_on_turnover:A06:1:2181",
+   "sentence": "This is the second time his team have lost the ball just after his hardest minutes so far.",
    "claim": "fact",
    "sources": [
     "engine.hi_speed",
@@ -1436,6 +1511,102 @@
    }
   },
   {
+   "t": 2764.7,
+   "period": 1,
+   "clock": "45+1:04",
+   "video_s": 2764.7,
+   "player": null,
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "kind": "tug_of_war",
+   "moment_id": "tug_of_war:home:1:2764",
+   "sentence": "Westerlyn Albion did 35% more high-speed running per ball-in-play minute than Ravensholt Albion in 30:00–45+1:05 (172 m vs 128 m).",
+   "claim": "fact",
+   "sources": [
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team",
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team, ball x"
+   ],
+   "mode": "analyst",
+   "verdict": "pass",
+   "shown": true,
+   "verifier": {
+    "stage": "llm",
+    "findings": []
+   }
+  },
+  {
+   "t": 2764.7,
+   "period": 1,
+   "clock": "45+1:04",
+   "video_s": 2764.7,
+   "player": null,
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "kind": "tug_of_war",
+   "moment_id": "tug_of_war:home:1:2764",
+   "sentence": "In 30:00–45+1:05, Westerlyn Albion did 470 m of high-speed running per minute in the first 10 s after losing the ball, against 123 m per minute the rest of the time the ball was in play.",
+   "claim": "fact",
+   "sources": [
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team",
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team, ball x"
+   ],
+   "mode": "analyst",
+   "verdict": "pass",
+   "shown": true,
+   "verifier": {
+    "stage": "llm",
+    "findings": []
+   }
+  },
+  {
+   "t": 2764.7,
+   "period": 1,
+   "clock": "45+1:04",
+   "video_s": 2764.7,
+   "player": null,
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "kind": "tug_of_war",
+   "moment_id": "tug_of_war:home:1:2764",
+   "sentence": "Westerlyn Albion did 35% more high-speed running per ball-in-play minute than Ravensholt Albion in 30:00–45+1:05.",
+   "claim": "fact",
+   "sources": [
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team",
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team, ball x"
+   ],
+   "mode": "fan",
+   "verdict": "pass",
+   "shown": true,
+   "verifier": {
+    "stage": "llm",
+    "findings": []
+   }
+  },
+  {
+   "t": 2764.7,
+   "period": 1,
+   "clock": "45+1:04",
+   "video_s": 2764.7,
+   "player": null,
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "kind": "tug_of_war",
+   "moment_id": "tug_of_war:home:1:2764",
+   "sentence": "62% of Albion's high-speed running came in the first 10 s after the ball changed hands, in 28% of the time the ball was in play.",
+   "claim": "fact",
+   "sources": [
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team",
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team, ball x"
+   ],
+   "mode": "fan",
+   "verdict": "pass",
+   "shown": true,
+   "verifier": {
+    "stage": "llm",
+    "findings": []
+   }
+  },
+  {
    "t": 787.9,
    "period": 2,
    "clock": "58:07",
@@ -1450,9 +1621,91 @@
    "team_name": "Ravensholt Albion",
    "kind": "exposed_on_turnover",
    "moment_id": "exposed_on_turnover:A05:2:787",
-   "sentence": "In the Premier League, players make about a third fewer high‑speed recovery runs right after their most intense spell than they normally do.",
-   "claim": "3",
+   "sentence": "This is the third time his team have lost the ball just after his hardest minutes so far.",
+   "claim": "fact",
    "sources": [
+    "engine.hi_speed",
+    "events.jsonl positive_transition and signals.players[].series.red_zone, post_peak",
+    "events.jsonl shot xg in this possession",
+    "signals.players[].series.battery",
+    "signals.players[].series.energy",
+    "signals.players[].series.hsr_5min",
+    "signals.players[].series.low_chance",
+    "signals.players[].series.red_zone",
+    "signals.players[].series.speed",
+    "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch",
+    "tracking players[].x,y and ball",
+    "tracking, 8 s after the turnover"
+   ],
+   "mode": "analyst",
+   "verdict": "pass",
+   "shown": true,
+   "verifier": {
+    "stage": "llm",
+    "findings": []
+   }
+  },
+  {
+   "t": 787.9,
+   "period": 2,
+   "clock": "58:07",
+   "video_s": 3553.6,
+   "player": {
+    "id": "A05",
+    "name": "Luca Elmbury",
+    "shirt": 2,
+    "team": "away"
+   },
+   "team": "away",
+   "team_name": "Ravensholt Albion",
+   "kind": "exposed_on_turnover",
+   "moment_id": "exposed_on_turnover:A05:2:787",
+   "sentence": "He has done running that would leave a typical professional at about 76% of their short-term reserve.",
+   "claim": "11",
+   "sources": [
+    "Skiba2012",
+    "Jones2017",
+    "Modric2020",
+    "engine.hi_speed",
+    "events.jsonl positive_transition and signals.players[].series.red_zone, post_peak",
+    "events.jsonl shot xg in this possession",
+    "signals.players[].series.battery",
+    "signals.players[].series.energy",
+    "signals.players[].series.hsr_5min",
+    "signals.players[].series.low_chance",
+    "signals.players[].series.red_zone",
+    "signals.players[].series.speed",
+    "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch",
+    "tracking players[].x,y and ball",
+    "tracking, 8 s after the turnover"
+   ],
+   "mode": "analyst",
+   "verdict": "pass",
+   "shown": true,
+   "verifier": {
+    "stage": "llm",
+    "findings": []
+   }
+  },
+  {
+   "t": 787.9,
+   "period": 2,
+   "clock": "58:07",
+   "video_s": 3553.6,
+   "player": {
+    "id": "A05",
+    "name": "Luca Elmbury",
+    "shirt": 2,
+    "team": "away"
+   },
+   "team": "away",
+   "team_name": "Ravensholt Albion",
+   "kind": "exposed_on_turnover",
+   "moment_id": "exposed_on_turnover:A05:2:787",
+   "sentence": "Losing the ball forces the hardest running of the game.",
+   "claim": "4",
+   "sources": [
+    "Bortnik2022",
     "Ju2022",
     "engine.hi_speed",
     "events.jsonl positive_transition and signals.players[].series.red_zone, post_peak",
@@ -1476,21 +1729,328 @@
    }
   },
   {
-   "t": 1575.0,
+   "t": 787.9,
    "period": 2,
-   "clock": "71:15",
-   "video_s": 4340.7,
+   "clock": "58:07",
+   "video_s": 3553.6,
    "player": {
-    "id": "H14",
-    "name": "Hugo Haskcott",
-    "shirt": 14,
+    "id": "A05",
+    "name": "Luca Elmbury",
+    "shirt": 2,
+    "team": "away"
+   },
+   "team": "away",
+   "team_name": "Ravensholt Albion",
+   "kind": "exposed_on_turnover",
+   "moment_id": "exposed_on_turnover:A05:2:787",
+   "sentence": "This is the third time his team have lost the ball just after his hardest minutes so far.",
+   "claim": "fact",
+   "sources": [
+    "engine.hi_speed",
+    "events.jsonl positive_transition and signals.players[].series.red_zone, post_peak",
+    "events.jsonl shot xg in this possession",
+    "signals.players[].series.battery",
+    "signals.players[].series.energy",
+    "signals.players[].series.hsr_5min",
+    "signals.players[].series.low_chance",
+    "signals.players[].series.red_zone",
+    "signals.players[].series.speed",
+    "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch",
+    "tracking players[].x,y and ball",
+    "tracking, 8 s after the turnover"
+   ],
+   "mode": "fan",
+   "verdict": "pass",
+   "shown": true,
+   "verifier": {
+    "stage": "llm",
+    "findings": []
+   }
+  },
+  {
+   "t": 1799.0,
+   "period": 2,
+   "clock": "74:59",
+   "video_s": 4564.7,
+   "player": null,
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "kind": "tug_of_war",
+   "moment_id": "tug_of_war:home:2:1799",
+   "sentence": "Westerlyn Albion did 35% more high-speed running per ball-in-play minute than Ravensholt Albion in 30:00–45+1:05.",
+   "claim": "fact",
+   "sources": [
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team",
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team, ball x"
+   ],
+   "mode": "analyst",
+   "verdict": "blocked",
+   "shown": false,
+   "verifier": {
+    "stage": "llm",
+    "findings": [
+     {
+      "claim": "F1",
+      "message": "The sentence asserts a 35% advantage in a specific time window that the facts do not support (no data for 30:00–45+1:05) and conflicts with the provided block's measured values (154 vs 153 m, ~0% difference).",
+      "stage": "llm"
+     }
+    ]
+   }
+  },
+  {
+   "t": 1799.0,
+   "period": 2,
+   "clock": "74:59",
+   "video_s": 4564.7,
+   "player": null,
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "kind": "tug_of_war",
+   "moment_id": "tug_of_war:home:2:1799",
+   "sentence": "The gap has closed: Westerlyn Albion had done up to 35% more high-speed running per ball-in-play minute than Ravensholt Albion, and in 60:00–75:00 it was level (154 m vs 153 m).",
+   "claim": "fact",
+   "sources": [
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team",
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team, ball x"
+   ],
+   "mode": "analyst",
+   "verdict": "fallback",
+   "shown": true,
+   "verifier": {
+    "stage": "llm",
+    "findings": []
+   },
+   "original": "Westerlyn Albion did 35% more high-speed running per ball-in-play minute than Ravensholt Albion in 30:00–45+1:05."
+  },
+  {
+   "t": 1799.0,
+   "period": 2,
+   "clock": "74:59",
+   "video_s": 4564.7,
+   "player": null,
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "kind": "tug_of_war",
+   "moment_id": "tug_of_war:home:2:1799",
+   "sentence": "62% of Albion's high-speed running in that block came in the first 10 s after the ball changed hands, in 28% of the time the ball was in play.",
+   "claim": "fact",
+   "sources": [
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team",
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team, ball x"
+   ],
+   "mode": "analyst",
+   "verdict": "blocked",
+   "shown": false,
+   "verifier": {
+    "stage": "llm",
+    "findings": [
+     {
+      "claim": "N1, F1",
+      "message": "The sentence gives two percentages that do not match the provided facts (45% and 34%); N1 requires numbers to come from the facts and F1 blocks statements that contradict those facts.",
+      "stage": "llm"
+     }
+    ]
+   }
+  },
+  {
+   "t": 1799.0,
+   "period": 2,
+   "clock": "74:59",
+   "video_s": 4564.7,
+   "player": null,
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "kind": "tug_of_war",
+   "moment_id": "tug_of_war:home:2:1799",
+   "sentence": "45% of Albion's high-speed running in that block came in the first 10 s after the ball changed hands, which accounted for 34% of the block's ball-in-play time.",
+   "claim": "fact",
+   "sources": [
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team",
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team, ball x"
+   ],
+   "mode": "analyst",
+   "verdict": "rewritten",
+   "shown": true,
+   "verifier": {
+    "stage": "llm",
+    "findings": []
+   },
+   "original": "62% of Albion's high-speed running in that block came in the first 10 s after the ball changed hands, in 28% of the time the ball was in play."
+  },
+  {
+   "t": 1799.0,
+   "period": 2,
+   "clock": "74:59",
+   "video_s": 4564.7,
+   "player": null,
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "kind": "tug_of_war",
+   "moment_id": "tug_of_war:home:2:1799",
+   "sentence": "Westerlyn Albion and Ravensholt Albion were level in 60:00–75:00, with Albion doing 0% more high-speed running per ball-in-play minute in that block; earlier the gap was 35%.",
+   "claim": "fact",
+   "sources": [
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team",
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team, ball x"
+   ],
+   "mode": "analyst",
+   "verdict": "pass",
+   "shown": true,
+   "verifier": {
+    "stage": "llm",
+    "findings": []
+   }
+  },
+  {
+   "t": 1799.0,
+   "period": 2,
+   "clock": "74:59",
+   "video_s": 4564.7,
+   "player": null,
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "kind": "tug_of_war",
+   "moment_id": "tug_of_war:home:2:1799",
+   "sentence": "45% of Albion's high-speed running in that block came in the first 10 s after the ball changed hands, in 34% of the time the ball was in play.",
+   "claim": "fact",
+   "sources": [
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team",
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team, ball x"
+   ],
+   "mode": "analyst",
+   "verdict": "pass",
+   "shown": true,
+   "verifier": {
+    "stage": "llm",
+    "findings": []
+   }
+  },
+  {
+   "t": 1799.0,
+   "period": 2,
+   "clock": "74:59",
+   "video_s": 4564.7,
+   "player": null,
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "kind": "tug_of_war",
+   "moment_id": "tug_of_war:home:2:1799",
+   "sentence": "Westerlyn Albion and Ravensholt Albion were level in 60:00–75:00 — the gap has closed from a 35% lead earlier.",
+   "claim": "fact",
+   "sources": [
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team",
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team, ball x"
+   ],
+   "mode": "fan",
+   "verdict": "blocked",
+   "shown": false,
+   "verifier": {
+    "stage": "llm",
+    "findings": [
+     {
+      "claim": "G1",
+      "message": "The sentence gives a 35% figure without naming its baseline and implies Westerlyn held that lead though the facts do not explicitly show which side held the earlier 35% advantage.",
+      "stage": "llm"
+     }
+    ]
+   }
+  },
+  {
+   "t": 1799.0,
+   "period": 2,
+   "clock": "74:59",
+   "video_s": 4564.7,
+   "player": null,
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "kind": "tug_of_war",
+   "moment_id": "tug_of_war:home:2:1799",
+   "sentence": "The gap has closed: in 60:00–75:00 Westerlyn Albion and Ravensholt Albion were level on high-speed running per ball-in-play minute, after Westerlyn Albion had done up to 35% more than them earlier.",
+   "claim": "fact",
+   "sources": [
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team",
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team, ball x"
+   ],
+   "mode": "fan",
+   "verdict": "fallback",
+   "shown": true,
+   "verifier": {
+    "stage": "llm",
+    "findings": []
+   },
+   "original": "Westerlyn Albion and Ravensholt Albion were level in 60:00–75:00 — the gap has closed from a 35% lead earlier."
+  },
+  {
+   "t": 1799.0,
+   "period": 2,
+   "clock": "74:59",
+   "video_s": 4564.7,
+   "player": null,
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "kind": "tug_of_war",
+   "moment_id": "tug_of_war:home:2:1799",
+   "sentence": "45% of Albion's high-speed running came in the first 10 s after the ball changed hands, in 34% of the time the ball was in play.",
+   "claim": "fact",
+   "sources": [
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team",
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team, ball x"
+   ],
+   "mode": "fan",
+   "verdict": "blocked",
+   "shown": false,
+   "verifier": {
+    "stage": "llm",
+    "findings": [
+     {
+      "claim": "G1: Every percentage must name its baseline (here the 60:00–75:00 block).",
+      "message": "Both percentages are taken from the given block but the sentence fails to state that baseline; G1 requires each percentage to name its baseline.",
+      "stage": "llm"
+     }
+    ]
+   }
+  },
+  {
+   "t": 1799.0,
+   "period": 2,
+   "clock": "74:59",
+   "video_s": 4564.7,
+   "player": null,
+   "team": "home",
+   "team_name": "Westerlyn Albion",
+   "kind": "tug_of_war",
+   "moment_id": "tug_of_war:home:2:1799",
+   "sentence": "In the 60:00–75:00 block, 45% of Albion's high-speed running in that block came in the first 10 s after the ball changed hands, which accounted for 34% of that block's ball-in-play time.",
+   "claim": "fact",
+   "sources": [
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team",
+    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team, ball x"
+   ],
+   "mode": "fan",
+   "verdict": "rewritten",
+   "shown": true,
+   "verifier": {
+    "stage": "llm",
+    "findings": []
+   },
+   "original": "45% of Albion's high-speed running came in the first 10 s after the ball changed hands, in 34% of the time the ball was in play."
+  },
+  {
+   "t": 1859.0,
+   "period": 2,
+   "clock": "75:59",
+   "video_s": 4624.7,
+   "player": {
+    "id": "H16",
+    "name": "Felix Morrmere",
+    "shirt": 16,
     "team": "home"
    },
    "team": "home",
    "team_name": "Westerlyn Albion",
    "kind": "fresh_legs",
-   "moment_id": "fresh_legs:H14:2:1575",
-   "sentence": "Hugo Haskcott has been on 10 min and done 9.7 m/min — about 5% more than the player he replaced (9.3 m/min) and 12% more than his team-mates over the same minutes.",
+   "moment_id": "fresh_legs:H16:2:1859",
+   "sentence": "Felix Morrmere has been on for 10 min and done 9.8 m/min, 49% more than his team-mates over the same minutes and 25% below the player he replaced, Marco Tarvsall.",
    "claim": "fact",
    "sources": [
     "engine.hi_speed",
@@ -1510,20 +2070,20 @@
    }
   },
   {
-   "t": 1575.0,
+   "t": 1859.0,
    "period": 2,
-   "clock": "71:15",
-   "video_s": 4340.7,
+   "clock": "75:59",
+   "video_s": 4624.7,
    "player": {
-    "id": "H14",
-    "name": "Hugo Haskcott",
-    "shirt": 14,
+    "id": "H16",
+    "name": "Felix Morrmere",
+    "shirt": 16,
     "team": "home"
    },
    "team": "home",
    "team_name": "Westerlyn Albion",
    "kind": "fresh_legs",
-   "moment_id": "fresh_legs:H14:2:1575",
+   "moment_id": "fresh_legs:H16:2:1859",
    "sentence": "Fresh legs: substitutes typically do 15–25% more high-intensity running per minute than players who started.",
    "claim": "6",
    "sources": [
@@ -1546,229 +2106,6 @@
    }
   },
   {
-   "t": 1575.0,
-   "period": 2,
-   "clock": "71:15",
-   "video_s": 4340.7,
-   "player": {
-    "id": "H14",
-    "name": "Hugo Haskcott",
-    "shirt": 14,
-    "team": "home"
-   },
-   "team": "home",
-   "team_name": "Westerlyn Albion",
-   "kind": "fresh_legs",
-   "moment_id": "fresh_legs:H14:2:1575",
-   "sentence": "Hugo Haskcott has been on 10 minutes and done 9.7 m/min of high‑speed running, about 5% more than the player he replaced.",
-   "claim": "fact",
-   "sources": [
-    "engine.hi_speed",
-    "signals.players[].series.battery",
-    "signals.players[].series.energy",
-    "signals.players[].series.low_chance",
-    "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch",
-    "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch (his whole match)",
-    "signals.players[].series.t"
-   ],
-   "mode": "fan",
-   "verdict": "pass",
-   "shown": true,
-   "verifier": {
-    "stage": "llm",
-    "findings": []
-   }
-  },
-  {
-   "t": 1575.0,
-   "period": 2,
-   "clock": "71:15",
-   "video_s": 4340.7,
-   "player": {
-    "id": "H14",
-    "name": "Hugo Haskcott",
-    "shirt": 14,
-    "team": "home"
-   },
-   "team": "home",
-   "team_name": "Westerlyn Albion",
-   "kind": "fresh_legs",
-   "moment_id": "fresh_legs:H14:2:1575",
-   "sentence": "Fresh legs: substitutes typically do 15–25% more high‑intensity running per minute than players who started.",
-   "claim": "6",
-   "sources": [
-    "Bradley2013",
-    "Hills2018",
-    "engine.hi_speed",
-    "signals.players[].series.battery",
-    "signals.players[].series.energy",
-    "signals.players[].series.low_chance",
-    "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch",
-    "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch (his whole match)",
-    "signals.players[].series.t"
-   ],
-   "mode": "fan",
-   "verdict": "pass",
-   "shown": true,
-   "verifier": {
-    "stage": "llm",
-    "findings": []
-   }
-  },
-  {
-   "t": 1799.0,
-   "period": 2,
-   "clock": "74:59",
-   "video_s": 4564.7,
-   "player": null,
-   "team": "home",
-   "team_name": "Westerlyn Albion",
-   "kind": "tug_of_war",
-   "moment_id": "tug_of_war:home:2:1799",
-   "sentence": "The two sides were level in 60:00–75:00 — Westerlyn Albion 154 m and Ravensholt Albion 153 m of high-speed running per ball-in-play minute, the gap has closed from a 35% earlier gap.",
-   "claim": "fact",
-   "sources": [
-    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team"
-   ],
-   "mode": "analyst",
-   "verdict": "blocked",
-   "shown": false,
-   "verifier": {
-    "stage": "llm",
-    "findings": [
-     {
-      "claim": "G1",
-      "message": "The sentence uses \"35%\" without naming its baseline; every percentage must state its baseline (e.g. vs the opponent, vs the first 15 min).",
-      "stage": "llm"
-     }
-    ]
-   }
-  },
-  {
-   "t": 1799.0,
-   "period": 2,
-   "clock": "74:59",
-   "video_s": 4564.7,
-   "player": null,
-   "team": "home",
-   "team_name": "Westerlyn Albion",
-   "kind": "tug_of_war",
-   "moment_id": "tug_of_war:home:2:1799",
-   "sentence": "They were level in 60:00–75:00 — Westerlyn Albion 154 m and Ravensholt Albion 153 m of high-speed running per ball-in-play minute; the gap has closed from a 35% earlier gap versus the opponent.",
-   "claim": "fact",
-   "sources": [
-    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team"
-   ],
-   "mode": "analyst",
-   "verdict": "rewritten",
-   "shown": true,
-   "verifier": {
-    "stage": "llm",
-    "findings": []
-   },
-   "original": "The two sides were level in 60:00–75:00 — Westerlyn Albion 154 m and Ravensholt Albion 153 m of high-speed running per ball-in-play minute, the gap has closed from a 35% earlier gap."
-  },
-  {
-   "t": 1799.0,
-   "period": 2,
-   "clock": "74:59",
-   "video_s": 4564.7,
-   "player": null,
-   "team": "home",
-   "team_name": "Westerlyn Albion",
-   "kind": "tug_of_war",
-   "moment_id": "tug_of_war:home:2:1799",
-   "sentence": "Without the ball, Premier League players typically cover about 10% more ground per minute than when they have it.",
-   "claim": "9b",
-   "sources": [
-    "Allen2026b",
-    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team"
-   ],
-   "mode": "analyst",
-   "verdict": "pass",
-   "shown": true,
-   "verifier": {
-    "stage": "llm",
-    "findings": []
-   }
-  },
-  {
-   "t": 1799.0,
-   "period": 2,
-   "clock": "74:59",
-   "video_s": 4564.7,
-   "player": null,
-   "team": "home",
-   "team_name": "Westerlyn Albion",
-   "kind": "tug_of_war",
-   "moment_id": "tug_of_war:home:2:1799",
-   "sentence": "The gap has closed — Westerlyn Albion and Ravensholt Albion were level in 60:00–75:00 at about 154 m of high‑speed running per ball‑in‑play minute.",
-   "claim": "fact",
-   "sources": [
-    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team"
-   ],
-   "mode": "fan",
-   "verdict": "pass",
-   "shown": true,
-   "verifier": {
-    "stage": "llm",
-    "findings": []
-   }
-  },
-  {
-   "t": 1799.0,
-   "period": 2,
-   "clock": "74:59",
-   "video_s": 4564.7,
-   "player": null,
-   "team": "home",
-   "team_name": "Westerlyn Albion",
-   "kind": "tug_of_war",
-   "moment_id": "tug_of_war:home:2:1799",
-   "sentence": "Earlier the widest gap was 35%.",
-   "claim": "fact",
-   "sources": [
-    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team"
-   ],
-   "mode": "fan",
-   "verdict": "blocked",
-   "shown": false,
-   "verifier": {
-    "stage": "llm",
-    "findings": [
-     {
-      "claim": "G1",
-      "message": "Every percentage must name its baseline; this sentence gives 35% without saying what it's relative to (e.g. the opponent).",
-      "stage": "llm"
-     }
-    ]
-   }
-  },
-  {
-   "t": 1799.0,
-   "period": 2,
-   "clock": "74:59",
-   "video_s": 4564.7,
-   "player": null,
-   "team": "home",
-   "team_name": "Westerlyn Albion",
-   "kind": "tug_of_war",
-   "moment_id": "tug_of_war:home:2:1799",
-   "sentence": "Earlier, the widest gap vs the opponent was 35%.",
-   "claim": "fact",
-   "sources": [
-    "signals.players[].series.speed (outfield) and tracking ball_status, possession_team"
-   ],
-   "mode": "fan",
-   "verdict": "rewritten",
-   "shown": true,
-   "verifier": {
-    "stage": "llm",
-    "findings": []
-   },
-   "original": "Earlier the widest gap was 35%."
-  },
-  {
    "t": 1859.0,
    "period": 2,
    "clock": "75:59",
@@ -1783,77 +2120,7 @@
    "team_name": "Westerlyn Albion",
    "kind": "fresh_legs",
    "moment_id": "fresh_legs:H16:2:1859",
-   "sentence": "Felix Morrmere has been on 10 min and done 9.8 m/min, 25% less than the player he replaced (13.0 m/min) but 49% more than his team-mates over the same minutes.",
-   "claim": "fact",
-   "sources": [
-    "engine.hi_speed",
-    "signals.players[].series.battery",
-    "signals.players[].series.energy",
-    "signals.players[].series.low_chance",
-    "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch",
-    "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch (his whole match)",
-    "signals.players[].series.t"
-   ],
-   "mode": "analyst",
-   "verdict": "pass",
-   "shown": true,
-   "verifier": {
-    "stage": "llm",
-    "findings": []
-   }
-  },
-  {
-   "t": 1859.0,
-   "period": 2,
-   "clock": "75:59",
-   "video_s": 4624.7,
-   "player": {
-    "id": "H16",
-    "name": "Felix Morrmere",
-    "shirt": 16,
-    "team": "home"
-   },
-   "team": "home",
-   "team_name": "Westerlyn Albion",
-   "kind": "fresh_legs",
-   "moment_id": "fresh_legs:H16:2:1859",
-   "sentence": "Fresh legs: substitutes typically do 15–25% more high-intensity running per minute than players who started.",
-   "claim": "6",
-   "sources": [
-    "Bradley2013",
-    "Hills2018",
-    "engine.hi_speed",
-    "signals.players[].series.battery",
-    "signals.players[].series.energy",
-    "signals.players[].series.low_chance",
-    "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch",
-    "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch (his whole match)",
-    "signals.players[].series.t"
-   ],
-   "mode": "analyst",
-   "verdict": "pass",
-   "shown": true,
-   "verifier": {
-    "stage": "llm",
-    "findings": []
-   }
-  },
-  {
-   "t": 1859.0,
-   "period": 2,
-   "clock": "75:59",
-   "video_s": 4624.7,
-   "player": {
-    "id": "H16",
-    "name": "Felix Morrmere",
-    "shirt": 16,
-    "team": "home"
-   },
-   "team": "home",
-   "team_name": "Westerlyn Albion",
-   "kind": "fresh_legs",
-   "moment_id": "fresh_legs:H16:2:1859",
-   "sentence": "Felix Morrmere has done 9.8 m/min since coming on, 49% more than his team‑mates over the same minutes.",
+   "sentence": "Felix Morrmere has done 9.8 m/min in his ten minutes on.",
    "claim": "fact",
    "sources": [
     "engine.hi_speed",
@@ -1887,11 +2154,9 @@
    "team_name": "Westerlyn Albion",
    "kind": "fresh_legs",
    "moment_id": "fresh_legs:H16:2:1859",
-   "sentence": "Fresh legs: substitutes typically do 15–25% more high‑intensity running per minute than players who started.",
-   "claim": "6",
+   "sentence": "That's 49% more high-speed running per minute than his team-mates over the same minutes.",
+   "claim": "fact",
    "sources": [
-    "Bradley2013",
-    "Hills2018",
     "engine.hi_speed",
     "signals.players[].series.battery",
     "signals.players[].series.energy",

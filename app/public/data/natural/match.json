@@ -626,6 +626,315 @@
    }
   }
  ],
+ "situations": [
+  "after_losing",
+  "after_winning",
+  "on_ball",
+  "off_ball_high",
+  "off_ball_deep"
+ ],
+ "team_situations": [
+  {
+   "video_start": 0.0,
+   "video_end": 900.0,
+   "from": "0:00",
+   "to": "15:00",
+   "home": {
+    "after_losing": [
+     393,
+     80
+    ],
+    "after_winning": [
+     244,
+     51
+    ],
+    "on_ball": [
+     392,
+     177
+    ],
+    "off_ball_high": [
+     0,
+     10
+    ],
+    "off_ball_deep": [
+     466,
+     140
+    ]
+   },
+   "away": {
+    "after_losing": [
+     233,
+     51
+    ],
+    "after_winning": [
+     136,
+     80
+    ],
+    "on_ball": [
+     226,
+     150
+    ],
+    "off_ball_high": [
+     26,
+     10
+    ],
+    "off_ball_deep": [
+     603,
+     167
+    ]
+   }
+  },
+  {
+   "video_start": 900.0,
+   "video_end": 1800.0,
+   "from": "15:00",
+   "to": "30:00",
+   "home": {
+    "after_losing": [
+     346,
+     82
+    ],
+    "after_winning": [
+     122,
+     58
+    ],
+    "on_ball": [
+     167,
+     135
+    ],
+    "off_ball_high": [
+     0,
+     6
+    ],
+    "off_ball_deep": [
+     582,
+     207
+    ]
+   },
+   "away": {
+    "after_losing": [
+     289,
+     58
+    ],
+    "after_winning": [
+     197,
+     82
+    ],
+    "on_ball": [
+     388,
+     213
+    ],
+    "off_ball_high": [
+     0,
+     7
+    ],
+    "off_ball_deep": [
+     278,
+     128
+    ]
+   }
+  },
+  {
+   "video_start": 1800.0,
+   "video_end": 2851.0,
+   "from": "30:00",
+   "to": "45+2:31",
+   "home": {
+    "after_losing": [
+     495,
+     91
+    ],
+    "after_winning": [
+     176,
+     100
+    ],
+    "on_ball": [
+     251,
+     156
+    ],
+    "off_ball_high": [
+     0,
+     6
+    ],
+    "off_ball_deep": [
+     476,
+     153
+    ]
+   },
+   "away": {
+    "after_losing": [
+     203,
+     100
+    ],
+    "after_winning": [
+     287,
+     91
+    ],
+    "on_ball": [
+     176,
+     159
+    ],
+    "off_ball_high": [
+     0,
+     1
+    ],
+    "off_ball_deep": [
+     345,
+     155
+    ]
+   }
+  },
+  {
+   "video_start": 2851.0,
+   "video_end": 3751.0,
+   "from": "45:00",
+   "to": "60:00",
+   "home": {
+    "after_losing": [
+     333,
+     80
+    ],
+    "after_winning": [
+     119,
+     80
+    ],
+    "on_ball": [
+     424,
+     203
+    ],
+    "off_ball_high": [
+     0,
+     1
+    ],
+    "off_ball_deep": [
+     360,
+     178
+    ]
+   },
+   "away": {
+    "after_losing": [
+     362,
+     80
+    ],
+    "after_winning": [
+     217,
+     80
+    ],
+    "on_ball": [
+     267,
+     179
+    ],
+    "off_ball_high": [
+     0,
+     8
+    ],
+    "off_ball_deep": [
+     460,
+     195
+    ]
+   }
+  },
+  {
+   "video_start": 3751.0,
+   "video_end": 4651.0,
+   "from": "60:00",
+   "to": "75:00",
+   "home": {
+    "after_losing": [
+     299,
+     99
+    ],
+    "after_winning": [
+     310,
+     109
+    ],
+    "on_ball": [
+     236,
+     113
+    ],
+    "off_ball_high": [
+     0,
+     5
+    ],
+    "off_ball_deep": [
+     611,
+     280
+    ]
+   },
+   "away": {
+    "after_losing": [
+     239,
+     109
+    ],
+    "after_winning": [
+     249,
+     99
+    ],
+    "on_ball": [
+     364,
+     285
+    ],
+    "off_ball_high": [
+     0,
+     8
+    ],
+    "off_ball_deep": [
+     211,
+     105
+    ]
+   }
+  },
+  {
+   "video_start": 4651.0,
+   "video_end": 5877.5,
+   "from": "75:00",
+   "to": "90+5:26",
+   "home": {
+    "after_losing": [
+     478,
+     109
+    ],
+    "after_winning": [
+     493,
+     128
+    ],
+    "on_ball": [
+     243,
+     184
+    ],
+    "off_ball_high": [
+     0,
+     10
+    ],
+    "off_ball_deep": [
+     693,
+     264
+    ]
+   },
+   "away": {
+    "after_losing": [
+     522,
+     128
+    ],
+    "after_winning": [
+     183,
+     109
+    ],
+    "on_ball": [
+     489,
+     274
+    ],
+    "off_ball_high": [
+     0,
+     10
+    ],
+    "off_ball_deep": [
+     493,
+     174
+    ]
+   }
+  }
+ ],
  "goals": [
   {
    "period": 1,

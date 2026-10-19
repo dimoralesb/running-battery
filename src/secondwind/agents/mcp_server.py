@@ -50,17 +50,18 @@ def build(folder: Path | str) -> FastMCP:
         "20:00", "45+2:00" or "67:30"; default his whole time on the pitch): battery for a
         typical professional with its band, the typical-pro chance with its calibration note,
         energy, high-speed running in the last 1/2/5 min and vs his own peak and match average,
-        intense-spell and post-peak ("just after an intense spell") flags. ``player``: id
-        ("H04"), name, or "home 3"."""
+        hardest-minutes and post-peak ("just after his hardest minutes so far") flags.
+        ``player``: id ("H04"), name, or "home 3"."""
         return tools.player_signals(player, start, end)
 
     @server.tool(annotations=READ_ONLY)
     def find_moments(kind: Kind, limit: int = 10, player: str | None = None) -> dict[str, Any]:
-        """Story moments, ranked best first: red_zone (an intense spell), exposed_on_turnover (a
-        defender just after an intense spell when his team loses the ball), second_wind (back to
-        normal after a spell), fresh_legs (a substitute's first minutes), not_tired_tactical
-        (running dropped while a non-fatigue reason fits), tug_of_war (team level: one team ran much
-        harder per ball-in-play minute, or a gap closed), flat_out (a run at or near a player's
+        """Story moments, ranked best first: red_zone (his hardest minutes so far),
+        exposed_on_turnover (a defender just after his hardest minutes so far when his team loses
+        the ball), second_wind (back to normal after them), fresh_legs (a substitute's first
+        minutes), not_tired_tactical (running dropped while a non-fatigue reason fits),
+        tug_of_war (team level: one team ran much harder per ball-in-play minute, or a gap
+        closed; with where the running happened), flat_out (a run at or near a player's
         top speed so far). Each moment lists its facts and the claims register rows that may
         describe it; team moments have a team instead of a player."""
         return tools.find_moments(kind, limit, player)
@@ -68,8 +69,11 @@ def build(folder: Path | str) -> FastMCP:
     @server.tool(annotations=READ_ONLY)
     def team_running(start: str | None = None, end: str | None = None) -> dict[str, Any]:
         """Both teams' running per ball-in-play minute, with and without the ball, over a window
-        (match clock, default the whole match) and in 15-min blocks. Measured running only:
-        which team is more tired is not measurable from positions (claim 35)."""
+        (match clock, default the whole match) and in 15-min blocks, and where it happened: per
+        situation of play (the first 10 s after losing or winning the ball, settled on the ball,
+        without it with the ball in the opponents' third or deeper), metres per minute of that
+        situation and shares. Measured running only: which team is more tired is not measurable
+        from positions (claim 35), and situations say where, never why (claims 38, 39)."""
         return tools.team_running(start, end)
 
     @server.tool(annotations=READ_ONLY)

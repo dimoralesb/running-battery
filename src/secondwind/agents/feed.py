@@ -97,13 +97,18 @@ def related(tools: MatchTools, favourite: str | None) -> set[str]:
 def ensure_favourite(picked: list[str], found: dict[str, dict], ids: set[str]) -> list[str]:
     """Add the favourite's (and his replacement's) best moment of each kind in FAVOURITE_KINDS
     that the pick left out (the first FAVOURITE_ARC kinds always, the rest until they have
-    FAVOURITE_MIN), at least a minute from the others."""
+    FAVOURITE_MIN), at least a minute from the others. For the first FAVOURITE_ARC kinds his
+    best-ranked moment is added even when another of that kind was picked: the Tactical agent
+    once picked his second turnover and left out the third, the story's (decision 30)."""
     chosen = [found[i] for i in picked]
     mine = [m for m in chosen if who(m) in ids]
     for n, kind in enumerate(FAVOURITE_KINDS):
         if n >= FAVOURITE_ARC and len(mine) >= FAVOURITE_MIN:
             break
-        if any(m["kind"] == kind for m in mine):
+        have = [m for m in mine if m["kind"] == kind]
+        best = max((m for m in found.values() if m["kind"] == kind and who(m) in ids),
+                   key=lambda m: m["score"], default=None)  # fmt: skip
+        if have and (n >= FAVOURITE_ARC or best is None or best in have):
             continue
         for mo in sorted(found.values(), key=lambda m: -m["score"]):
             if (
@@ -240,7 +245,8 @@ def _clock(tools: MatchTools, period: int, t: float) -> str:
 def verifier_context(b: dict) -> dict[str, Any]:
     return {"non_fatigue_reasons": b["non_fatigue_reasons"], "facts": b["facts"],
             "context": b["context"], "subject": _name(b),
-            "claims_offered": [c["id"] for c in b["claims"]]}  # fmt: skip
+            "claims_offered": [c["id"] for c in b["claims"]],
+            "team_moment": b["kind"] in TEAM_KINDS}  # fmt: skip
 
 
 def _name(b: dict) -> str:
@@ -269,23 +275,28 @@ def template(b: dict, mode: str) -> list[tuple[str, str]]:
     )  # fmt: skip
     out: list[tuple[str, str] | None] = []
     if kind == "red_zone":
-        n = _v(b, "spell_number")
+        n = _v(b, "hardest_minutes_count")
         peak = _v(b, "peak_1min_hsr")
         nth = ORDINAL.get(n, f"number {n}")
         if mode == "fan":
+            lead = (
+                f"{name}'s hardest minutes so far"
+                if n == 1
+                else f"For the {nth} time, {name} runs as hard as in his hardest minutes so far"
+            )
             out.append(
                 (
                     "fact",
-                    f"{name}'s {nth} intense spell: {peak} m of high-speed running "
-                    "in one minute, against a published average peak of 62 m.",
+                    f"{lead}: {peak} m of high-speed running in one minute, against a "
+                    "published average best minute of 62 m.",
                 )
             )
         else:
             out.append(
                 (
                     "fact",
-                    f"{name}: intense spell {n}, a 1-min peak of {peak} m above "
-                    "5.5 m/s (19.8 km/h), against a published mean peak of 62 m "
+                    f"{name}: his hardest minutes so far ({nth} time), a 1-min peak of {peak} m "
+                    "above 5.5 m/s (19.8 km/h), against a published mean peak of 62 m "
                     "[Leifsson2024].",
                 )
             )
@@ -296,7 +307,7 @@ def template(b: dict, mode: str) -> list[tuple[str, str]]:
         out.append(
             (
                 "fact",
-                f"{team} lose the ball just after {name}'s intense spell: {d0} m "
+                f"{team} lose the ball just after {name}'s hardest minutes so far: {d0} m "
                 f"from the ball, then {d8} m eight seconds "
                 "later.",
             )
@@ -311,7 +322,7 @@ def template(b: dict, mode: str) -> list[tuple[str, str]]:
             else pro
         )
     elif kind == "second_wind":
-        mins = _v(b, "minutes_after_spell", digits=1)
+        mins = _v(b, "minutes_after_hardest_minutes", digits=1)
         rate, avg = (
             _v(b, "last_2min_hsr_per_min", digits=1),
             _v(b, "match_average_per_min", digits=1),
@@ -319,18 +330,18 @@ def template(b: dict, mode: str) -> list[tuple[str, str]]:
         out.append(
             (
                 "fact",
-                f"Second wind for {name}: {mins} minutes after his intense spell, "
+                f"Second wind for {name}: {mins} minutes after his hardest minutes, "
                 f"his high-speed running is back to his match average ({rate} m per "
                 f"minute vs {avg}).",
             )
         )
-        if mode == "analyst":
+        if mode == "analyst" and any(c["id"] == "1" for c in b["claims"]):
             out.append(
                 (
                     "1",
-                    "After that 5-minute spell, players typically cover about 40% less "
-                    "high-speed distance in the next minute than their match average. "
-                    "It comes back over about 5 minutes.",
+                    "After a player's hardest 5 minutes, high-speed running in the next "
+                    "minute is typically about 40% below their match average. It comes back "
+                    "over about 5 minutes.",
                 )
             )
     elif kind == "fresh_legs":
@@ -404,6 +415,26 @@ def template(b: dict, mode: str) -> list[tuple[str, str]]:
                     + ("." if mode == "fan" else f" ({mine} m vs {theirs} m)."),
                 )
             )
+        share, time = (
+            _v(b, "team_hsr_share_after_ball_changed_hands"),
+            _v(b, "time_share_after_ball_changed_hands"),
+        )
+        lost, rest = _v(b, "team_hsr_per_min_after_losing"), _v(b, "team_hsr_per_min_rest")
+        out.append(
+            (
+                "fact",
+                f"In {block}, {share}% of {name}'s high-speed running came in the first 10 "
+                f"seconds after the ball changed hands, in {time}% of the time the ball was in "
+                "play.",
+            )
+            if mode == "fan"
+            else (
+                "fact",
+                f"In {block}, {name} did {lost} m of high-speed running per minute in the first "
+                f"10 s after losing the ball, against {rest} m per minute the rest of the time "
+                "the ball was in play.",
+            )
+        )
         if mode == "fan":
             out.append(
                 (
@@ -476,7 +507,7 @@ class Lines(BaseModel):
 NARRATOR = """You are the Narrator of Second Wind, live commentary on a synthetic football match
 for {audience}. For each moment write one or two sentences, each a separate line with the
 claim id it uses: a register claim id from the moment's "claims", or "fact" for a measured fact
-from its "facts" (distances, high-speed running, intense spells, energy, speeds).
+from its "facts" (distances, high-speed running, his hardest minutes, energy, speeds).
 
 Rules (a Verifier blocks anything else):
 - Never say a player is tired, exhausted, empty, unfit or fitter, or blame an error, a miss, a
@@ -492,8 +523,11 @@ Rules (a Verifier blocks anything else):
   Every percentage says what it is compared with (his match average, his peak, his team-mates).
 - If the moment lists non_fatigue_reasons, a sentence that mentions fatigue must name the reason
   and hedge ("likely", "may be").
-- The post-peak window is neutral: "just after an intense spell" (it says when, nothing about
-  his body).
+- A red_zone moment is "his hardest minutes so far" (the few minutes when he has run hardest so
+  far); the post-peak window is neutral: "just after his hardest minutes so far" (it says when,
+  nothing about his body). Find a natural sentence for them; never call them a "spell".
+- The battery is never his: not "his battery", not "his typical-pro battery". Claim 11's wording
+  takes no reason after it (a lead or possession does not "explain" running already done).
 - The numbers in the wordings of claims 11, 12 and 13 are examples: for claim 11 use the
   moment's typical_pro_battery_now (0.62 is "about 62%"). What you say must agree with the facts.
 - Say something specific to each moment; use a general register sentence at most twice in the
@@ -508,7 +542,16 @@ Rules (a Verifier blocks anything else):
 - Team numbers are high-speed running (> 5.5 m/s), team totals: say "high-speed running", never
   "covered", which reads as total distance. vs_opponent is how much more (+) or less (−) the
   team ran than the opponent: say "X% more than their opponents", never turn it round.
+- Claims 3 and 4 are general findings: never apply them to this player ("one of those moments
+  for him", "the hardest running of the game for him"); his own running is in the facts.
 - Never write field names such as vs_opponent or top_speed_so_far; write plain English.
+- Team moments (tug_of_war) also say where the running happened, from possession and the ball's
+  position only (team_hsr_share_after_ball_changed_hands with time_share_after_ball_changed_hands,
+  or metres per minute of a situation, never raw totals): "43% of Albion's high-speed running
+  came in the first 10 seconds after the ball changed hands, in 29% of the time the ball was in
+  play". Situations say where, never why: no "pressing", "pressed", "closing down" or other
+  purposes (claim 39), no tiredness. From claim 4 use only its first sentence ("Losing the ball
+  forces the hardest running of the game"); "tired legs" would be about the team (claim 35).
 - Team moments (tug_of_war): the first sentence compares the two teams by name, as the
   comparison is the point: "Albion did 30% more high-speed running per ball-in-play minute than
   Ravensholt in 0:00–15:00" (vs_opponent). For pattern "gap closed" say "the gap has closed",
@@ -517,12 +560,13 @@ Rules (a Verifier blocks anything else):
 - Claim 14 ("fewer touches") only if the moment's claims include it; then give the touch
   counts from the facts (touches_last_5min against touches_per_5min_so_far).
 - An exposed_on_turnover moment with times_exposed_so_far above 1: say it is the second (third…)
-  time his team lost the ball just after an intense spell of his, in those words ("This is the
-  third time his team have lost the ball just after an intense spell of his"), not "exposed".
+  time his team lost the ball just after his hardest minutes so far, in those words ("This is
+  the third time his team have lost the ball just after his hardest minutes so far"), not
+  "exposed".
 - A flat_out run with new_personal_best: say it is his fastest of the match so far, never a
   share of his top speed above 100%.
 - A gap that closed: say the two sides were level, never "0% more".
-- Claims 1 (after a 5-minute spell), 7 (the last 15 minutes) and 36 (top speed late on) are
+- Claims 1 (after his hardest 5 minutes), 7 (the last 15 minutes) and 36 (top speed late on) are
   offered only where they fit; the Verifier blocks them elsewhere.
 - m/s first, km/h in brackets. Plain English.
 {style}"""
@@ -601,10 +645,25 @@ def as_fact(b: dict, claim: str, sentence: str) -> str:
     need = MUST_SAY.get(b["facts"].get("pattern")) if b["kind"] in TEAM_KINDS else None
     if need and re.search(need, sentence, re.I):
         return "fact"
-    if claim in ("fact", None) or claim in SPECIFIC:
+    if claim in ("fact", None):
+        # A register wording tagged "fact" is that claim, not a measurement (the Narrator tagged
+        # claim 9b's "Without the ball, Premier League players typically cover…" as a fact).
+        return next((c["id"] for c in b["claims"] if _wording_of(sentence, c.get("wording"))),
+                    claim)  # fmt: skip
+    if claim in SPECIFIC:
         return claim
-    row = next((c for c in b["claims"] if c["id"] == claim), None) or {}
-    return "fact" if verifier.from_facts(sentence, b["facts"], row.get("wording") or "") else claim
+    # The register's wording even for a claim the moment does not offer: else a number of the
+    # wording that matches a fact by chance ("40%") made claim 1 a "fact" (decision 30).
+    row = next((c for c in b["claims"] if c["id"] == claim), None) or verifier.register_row(claim)
+    wording = (row or {}).get("wording") or ""
+    return "fact" if verifier.from_facts(sentence, b["facts"], wording) else claim
+
+
+def _wording_of(sentence: str, wording: str | None) -> bool:
+    """The sentence is mostly the claim's wording: 60% or more of its longer words."""
+    words = lambda t: set(re.findall(r"[a-z]{4,}", t.lower()))  # noqa: E731
+    own = words(wording or "")
+    return bool(own) and len(own & words(sentence)) >= 0.6 * len(own)
 
 
 async def entries_for(b: dict, mode: str, lines: list[tuple[str, str]], agent) -> list[dict]:
