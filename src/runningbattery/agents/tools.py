@@ -875,8 +875,8 @@ class MatchTools:
     def _moments_flat_out(self) -> list[dict]:
         m, out = self.m, []
         sig = "signals.players[].series.speed (fastest second)"
-        best_in_match = 0.0
         found = []
+        speeds = []  # every outfield player's (video time, speed), for "fastest of anyone"
         for pid, s in m.series.items():
             info = m.players[pid]
             if info["position"] == "GK":
@@ -884,6 +884,7 @@ class MatchTools:
             v = np.where(s.cols["speed"] <= MAX_PLAUSIBLE_SPEED, s.cols["speed"], 0.0)
             top_before = np.maximum.accumulate(np.r_[0.0, v[:-1]])
             video = s.t + np.where(s.period == 2, m.durations[1], 0.0)
+            speeds.append((video, v))
             hot = (
                 (v >= FLAT_OUT_SHARE * top_before)
                 & (top_before >= FLAT_OUT_MIN_SPEED)
@@ -897,8 +898,11 @@ class MatchTools:
         for vid, pid, i, peak, top, late_top in found:
             s, info = m.series[pid], m.players[pid]
             per, t = int(s.period[i]), float(s.t[i])
-            fastest = peak > best_in_match
-            best_in_match = max(best_in_match, peak)
+            # Fastest of anyone so far: against every outfield player's every second before this
+            # one, not only the earlier flat-out moments (decision 37: a run at 10:48 was called
+            # the fastest when another player had been faster outside any flat-out moment).
+            before = [float(sp[tv < vid].max()) for tv, sp in speeds if (tv < vid).any()]
+            fastest = peak > max(before, default=0.0)
             facts = {
                 "peak_speed": q(peak, "m/s", sig, 1),
                 "peak_speed_kmh": q(peak * 3.6, "km/h", sig, 0),
