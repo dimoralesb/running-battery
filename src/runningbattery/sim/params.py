@@ -122,6 +122,7 @@ HI_MIN_S = 1.0
 DRIFT_SPEED = 0.42  # holding the team shape
 DEAD_SPEED = 0.40  # walking back into shape while the ball is dead
 CHASE_SPEED = 0.90  # receiver, presser, interceptor, loose ball
+LOOSE_CHASERS = 1  # per team: the nearest player goes for a loose ball (was 2; decision 37)
 RUN_SPEED = 0.88  # in-possession runs: in behind, overlap, into the box, support
 SHOW_SPEED = 0.70  # coming short to receive
 ONSIDE_SPEED = 0.60  # hurrying back from an offside position
@@ -194,7 +195,10 @@ COVER_DEPTH = 8.0
 SHOW_CHANCE = 0.35  # one team-mate comes short to offer a pass
 OVERLAP_CHANCE = 0.9  # full-back overlaps a wide player on the ball, middle or final third
 BOX_RUN_CHANCE = 0.85  # each forward breaks into the box when the ball is wide in the final third
-BEHIND_CHANCE = 0.25  # a forward near the offside line runs in behind as the pass is played
+# a forward near the offside line runs in behind as a forward pass is played; 0.25 before decision
+# 37 limited the run to forward passes and short of the keeper, raised to keep forwards' and
+# centre-backs' sprint distance (synthesis §4.2) on 60 seeds
+BEHIND_CHANCE = 0.65
 SUPPORT_RUNNERS = 2  # midfielders (not the DM) who sprint up in support in a positive transition
 # On a positive transition, each forward ahead of the ball sprints towards goal with this
 # chance (positive transitions hold the most sprinting [Bortnik2022, Fig. 3]), COUNTER_DEPTH
@@ -202,31 +206,42 @@ SUPPORT_RUNNERS = 2  # midfielders (not the DM) who sprint up in support in a po
 # (OFFSIDE_PASS_WEIGHT). Our assumption, tuned to forwards' sprint distance (synthesis §4.2).
 COUNTER_RUN_CHANCE = 0.55
 COUNTER_DEPTH = (15.0, 30.0)
-# How far beyond the offside line a run in behind aims, m. Our assumption.
+# How far beyond the offside line a run in behind aims, m. Our assumption. A run in behind
+# starts only on a forward pass (the receiver can then play it on), and aims no deeper than
+# BEHIND_KEEPER_GAP metres short of the opponents' goalkeeper: the space is between the back
+# line and the keeper (decision 37). Our assumption.
 BEHIND_DEPTH = (15.0, 30.0)
+BEHIND_KEEPER_GAP = 2.0
 RUN_S = (2.0, 4.5)  # length of a triggered run, s
 # Exploit space: when a team-mate has the ball outside their own third, one free forward may
 # run EXPLOIT_LENGTH metres into space towards goal at RUN_SPEED (Move to Receive / Exploit
-# Space [Ju2022, Table 1]). Our assumption, tuned to the purpose mix and in-possession running.
-EXPLOIT_CHANCE = 0.25
+# Space [Ju2022, Table 1]). Our assumption, tuned to the purpose mix and in-possession running;
+# 0.25 before decision 37, raised with BEHIND_CHANCE for attacking midfielders' running.
+EXPLOIT_CHANCE = 0.35
 EXPLOIT_LENGTH = (12.0, 22.0)
 # Support in settled play: when a team-mate carries the ball in the middle or final third more
 # than MID_SUPPORT_GAP metres ahead of a free midfielder (DM, CM, AM), that midfielder may run
 # up to about MID_SUPPORT_BEHIND metres behind the ball at RUN_SPEED (Support Play [Ju2022,
 # Table 1]). Our assumption, tuned to midfielders' distance (synthesis §4.2); 0.55 with fatigue
-# off, raised with fatigue on like OVERLAP_CHANCE (2026-10-16).
-MID_SUPPORT_CHANCE = 0.65
+# off, raised with fatigue on like OVERLAP_CHANCE (2026-10-16); 0.65 before decision 37, which
+# cut midfielders' close-down runs.
+MID_SUPPORT_CHANCE = 0.85
 MID_SUPPORT_GAP = 15.0
 MID_SUPPORT_BEHIND = 10.0
 # Pressing high: when an opponent gets the ball in their own half, the nearest free forward
 # within PRESS_REACH metres closes them down with this chance. Our assumption, tuned to the
 # purpose mix (forwards close down most [Ju2022, p.978–980]).
-PRESS_RUN_CHANCE = 0.4
+# Nobody presses a carrier a team-mate is already within PRESS_COVERED metres of, and a
+# close-down run ends when the ball reaches a new carrier (it followed the old one; decision
+# 37). Our assumption. The chances were 0.4 and 0.3 (MID_PRESS_CHANCE) before decision 37,
+# raised so that forwards and midfielders keep their high-speed running.
+PRESS_RUN_CHANCE = 0.7
 PRESS_REACH = 20.0
+PRESS_COVERED = 5.0
 # Central midfielders (DM, CM) close down a carrier in the middle third on their side of
 # halfway with this chance (Close Down/Press is one of the CMP actions [Ju2022, p.978–980]).
 # Our assumption, tuned to their HID (synthesis §4.2).
-MID_PRESS_CHANCE = 0.3
+MID_PRESS_CHANCE = 0.75
 # Recovery runs reach full effort only when there is danger: the ball in the team's own half
 # (u < DANGER_U in the team's frame) or the opponent on a counter-attack. Our assumption, tuned
 # to the purpose mix [Ju2022, p.975] and the HID by phase [Allen2026b, Table 5].

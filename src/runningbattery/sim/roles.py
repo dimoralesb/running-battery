@@ -191,7 +191,7 @@ class Roles:
             if self.is_forward[i] and uv[j, 0] > ball_u and self.free(i):
                 if rng.random() < P.COUNTER_RUN_CHANCE:
                     target = uv[j] + np.array([rng.uniform(*P.COUNTER_DEPTH), -0.3 * uv[j, 1]])
-                    target[0] = min(target[0], GOAL_U - 8.0)
+                    target[0] = min(target[0], GOAL_U - 8.0, self.behind_cap(team))
                     t_end = min(e.transition[1], t + rng.uniform(*P.SPRINT_RUN_S))
                     run = Run(RunPurpose.RUN_IN_BEHIND, t_end, P.BEHIND_EFFORT)
                     run.target = e.inside(e.to_uv(team, target))
@@ -206,6 +206,10 @@ class Roles:
         idx = [int(i) for i in e.members(team) if i != carrier]
         c_xy = e.pos[carrier]
         c_u, c_v = e.to_uv(team, c_xy)
+        # Close-down runs follow the ball, so they were aimed at the last carrier: they end.
+        for i, run in list(self.runs.items()):
+            if run.purpose == RunPurpose.CLOSE_DOWN and int(e.team_of[i]) != team:
+                del self.runs[i]
         if self.is_gk[carrier]:
             return
         self.press_carrier(carrier, t)
@@ -299,6 +303,9 @@ class Roles:
         near = [int(i) for i in e.members(team) if who[i] and self.free(int(i))]
         if not near or e.rng.random() >= chance:
             return
+        mates = e.members(team)[1:]
+        if np.hypot(*(e.pos[mates] - e.pos[carrier]).T).min() < P.PRESS_COVERED:
+            return  # a team-mate is already on the carrier
         i = min(near, key=lambda j: float(np.hypot(*(e.pos[j] - e.pos[carrier]))))
         if np.hypot(*(e.pos[i] - e.pos[carrier])) <= P.PRESS_REACH:
             run = Run(RunPurpose.CLOSE_DOWN, t + e.rng.uniform(*P.RUN_S), P.CHASE_SPEED)
@@ -330,7 +337,10 @@ class Roles:
         if not open_play:
             return
         team = int(e.team_of[passer])
+        if e.to_uv(team, end)[0] <= e.to_uv(team, e.pos[passer])[0]:
+            return  # a square or backward pass: the receiver cannot play a forward in behind
         line = e.offside_line(team, e.pos[passer])
+        cap = self.behind_cap(team)
         for i in e.members(team):
             i = int(i)
             if i in (passer, receiver) or not self.is_forward[i] or not self.free(i):
@@ -338,12 +348,20 @@ class Roles:
             i_u, i_v = e.to_uv(team, e.pos[i])
             if line - P.THROUGH_BALL_NEAR_LINE < i_u <= line and rng.random() < P.BEHIND_CHANCE:
                 depth = rng.uniform(*P.BEHIND_DEPTH)
-                target_uv = np.array([min(line + depth, GOAL_U - 6.0), 0.8 * i_v])
+                if min(line + depth, cap) <= i_u:
+                    continue  # the keeper is out at the line: no space in behind
+                target_uv = np.array([min(line + depth, GOAL_U - 6.0, cap), 0.8 * i_v])
                 t_end = t + rng.uniform(*P.SPRINT_RUN_S)
                 run = Run(RunPurpose.RUN_IN_BEHIND, t_end, P.BEHIND_EFFORT)
                 run.target = e.inside(e.to_uv(team, target_uv))
                 self.start(i, run, t)
                 self.track(t, i, run.target)
+
+    def behind_cap(self, team: int) -> float:
+        """How deep (u, in ``team``'s frame) a run in behind may aim: ``BEHIND_KEEPER_GAP``
+        short of the opponents' goalkeeper."""
+        keeper = int(self.e.members(1 - team)[0])
+        return float(self.e.to_uv(team, self.e.pos[keeper])[0]) - P.BEHIND_KEEPER_GAP
 
     def track(self, t: float, runner: int, aim: np.ndarray) -> None:
         """The defenders (CB, FB) nearest a runner in behind sprint back goal-side of where the
@@ -671,7 +689,7 @@ class Roles:
             for k in (0, 1):
                 idx = e.members(k)
                 d = np.hypot(*(e.pos[idx] - e.loose_point).T)
-                for i in idx[np.argsort(d)[:2]]:
+                for i in idx[np.argsort(d)[: P.LOOSE_CHASERS]]:
                     role(int(i), e.loose_point, P.CHASE_SPEED, None)
         else:
             r = e.restart
