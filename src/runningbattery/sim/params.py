@@ -196,22 +196,26 @@ SHOW_CHANCE = 0.35  # one team-mate comes short to offer a pass
 OVERLAP_CHANCE = 0.9  # full-back overlaps a wide player on the ball, middle or final third
 BOX_RUN_CHANCE = 0.85  # each forward breaks into the box when the ball is wide in the final third
 # a forward near the offside line runs in behind as a forward pass is played; 0.25 before decision
-# 37 limited the run to forward passes and short of the keeper, raised to keep forwards' and
-# centre-backs' sprint distance (synthesis §4.2) on 60 seeds
-BEHIND_CHANCE = 0.65
+# 37 limited the run to forward passes and short of the keeper and the penalty spot, raised to
+# keep forwards' and centre-backs' sprint distance (synthesis §4.2) on 60 seeds
+BEHIND_CHANCE = 0.9
 SUPPORT_RUNNERS = 2  # midfielders (not the DM) who sprint up in support in a positive transition
 # On a positive transition, each forward ahead of the ball sprints towards goal with this
 # chance (positive transitions hold the most sprinting [Bortnik2022, Fig. 3]), COUNTER_DEPTH
 # metres ahead. These runs may go beyond the offside line; passers avoid offside team-mates
-# (OFFSIDE_PASS_WEIGHT). Our assumption, tuned to forwards' sprint distance (synthesis §4.2).
-COUNTER_RUN_CHANCE = 0.55
+# (OFFSIDE_PASS_WEIGHT). Our assumption, tuned to forwards' sprint distance (synthesis §4.2);
+# 0.55 before decision 37 stopped these runs short of the keeper and the penalty spot.
+COUNTER_RUN_CHANCE = 0.6
 COUNTER_DEPTH = (15.0, 30.0)
 # How far beyond the offside line a run in behind aims, m. Our assumption. A run in behind
-# starts only on a forward pass (the receiver can then play it on), and aims no deeper than
-# BEHIND_KEEPER_GAP metres short of the opponents' goalkeeper: the space is between the back
-# line and the keeper (decision 37). Our assumption.
+# starts only on a pass at least BEHIND_PASS_FORWARD metres forward (the receiver can then play
+# it on), and aims no deeper than BEHIND_KEEPER_GAP metres short of the opponents' goalkeeper
+# nor nearer goal than BEHIND_GOAL_GAP (the penalty spot): the space is between the back line
+# and the keeper (decision 37). Our assumption.
 BEHIND_DEPTH = (15.0, 30.0)
 BEHIND_KEEPER_GAP = 2.0
+BEHIND_GOAL_GAP = 11.0
+BEHIND_PASS_FORWARD = 5.0
 RUN_S = (2.0, 4.5)  # length of a triggered run, s
 # Exploit space: when a team-mate has the ball outside their own third, one free forward may
 # run EXPLOIT_LENGTH metres into space towards goal at RUN_SPEED (Move to Receive / Exploit
@@ -241,7 +245,7 @@ PRESS_COVERED = 5.0
 # Central midfielders (DM, CM) close down a carrier in the middle third on their side of
 # halfway with this chance (Close Down/Press is one of the CMP actions [Ju2022, p.978–980]).
 # Our assumption, tuned to their HID (synthesis §4.2).
-MID_PRESS_CHANCE = 0.75
+MID_PRESS_CHANCE = 0.7
 # Recovery runs reach full effort only when there is danger: the ball in the team's own half
 # (u < DANGER_U in the team's frame) or the opponent on a counter-attack. Our assumption, tuned
 # to the purpose mix [Ju2022, p.975] and the HID by phase [Allen2026b, Table 5].

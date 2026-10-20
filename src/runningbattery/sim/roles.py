@@ -337,7 +337,7 @@ class Roles:
         if not open_play:
             return
         team = int(e.team_of[passer])
-        if e.to_uv(team, end)[0] <= e.to_uv(team, e.pos[passer])[0]:
+        if e.to_uv(team, end)[0] - e.to_uv(team, e.pos[passer])[0] < P.BEHIND_PASS_FORWARD:
             return  # a square or backward pass: the receiver cannot play a forward in behind
         line = e.offside_line(team, e.pos[passer])
         cap = self.behind_cap(team)
@@ -359,9 +359,10 @@ class Roles:
 
     def behind_cap(self, team: int) -> float:
         """How deep (u, in ``team``'s frame) a run in behind may aim: ``BEHIND_KEEPER_GAP``
-        short of the opponents' goalkeeper."""
+        short of the opponents' goalkeeper, and no nearer goal than ``BEHIND_GOAL_GAP``."""
         keeper = int(self.e.members(1 - team)[0])
-        return float(self.e.to_uv(team, self.e.pos[keeper])[0]) - P.BEHIND_KEEPER_GAP
+        u = float(self.e.to_uv(team, self.e.pos[keeper])[0]) - P.BEHIND_KEEPER_GAP
+        return min(u, GOAL_U - P.BEHIND_GOAL_GAP)
 
     def track(self, t: float, runner: int, aim: np.ndarray) -> None:
         """The defenders (CB, FB) nearest a runner in behind sprint back goal-side of where the
