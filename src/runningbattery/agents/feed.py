@@ -104,9 +104,10 @@ def related(tools: MatchTools, favourite: str | None) -> set[str]:
 def ensure_favourite(picked: list[str], found: dict[str, dict], ids: set[str]) -> list[str]:
     """Add the favourite's (and his replacement's) best moment of each kind in FAVOURITE_KINDS
     that the pick left out (the first FAVOURITE_ARC kinds always, the rest until they have
-    FAVOURITE_MIN), at least a minute from the others. For the first FAVOURITE_ARC kinds his
-    best-ranked moment is added even when another of that kind was picked: the Tactical agent
-    once picked his second turnover and left out the third, the story's (decision 30)."""
+    FAVOURITE_MIN), at least a minute from the other player moments. For the first
+    FAVOURITE_ARC kinds his best-ranked moment is added even when another of that kind was
+    picked: the Tactical agent once picked his second turnover and left out the third, the
+    story's (decision 30)."""
     chosen = [found[i] for i in picked]
     mine = [m for m in chosen if who(m) in ids]
     for n, kind in enumerate(FAVOURITE_KINDS):
@@ -121,7 +122,12 @@ def ensure_favourite(picked: list[str], found: dict[str, dict], ids: set[str]) -
             if (
                 mo["kind"] == kind
                 and who(mo) in ids
-                and all(abs(mo["video_s"] - c["video_s"]) >= 60.0 for c in chosen)
+                # A minute from the other player moments; a team moment at a block's end may be
+                # nearer (its clip is a different picture; decision 37: all of the favourite's
+                # best turnovers fell within 60 s of one and his story dropped out).
+                and all(
+                    abs(mo["video_s"] - c["video_s"]) >= 60.0 for c in chosen if c.get("player")
+                )
             ):
                 chosen.append(mo)
                 mine.append(mo)

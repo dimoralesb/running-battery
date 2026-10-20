@@ -53,7 +53,7 @@ source. The overlay (React) is hosted on Azure Static Web Apps; auth is keyless 
 runs on GitHub Actions.
 
 **How we checked it.** The generator is grounded in 74 papers and checked against 240 synthetic
-matches and 7 real tracked matches (IDSSE, offline calibration only). On 174 test sentences, the
+matches and 7 real tracked matches (IDSSE, offline calibration only). On 180 test sentences, the
 rules alone never block a valid sentence, and rules plus the LLM catch most unsupported ones
 (README, The Verifier).
 
@@ -74,4 +74,4 @@ rules alone never block a valid sentence, and rules plus the LLM catch most unsu
 | Seven read-only MCP tools | `src/runningbattery/agents/mcp_server.py` |
 | gpt-5-mini on Foundry | PLAN decision 18 |
 | 74 papers; 240 matches; 7 IDSSE matches | README; [Bassek2025] |
-| 174 test sentences; rules never block a valid one | `docs/verifier_report.json` |
+| 180 test sentences; rules never block a valid one | `docs/verifier_report.json` |

@@ -15,29 +15,13 @@ const FLAT_MIN = 70; // decimetres per second
 const FLAT_FROM = 600;
 const PLAUSIBLE = 110;
 const PULSE_S = 3; // match seconds the pulse lasts
-// Reachable area in 1 s [Narizuka2023, p.5–6]: the Fujimura–Sugihara model with the paper's
-// fit at Δt = 1 s (α 1.23 1/s, V_max 14.53 m/s): centre x + A·v, radius V_max·(Δt − A),
-// A = (1 − e^(−αΔt))/α ≈ 0.576, radius ≈ 6.2 m (the paper's 6.16 m). v is the 1-s difference
-// of positions, as in the paper (p.2).
-const ALPHA = 1.23;
-const VMAX = 14.53;
-const REACH_A = (1 - Math.exp(-ALPHA)) / ALPHA;
-const REACH_R = VMAX * (1 - REACH_A);
-const REACH_WINDOW = 6; // shown from 6 s before to 6 s after the clip's key second
-const REACH_OPPONENTS = 2;
-
-/** Whether a clip shows its reachable areas now (the page names them in a pitch flag, since a
- * label inside the pitch landed on other players; decision 37). */
-export function reachShown(item: Item, now: number) {
-  return item.reach && Math.abs(now - item.at) <= REACH_WINDOW;
-}
 const TRAIL_STEP = 0.2; // s between trail points (the positions are at 5 Hz)
 const LAPSE_STEP = 2; // s between trail points for a whole match (most ground covered)
 const STRIPES = 12; // mown stripes across the pitch, as on a broadcast
 const FADE_STEPS = 6; // the trail fades towards its start in this many steps, so it shows direction
 
 // Three views (decision 29): the full match, and a clip's Watch and Replay-with-details steps,
-// which show only the clip's player path (and the reachable areas at a turnover).
+// which show only the clip's player path.
 export type View = "full" | "watch" | "replay";
 
 interface Props {
@@ -200,24 +184,6 @@ export function Pitch({ data, now, mode, view, selected, favourite, allBatteries
   const inFocus = (id: string) => id === selected || id === favourite || id === focus;
   const showBattery = (id: string) => allBatteries || id === selected || id === favourite;
 
-  // Reachable areas (model) at a clip's turnover: the player and his nearest opponents.
-  const reach: { id: string; team: string; cx: number; cy: number }[] = [];
-  if (clip && reachShown(clip, now) && clip.player && clip.player in col) {
-    const me = here[col[clip.player]];
-    if (me.xy) {
-      const others = here
-        .filter((h) => h.xy && h.p.team !== me.p.team)
-        .map((h) => ({ h, d: Math.hypot(h.xy![0] - me.xy![0], h.xy![1] - me.xy![1]) }))
-        .sort((a, b) => a.d - b.d).slice(0, REACH_OPPONENTS).map((x) => x.h);
-      for (const h of [me, ...others]) {
-        const before = position(data, col[h.p.id], now - 1) ?? h.xy!;
-        const [vx, vy] = [h.xy![0] - before[0], h.xy![1] - before[1]];
-        reach.push({ id: h.p.id, team: h.p.team, cx: h.xy![0] + REACH_A * vx,
-                     cy: -(h.xy![1] + REACH_A * vy) });
-      }
-    }
-  }
-
   return (
     <svg className={`pitch view-${view}`} viewBox={`${-L / 2 - 2} ${-W / 2 - 2} ${L + 4} ${W + 4}`}
          role="img" aria-label={copy.pitchLabel}>
@@ -230,18 +196,13 @@ export function Pitch({ data, now, mode, view, selected, favourite, allBatteries
       {clip && clip.player && clip.player in col && (
         <Trail data={data} item={clip} now={now} j={col[clip.player]} />
       )}
-      {reach.map((r) => (
-        <g key={`reach-${r.id}`} className={`reach ${r.team}`}>
-          <circle cx={r.cx} cy={r.cy} r={REACH_R} />
-        </g>
-      ))}
       {here.map(({ p, xy, s, i }) => {
         if (!xy) return null;
         const [x, y] = [xy[0], -xy[1]];
         const isSel = p.id === selected;
         const star = clip ? p.id === clip.player : inFocus(p.id);
         // A team clip has no star player, so nothing is dimmed.
-        const dim = clip && clip.player ? !star && !(clip.reach && reach.some((r) => r.id === p.id)) : false;
+        const dim = clip && clip.player ? !star : false;
         const red = !clip && star && i !== null && s.red_zone[i] === 1;
         const since = clip || !star ? undefined
           : (peaks[p.id] ?? []).map((v) => now - v).find((d) => d >= 0 && d < PULSE_S);

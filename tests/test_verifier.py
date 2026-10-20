@@ -124,6 +124,9 @@ def test_report_covers_this_suite():
     # prompt revision 6 with decision 31's cases, 106/108 (F1 5/6; one LLM call timed out),
     # then with G11's wording made clear on 174 sentences, 106/108 (F1 5/6).
     # Decision 37 ("typical pro" as a rule-24 baseline), same prompt: 103/108 (F1 4/6).
+    # With the G12 rule and its two cases, 176 sentences: 106/109 (F1 4/6), 3/67 false blocks.
+    # Rule 33 ("reserve") and the team G5 check with their three cases, 179: 106/111, 4/68;
+    # rule 33 with "his estimated typical-pro reserve", 180: 110/112, 0/68 (F1 5/6).
     assert rep["report"]["llm"]["caught_rate"] >= 0.93
 
 

@@ -211,7 +211,6 @@ export interface Item {
   caption: string;
   h?: Highlight;
   momentId?: string;
-  reach: boolean; // reachable-area circles near `at` (a turnover)
   lapse: boolean; // the whole match at once (most ground covered)
 }
 
@@ -240,7 +239,7 @@ export function itemOfHighlight(h: Highlight): Item {
     player: h.player.id, team: h.player.team, clock: h.clock,
     at: h.kind === "recovery_run" ? h.start_video_s : h.video_s,
     start: lapse ? 0 : h.start_video_s, end: h.end_video_s, segments: h.segments,
-    caption: h.caption, h, reach: h.kind === "recovery_run", lapse,
+    caption: h.caption, h, lapse,
   };
 }
 
@@ -259,7 +258,7 @@ export function queue(d: MatchData, mode: Mode, best: Highlight[]): Item[] {
       id: m.moment_id, source: "moment", kind: m.kind, player: pid, team: e.team,
       clock: m.clock, at: m.video_s, start, end,
       segments: pid ? fastSegments(d.signals[pid], start, end) : [], caption: e.sentence,
-      momentId: m.moment_id, reach: m.kind === "exposed_on_turnover", lapse: false,
+      momentId: m.moment_id, lapse: false,
     });
   }
   return items.sort((a, b) => a.at - b.at);

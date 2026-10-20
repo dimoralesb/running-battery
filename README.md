@@ -53,27 +53,33 @@ It runs fixed rules first, then an LLM pass that can only block, against the cla
 up, the ball is out of play or the player has just come on must say so, and every number must be
 one of the facts. The paraphrases are blocked claims in other words, and the fact checks are
 sentences that do or do not agree with their facts (F1); both were written before the rules or
-the prompt that could catch them and never used to tune them. On 174 test sentences
+the prompt that could catch them and never used to tune them. On 180 test sentences
 ([docs/verifier_report.json](docs/verifier_report.json), prompt revision 7, run on 2026-10-20 after
-decision 37 added "typical pro" to rule 24's baselines):
+decision 37's rule changes: "typical pro" as a rule-24 baseline, G12 (a published finding opened
+with a player's name), rule 33 reading "his (estimated) typical-pro reserve", and G5 asking a team's metres
+per minute to say they are high-speed running):
 
 | | Unsupported sentences caught | Valid sentences blocked |
 |---|---|---|
-| Rules alone | 75 / 108 (paraphrases 2 / 23, fact checks 0 / 6) | 0 / 66 |
-| Rules + LLM | 103 / 108 (paraphrases 23 / 23, fact checks 4 / 6) | 1 / 66 |
+| Rules alone | 79 / 112 (paraphrases 2 / 23, fact checks 0 / 6) | 0 / 68 |
+| Rules + LLM | 110 / 112 (paraphrases 23 / 23, fact checks 5 / 6) | 0 / 68 |
 
 The LLM still misses sentences that mislead without a wrong number: claim 3 ("about a third fewer
 recovery runs right after their hardest minutes") used as the lead-in to a defender's own speed
-after a turnover, "the lowest point of his match" when it was not, a team comparison with the
-wrong percentage ("roughly 22% less"), and two of the six held-out fact checks ("his fastest run
-so far" when it was not, and "less high-speed running per minute than his team-mates" since
-coming on). The previous run of the same prompt (2026-10-20, before the rule change) caught
-106 / 108 (fact checks 5 / 6) and blocked 2 / 66. With prompt revision 5 (166 sentences, 97/104) it also missed "the lowest point of his
+after a turnover, and one of the six held-out fact checks ("his fastest run so far" when it was
+not). The LLM pass varies: the five runs on 2026-10-20, as the suite grew from 174 to 180
+sentences, caught 106 / 108, 103 / 108, 106 / 109, 106 / 111 and 110 / 112 and blocked 2 / 66,
+1 / 66, 3 / 67, 4 / 68 and 0 / 68 valid sentences; the earlier runs also missed "the lowest
+point of his match" when it was not, a team comparison with the wrong percentage ("roughly 22%
+less") and a second fact check. With prompt revision 5 (166 sentences, 97/104) it also missed "the lowest point of his
 match" when it was not and three of the six held-out fact checks, so the LLM pass is a second net,
 not a guarantee. A general finding about short bursts used to explain a 76- or 197-second spell,
-which it missed in every run, is now blocked by a rule (claim 2, below). The valid sentence it
-blocked is "He ran less after the break than before it" (claim 15); the previous run also blocked
-the typical-pro chance worded with "in the red". The rules never block a valid sentence; the LLM pass varies by a sentence
+which it missed in every run, is now blocked by a rule (claim 2, below). In this run it blocked no
+valid sentence; earlier runs blocked "He ran less after the break than before it" (claim 15), the
+typical-pro chance worded with "in the red", "His team kept the ball for most of the last five
+minutes, so he ran less; likely not fatigue", "Without the ball, Ravensholt are covering more
+ground per minute than with it" and a team's share of its high-speed running in the 10 s after
+the ball changed hands. The rules never block a valid sentence; the LLM pass varies by a sentence
 or two from run to run (the first run of revision 6, on 173 sentences: 106/108, 1/65, with one
 LLM check timed out).
 
@@ -110,7 +116,7 @@ key). While a clip plays, only the score, the pitch and the lower third ask for 
 It opens on the **Highlights** (decision 29): one clip at a time, in match order, from the
 match's best physical moments and the feed's moments. Each clip plays once, as it happened, at
 normal speed, with only that player's path on the pitch (the others dimmed), in white, fading
-towards its start with an arrowhead where he is, and the dashed circles where a turnover matters.
+towards its start with an arrowhead where he is.
 When it is over it stops on its last frame ("Clip ended · last frame") and the **Details** tab
 opens (decision 34): the numbers (top speed, distance, metres above 5.5 m/s, the gap timer between
 back-to-back runs), what the feed says about it, the run's speed second by second and his number
@@ -119,10 +125,7 @@ against the published one. Fans see one short label under each line ("Verified �
 and the check; analysts see the full citation and verdict, and the 10–90% band as the first line.
 **Replay** plays the clip again at the clip speed (1× unless the viewer picks ½× or 2×), with the numbers growing; the progress bar seeks within the clip; **Next** starts the next
 clip and gives back the tab the viewer was on. "Play highlights" leaves the details up for 6 s
-before the next clip. The circles show where the player and his two nearest opponents could get to
-in one second, named by a pitch flag "Circles: 1-second reach (model)" (the Fujimura–Sugihara
-motion model with Narizuka's fit at Δt = 1 s, radius 6.2 m [Narizuka2023, p.5–6]); the Details
-tab says what they mean: where two circles overlap, those players could meet within a second. The Clips tab shows each team's fastest second so
+before the next clip. The Clips tab shows each team's fastest second so
 far.
 
 **The battery is the one bold graphic** (decisions 32, 33, 36). The lower third names the clip or

@@ -154,7 +154,8 @@ RULES: tuple[Rule, ...] = (
     # Found in the decision 30 feeds: the field name typical_pro_battery_now as "his typical-pro
     # battery", the old names as "that hardest spell", and a reason pinned to the battery wording.
     Rule("33", "The player's battery, even \"typical-pro\"; say what the running would leave a "
-         "typical professional", r"\b(his|her)\s+typical[- ]pro(fessional)?('s)?\s+battery\b"),
+         "typical professional", r"\b(his|her)\s+([\w-]+\s+){0,2}typical[- ]pro(fessional)?('s)?\s+"
+         r"(short-term\s+)?(battery|reserve)\b"),  # "reserve", "estimated": decision 37 feeds
     Rule("G10", "Our name for the window is \"his hardest minutes\", never a spell (decision 30)",
          r"\b(hardest|intense|red-zone)\s+spell\b|\bhardest minutes\b[^.]*\bspell\b"),
     Rule("G9", "The typical-professional wording describes the running done; nothing explains "
@@ -384,6 +385,23 @@ def context_findings(text: str, context: dict, claim_id: str | None) -> list[Fin
     ):
         out.append(Finding("2", "Claim 2 is a general finding about 1- and 5-minute peaks; give "
                            "his own numbers on their own, not as its example"))  # fmt: skip
+    # G12 (decision 37, found on the site's feed): "Marco Tarvsall: losing the ball forces the
+    # hardest running of the game." A published finding opened with a player's name reads as
+    # being about him (he had jogged). Measured templates ("fact") may open with his name.
+    named = re.match(r"\s*[A-Z][\w'-]+(?: [A-Z][\w'-]+)+:\s", text)
+    if named and claim_id is not None and str(claim_id) != "fact":
+        out.append(Finding("G12", "A published finding opened with a player's name reads as "
+                           "being about him; give it as a general finding, his own numbers "
+                           "apart"))  # fmt: skip
+    # G5 (decision 37 feed, 59:59): "Westerlyn Albion ran 234 m/min without the ball" is the
+    # team's high-speed running; without the word it reads as all running.
+    if (
+        context.get("team_moment")
+        and re.search(r"\d\s*m\s*(/\s*min|per\s+minute|a\s+minute)", text)
+        and not re.search(r"high-speed|above 5\.5|sprint", text)
+    ):
+        out.append(Finding("G5", "Say which running a team's metres per minute are: high-speed "
+                           "running (above 5.5 m/s)"))  # fmt: skip
     offered = context.get("claims_offered")
     if offered is not None and claim_id and str(claim_id) not in offered:
         out.append(Finding(str(claim_id), f"Claim {claim_id} is not offered for this moment "

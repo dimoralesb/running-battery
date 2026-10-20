@@ -199,9 +199,6 @@ select { background: var(--surface); border: 1px solid var(--border); border-rad
   stroke: rgba(0, 0, 0, 0.6); stroke-linejoin: round; pointer-events: none; }
 .flat-label { font-size: 1.8px; font-weight: 600; stroke-width: 0.5px; }
 .trail-label { font-size: 2.4px; font-weight: 700; stroke-width: 0.6px; }
-.reach circle { stroke-width: 0.25; stroke-dasharray: 0.8 0.5; }
-.reach.home circle { fill: var(--home-on-dark); fill-opacity: 0.1; stroke: var(--home-on-dark); }
-.reach.away circle { fill: var(--away-on-dark); fill-opacity: 0.1; stroke: var(--away-on-dark); }
 .trail-path { fill: none; stroke: var(--trail); stroke-width: 0.35; stroke-dasharray: 0.8 0.6; }
 .trail-run { fill: none; stroke: var(--trail); stroke-width: 0.9; stroke-linecap: round; stroke-linejoin: round; }
 .trail-arrow { fill: var(--trail); }
@@ -209,8 +206,6 @@ select { background: var(--surface); border: 1px solid var(--border); border-rad
 @media (max-width: 520px) { .player .shirt { display: none; } }
 .pitch-flag { position: absolute; top: var(--space-2); right: var(--space-2); background: var(--plate);
   color: var(--plate-text-2); font-size: var(--text-xs); padding: 2px var(--space-2); border-radius: var(--radius-plate); }
-.pitch-flag.left { left: var(--space-2); right: auto; }
-@media (max-width: 520px) { .pitch-flag.left { top: calc(var(--space-2) + 22px); } } /* a row under "Clip ended" */
 
 /* Lower third: one dark plate under the pitch. */
 .lower-third { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;

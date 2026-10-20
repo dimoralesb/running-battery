@@ -90,6 +90,10 @@ MIN_IN_PLAY_S = 300.0  # a block needs 5 min of ball in play to compare
 FLAT_OUT_SHARE = 0.9  # a flat-out run: ≥ 90% of his top speed so far (our assumption)
 FLAT_OUT_MIN_SPEED = 7.0  # m/s (25.2 km/h): about the sprint threshold [Bradley2009, p.162]
 FLAT_OUT_FROM_S = 600.0  # from the 10th minute, so that "his top speed so far" means something
+# A new best (his own, or anyone's so far) must beat the old one by this much, so that it shows at
+# the 0.1 m/s we print: 7.92 against 7.88 m/s read as "7.9 and 7.9" and the LLM pass rewrote a
+# true "new personal best" into "not his fastest" (decision 37). Our assumption.
+NEW_BEST_MARGIN = 0.05  # m/s
 MAX_PLAUSIBLE_SPEED = 11.0  # m/s; faster seconds are tracking errors (our assumption)
 # Where each team's running happened (decision 30): situations of play from possession and the
 # ball's position only, ball in play. Situations, not purposes: "pressing" or "recovery runs"
@@ -902,18 +906,18 @@ class MatchTools:
             # one, not only the earlier flat-out moments (decision 37: a run at 10:48 was called
             # the fastest when another player had been faster outside any flat-out moment).
             before = [float(sp[tv < vid].max()) for tv, sp in speeds if (tv < vid).any()]
-            fastest = peak > max(before, default=0.0)
+            fastest = peak >= max(before, default=0.0) + NEW_BEST_MARGIN
             facts = {
                 "peak_speed": q(peak, "m/s", sig, 1),
                 "peak_speed_kmh": q(peak * 3.6, "km/h", sig, 0),
                 "top_speed_so_far": q(top, "m/s (his fastest second before this run)", sig, 1),
-                "new_personal_best": peak > top,
+                "new_personal_best": peak >= top + NEW_BEST_MARGIN,
                 "fastest_in_match_so_far": fastest,
                 "published_match_peak_for_position": q(MATCH_PEAK[info["position"]], "m/s, "
                                                        "mean match peak for his position",
                                                        "SilvaH2025, Table 1 (Brazil, GNSS)", 2),
             }  # fmt: skip
-            if peak <= top:  # a new best is his fastest so far, not "108% of his top speed"
+            if peak < top + NEW_BEST_MARGIN:  # a new best is his fastest so far, not "108%"
                 facts["share_of_top_speed"] = q(100.0 * peak / top, "% of his top speed so far",
                                                 sig, 0)  # fmt: skip
             if vid >= 75 * 60 and late_top > 0:
@@ -926,7 +930,12 @@ class MatchTools:
             direction = self._direction(pid, per, t)
             if direction:
                 facts["running"] = direction
-            score = peak / 10.0 + 0.5 * (peak > top) + 1.0 * fastest + 0.3 * (vid >= 75 * 60)
+            score = (
+                peak / 10.0
+                + 0.5 * (peak >= top + NEW_BEST_MARGIN)
+                + 1.0 * fastest
+                + 0.3 * (vid >= 75 * 60)
+            )
             late = "share_of_top_before_75" in facts
             claims = [c for c in MOMENT_KINDS["flat_out"][1] if c != "36" or late]
             out.append(
@@ -1095,6 +1104,12 @@ class MatchTools:
                     "minutes so far, this one included", "events.jsonl positive_transition and "
                     "signals.players[].series.red_zone, post_peak",
                 )  # fmt: skip
+                # Claim 4 ("losing the ball forces the hardest running of the game") is offered
+                # only if he did run hard after it: next to a player who jogged it read as being
+                # about him, and the clip showed otherwise (decision 37).
+                ran_hard = len(spd) > 0 and float(spd.max()) >= EP.HI_SPEED
+                claims = MOMENT_KINDS["exposed_on_turnover"][1]
+                claims = claims if ran_hard else [c for c in claims if c != "4"]
                 score = (
                     0.5 * (exposed[pid] - 1)  # the same defender exposed again: the story
                     + 2.0 * goal
@@ -1112,6 +1127,7 @@ class MatchTools:
                         score,
                         facts,
                         "his team lost the ball just after his hardest minutes so far",
+                        claims,
                     )
                 )
         return out

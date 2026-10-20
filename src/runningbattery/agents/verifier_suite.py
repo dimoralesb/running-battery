@@ -393,6 +393,36 @@ CONTEXT = [
      "for Marco Tarvsall.", "fan",
      {"facts": {"mean_speed_next_8s": {"value": 3.1, "unit": "m/s"}},
       "claims_offered": ["4", "3", "11"]}, "4", False),
+    # … and again on the decision 37 feed (14:20), as a name and a colon, while he jogged (top
+    # 4.6 m/s); both passes let it through, and the G12 rule was written from it. The finding
+    # on its own is fine.
+    ("Marco Tarvsall: losing the ball forces the hardest running of the game.", "fan",
+     {"facts": {"mean_speed_next_8s": {"value": 3.9, "unit": "m/s"}},
+      "claims_offered": ["4", "3", "11"]}, "4", False),
+    ("Losing the ball forces the hardest running of the game.", "fan",
+     {"facts": {"mean_speed_next_8s": {"value": 3.9, "unit": "m/s"}},
+      "claims_offered": ["4", "3", "11"]}, "4", True),
+    # … his own "typical-pro reserve" (35:17; rule 33 read only "battery"), and a team's
+    # metres per minute without saying they are high-speed running (59:59); the rules were
+    # extended from them. The worded-out versions are fine.
+    ("He did hardly any high-speed running in the last 5 min while his typical-pro short-term "
+     "reserve estimate is about 91% (band 82–96%).", "analyst",
+     {"facts": {"typical_pro_battery": {"value": 0.91, "unit": "share"}}}, None, False),
+    ("He came on 10 min ago and his estimated typical-pro short-term reserve is about 85%.",
+     "analyst", {"facts": {"typical_pro_battery": {"value": 0.85, "unit": "share"},
+                           "minutes_on": {"value": 10, "unit": "min"}}}, None, False),
+    ("In 45:00–60:00 Westerlyn Albion ran 234 m/min without the ball and 214 m/min with the "
+     "ball.", "fan",
+     {"team_moment": True, "team_names": ["Westerlyn Albion", "Ravensholt Albion"],
+      "facts": {"team_hsr_per_min_without_ball": {"value": 234, "unit": "m/min"},
+                "team_hsr_per_min_with_ball": {"value": 214, "unit": "m/min"},
+                "block": "45:00–60:00"}}, None, False),
+    ("In 45:00–60:00 Westerlyn Albion did 234 m of high-speed running per minute without the "
+     "ball and 214 m with it.", "fan",
+     {"team_moment": True, "team_names": ["Westerlyn Albion", "Ravensholt Albion"],
+      "facts": {"team_hsr_per_min_without_ball": {"value": 234, "unit": "m/min"},
+                "team_hsr_per_min_with_ball": {"value": 214, "unit": "m/min"},
+                "block": "45:00–60:00"}}, None, True),
     # … the player's own state as a share, in an LLM rewrite on the site's feed (claim 33; the
     # rule read only percentages) …
     ("Earlier in the match he fell to about 0.64 of a typical professional's short-term reserve; "

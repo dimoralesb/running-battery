@@ -117,7 +117,7 @@ A clip plays once at 1×, from 3 s before its first run to 2 s after its end (a 
 The clip stops on its last frame. Lower third unchanged. Pitch flag "Clip ended · last frame". The Details tab opens (rule 1) with, in order:
 
 1. **Numbers strip** (at most 4 cells; Cowan ~4±1): "Top speed in this clip" (m/s, km/h in brackets), "Distance in this clip", "Of it above 5.5 m/s (19.8 km/h)"; a back-to-back clip adds "High-speed run n / N" and "Since his last high-speed run"; a whole-match clip shows "Distance since kick-off" alone. "Speed now" shows only in Replay (it moves). No battery cell: the lower third carries it (no repeated values). **Not built:** the mock's "3rd time so far" cell (no such field in `feed.json`).
-2. **The lines**, under "Commentary" (`linesTitle`): the clip's first line (the caption, which for a highlight is the measured caption), then the moment's other lines, then, under a quiet "Blocked by the Verifier", any lines the Verifier blocked (struck through with the rule they broke; kept for both modes, they are the Verifier's evidence). A reach clip ("Caught on the break", "Recovery run") adds what the circles mean (`reachNote`; analysts `reachNoteAnalyst`).
+2. **The lines**, under "Commentary" (`linesTitle`): the clip's first line (the caption, which for a highlight is the measured caption), then the moment's other lines, then, under a quiet "Blocked by the Verifier", any lines the Verifier blocked (struck through with the rule they broke; kept for both modes, they are the Verifier's evidence).
 3. **Speed chart** (`speedChart`, hover for values, click to jump; whole-match clip: the distance chart).
 4. **"Against the published number"** (`compare`) for highlight clips, once the clip is over.
 5. **Team clip** ("Team high-speed running"): instead of 1, 3, 4: the team running chart and that 15-minute block's "High-speed running by situation" chart, after the lines.
@@ -190,7 +190,6 @@ Breakpoints: bug codes at ≤ 520 px (as today); lower third moves under the pit
 - **`step=details`:** opens the Details tab, paused on the last frame. **`auto=1`:** needs no tab touch (tab rules 1 and 3).
 - **Analyst on a phone:** no second row (Layouts).
 - **Switching Fan/Analyst or Match mid-clip:** the clip keeps playing; the list, lines and band follow the new mode; the count disappears if the clip is no longer in the list.
-- **A recovery or caught-on-the-break clip:** the reach circles stay on the pitch, named by a pitch flag "Circles: 1-second reach (model)" (`reachLabel`, top-left; on a phone a row under the top-right flag) while they show, from 6 s before to 6 s after the key second (decision 37: a label inside the pitch landed on other players); the note that says what they mean is in Details (`reachNote`; analysts `reachNoteAnalyst`, with the model and its numbers).
 
 ---
 
@@ -236,7 +235,7 @@ Frame = always visible. Tabs: C Clips, T Team sheet, D Details, S Settings. "Kep
 | Pitch: grass, stripes, lines, ball, markers, shirt numbers, team colours | Frame, pitch | kept as is |
 | Pitch: selected-marker outline, marker click | Frame, pitch | kept; in a clip it only outlines |
 | Pitch: clip trail, thick high-speed runs, value label at the end | Frame, pitch | direction added (fix 8) |
-| Pitch: reach circles + pitch flag "Circles: 1-second reach (model)" | Frame, pitch | note `reachNote` / `reachNoteAnalyst` to D (Details step); `legendReach` in S › Key |
+| Pitch: reach circles | **Removed** (decision 37) | at 1 s their size is fixed, so they told a first-time viewer little |
 | Pitch: battery icon above a player | Frame, pitch | Fan only; clip's player / followed / favourite / all |
 | Pitch: focus ring, hardest-minutes ring, flat-out pulse + label, favourite ring (Full match) | Frame, pitch | explained in S › Key |
 | Pitch: dimming of non-star markers | Frame, pitch | kept for player clips; **dropped** for team clips (it dims everything) |
@@ -252,7 +251,6 @@ Frame = always visible. Tabs: C Clips, T Team sheet, D Details, S Settings. "Kep
 | Lower third: team clip (no battery) | Frame, lower third, team slot | both teams' running (edge cases) |
 | Lower third: goalkeeper / off pitch | Frame, lower third | "GK", or `offPitch` |
 | Lower third: "Following" (`ltFollow`), Full match | Frame, lower third | |
-| Reach note under the lower third (`legendReach`) | D (Details of a reach clip: `reachNote`, `reachNoteAnalyst`), S › Key (`legendReach`) | off the picture in Watch |
 | Previous / Replay / Play-Pause / Next | Frame, play bar | quiet; Previous by match time; Play disabled in Details |
 | "Ready" emphasis on Replay and Next in Details | **Dropped** | equal weight, outlined |
 | Team sheet in the left column (`TeamSheet`, `sheetTitle`, `sheetSub`) | T | |

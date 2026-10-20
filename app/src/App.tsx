@@ -16,7 +16,7 @@ import {
 import { BrandMark, LowerThird, TeamSheet, reading } from "./Battery";
 import { Feed } from "./Feed";
 import { Highlights, reel } from "./Highlights";
-import { Legend, Pitch, reachShown } from "./Pitch";
+import { Legend, Pitch } from "./Pitch";
 import { Replay } from "./Replay";
 import { SplitChart } from "./SplitChart";
 import { TeamChart } from "./TeamChart";
@@ -360,9 +360,6 @@ export default function App() {
                    flatLabel={copy.flatLabel} onSelect={setSelected} />
           )}
           {view === "highlights" && step === "details" && <span className="pitch-flag">{copy.clipEnded}</span>}
-          {view === "highlights" && cur && reachShown(cur, now) && (
-            <span className="pitch-flag left">{copy.reachLabel}</span>
-          )}
         </div>
 
         {view === "highlights" && cur
