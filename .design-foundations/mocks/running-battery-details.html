@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<!-- No DESIGN.md found — wireframe mode: greyscale defaults. Run /design-for-ai to establish tokens. -->
+<!-- No JOURNEY.md found — structure taken from plan 2026-10-20-running-battery-overlay.md and the mock brief. -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Running Battery overlay — Details (wireframe mock)</title>
+<style>
+/* === WIREFRAME GREYSCALE DEFAULTS (no DESIGN.md) === */
+:root {
+  --background: #ffffff; --surface: #f5f5f5; --surface-hover: #ebebeb;
+  --border-subtle: #e0e0e0; --border: #bdbdbd; --border-strong: #9e9e9e;
+  --text-secondary: #616161; --text: #212121;
+  --accent-solid: #424242; --accent-on-solid: #ffffff; --accent-text: #212121;
+  /* pitch, greyscale stand-ins for the mown green + team colours */
+  --pitch: #9a9a9a; --pitch-stripe: #a6a6a6; --pitch-line: #f2f2f2;
+  --home: #2b2b2b; --away: #ffffff; --trace: #ffffff; --hero-ring: #ffffff;
+  --text-xs: .75rem; --text-sm: .875rem; --text-base: 1rem; --text-lg: 1.125rem;
+  --text-xl: 1.25rem; --text-2xl: 1.5rem; --text-3xl: 1.875rem; --text-4xl: 2.25rem;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, sans-serif; background: var(--background); color: var(--text); line-height: 1.45; }
+.num { font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+.mocknote { background: var(--surface); border-bottom: 1px dashed var(--border-strong); color: var(--text-secondary);
+  font-size: var(--text-xs); padding: .3rem 1rem; display: flex; justify-content: space-between; }
+.mocknote b { color: var(--text); }
+.frame { max-width: 1180px; margin: 0 auto; padding: 0 1rem 3rem; }
+
+/* top bar */
+.top { display: flex; align-items: center; justify-content: space-between; padding: .7rem 0; gap: 2rem; }
+.scorebug { display: inline-flex; align-items: stretch; text-transform: uppercase; font-weight: 700;
+  letter-spacing: .02em; font-size: var(--text-sm); border: 2px solid var(--accent-solid); }
+.scorebug span { padding: .35rem .75rem; display: flex; align-items: center; }
+.scorebug .score { background: var(--accent-solid); color: var(--accent-on-solid); font-size: var(--text-lg); }
+.scorebug .clock { border-left: 2px solid var(--accent-solid); }
+.brand { display: flex; align-items: center; gap: .6rem; text-align: right; }
+.brand .name { font-weight: 700; font-size: var(--text-sm); }
+.brand .tagline { font-size: var(--text-xs); color: var(--text-secondary); max-width: 26rem; line-height: 1.3; }
+.mark { width: 26px; height: 14px; border: 2px solid var(--text); border-radius: 2px; position: relative; flex: none; }
+.mark::before { content: ""; position: absolute; inset: 1px 30% 1px 1px; background: var(--text); }
+.mark::after { content: ""; position: absolute; right: -5px; top: 3px; width: 3px; height: 4px; background: var(--text); }
+
+/* pitch + lower third */
+.stage { position: relative; }
+.pitch { display: block; width: 100%; height: auto; }
+.dot circle { stroke-width: .3; }
+.dot text { font-size: 1.3px; text-anchor: middle; font-weight: 700; font-family: system-ui, sans-serif; }
+.home circle { fill: var(--home); stroke: #fff; } .home text { fill: #fff; }
+.away circle { fill: var(--away); stroke: #2b2b2b; } .away text { fill: #2b2b2b; }
+.hero circle { fill: var(--home); stroke: #fff; stroke-width: .45; } .hero text { fill: #fff; font-size: 1.8px; }
+.frozen { position: absolute; top: .75rem; right: .75rem; background: rgba(255,255,255,.88); color: var(--text-secondary);
+  font-size: var(--text-xs); padding: .2rem .55rem; }
+.lowerthird { position: absolute; left: 1.25rem; bottom: 1.25rem; display: grid;
+  grid-template-columns: auto auto; align-items: center; gap: 2rem; background: var(--background);
+  padding: .85rem 1.25rem .85rem 1.1rem; box-shadow: 0 1px 0 var(--border-strong); border-left: 4px solid var(--accent-solid); }
+.lt-who .moment { font-size: var(--text-sm); color: var(--text-secondary); }
+.lt-who .player { font-size: var(--text-2xl); font-weight: 700; line-height: 1.15; display: flex; align-items: baseline; gap: .5rem; }
+.lt-who .player .shirt { font-size: var(--text-xl); }
+.lt-who .player .pos { font-size: var(--text-sm); font-weight: 500; color: var(--text-secondary); }
+.lt-who .player .clock { font-size: var(--text-base); font-weight: 600; color: var(--text-secondary); margin-left: .75rem; }
+.gauge { display: grid; grid-template-columns: auto auto; column-gap: .9rem; align-items: center; }
+.cell { width: 168px; height: 44px; border: 3px solid var(--text); border-radius: 5px; padding: 3px; position: relative; }
+.cell::after { content: ""; position: absolute; right: -9px; top: 12px; width: 6px; height: 14px; background: var(--text); border-radius: 0 2px 2px 0; }
+.cell .fill { height: 100%; width: 83%; background: var(--accent-solid); border-radius: 2px; }
+.pct { font-size: var(--text-4xl); font-weight: 800; line-height: 1; }
+.gauge .cap { grid-column: 1 / -1; font-size: var(--text-xs); color: var(--text-secondary); margin-top: .35rem; }
+
+/* quiet controls */
+.controls { display: flex; align-items: center; gap: .25rem; padding: .55rem 0; border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-secondary); font-size: var(--text-sm); }
+.controls button { font: inherit; color: inherit; background: none; border: 1px solid transparent; padding: .3rem .7rem; min-height: 32px; cursor: pointer; }
+.controls button:disabled { color: var(--border-strong); }
+.controls button.emph { color: var(--accent-on-solid); background: var(--accent-solid); font-weight: 600; }
+.controls button.emph.outline { color: var(--text); background: none; border-color: var(--accent-solid); }
+.controls .count { margin-left: auto; }
+
+/* quiet tabs */
+.tabs { display: flex; gap: 1.75rem; border-bottom: 1px solid var(--border-subtle); margin-top: .9rem; }
+.tabs a { color: var(--text-secondary); text-decoration: none; font-size: var(--text-sm); padding: .55rem 0; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tabs a[aria-selected="true"] { color: var(--text); font-weight: 600; border-color: var(--text); }
+.panel { padding: 1rem 0; }
+.fastest { font-size: var(--text-sm); color: var(--text-secondary); margin-bottom: .6rem; }
+.fastest b { color: var(--text); font-weight: 600; }
+.sep { color: var(--border-strong); margin: 0 .3rem; }
+.cliplist { list-style: none; }
+.clip { display: grid; grid-template-columns: 2rem 16rem 1fr 5rem 7rem; align-items: center; padding: .5rem .5rem;
+  border-bottom: 1px solid var(--border-subtle); font-size: var(--text-sm); }
+.clip .n { color: var(--text-secondary); } .clip .p { color: var(--text-secondary); } .clip .c { text-align: right; }
+.clip.current { background: var(--surface); font-weight: 600; }
+.clip.current .p { color: var(--text); }
+.clip .now { font-size: var(--text-xs); color: var(--text-secondary); text-align: right; font-weight: 400; }
+.more { font-size: var(--text-xs); color: var(--text-secondary); padding: .6rem .5rem; }
+.panel-head { font-size: var(--text-sm); color: var(--text-secondary); margin-bottom: .75rem; }
+.stats { display: grid; grid-template-columns: 1fr 1fr 2fr; gap: 1px; background: var(--border-subtle); border: 1px solid var(--border-subtle); margin-bottom: 1.1rem; }
+.stats > div { background: var(--background); padding: .7rem .9rem; }
+.stats dt { font-size: var(--text-xs); color: var(--text-secondary); }
+.stats dd { font-size: var(--text-2xl); font-weight: 700; }
+.stats dd small { font-size: var(--text-sm); font-weight: 500; color: var(--text-secondary); }
+.feed { list-style: none; max-width: 52rem; }
+.line { padding: .7rem 0; border-bottom: 1px solid var(--border-subtle); }
+.line > p:first-child { font-size: var(--text-base); }
+.meta { margin-top: .3rem; display: flex; gap: .6rem; align-items: center; font-size: var(--text-xs); color: var(--text-secondary); }
+.tag { border: 1px solid var(--border-strong); border-radius: 999px; padding: .05rem .5rem; color: var(--text); }
+</style>
+</head>
+<body>
+<p class="mocknote"><span><b>Mock · wireframe · State 2: Details</b> — clip finished: last frame, Replay and Next emphasised, Feed tab open with this clip's details</span>
+  <span>No DESIGN.md: greyscale wireframe defaults (pitch green, team colours and type are placeholders)</span></p>
+<div class="frame">
+<header class="top">
+  <p class="scorebug" aria-label="Score"><span>Westerlyn Albion</span><span class="score num">0–1</span><span>Ravensholt Albion</span><span class="clock num">24:37</span></p>
+  <div class="brand"><div><p class="name">Running Battery</p>
+    <p class="tagline">How much hard running each player has done, and what it would leave a typical professional</p></div>
+    <span class="mark" aria-hidden="true"></span></div>
+</header>
+<main>
+  <section class="stage" aria-label="Pitch">
+    <svg class="pitch" viewBox="-2 -2 109 72" preserveAspectRatio="xMidYMid meet" role="img" aria-label="[Pitch: 22 players, Marco Tarvsall highlighted with his path]">
+<rect x="-2" y="-2" width="109" height="72" fill="var(--pitch)"/>
+<rect x="0" y="0" width="7.5" height="68" fill="var(--pitch-stripe)"/>
+<rect x="15" y="0" width="7.5" height="68" fill="var(--pitch-stripe)"/>
+<rect x="30" y="0" width="7.5" height="68" fill="var(--pitch-stripe)"/>
+<rect x="45" y="0" width="7.5" height="68" fill="var(--pitch-stripe)"/>
+<rect x="60" y="0" width="7.5" height="68" fill="var(--pitch-stripe)"/>
+<rect x="75" y="0" width="7.5" height="68" fill="var(--pitch-stripe)"/>
+<rect x="90" y="0" width="7.5" height="68" fill="var(--pitch-stripe)"/>
+<g fill="none" stroke="var(--pitch-line)" stroke-width="0.35">
+<rect x="0" y="0" width="105" height="68"/><line x1="52.5" y1="0" x2="52.5" y2="68"/>
+<circle cx="52.5" cy="34" r="9.15"/>
+<path d="M0 13.84 H16.5 V54.16 H0"/><path d="M0 24.84 H5.5 V43.16 H0"/>
+<path d="M16.5 26.69 A9.15 9.15 0 0 1 16.5 41.31"/>
+<circle cx="11" cy="34" r="0.3" fill="var(--pitch-line)"/>
+<path d="M105 13.84 H88.5 V54.16 H105"/><path d="M105 24.84 H99.5 V43.16 H105"/>
+<path d="M88.5 26.69 A9.15 9.15 0 0 0 88.5 41.31"/>
+<circle cx="94" cy="34" r="0.3" fill="var(--pitch-line)"/>
+<circle cx="52.5" cy="34" r="0.3" fill="var(--pitch-line)"/></g>
+<polyline points="73,53 67,52.6 60,52 53,51 46.5,49.6 40,48" fill="none" stroke="var(--trace)" stroke-width="0.6" stroke-linecap="round" stroke-dasharray="1.2 0.9"/>
+<g class="dot home"><circle cx="5" cy="34" r="1.35"/><text x="5" y="34.55">1</text></g>
+<g class="dot home"><circle cx="30" cy="18" r="1.35"/><text x="30" y="18.55">2</text></g>
+<g class="dot home"><circle cx="28" cy="34" r="1.35"/><text x="28" y="34.55">4</text></g>
+<g class="dot home"><circle cx="30" cy="50" r="1.35"/><text x="30" y="50.55">5</text></g>
+<g class="dot home"><circle cx="47" cy="22" r="1.35"/><text x="47" y="22.55">6</text></g>
+<g class="dot home"><circle cx="52" cy="36" r="1.35"/><text x="52" y="36.55">8</text></g>
+<g class="dot home"><circle cx="77" cy="56" r="1.35"/><text x="77" y="56.55">10</text></g>
+<g class="dot home"><circle cx="66" cy="14" r="1.35"/><text x="66" y="14.55">7</text></g>
+<g class="dot home"><circle cx="70" cy="40" r="1.35"/><text x="70" y="40.55">9</text></g>
+<g class="dot home"><circle cx="64" cy="28" r="1.35"/><text x="64" y="28.55">11</text></g>
+<g class="dot away"><circle cx="100" cy="34" r="1.35"/><text x="100" y="34.55">1</text></g>
+<g class="dot away"><circle cx="64" cy="58" r="1.35"/><text x="64" y="58.55">2</text></g>
+<g class="dot away"><circle cx="52" cy="43" r="1.35"/><text x="52" y="43.55">3</text></g>
+<g class="dot away"><circle cx="46" cy="28" r="1.35"/><text x="46" y="28.55">4</text></g>
+<g class="dot away"><circle cx="55" cy="20" r="1.35"/><text x="55" y="20.55">5</text></g>
+<g class="dot away"><circle cx="36" cy="39" r="1.35"/><text x="36" y="39.55">6</text></g>
+<g class="dot away"><circle cx="40" cy="30" r="1.35"/><text x="40" y="30.55">8</text></g>
+<g class="dot away"><circle cx="26" cy="42" r="1.35"/><text x="26" y="42.55">9</text></g>
+<g class="dot away"><circle cx="30" cy="24" r="1.35"/><text x="30" y="24.55">10</text></g>
+<g class="dot away"><circle cx="19" cy="50" r="1.35"/><text x="19" y="50.55">11</text></g>
+<g class="dot away"><circle cx="31" cy="54" r="1.35"/><text x="31" y="54.55">7</text></g>
+<circle cx="40" cy="48" r="3" fill="none" stroke="var(--hero-ring)" stroke-width="0.5"/>
+<g class="dot hero"><circle cx="40" cy="48" r="1.9"/><text x="40" y="48.7">3</text></g>
+<circle cx="27.6" cy="42.4" r="0.75" fill="#fff" stroke="#111" stroke-width="0.25"/>
+</svg>
+    <p class="frozen">Clip ended · last frame</p>
+    <aside class="lowerthird" aria-label="Lower third">
+      <div class="lt-who">
+        <p class="moment">Caught on the break</p>
+        <p class="player"><span class="shirt num">3</span> Marco Tarvsall <span class="pos">FB</span><span class="clock num">24:37</span></p>
+      </div>
+      <div class="gauge" role="meter" aria-valuenow="83" aria-valuemin="0" aria-valuemax="100">
+        <div class="cell"><div class="fill"></div></div><span class="pct num">83%</span>
+        <p class="cap">What this running would leave a typical professional</p>
+      </div>
+    </aside>
+  </section>
+  <nav class="controls" aria-label="Clip controls"><button disabled>Previous</button><button class="emph">Replay</button><button disabled>Pause</button><button class="emph outline">Next</button><span class="count num">7 / 19</span></nav>
+  <nav class="tabs" role="tablist" aria-label="Panels"><a href="#" role="tab" aria-selected="false">Clips</a><a href="#" role="tab" aria-selected="false">Team sheet</a><a href="#" role="tab" aria-selected="true">Feed</a><a href="#" role="tab" aria-selected="false">Settings</a></nav>
+  <section class="panel" aria-label="Feed: this clip's details">
+  <p class="panel-head">Caught on the break <span class="sep">·</span> Marco Tarvsall <span class="sep">·</span> <span class="num">24:37</span></p>
+  <dl class="stats">
+    <div><dt>Top speed</dt><dd class="num">8.1 m/s <small>(29 km/h)</small></dd></div>
+    <div><dt>Battery</dt><dd class="num">83%</dd></div>
+    <div class="wide"><dt>Lost the ball just after his hardest minutes</dt><dd class="num">3rd time <small>so far</small></dd></div>
+  </dl>
+  <ul class="feed"><li class="line"><p>This is the third time Marco Tarvsall's team have lost the ball just after his hardest minutes so far.</p><p class="meta"><span class="tag">Verified</span><span class="src">Measured fact</span></p></li><li class="line"><p>In the Premier League, players make about a third fewer high-speed recovery runs right after their hardest minutes of the match than they normally do.</p><p class="meta"><span class="tag">Verified</span><span class="src">Claim 3 · Ju2022</span></p></li><li class="line"><p>That running would leave a typical professional at about 83% of their short-term reserve, by our estimate.</p><p class="meta"><span class="tag">Template (plain code)</span><span class="src">Claim 11 · Skiba2012, Jones2017</span></p></li></ul>
+</section>
+</main>
+</div>
+</body>
+</html>
