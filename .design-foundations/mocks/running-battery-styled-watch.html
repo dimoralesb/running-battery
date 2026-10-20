@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Running Battery, Watch (styled mock)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira:wdth,wght@100..125,400..800&display=swap">
+<style>
+/* === Tokens: DESIGN.md token block, verbatim === */
+/* Running Battery · Charge Plate tokens. Dark is the default (:root); light is opt-in. */
+:root {
+  color-scheme: dark;
+
+  /* Neutrals, dark: palette.mjs --seed "#3b7638" --chroma muted --harmony mono */
+  --neutral-1: #121312;
+  --neutral-2: #191a19;
+  --neutral-3: #212321;
+  --neutral-4: #282b28;
+  --neutral-5: #303330;
+  --neutral-6: #393d38;
+  --neutral-7: #454b45;
+  --neutral-8: #5c635b;
+  --neutral-9: #b1bab0;
+  --neutral-10: #c4cec3;
+  --neutral-11: #b3b9b3;
+  --neutral-12: #e5e9e5;
+
+  /* Semantic aliases (page) */
+  --background: var(--neutral-1);
+  --surface: var(--neutral-2);
+  --surface-hover: var(--neutral-3);
+  --surface-active: var(--neutral-4);
+  --border-subtle: var(--neutral-6);
+  --border: var(--neutral-7);
+  --text-secondary: var(--neutral-11);
+  --text: var(--neutral-12);
+  --control-edge: var(--text-secondary);   /* outlined buttons (Replay, Next) */
+  --focus: var(--text);                     /* 2 px focus ring, offset 2 px */
+  --accent-solid: var(--text);              /* the charge on the page: gauges in Team sheet */
+  --accent-on-solid: var(--background);
+  --gauge-band: var(--text-secondary);      /* analyst band brackets on the page */
+
+  /* Broadcast plates: identical in both themes */
+  --plate: #191a19;
+  --plate-raised: #282b28;                  /* the score cell */
+  --plate-edge: #393d38;                    /* 1 px hairline where a plate meets the dark page */
+  --plate-text: #e5e9e5;
+  --plate-text-2: #b3b9b3;
+  --charge: #f4f6f2;                        /* the battery: shell, fill, %, on plates */
+  --charge-band: var(--plate-text-2);       /* analyst band brackets on plates */
+
+  /* Teams: dark-ground pair (pitch, plates, dark page) */
+  --home-on-dark: #3987e5;
+  --away-on-dark: #d95926;
+  --on-team: #121312;                       /* shirt numbers on markers */
+  --home: var(--home-on-dark);              /* page dots, lines, chart marks */
+  --away: var(--away-on-dark);
+
+  /* Pitch: identical in both themes */
+  --grass: #173a1b;
+  --grass-alt: #1a3e1e;
+  --pitch-line: rgba(255, 255, 255, 0.6);
+  --on-pitch: #ffffff;                      /* labels on grass, with a dark halo */
+  --trail: #ffffff;                         /* the star player's run */
+  --warning: #fab219;                       /* hardest minutes ring, always with its Key label */
+
+  /* Type */
+  --font: "Saira", "Barlow", "Segoe UI", system-ui, sans-serif;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.375rem;
+  --text-2xl: 1.75rem;
+  --text-3xl: 2.25rem;
+  --text-4xl: 3rem;
+  --leading-body: 1.45;
+  --leading-tight: 1.1;
+
+  /* Space, shape, motion */
+  --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
+  --space-5: 24px; --space-6: 32px; --space-7: 48px;
+  --radius-plate: 2px;
+  --radius-shell: 4px;
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --dur-micro: 120ms;
+  --dur-standard: 200ms;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  /* Neutrals, light: palette.mjs (same run) */
+  --neutral-1: #fcfdfc;
+  --neutral-2: #f8f9f8;
+  --neutral-3: #eff1ef;
+  --neutral-4: #e6e9e5;
+  --neutral-5: #dbdfdb;
+  --neutral-6: #cfd4ce;
+  --neutral-7: #bfc6be;
+  --neutral-8: #a6ada5;
+  --neutral-9: #b1bab0;
+  --neutral-10: #9fa79e;
+  --neutral-11: #60655f;
+  --neutral-12: #2c2f2c;
+
+  /* Teams: light-ground pair (light page only; pitch and plates keep the dark-ground pair) */
+  --home: #2a78d6;
+  --away: #eb6834;
+}
+
+/* === Mock components (tokens only) === */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+body { font-family: var(--font); font-size: var(--text-base); line-height: var(--leading-body);
+  background: var(--background); color: var(--text); overflow-x: hidden; }
+.num { font-variant-numeric: tabular-nums; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.mocknote { position: fixed; right: 8px; bottom: 8px; z-index: 9; font-size: var(--text-xs); color: var(--text-secondary);
+  background: var(--background); border: 1px solid var(--border-subtle); padding: 2px 8px; border-radius: var(--radius-plate); }
+
+.frame { width: min(100%, calc((100vh - 330px) * 1.514)); min-width: min(100%, 720px); margin: 0 auto; padding: 0 0 var(--space-7); }
+
+/* Top band: score bug left, brand right */
+.top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-5); padding: var(--space-3) 0; min-height: 64px; }
+.scorebug { display: inline-flex; flex: none; align-items: stretch; height: 36px; background: var(--plate); color: var(--plate-text);
+  border: 1px solid var(--plate-edge); border-radius: var(--radius-plate); text-transform: uppercase; letter-spacing: .04em;
+  font-weight: 700; font-size: var(--text-base); line-height: 1; white-space: nowrap; }
+.scorebug > span { display: flex; align-items: center; gap: var(--space-2); padding: 0 var(--space-3); }
+.scorebug .chip { width: 8px; height: 16px; padding: 0; flex: none; }
+.chip.home, .lt .chip.home { background: var(--home-on-dark); }
+.chip.away, .lt .chip.away { background: var(--away-on-dark); }
+.scorebug .score { background: var(--plate-raised); font-size: var(--text-xl); font-weight: 800; letter-spacing: 0; padding: 0 var(--space-3); }
+.scorebug .clock { font-weight: 600; letter-spacing: 0; border-left: 1px solid var(--plate-edge); }
+.scorebug .code { display: none; }
+.brand { display: flex; flex: 1; min-width: 0; align-items: flex-start; gap: var(--space-3); text-align: right; justify-content: flex-end; }
+.brand .name { white-space: nowrap; font-weight: 700; font-size: var(--text-base); line-height: var(--leading-tight); }
+.brand .synth { font-weight: 500; font-size: var(--text-xs); color: var(--text-secondary); }
+.brand .tagline { font-size: var(--text-xs); color: var(--text-secondary); max-width: 21rem; margin-left: auto; line-height: 1.3; margin-top: 2px; }
+.mark { position: relative; width: 24px; height: 12px; border: 1.5px solid var(--text); border-radius: 3px; flex: none; margin-top: 2px; }
+.mark::after { content: ""; position: absolute; right: -4.5px; top: 2.5px; width: 3px; height: 4px; background: var(--text); border-radius: 0 1px 1px 0; }
+
+/* Pitch band */
+.stage { position: relative; }
+.pitch { display: block; width: 100%; height: auto; }
+.mk circle { stroke: rgba(0,0,0,.5); stroke-width: .25; }
+.mk.home circle { fill: var(--home-on-dark); }
+.mk.away circle { fill: var(--away-on-dark); }
+.mk text { font-family: var(--font); font-size: 1.35px; font-weight: 700; text-anchor: middle; fill: var(--on-team); font-variant-numeric: tabular-nums; }
+.mk.hero text { font-size: 1.9px; font-weight: 800; }
+.flag { position: absolute; top: 14px; right: 14px; background: var(--plate); color: var(--plate-text-2);
+  font-size: var(--text-xs); padding: 3px var(--space-2); border-radius: var(--radius-plate); }
+
+/* Lower third */
+.lt { position: absolute; left: 3.2%; bottom: calc(2.8% + 24px); display: grid; grid-template-columns: auto auto; align-items: center;
+  column-gap: var(--space-6); background: var(--plate); color: var(--plate-text); padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-plate); }
+.lt .moment { font-size: var(--text-base); font-weight: 500; color: var(--plate-text-2); }
+.lt .moment .sep { margin: 0 .35em; }
+.lt .who { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-2xl); font-weight: 700; line-height: var(--leading-tight); margin-top: 2px; white-space: nowrap; }
+.lt .who .chip { width: 8px; height: 18px; flex: none; }
+.lt .who .shirt { font-weight: 800; }
+.lt .who .pos { font-size: var(--text-sm); font-weight: 500; color: var(--plate-text-2); align-self: flex-end; margin-bottom: 3px; }
+.gauge { display: flex; align-items: center; }
+.shell { position: relative; display: block; width: 168px; height: 44px; border: 2px solid var(--charge); border-radius: var(--radius-shell); }
+.fill { position: absolute; left: 3px; top: 3px; bottom: 3px; min-width: 2px; background: var(--charge); border-radius: 1px; transition: width .25s linear; }
+.band { position: absolute; top: -11px; bottom: -11px; }
+.band::before, .band::after { content: ""; position: absolute; left: -2px; right: -2px; height: 6px; border: 2px solid var(--charge-band); }
+.band::before { top: 0; border-bottom: 0; }
+.band::after { bottom: 0; border-top: 0; }
+.nub { width: 5px; height: 16px; background: var(--charge); border-radius: 0 2px 2px 0; }
+.pct { font-size: var(--text-4xl); font-weight: 800; line-height: 1; color: var(--charge); min-width: 3.1ch; text-align: right; margin-left: var(--space-3); }
+.pct-band { font-size: var(--text-sm); color: var(--plate-text-2); margin-left: var(--space-2); align-self: flex-end; margin-bottom: 4px; }
+.cap { font-size: var(--text-xs); color: var(--plate-text-2); margin-top: var(--space-3); }
+
+/* Play bar + tabs: quiet */
+.controls { display: flex; align-items: center; gap: var(--space-1); height: 44px; color: var(--text-secondary); font-size: var(--text-sm); }
+.controls button { min-height: 32px; padding: 0 var(--space-3); border: 1px solid transparent; border-radius: var(--radius-plate); }
+.controls button:hover { color: var(--text); text-decoration: underline; }
+.controls button:disabled { color: var(--border); cursor: default; text-decoration: none; }
+.controls button.outline { border-color: var(--control-edge); color: var(--text); }
+.controls .status { margin-left: auto; }
+.tabs { display: flex; gap: var(--space-6); border-bottom: 1px solid var(--border-subtle); height: 48px; align-items: flex-end; }
+.tabs a { color: var(--text-secondary); text-decoration: none; font-size: var(--text-sm); padding: var(--space-3) 0; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tabs a[aria-selected="true"] { color: var(--text); font-weight: 600; border-color: var(--text); }
+
+/* Panels: rules and rows, no cards */
+.panel { padding: var(--space-3) 0; }
+.panel-title { font-size: var(--text-sm); font-weight: 600; margin: var(--space-3) 0 var(--space-1); }
+.fastest { font-size: var(--text-sm); color: var(--text-secondary); }
+.fastest .dot { margin-right: var(--space-2); vertical-align: 1px; }
+.fastest .num, .fastest b { white-space: nowrap; }
+.fastest b { color: var(--text); font-weight: 600; }
+.quiet-link { font-size: var(--text-sm); color: var(--text-secondary); margin-top: var(--space-2); }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.dot.home { background: var(--home); }
+.dot.away { background: var(--away); }
+.cliplist { list-style: none; border-top: 1px solid var(--border-subtle); }
+.clip { position: relative; display: grid; grid-template-columns: 8px 1.75rem 13rem 1fr auto; column-gap: var(--space-3); align-items: center;
+  padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--border-subtle); font-size: var(--text-sm); }
+.clip .n, .clip .p { color: var(--text-secondary); }
+.clip .c { margin-left: var(--space-2); }
+.clip:hover .m { text-decoration: underline; }
+.clip.current { font-weight: 600; }
+.clip.current::before { content: ""; position: absolute; left: 0; top: 4px; bottom: 4px; width: 3px; background: var(--text); }
+.clip.current .p, .clip.current .n { color: var(--text); }
+.clip .now { font-size: var(--text-xs); font-weight: 500; color: var(--text-secondary); }
+.more { font-size: var(--text-xs); color: var(--text-secondary); padding: var(--space-2) var(--space-3); }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle); }
+.stats > div { padding: var(--space-2) var(--space-4) var(--space-2) 0; }
+.stats > div + div { padding-left: var(--space-4); border-left: 1px solid var(--border-subtle); }
+.stats dt { font-size: var(--text-xs); font-weight: 500; color: var(--text-secondary); }
+.stats dd { font-size: var(--text-xl); font-weight: 800; line-height: var(--leading-tight); margin-top: 2px; }
+.stats dd small { font-size: var(--text-sm); font-weight: 500; color: var(--text-secondary); }
+.feed { list-style: none; max-width: 44rem; }
+.line { padding: var(--space-2) 0 var(--space-3); border-bottom: 1px solid var(--border-subtle); }
+.meta { margin-top: var(--space-1); display: flex; gap: var(--space-3); align-items: center; font-size: var(--text-xs); color: var(--text-secondary); }
+.verdict { display: inline-flex; align-items: center; gap: 6px; font-size: var(--text-xs); color: var(--text-secondary); text-decoration: underline dotted; text-underline-offset: 3px; }
+.tick { width: 9px; height: 5px; border-left: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(-45deg) translateY(-1px); }
+.foot { font-size: var(--text-xs); color: var(--text-secondary); padding-top: var(--space-5); border-top: 1px solid var(--border-subtle); margin-top: var(--space-5); }
+
+/* Phone */
+@media (max-width: 700px) {
+  .frame { width: 100%; min-width: 0; padding: 0 var(--space-4) var(--space-7); }
+  .top { flex-direction: column-reverse; align-items: stretch; gap: var(--space-2); }
+  .brand { justify-content: flex-start; text-align: left; }
+  .brand .tagline { max-width: none; }
+  .lt { position: static; grid-template-columns: 1fr; row-gap: var(--space-2); border-radius: 0; padding: var(--space-3) var(--space-4); }
+  .lt .who { font-size: var(--text-xl); }
+  .shell { width: 132px; height: 36px; }
+  .pct { font-size: var(--text-3xl); }
+  .controls { flex-wrap: wrap; height: auto; padding: var(--space-1) 0; }
+  .controls button { min-height: 44px; flex: 1; padding: 0 var(--space-1); }
+  .controls .status { flex-basis: 100%; text-align: right; }
+  .tabs { gap: 0; justify-content: space-between; }
+  .tabs a { flex: 1; text-align: center; }
+  .clip { grid-template-columns: 8px 1.5rem minmax(0, 1fr); row-gap: 0; }
+  .clip .p { grid-column: 3; }
+  .clip .now { grid-column: 3; }
+  .clip .m { overflow-wrap: anywhere; }
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 520px) {
+  .scorebug { font-size: var(--text-sm); height: 32px; }
+  .scorebug .full { display: none; }
+  .scorebug .code { display: inline; }
+  .scorebug .score { font-size: var(--text-lg); }
+}
+
+</style>
+</head>
+<body>
+<p class="mocknote">Styled mock · Watch · dark · tokens: DESIGN.md (ready to lock)</p>
+<div class="frame">
+<header class="top">
+  <p class="scorebug" aria-label="Westerlyn Albion 0, Ravensholt Albion 1, 24:37">
+    <span><span class="chip home"></span><span class="full">Westerlyn Albion</span><span class="code">WES</span></span>
+    <span class="score num">0–1</span>
+    <span><span class="full">Ravensholt Albion</span><span class="code">RAV</span><span class="chip away"></span></span>
+    <span class="clock num">24:37</span></p>
+  <div class="brand"><span class="mark" aria-hidden="true"></span><div>
+    <p class="name">Running Battery <span class="synth">· synthetic match</span></p>
+    <p class="tagline">How much hard running each player has done, and what it would leave a typical professional</p></div></div>
+</header>
+<main>
+  <section class="stage" aria-label="Pitch">
+    <svg class="pitch" viewBox="-2 -2 109 72" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Pitch: 22 players; 3 Marco Tarvsall ringed, with his run">
+<rect x="-2" y="-2" width="109" height="72" fill="var(--grass)"/>
+<rect x="7.5" y="-2" width="7.5" height="72" fill="var(--grass-alt)"/>
+<rect x="22.5" y="-2" width="7.5" height="72" fill="var(--grass-alt)"/>
+<rect x="37.5" y="-2" width="7.5" height="72" fill="var(--grass-alt)"/>
+<rect x="52.5" y="-2" width="7.5" height="72" fill="var(--grass-alt)"/>
+<rect x="67.5" y="-2" width="7.5" height="72" fill="var(--grass-alt)"/>
+<rect x="82.5" y="-2" width="7.5" height="72" fill="var(--grass-alt)"/>
+<rect x="97.5" y="-2" width="7.5" height="72" fill="var(--grass-alt)"/>
+<g fill="none" stroke="var(--pitch-line)" stroke-width="0.35">
+<rect x="0" y="0" width="105" height="68"/><line x1="52.5" y1="0" x2="52.5" y2="68"/>
+<circle cx="52.5" cy="34" r="9.15"/>
+<path d="M0 13.84 H16.5 V54.16 H0"/><path d="M0 24.84 H5.5 V43.16 H0"/>
+<path d="M16.5 26.69 A9.15 9.15 0 0 1 16.5 41.31"/>
+<circle cx="11" cy="34" r="0.3" fill="var(--pitch-line)"/>
+<path d="M105 13.84 H88.5 V54.16 H105"/><path d="M105 24.84 H99.5 V43.16 H105"/>
+<path d="M88.5 26.69 A9.15 9.15 0 0 0 88.5 41.31"/>
+<circle cx="94" cy="34" r="0.3" fill="var(--pitch-line)"/>
+<circle cx="52.5" cy="34" r="0.3" fill="var(--pitch-line)"/></g>
+<line x1="73" y1="53" x2="67" y2="52.6" stroke="var(--trail)" stroke-width="0.35" stroke-dasharray="0.9 0.7" opacity="0.40"/>
+<line x1="67" y1="52.6" x2="60" y2="52" stroke="var(--trail)" stroke-width="0.35" stroke-dasharray="0.9 0.7" opacity="0.55"/>
+<line x1="60" y1="52" x2="53" y2="51" stroke="var(--trail)" stroke-width="0.8" stroke-linecap="round" opacity="0.70"/>
+<line x1="53" y1="51" x2="46.5" y2="49.6" stroke="var(--trail)" stroke-width="0.8" stroke-linecap="round" opacity="0.85"/>
+<line x1="46.5" y1="49.6" x2="42.6" y2="48.5" stroke="var(--trail)" stroke-width="0.8" stroke-linecap="round" opacity="1.00"/>
+<polygon points="41.54,48.20 43.44,48.18 43.15,49.21" fill="var(--trail)"/>
+<g class="mk home"><circle cx="5" cy="34" r="1.35"/><text x="5" y="34.5">1</text></g>
+<g class="mk home"><circle cx="30" cy="18" r="1.35"/><text x="30" y="18.5">2</text></g>
+<g class="mk home"><circle cx="28" cy="34" r="1.35"/><text x="28" y="34.5">4</text></g>
+<g class="mk home"><circle cx="30" cy="50" r="1.35"/><text x="30" y="50.5">5</text></g>
+<g class="mk home"><circle cx="47" cy="22" r="1.35"/><text x="47" y="22.5">6</text></g>
+<g class="mk home"><circle cx="52" cy="36" r="1.35"/><text x="52" y="36.5">8</text></g>
+<g class="mk home"><circle cx="77" cy="56" r="1.35"/><text x="77" y="56.5">10</text></g>
+<g class="mk home"><circle cx="66" cy="14" r="1.35"/><text x="66" y="14.5">7</text></g>
+<g class="mk home"><circle cx="70" cy="40" r="1.35"/><text x="70" y="40.5">9</text></g>
+<g class="mk home"><circle cx="64" cy="28" r="1.35"/><text x="64" y="28.5">11</text></g>
+<g class="mk away"><circle cx="100" cy="34" r="1.35"/><text x="100" y="34.5">1</text></g>
+<g class="mk away"><circle cx="64" cy="58" r="1.35"/><text x="64" y="58.5">2</text></g>
+<g class="mk away"><circle cx="52" cy="43" r="1.35"/><text x="52" y="43.5">3</text></g>
+<g class="mk away"><circle cx="46" cy="28" r="1.35"/><text x="46" y="28.5">4</text></g>
+<g class="mk away"><circle cx="55" cy="20" r="1.35"/><text x="55" y="20.5">5</text></g>
+<g class="mk away"><circle cx="36" cy="39" r="1.35"/><text x="36" y="39.5">6</text></g>
+<g class="mk away"><circle cx="40" cy="30" r="1.35"/><text x="40" y="30.5">8</text></g>
+<g class="mk away"><circle cx="26" cy="42" r="1.35"/><text x="26" y="42.5">9</text></g>
+<g class="mk away"><circle cx="30" cy="24" r="1.35"/><text x="30" y="24.5">10</text></g>
+<g class="mk away"><circle cx="19" cy="50" r="1.35"/><text x="19" y="50.5">11</text></g>
+<g class="mk away"><circle cx="31" cy="54" r="1.35"/><text x="31" y="54.5">7</text></g>
+<circle cx="40" cy="48" r="2.9" fill="none" stroke="var(--trail)" stroke-width="0.5"/>
+<g class="mk home hero"><circle cx="40" cy="48" r="1.9"/><text x="40" y="48.7">3</text></g>
+<g class="pitch-batt"><rect x="37.75" y="41.449999999999996" width="4.8" height="2.3" rx="0.3" fill="var(--plate)"/><rect x="38.1" y="41.8" width="3.6" height="1.6" rx="0.25" fill="none" stroke="var(--charge)" stroke-width="0.18"/><rect x="38.4" y="42.099999999999994" width="2.49" height="1.0" fill="var(--charge)"/><rect x="41.7" y="42.25" width="0.3" height="0.7" fill="var(--charge)"/></g>
+<circle cx="27.6" cy="42.4" r="0.7" fill="#fff" stroke="#111" stroke-width="0.2"/>
+</svg>
+    
+    <aside class="lt" aria-label="Lower third">
+      <div>
+        <p class="moment">Caught on the break<span class="sep">·</span><span class="num">24:37</span></p>
+        <p class="who"><span class="chip home"></span><span class="shirt num">3</span> Marco Tarvsall <span class="pos">FB</span></p>
+      </div>
+      <div><div class="gauge" role="meter" aria-valuenow="83" aria-valuemin="0" aria-valuemax="100" aria-label="What this running would leave a typical professional: 83%">
+        <span class="shell"><span class="fill" style="width:calc((100% - 6px) * 0.83)"></span></span><span class="nub"></span>
+        <span class="pct num">83%</span>
+      </div>
+      <p class="cap">What this running would leave a typical professional</p></div>
+    </aside>
+  </section>
+  <nav class="controls" aria-label="Clip controls"><button>Previous</button><button>Replay</button><button>Pause</button><button>Next</button><span class="status num">Watch · 7 / 19</span></nav>
+  <nav class="tabs" role="tablist" aria-label="Panels"><a href="#" role="tab" aria-selected="true">Clips</a><a href="#" role="tab" aria-selected="false">Team sheet</a><a href="#" role="tab" aria-selected="false">Details</a><a href="#" role="tab" aria-selected="false">Settings</a></nav>
+  <section class="panel" aria-label="Clips">
+  <p class="fastest"><span class="dot home"></span>Fastest so far, Westerlyn Albion: <b>Adam Morrbury</b>, <span class="num">9.0 m/s (32 km/h)</span></p>
+  <p class="fastest"><span class="dot away"></span>Fastest so far, Ravensholt Albion: <b>Hugo Dorrlowe</b>, <span class="num">8.7 m/s (31 km/h)</span></p>
+  <p class="quiet-link"><a href="#">Full match</a></p>
+  <h2 class="panel-title">All the clips, in match order</h2>
+  <ol class="cliplist"><li class="clip"><span class="dot away"></span><span class="n num">1</span><span class="m">Back-to-back runs</span><span class="p">Kofi Rasknell <span class="c num">1:35</span></span><span class="now"></span></li><li class="clip"><span class="dot away"></span><span class="n num">2</span><span class="m">Hardest minutes</span><span class="p">Kofi Rasknell <span class="c num">1:36</span></span><span class="now"></span></li><li class="clip"><span class="dot away"></span><span class="n num">3</span><span class="m">Caught on the break</span><span class="p">Yusuf Jorraway <span class="c num">4:07</span></span><span class="now"></span></li><li class="clip"><span class="dot home"></span><span class="n num">4</span><span class="m">Quiet spell</span><span class="p">Marco Tarvsall <span class="c num">10:00</span></span><span class="now"></span></li><li class="clip"><span class="dot home"></span><span class="n num">5</span><span class="m">Who's doing the running</span><span class="p">Westerlyn Albion <span class="c num">14:59</span></span><span class="now"></span></li><li class="clip"><span class="dot home"></span><span class="n num">6</span><span class="m">Flat out</span><span class="p">Marco Tarvsall <span class="c num">20:05</span></span><span class="now"></span></li><li class="clip current" aria-current="true"><span class="dot home"></span><span class="n num">7</span><span class="m">Caught on the break</span><span class="p">Marco Tarvsall <span class="c num">24:37</span></span><span class="now">Now playing</span></li><li class="clip"><span class="dot home"></span><span class="n num">8</span><span class="m">Second wind</span><span class="p">Marco Tarvsall <span class="c num">30:01</span></span><span class="now"></span></li></ol>
+  <p class="more">11 more clips, in match order</p>
+</section>
+  <p class="foot">Synthetic match. The battery describes the running: what it would leave a typical professional, never how tired this player is.</p>
+</main>
+</div>
+<script>
+addEventListener('load', () => setTimeout(() => {
+  const r = s => { const e = document.querySelector(s); return e ? Math.round(e.getBoundingClientRect().top) : -1; };
+  const caps = [...document.querySelectorAll('body *')].filter(e => getComputedStyle(e).textTransform === 'uppercase')
+    .filter(e => !e.closest('.scorebug')).length;
+  document.body.dataset.probe = JSON.stringify({ vw: innerWidth, vh: innerHeight,
+    scrollWidth: document.documentElement.scrollWidth, tabsTop: r('.tabs'), panelTop: r('.panel'),
+    firstLineTop: r('.stats, .fastest'), frameWidth: Math.round(document.querySelector('.frame').getBoundingClientRect().width),
+    upperOutsideBug: caps, font: document.fonts.check('700 16px Saira') });
+}, 1500));
+</script>
+</body>
+</html>

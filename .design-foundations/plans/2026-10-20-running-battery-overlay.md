@@ -1,7 +1,7 @@
 # Plan: Running Battery overlay as a cleaned-up broadcast
 
 - Date: 2026-10-20 · Track: **Quick** · Entry stage: **Discover** (no DESIGN.md or JOURNEY.md yet)
-- **Status:** in-progress · **Started:** 2026-10-20 · **Current Phase:** 1 · Branch: `redesign`
+- **Status:** complete · **Started:** 2026-10-20 · **Completed:** 2026-10-20 · **Current Phase:** done · Branch: `redesign`
 - Seed: `.design-foundations/research/2026-10-20-running-battery.md`
 
 ## Context
@@ -123,3 +123,10 @@ over the green pitch; contrast of white text on both team colours.
 - [x] REVIEW: PASS (haiku; one Major: the tab named "Feed" is weak scent for a clip's details)
 - [x] Committed
 Summary: JOURNEY.md holds the overlay's page spec (Watch, Details, Replay, Full match; tabs Clips, Team sheet, Feed, Settings), maps every current element and all 13 URL parameters, lists new copy to verify (incl. the analyst trace tooltip, which lacked "typical professional"), and leaves seven defaults open for sign-off.
+
+### Phase 2: Visual identity (Gate: Full)
+- [x] BUILD: Discovery + design + production complete (fable)
+- [x] REVIEW: PASS (sonnet; detector 0 findings; DW-2.5 partial: three inline numbers not tabular, carried into the build)
+- [x] User confirmed the lock (2026-10-20): lower third docked under the pitch, plain dots on a phone, near-white charge
+- [x] Committed
+Summary: DESIGN.md locked ("Charge Plate": Saira, muted grass-tinted neutrals, dark plates, the near-white battery as the one bold graphic, 74/74 contrast pairs in both themes); styled mocks in .design-foundations/mocks/; next is rebuilding app/ to DESIGN.md and JOURNEY.md.

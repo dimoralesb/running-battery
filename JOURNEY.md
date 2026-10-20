@@ -1,6 +1,6 @@
 # JOURNEY.md
 
-<!-- The structural and temporal design spec for the Running Battery overlay (`app/`). Pairs with DESIGN.md (visual tokens; Phase 2, not yet written). For visual tokens, see DESIGN.md. Written 2026-10-20, Phase 1 of `.design-foundations/plans/2026-10-20-running-battery-overlay.md`. -->
+<!-- The structural and temporal design spec for the Running Battery overlay (`app/`). Pairs with DESIGN.md (visual tokens; Phase 2, ready to lock). For visual tokens, see DESIGN.md. Written 2026-10-20, Phase 1 of `.design-foundations/plans/2026-10-20-running-battery-overlay.md`. -->
 
 Scope: the overlay only. Out of scope: the data, the agents' lines, the science, new features. The spec describes today's overlay as it is in the code, then where each part goes in the cleaned-up broadcast.
 
@@ -23,9 +23,9 @@ Scope: the overlay only. Out of scope: the data, the agents' lines, the science,
 |-------|---------|---------|---------|-------------|---------------------------|
 | Arrive | Opens the link; the first clip starts at once | "What am I looking at?" | Med | Score bug, brand line, pitch, lower third | One place to look: the pitch and one bar (Phase 2 look) |
 | Watch | Follows the star player's run | "Where is it going?" | High | Pitch trail, lower third gauge | Trail shows direction (fix 8) (Phase 2/build) |
-| Details | Clip stops; reads the first line and the numbers | "Why is this a moment? Can I trust it?" | High to Med | Feed tab: first line, numbers strip, verdict label | First lines visible without scrolling at 1440×900 (fix 1) (build) |
-| Probe | Replay; opens sources; Team sheet; Analyst; Next | "Is it only this clip?" | Med | Play bar, Feed sources, Team sheet, Settings | Previous and Next always work (fix 2) (build) |
-| Leave | Scores; maybe opens Full match | "Did it hold together?" | Med | Full match, the footer line | Footer states "Synthetic match" (open item 4) |
+| Details | Clip stops; reads the first line and the numbers | "Why is this a moment? Can I trust it?" | High to Med | Details tab: first line, numbers strip, verdict label | First lines visible without scrolling at 1440×900 (fix 1) (build) |
+| Probe | Replay; opens sources; Team sheet; Analyst; Next | "Is it only this clip?" | Med | Play bar, Details sources, Team sheet, Settings | Previous and Next always work (fix 2) (build) |
+| Leave | Scores; maybe opens Full match | "Did it hold together?" | Med | Full match, the brand line | The brand line says "synthetic match", always visible (signed off 2026-10-20) |
 
 **Decision model:** not a purchase, so the loyalty loop does not apply. The honest model is the explore↔evaluate loop of the messy middle (Google 2020) in small: each clip is a Watch→Details loop, repeated until the judge has seen enough. It is not a funnel (journey-caveats: linear-funnel fallacy).
 
@@ -46,19 +46,19 @@ Overlay (one page, the URL's parameters set where it opens)
 └── Tabs (one at a time, under the frame)
     ├── Clips        the clip list (Highlights) · highlights so far and moments (Full match)
     ├── Team sheet   followed player · both line-ups with batteries · team charts
-    ├── Feed         this clip's details (Highlights) · live explanations (Full match)
+    ├── Details      this clip's details (Highlights) · the agents' lines as they come (Full match)
     └── Settings     View · Fan/Analyst · Match · Favourite player · Theme · pitch options · Key
 ```
 
-**Global navigation labels:** Clips, Team sheet, Feed, Settings (the plan's names; "Feed" is the one label with weak scent in Details, see open item 2). **Validation:** NOT VALIDATED (no card sort, no tree test; four labels, one page). The mock review (PASS, 2026-10-20) is the only check.
+**Global navigation labels:** Clips, Team sheet, Details, Settings (user sign-off 2026-10-20: the tab that holds a clip's details is named "Details", not "Feed", for scent). **Validation:** NOT VALIDATED (no card sort, no tree test; four labels, one page). The mock review (PASS, 2026-10-20) is the only check.
 
 ## Flows
 
-**1. Watch the highlights (task flow).** Entry: the link. Goal: understand one clip. Steps: (1) the first clip plays (Watch, Clips tab) → (2) the clip ends: Feed opens with its details (Details) → (3) read: numbers, lines, sources → (4) Next → the next clip plays and the viewer gets back the tab they were on. Error: data fails to load (state below). Success: the judge has seen several clips and opened one source.
+**1. Watch the highlights (task flow).** Entry: the link. Goal: understand one clip. Steps: (1) the first clip plays (Watch, Clips tab) → (2) the clip ends: the Details tab opens with them (Details) → (3) read: numbers, lines, sources → (4) Next → the next clip plays and the viewer gets back the tab they were on. Error: data fails to load (state below). Success: the judge has seen several clips and opened one source.
 
 **2. Auto-play (task flow).** Entry: `auto=1`. Watch → Details (6 s) → next Watch … stops on the last Details. No tab touch needed.
 
-**3. Replay a clip (user flow).** Details → Replay → plays at ½× with the numbers growing in Feed → ends in Details. Decision: Next or Replay again (equal weight).
+**3. Replay a clip (user flow).** Details → Replay → plays at ½× with the numbers growing in the Details tab → ends in Details. Decision: Next or Replay again (equal weight).
 
 **4. Follow a player (user flow).** Team sheet tab → click a name → the Full match opens at the current time following him (today's behaviour); in Full match a click only changes who is followed.
 
@@ -77,11 +77,11 @@ Overlay (one page, the URL's parameters set where it opens)
 **Content blocks (in order, top to bottom; identical in every step):**
 
 1. **Score bug**, top-left: both team names in full, a team colour chip beside each name, the score, the running match clock. Capitals only here. On phone ≤ 520 px: three-letter codes (WES, RAV) next to the chips; the lower third and tabs still use the full names.
-2. **Brand line**, top-right: the battery mark (an outline, never a reading, never a fill level), "Running Battery", and the tagline "How much hard running each player has done, and what it would leave a typical professional" (`tagline`). The name never appears without the tagline (decision 14). On phone the line sits above the score bug and the tagline wraps to two lines.
+2. **Brand line**, top-right: the battery mark (an outline, never a reading, never a fill level), "Running Battery", next to it, small, "· synthetic match" (`brandSynthetic`; always visible, signed off 2026-10-20), and the tagline "How much hard running each player has done, and what it would leave a typical professional" (`tagline`). The name never appears without the tagline (decision 14). On phone the line sits above the score bug and the tagline wraps to two lines.
 3. **Pitch**: the mown-stripe pitch with white lines and the two team colours. In a clip: the star player ringed, his run trail (thin path, thick where he ran above 5.5 m/s) with an arrowhead at the current position or a tail fading toward the start (fix 8), his battery icon above him (Fan), the ball, the other markers at normal strength. A pitch flag "Clip ended · last frame" appears top-right in Details only. Height budget below.
 4. **Lower third**, docked inside the pitch, bottom-left, lifted at least 24 px off the touchline (phone: below the pitch). Row 1: the moment name and its clock ("Caught on the break · 24:37"). Row 2: shirt number, player name, position. Battery slot: the gauge (outline shell, continuous fill, the 10–90% band as a bracket in Analyst), the percentage, and under the gauge "What this running would leave a typical professional" (`ltBatterySub`). Nothing else: no caption, no feed line, no band sentence (decision 5 in the discovery file).
 5. **Play bar**, under the pitch (low emphasis): Highlights: Previous · Replay · Play/Pause · Next, then on the right the step name (Watch, Details, Slow-motion replay) and "7 / 19". Full match: Play/Pause · match-time slider · speed 1× 5× 20×.
-6. **Tab bar**: Clips · Team sheet · Feed · Settings. Selected = primary text, weight 600, 2 px underline in the text colour.
+6. **Tab bar**: Clips · Team sheet · Details · Settings. Selected = primary text, weight 600, 2 px underline in the text colour.
 7. **Tab panel**: the open tab's content (below).
 8. **Footer line**: `disclaimer` ("Synthetic match. The battery describes the running: what it would leave a typical professional, never how tired this player is.").
 
@@ -92,29 +92,29 @@ Overlay (one page, the URL's parameters set where it opens)
 | Pitch | clip plays 1×; star, trail | clip's last frame; trail complete; "Clip ended · last frame" flag | plays ½×; trail grows | whole match; players, ball; focus rings (below) |
 | Lower third | moment · player · battery, live | same, at the last frame | same, live | the moment on screen (from 8 s before to 6 s after it) or "Following" the selected player |
 | Play bar | Previous · Replay · Pause · Next · "Watch" · n / N | same; Play disabled; "Details" | same; "Slow-motion replay" | Play · slider · 1× 5× 20× |
-| Tab that opens | Clips (or the tab the viewer was on) | **Feed** | **Feed** | **Feed** |
-| Feed tab holds | "This clip's details open when it ends." | the clip's details | the details, growing | live explanations |
+| Tab that opens | Clips (or the tab the viewer was on) | **Details** | **Details** | **Details** |
+| Details tab holds | "This clip's details open when it ends." | the clip's details | the details, growing | the agents' lines as they come |
 
 **Tab rules (one rule set; the viewer's own choice always wins):**
 
-1. A step opens a tab only when the step starts by itself: a clip ending opens Feed (Details), Replay opens Feed, a deep link opens its own (table below), Full match from a link opens Feed.
+1. A step opens a tab only when the step starts by itself: a clip ending opens the Details tab (step Details), Replay opens the Details tab, a deep link opens its own (table below), Full match from a link opens the Details tab.
 2. A tab the viewer clicks is never changed by the app, except rule 3.
-3. Details borrows Feed: if Feed was opened by the clip's end, the next Watch (Next, Previous, a clip row, auto) returns to the tab the viewer was on (Clips if none chosen). If the viewer clicked any tab during Details, that tab stays.
+3. The Details step borrows the Details tab: if the tab was opened by the clip's end, the next Watch (Next, Previous, a clip row, auto) returns to the tab the viewer was on (Clips if none chosen). If the viewer clicked any tab during Details, that tab stays.
 4. Changing View in Settings leaves the viewer in Settings (they are mid-change); the pitch and play bar change at once.
 
-**Pitch and frame height budget (laptop):** pitch height = min(frame width ÷ 1.514, 100vh − 330 px), floor 280 px; the frame column is as wide as the pitch and centred (score bug on its left edge, brand on its right, tabs and panel in the same column). At 1440×900: top 72 px, pitch ≤ 570 px (863 px wide), play bar 44, tab bar 48, panel starts at y≈746, about 150 px of panel visible: the first line and the numbers strip. At 1280×720: pitch 390 px, panel starts at y≈568. Fix (1).
+**Pitch and frame height budget (laptop; column width signed off 2026-10-20):** pitch height = min(frame width ÷ 1.514, 100vh − 330 px), floor 280 px; the frame column is as wide as the pitch and centred (score bug on its left edge, brand on its right, tabs and panel in the same column). At 1440×900: top 72 px, pitch ≤ 570 px (863 px wide), play bar 44, tab bar 48, panel starts at y≈746, about 150 px of panel visible: the first line and the numbers strip. At 1280×720: pitch 390 px, panel starts at y≈568. Fix (1).
 
 ---
 
 #### Step: Watch
 
-A clip plays once at 1×, from 3 s before its first run to 2 s after its end (a whole-match clip, "Most ground covered", plays at 120× from kick-off). The viewer sees only the score bug, the pitch and the lower third as emphasis (heuristic pass below). The Feed tab, if opened by hand, shows "This clip's details open when it ends." (`detailsWait`, new). Previous: the latest clip before this one in match time, disabled only on the first clip; Next: the earliest clip after it, disabled only on the last (fix 2). Play/Pause toggles; Replay jumps to Replay. Clicking a Clips row starts that clip in Watch.
+A clip plays once at 1×, from 3 s before its first run to 2 s after its end (a whole-match clip, "Most ground covered", plays at 120× from kick-off). The viewer sees only the score bug, the pitch and the lower third as emphasis (heuristic pass below). The Details tab, if opened by hand, shows "This clip's details open when it ends." (`detailsWait`, new). Previous: the latest clip before this one in match time, disabled only on the first clip; Next: the earliest clip after it, disabled only on the last (fix 2). Play/Pause toggles; Replay jumps to Replay. Clicking a Clips row starts that clip in Watch.
 
 **Exit:** the clip's end (automatic) → Details; Next/Previous/row → another Watch; Settings › View → Full match.
 
 #### Step: Details
 
-The clip stops on its last frame. Lower third unchanged. Pitch flag "Clip ended · last frame". Feed opens (rule 1) with, in order:
+The clip stops on its last frame. Lower third unchanged. Pitch flag "Clip ended · last frame". The Details tab opens (rule 1) with, in order:
 
 1. **Numbers strip** (at most 4 cells; Cowan ~4±1): "Top speed in this clip" (m/s, km/h in brackets), "Distance in this clip", "Of it above 5.5 m/s (19.8 km/h)"; a back-to-back clip adds "High-speed run n / N" and "Since his last high-speed run"; a whole-match clip shows "Distance since kick-off" alone. "Speed now" shows only in Replay (it moves). No battery cell: the lower third carries it (no repeated values). **Not built:** the mock's "3rd time so far" cell (no such field in `feed.json`).
 2. **The lines**, under "What we say about it, with sources" (`linesTitle`): the clip's first line (the caption, which for a highlight is the measured caption), then the moment's other lines, then, under a quiet "Blocked by the Verifier", any lines the Verifier blocked (struck through with the rule they broke; kept for both modes, they are the Verifier's evidence). A reach clip ("Caught on the break", "Recovery run") adds the key note `legendReach`.
@@ -129,11 +129,11 @@ The clip stops on its last frame. Lower third unchanged. Pitch flag "Clip ended 
 
 #### Step: Replay
 
-The clip plays again at ½×; the lower third's battery moves with it; Feed stays open and the numbers, the speed chart and the lines grow with the run ("Speed now" included); "Against the published number" appears when the clip is over. At its end the step becomes Details.
+The clip plays again at ½×; the lower third's battery moves with it; the Details tab stays open and the numbers, the speed chart and the lines grow with the run ("Speed now" included); "Against the published number" appears when the clip is over. At its end the step becomes Details.
 
 #### Step: Full match
 
-The whole match, paused at load (at `t`, else at the first moment). Same frame. Pitch: all players; **focus rings** only on the followed player, the favourite (dashed ring), and the feed moment's player; hardest-minutes ring (warning colour, always with its Key label), "flat out" pulse and label, battery icons: Fan shows them for the followed and favourite players, or for every outfield player with "Batteries: every outfield player" (Settings). Analyst shows no icons (the Trace is in Team sheet). Lower third: the feed moment on screen (moment name · its clock, its player, his battery; a team moment shows the team slot) or, with none, "Following" · match clock, the followed player and his battery. Play bar: Play/Pause, the match-time slider ("Match time"), speed 1× 5× 20×. Feed tab holds the live explanations (below). **Exit:** Settings › View → Highlights (restarts the last clip in Watch); Clips tab "Highlights so far" → a clip in Watch; Team sheet name → follow him.
+The whole match, paused at load (at `t`, else at the first moment). Same frame. Pitch: all players; **focus rings** only on the followed player, the favourite (dashed ring), and the feed moment's player; hardest-minutes ring (warning colour, always with its Key label), "flat out" pulse and label, battery icons: Fan shows them for the followed and favourite players, or for every outfield player with "Batteries: every outfield player" (Settings). Analyst shows no icons (the Trace is in Team sheet). Lower third: the feed moment on screen (moment name · its clock, its player, his battery; a team moment shows the team slot) or, with none, "Following" · match clock, the followed player and his battery. Play bar: Play/Pause, the match-time slider ("Match time"), speed 1× 5× 20×. The Details tab holds the agents' lines as they come (below). **Exit:** Settings › View → Highlights (restarts the last clip in Watch); Clips tab "Highlights so far" → a clip in Watch; Team sheet name → follow him.
 
 ---
 
@@ -148,7 +148,7 @@ The whole match, paused at load (at `t`, else at the first moment). Same frame. 
 - **Both steps:** the Batteries sheet (`sheetTitle`, `sheetSub`): two columns by team, each player a row (shirt, name, gauge with percentage; Analyst adds the band mark; a goalkeeper shows "GK" and no gauge; the favourite carries a star; the clip's player is highlighted). Click a name = follow him (in Highlights this opens Full match at the current time, as today).
 - **Both steps, below:** "Who's doing the running" (`teamChart`) and "Where the running happened" (`splitChart`, finished 15-minute blocks so far).
 
-#### Tab: Feed
+#### Tab: Details
 
 - **Highlights:** the Details content above (Watch: `detailsWait`).
 - **Full match:** "Live explanations" (heading, newest first), the checkbox "What the Verifier blocked" (with `blocked` and each blocked sentence struck through and its rule), each entry: time button (jumps to 3 s before it and selects the player), team dot, player (or "{team} (team)"), the sentence, verdict label and sources as above; the empty state; "{n} more later in the match."
@@ -166,7 +166,7 @@ In this order, applied at once, no Save: **View** (Highlights | Full match), **A
 | Frame | one centred column the width of the pitch (budget above) | one full-width column, 16 px gutters |
 | Score bug / brand | bug left, brand right, one row | brand line above; bug with codes (WES, RAV) and chips; the clock stays |
 | Lower third | inside the pitch, bottom-left | below the pitch; rows stacked; gauge and percentage always visible (gauge under the name, not beside it) |
-| Analyst band | bracket on the gauge and "(71–92%)" beside the percentage, same row; no second row | the same, on the gauge's row; the band sentence is in Feed and the gauge's spoken name |
+| Analyst band | bracket on the gauge and "(71–92%)" beside the percentage, same row; no second row | the same, on the gauge's row; the band sentence is in the Details tab and the gauge's spoken name |
 | Play bar | one row | one row of four 44 px buttons; step name and "n / N" on a second line |
 | Tabs | four text tabs | four tabs sharing the width (≈ 260 px of text at 14 px) |
 | Panels | lists and 2-column sheets | one column; Team sheet one column; charts scale to the width; numbers strip 2 across; Settings stacked |
@@ -178,7 +178,7 @@ Breakpoints: bug codes at ≤ 520 px (as today); lower third moves under the pit
 - **Default:** as above, Fan mode, dark, first clip, Watch, Clips.
 - **Loading:** "Loading the match…" in place of the frame. **Error:** "Could not load the match: …" with the reason; the page stays usable (Settings › Match is out of reach, so the line says to reload).
 - **No clips** (a match whose feed has no shown lines): opens as Full match.
-- **Empty Feed (Full match start):** "The first explanation comes with the first moment. Press play or pick a moment."
+- **Empty Details tab (Full match start):** "The first explanation comes with the first moment. Press play or pick a moment."
 - **Player not on the pitch** (before kick-off, after a substitution): the battery slot shows `offPitch`, no gauge.
 - **Success:** the clip's end with its details visible (Details).
 
@@ -187,7 +187,7 @@ Breakpoints: bug codes at ≤ 520 px (as today); lower third moves under the pit
 - **A team clip** (no player): no battery and no empty gauge. The battery slot shows both teams' running: each team's full name with its team-colour chip and its metres per minute above 5.5 m/s in play, from the latest finished 5-minute block, under `teamChartAxis` ("m per minute in play"); before the first block, `hlNone`. The star-player dimming is off: no marker is dimmed when there is no star.
 - **A goalkeeper** (Full match: followed from the Team sheet; no goalkeeper clip exists in either match today): the lower third shows the position "GK" and no gauge, no percentage, no empty shell; no battery icon on the pitch.
 - **A clip merged into another** (`reel()` drops overlapping clips; `hl=` can still name one): it plays as a one-off, appears as the extra first Clips row, has no "n / N", and Previous/Next still work by match time.
-- **`step=details`:** opens the Feed tab, paused on the last frame. **`auto=1`:** needs no tab touch (tab rules 1 and 3).
+- **`step=details`:** opens the Details tab, paused on the last frame. **`auto=1`:** needs no tab touch (tab rules 1 and 3).
 - **Analyst on a phone:** no second row (Layouts).
 - **Switching Fan/Analyst or Match mid-clip:** the clip keeps playing; the list, lines and band follow the new mode; the count disappears if the clip is no longer in the list.
 - **A recovery or caught-on-the-break clip:** the reach circles and "model: reach in 1 s" label stay on the pitch; the long note is in Details.
@@ -217,7 +217,7 @@ Dropped to meet this: the red "● Watch" dot of today's step chip (saturated co
 
 ### Element map: today's overlay → the new place (DW-1.2)
 
-Frame = always visible. Tabs: C Clips, T Team sheet, F Feed, S Settings. "Kept" = same content, new place; "Dropped" has a reason.
+Frame = always visible. Tabs: C Clips, T Team sheet, D Details, S Settings. "Kept" = same content, new place; "Dropped" has a reason.
 
 | Today (file) | Goes to | Note |
 |--------------|---------|------|
@@ -236,7 +236,7 @@ Frame = always visible. Tabs: C Clips, T Team sheet, F Feed, S Settings. "Kept" 
 | Pitch: grass, stripes, lines, ball, markers, shirt numbers, team colours | Frame, pitch | kept as is |
 | Pitch: selected-marker outline, marker click | Frame, pitch | kept; in a clip it only outlines |
 | Pitch: clip trail, thick high-speed runs, value label at the end | Frame, pitch | direction added (fix 8) |
-| Pitch: reach circles + "model: reach in 1 s" | Frame, pitch | long note `legendReach` to F (Details) and S › Key |
+| Pitch: reach circles + "model: reach in 1 s" | Frame, pitch | long note `legendReach` to D (Details step) and S › Key |
 | Pitch: battery icon above a player | Frame, pitch | Fan only; clip's player / followed / favourite / all |
 | Pitch: focus ring, hardest-minutes ring, flat-out pulse + label, favourite ring (Full match) | Frame, pitch | explained in S › Key |
 | Pitch: dimming of non-star markers | Frame, pitch | kept for player clips; **dropped** for team clips (it dims everything) |
@@ -247,22 +247,22 @@ Frame = always visible. Tabs: C Clips, T Team sheet, F Feed, S Settings. "Kept" 
 | Lower third: "Battery" label (`ltBattery`) | **Dropped as visible text** | `ltBatterySub` carries it; kept as the gauge's spoken name |
 | Lower third: gauge + band bracket + percentage | Frame, lower third | the one bold graphic |
 | Lower third: "What this running would leave a typical professional" (`ltBatterySub`) | Frame, lower third | |
-| Lower third: caption row (the clip's line / feed moment's sentence) | F, first line of Details; Full match: F live list | moved off the picture (the brief) |
-| Lower third: band sentence (`ltBand`) | F, first analyst line; gauge's spoken name | no second row |
+| Lower third: caption row (the clip's line / feed moment's sentence) | D, first line of Details; Full match: D, live list | moved off the picture (the brief) |
+| Lower third: band sentence (`ltBand`) | D, first analyst line; gauge's spoken name | no second row |
 | Lower third: team clip (no battery) | Frame, lower third, team slot | both teams' running (edge cases) |
 | Lower third: goalkeeper / off pitch | Frame, lower third | "GK", or `offPitch` |
 | Lower third: "Following" (`ltFollow`), Full match | Frame, lower third | |
-| Reach note under the lower third (`legendReach`) | F (Details of a reach clip), S › Key | off the picture in Watch |
+| Reach note under the lower third (`legendReach`) | D (Details of a reach clip), S › Key | off the picture in Watch |
 | Previous / Replay / Play-Pause / Next | Frame, play bar | quiet; Previous by match time; Play disabled in Details |
 | "Ready" emphasis on Replay and Next in Details | **Dropped** | equal weight, outlined |
 | Team sheet in the left column (`TeamSheet`, `sheetTitle`, `sheetSub`) | T | |
 | "All the clips, in match order" (`upNext`, `.up-next`) | C, Highlights list | |
-| Replay panel: numbers (`Stats`, `stat*`) | F, numbers strip | |
-| Replay panel: speed / distance chart (`SpeedChart`) | F | |
-| Replay panel: "Against the published number" (`Compare`) | F | |
-| Replay panel: "What we say about it, with sources" + lines (`Line`, `hlChecked`) | F, the lines | |
-| Replay panel: blocked lines with their rule | F, under the lines | both modes |
-| Team clip: `TeamChart` + block `SplitChart` in the Replay column | F (team clip Details) | |
+| Replay panel: numbers (`Stats`, `stat*`) | D, numbers strip | |
+| Replay panel: speed / distance chart (`SpeedChart`) | D | |
+| Replay panel: "Against the published number" (`Compare`) | D | |
+| Replay panel: "What we say about it, with sources" + lines (`Line`, `hlChecked`) | D, the lines | |
+| Replay panel: blocked lines with their rule | D, under the lines | both modes |
+| Team clip: `TeamChart` + block `SplitChart` in the Replay column | D (team clip Details) | |
 | Full match: transport (play, slider, 1× 5× 20×) | Frame, play bar | |
 | Full match: Key (`Legend`, `key`, `legend*`) | S › Key | |
 | Full match: "Batteries: selected and favourite / every outfield player" checkbox | S › On the pitch | Fan, Full match |
@@ -272,10 +272,10 @@ Frame = always visible. Tabs: C Clips, T Team sheet, F Feed, S Settings. "Kept" 
 | Full match: `Trace` (battery with band; high-speed running; Analyst) | T, under the card | |
 | Full match: `TeamChart` ("Who's doing the running") | T, below the sheet | |
 | Full match: `SplitChart` ("Where the running happened") | T, below the team chart | |
-| Chart furniture in every chart (axes, grid, hover crosshair and tooltip, "Hover for values; click to jump there", the dashed 5.5 m/s line, shaded high-speed runs and hardest-minutes zones, the half-time line, direct end labels, team swatch legend, the split's per-situation bars and share line) | Goes with its chart (F or T) | kept; tooltips follow the `traceTip` correction |
-| Full match: Feed (`Feed.tsx`: heading, entries, time button, team dot, verdict badge, `Sources`, "n more later") | F | labels by audience (fix 4) |
-| Full match: "What the Verifier blocked" checkbox, `blocked`, blocked list | F | |
-| Full match: empty-feed sentence | F | |
+| Chart furniture in every chart (axes, grid, hover crosshair and tooltip, "Hover for values; click to jump there", the dashed 5.5 m/s line, shaded high-speed runs and hardest-minutes zones, the half-time line, direct end labels, team swatch legend, the split's per-situation bars and share line) | Goes with its chart (D or T) | kept; tooltips follow the `traceTip` correction |
+| Full match: Feed (`Feed.tsx`: heading, entries, time button, team dot, verdict badge, `Sources`, "n more later") | D | labels by audience (fix 4) |
+| Full match: "What the Verifier blocked" checkbox, `blocked`, blocked list | D | |
+| Full match: empty-feed sentence | D | |
 | Footer `disclaimer` | Frame, footer line | |
 | "Loading the match…", "Could not load the match" | States | |
 | Unused code: `.hl-caption`, `.clip-caption`, `Highlights` props `active` and `reelOn` | **Dropped** | not rendered today |
@@ -288,19 +288,19 @@ The app reads the URL once at load and never writes it. Precedence for the clip:
 
 | Parameter | Values (default) | What it sets | Screen · tab it opens |
 |-----------|------------------|--------------|------------------------|
-| `view` | `full`, else Highlights | the step | `full` → Full match · **Feed**, paused; else Highlights → Watch · **Clips** |
+| `view` | `full`, else Highlights | the step | `full` → Full match · **Details**, paused; else Highlights → Watch · **Clips** |
 | `match` | `story` (first), `natural` | the data set (S › Match) | same screen; an unknown id shows the load error |
-| `t` | seconds from kick-off, > 0 | Full match: the time it opens at (without `t`: the first moment's time, not 0). Highlights: the start time inside the clip (for capture; a time outside the clip is not supported) | Full match · Feed; Highlights unchanged |
+| `t` | seconds from kick-off, > 0 | Full match: the time it opens at (without `t`: the first moment's time, not 0). Highlights: the start time inside the clip (for capture; a time outside the clip is not supported) | Full match · Details; Highlights unchanged |
 | `mode` | `analyst`, else Fan | S › Audience; the clip list (a clip needs a line shown in that mode), band, lines, citations | the screen the other parameters give |
-| `player` | a player id, e.g. `H04` | Full match: the followed player (T card, "Following"). Highlights: with `moment`, narrows to his clip; the clip's own player then wins | Full match · Feed (card in T); Highlights per its step |
+| `player` | a player id, e.g. `H04` | Full match: the followed player (T card, "Following"). Highlights: with `moment`, narrows to his clip; the clip's own player then wins | Full match · Details (card in T); Highlights per its step |
 | `favourite` | a player id (the feed's favourite) | S › Favourite player; ring, star, highlighted lines | no tab change |
 | `theme` | `light`, `dark` (dark) | S › Theme | no tab change |
-| `batteries` | `all` | Full match, Fan: icons on every outfield player (S › On the pitch); ignored in Highlights | Full match · Feed |
+| `batteries` | `all` | Full match, Fan: icons on every outfield player (S › On the pitch); ignored in Highlights | Full match · Details |
 | `hl` | `top_speed`, `longest_run`, `recovery_run`, `back_to_back`, `busiest_minute`, `most_ground` | the match's best highlight of that kind (whole match, not "so far"); ignored with `view=full` | Highlights · Watch · Clips (per `step`) |
 | `moment` | a moment kind (first in the list) or a full moment id; `&player=` narrows | that feed moment's clip; none found → the first clip | Highlights, as `hl` |
 | `item` | n ≥ 1, in the current mode's list (numbers shift with `mode`) | the n-th clip | Highlights, as `hl` |
-| `step` | `watch` (default), `details`, `replay` | with a clip: plays at 1×; stops on its last frame with its details; plays at ½× with the details growing | `watch` → **Clips**; `details` → **Feed**, paused; `replay` → **Feed**. Ignored in Full match |
-| `auto` | `1` | the clips play one after another: Watch → Details (6 s) → next Watch …; stops after the last Details, or on entering Full match or following a player from T | Highlights; Clips during Watch, Feed during Details, no touch needed. With `view=full` it waits until the viewer enters Highlights |
+| `step` | `watch` (default), `details`, `replay` | with a clip: plays at 1×; stops on its last frame with its details; plays at ½× with the details growing | `watch` → **Clips**; `details` → **Details**, paused; `replay` → **Details**. Ignored in Full match |
+| `auto` | `1` | the clips play one after another: Watch → Details (6 s) → next Watch …; stops after the last Details, or on entering Full match or following a player from T | Highlights; Clips during Watch, the Details tab during the Details step, no touch needed. With `view=full` it waits until the viewer enters Highlights |
 
 Not in the URL: the open tab, speed, the blocked-lines checkbox, marker clicks.
 
@@ -311,12 +311,13 @@ Not in the URL: the open tab, speed, the blocked-lines checkbox, marker clicks.
 | Key (proposed) | Text | Where |
 |----------------|------|-------|
 | `brand` | Running Battery | brand line (hard-coded today) |
-| `tabClips` `tabTeam` `tabFeed` `tabSettings` | Clips · Team sheet · Feed · Settings | tab bar |
+| `brandSynthetic` | synthetic match | brand line, next to the name (signed off 2026-10-20) |
+| `tabClips` `tabTeam` `tabDetails` `tabSettings` | Clips · Team sheet · Details · Settings | tab bar |
 | `settingsView` `settingsAudience` `settingsMatch` `settingsFavourite` `settingsTheme` `settingsPitch` | View · Audience · Match · Favourite player · Theme · On the pitch | Settings |
 | `themeDark` `themeLight` | Dark · Light | Settings |
 | `nowPlaying` | Now playing | Clips row |
 | `clipEnded` | Clip ended · last frame | pitch flag, Details |
-| `detailsWait` | This clip's details open when it ends. | Feed during Watch |
+| `detailsWait` | This clip's details open when it ends. | Details tab during Watch |
 | `verdictMeasured` | Verified · measured | verdict label |
 | `verdictEstimate` | Verified · our estimate | verdict label (claim 11) |
 | `verdictResearch` | Verified · published research | verdict label |
@@ -328,12 +329,12 @@ Not in the URL: the open tab, speed, the blocked-lines checkbox, marker clicks.
 
 ---
 
-### Open for sign-off (defaults taken; the user may object)
+### Signed off (user, 2026-10-20)
 
-1. **Frame width on laptop:** the column narrows to the pitch's width (≈ 863 px at 1440×900) so the tabs show. The alternative is a full-width pitch cropped at the touchlines, which hides markers. Settle in the Phase 2 mock.
-2. **Tab "Feed"** holds this clip's details during Details. Renaming it ("Details") is the mock review's suggestion; the plan keeps "Feed".
-3. **A quiet "Full match" link in Clips**, besides Settings › View (the plan puts View in Settings only; Settings is two clicks away).
-4. **"Synthetic match"** appears only in the footer line, below the fold on a laptop. Option: say it in the brand line.
-5. **Tab borrow rule** (Details borrows Feed, the next Watch hands the tab back) is new behaviour; today there are no tabs.
-6. **Dark by default** even when the device is set to light (today the theme follows the device).
-7. **The mock's "3rd time so far" cell is not built** (no data field).
+1. **Frame width on laptop:** the whole column narrows to the pitch's width (≈ 860 px at 1440×900) so the tabs and the first lines of details show without scrolling; every player stays visible.
+2. **Tab "Details"** (not "Feed") holds this clip's details during the Details step; in the full match the same tab lists the agents' lines as they come. Tabs: Clips · Team sheet · Details · Settings.
+3. **A quiet "Full match" link in Clips**, besides Settings › View. Stands.
+4. **"Synthetic match" in the brand line**, small, next to the name ("Running Battery · synthetic match"), always visible; the footer line keeps `disclaimer`.
+5. **Tab borrow rule** (the Details step borrows the Details tab, the next Watch hands the tab back). Stands.
+6. **Dark by default** even when the device is set to light. Stands.
+7. **The mock's "3rd time so far" cell is not built** (no data field). Stands.
