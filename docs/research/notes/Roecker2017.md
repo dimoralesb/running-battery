@@ -18,7 +18,7 @@ The best speed a player sustains for a given duration in a match follows an S-cu
 - Medians, and half-time inside the 2,700 s window, both pull the long-window values down.
 - Mostly 2–3 games per team.
 
-## Use in Second Wind
+## Use in Running Battery
 - **Estimator (3.2.5 option A, 8.1)**: confirms that a match speed–duration profile does not give a physiological CS. With the same kind of data, the "CS" is 1.7 m/s here, 2.0 m/s with CS3/OmSD [Mizelman2024], 3.6–4.0 m/s with a linear 1/t fit [Lord2020].
 - **Analyst mode**: the S-curve is a nicer way to draw a player's match speed–duration profile than a hyperbola, if we ever show one. Not planned.
 - **Claims**: block per-player "match critical speed" (claim 29).

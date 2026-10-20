@@ -103,7 +103,7 @@ None.
 - NCAA women's data with unlimited interchanges are a different game.
 - Figure 1 is one team's routine, not data.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: substitution timing distribution: 1st sub mean ~57–58 min with a spike at half-time, 2nd ~71 min, 3rd ~81 min with a spike in 2nd-half stoppage; ~82% of teams make all three subs (old 3-sub rule; current EPL rules allow 5, so timing will differ). Make losing teams substitute earlier; make later subs more often attackers/midfielders (EPL). Sub output: +7–12% TD and +15–27% HIR per minute vs the same-period whole-match player; about +3% TD and +10% HIR vs the player replaced; no change in sprint distance; lower top speed than the replaced player; start lower and ramp up over the first 10–15 min (especially forwards). Midfielders give the biggest gain; full-backs no HIR gain.
 - Fatigue estimator: a substitute should enter with a full battery but also with a "cold" penalty for the first minutes (muscle temperature). Their per-minute HIR is a useful "fresh" reference for the same team's tired players in the same phase.
 - Agents / claims: the "fresh substitute makes the difference" story is supported for running volume ("covers ~10–25% more high-speed ground per minute than the player he replaced / than tired teammates"). Not supported: "the sub is faster" (replaced players reached higher max speeds), "the sub passes better" (no difference in pass completion), "subs always win games" (only one club, 5 seasons, outcome link). Also not supported: "came on and immediately at full intensity": evidence points to a ramp-up.

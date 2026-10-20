@@ -66,7 +66,7 @@ Only the calibration equations above (Fig. 1). Checked against the rendered PDF 
 - Congestion results use capped minutes (96 / 128) and do not test injury or performance.
 - Two authors are from an EPL club and one from the Premier League (competing interests, p.1653).
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: **the team-level target for a current EPL match.** Use 2024/25: team TD 113,891 ± 4,097 m, HID 9,611 ± 1,300 m, HSR 7,285 ± 931 m, SprD 2,326 ± 471 m, match length 99.5 ± 2.9 min. Our per-position table (synthesis §4.2) must add up to these. Per-minute values give a direct check of per player-slot output: 104 m/min, HID 8.8 m/min, sprint 2.1 m/min.
 - Fatigue estimator: nothing direct. The ~10% HSR / ~12% sprint gap between two optical systems is a useful reminder that thresholds and filters matter more than they look.
 - Agents / claims: supported: "EPL matches have become more intense: high-intensity distance per team is up about 27% and sprint distance about 40% since 2015/16 [Allen2025, Fig. 2]". Not supported from this paper: anything about individual positions, or that fixture congestion makes a player tired in a given match (exposure only). The "players pace themselves to save energy for high-speed efforts" idea (p.1650) is the authors' speculation, so label it as a hypothesis.

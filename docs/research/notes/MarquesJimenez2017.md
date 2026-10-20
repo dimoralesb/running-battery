@@ -45,7 +45,7 @@ The symbols are images, so the .md loses them; read from the rendered PDF page. 
 - Mixes women's, youth, semi-professional and lab studies with elite men's matches without separating them.
 - 2017, and the match numbers it cites are from 2005–2013.
 
-## Use in Second Wind
+## Use in Running Battery
 - **Simulator**: nothing new to calibrate. The numbers it repeats are already our targets from the primary papers (Bradley2009 −21% and +28%; Bradley2013 substitutes +15%).
 - **Fatigue estimator**: supports the decision not to claim who is tired. Players respond differently to the same match (p.56, p.61), and even with lab tests and blood samples there is no agreed fatigue marker (p.56, p.58). A positions-only estimator can't do better than that, so "work that would leave a typical professional at X%" is the honest claim (PLAN decision 14).
 - **Agents / claims**: secondary support for the context check (self-pacing, situational variables, p.55) and for blocking "missed the pass because he was tired" (skills preserved, p.58; Fig. 1 "?"). Secondary support for not modelling fatigue carried over from the previous match: running during congested fixtures was not affected (p.56); the muscle-damage markers that stay high for 72 h are invisible in tracking.

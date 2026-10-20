@@ -26,7 +26,7 @@ Skiba 2015 depletion/recovery in speed form, as above. Checked against PDF text 
 - Active recovery (~30% of D_CS) was treated with the passive τ (trivial effect here, ES 0.19).
 - Authors suggest the τ = D′/D_CS scaling may be wrong for running (1 W ≠ 1 m/s), or running recovers slower than cycling (more muscle mass, slower autonomic recovery) (p.722–725).
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: in the truth model the **slow** recovery pool should have τ of minutes (≈ 250–650 s at rest), not about one minute.
 - Fatigue estimator: **the standard running τ = D′/(CS − v) recovers far too fast for runners.** With it, the battery stays near full (here ~60% at real exhaustion; Sutcliffe2025 saw a deepest dip of only ~21% in university football). Add a running correction factor k: τ = k·D′/(CS − v), with k ≈ 5 from this paper (≈ 360 s at rest), and test k = 1, 3, 5. With the right τ, D′ balance discriminated exhausting sessions very well (AUC 0.97).
 - Agents / claims: keep "battery is a relative gauge" ("lowest of his match", "lower than teammates"). Never "exhausted" from the battery, because the right τ for football is unknown.

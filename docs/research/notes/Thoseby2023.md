@@ -122,7 +122,7 @@ AveAcc definition as in Thoseby2022 (mean of $|a_i|$ over the window).
 - No contextual factors (score, opponent, possession).
 - The inclusion rule (> 70 min) is justified by citing Thoseby2022 as showing most peaks occur before the 70th minute (p. 312), but Thoseby2022 reports within-half timing, so that justification is loose.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: use the Table 2 power-law parameters as per-position targets for peak 1–10 min TD, HSD (> 5.5 m/s) and AveAcc in synthetic matches, with a correction for league/system (A-League GPS, not EPL optical). In the 2nd half, keep peak TD and HSD the same for most positions, but lower peak AveAcc by ~4–7% for STR, WD and DM (and WNG over long windows), and lower STR long-window TD (−5 to −7%) and long-window HSD (~−15 to −20%). Keep whole-half metres equal across halves; per-minute values fall only because the 2nd half is ~3 min longer.
 - Fatigue estimator: "rolling 1/2/5-min HSD vs player's own peak": the 1-min peak HSD is 2.5–4 times the 10-min peak (slope ≈ −0.6), so thresholds must be window-specific. A generic "50% of 1-min peak" rule would fire constantly over 5-min windows. Use P(t) = c t^n per player to set the reference for any window length.
 - Agents / claims: allowed: "strikers and full-backs typically show smaller acceleration peaks after half-time" (A-League evidence, one team). Not allowed: "everyone's peak sprinting drops in the second half": peak HSD is kept for most positions, and absolute HSD metres are kept for all positions.

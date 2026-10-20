@@ -67,7 +67,7 @@ The simpler differential form of Skiba 2015 (τ = W′/D_CP) is NOT in this pape
 - Assumes CP and W′ stay constant during exercise; recovery above CP is undefined (τ explodes). Highly fit people may recover differently (subject 4).
 - Assumes depletion is linear in (P − CP) and recharge single-exponential; authors already suggest a two-compartment model.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: our hidden truth should be richer than this (e.g., two-compartment Eq. 5 with fast + slow τ, plus individual variation), so the estimator's single-τ D′bal is not tested against itself.
 - Fatigue estimator: OUR ADAPTATION (not done in this paper): replace $P \to v$ (m/s), $CP \to CS$ (m/s), $W' \to D'$ (m), $W'_{exp}(u) = \max(0, v(u) - CS)$ (m per s). For τ we cannot reuse Eq. 4 directly (units W). Options: (a) a fixed τ of ~300–400 s as order of magnitude from cycling, (b) the Skiba 2015 form τ = D′/(CS − v_rec) cited in Jones2017, (c) calibrate on synthetic truth / on the post-peak recovery curves of Leifsson2024 / Schimpchen2020. State clearly in the UI that τ is an assumption.
 - Agents / claims: may say "battery model based on the W′ balance model from cycling research (Skiba 2012), adapted to running speed"; must NOT say it is validated in football.

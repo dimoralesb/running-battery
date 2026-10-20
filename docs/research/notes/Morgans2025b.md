@@ -23,7 +23,7 @@ None.
 - Two clubs, GPS, tactical style of one team; counts not comparable with optical/broadcast tracking.
 - **Docling:** .md starts mid-introduction (abstract and first page lost); read from PDF.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: shape only (FB/AM highest, CB lowest, decelerations ≥ accelerations). **Do not use absolute counts as targets.**
 - Fatigue estimator: acceleration counts depend so much on the system and filter that we should only track **relative** change within a match (e.g. first vs second half), never compare to literature counts.
 - Agents / claims: "Premier League players accelerate more than Ligue 1 players" is weakly supported (one club each).

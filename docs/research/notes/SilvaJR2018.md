@@ -86,7 +86,7 @@ $M_{pre}$, $M_{post}$: group mean of the test (units of the test: s, cm, N·m…
 - Text p. 569 says LSPT data come from "four studies, 82 players" but cites six references.
 - Inclusion said ≥18 y, yet 17–18-year-old juniors (Rampinini 2008) were included.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: hidden "capacity" for sprint should fall about 2–4% by match end (test-based sprint time +3.5% Post, ES 0.6) and about 3% already at half-time if we follow HT data (weak). Use a smaller drop for real-match realism (11 vs 11 10 m sprint ES 0.38, CI crosses zero). Recovery for multi-match simulation: sprint back by 72 h; jump and hamstring strength not fully back at 72 h.
 - Fatigue estimator: supports using drop in max speed / acceleration capacity as a fatigue signal, but in-match running is self-paced, so test-based ES are an upper bound for what we will see in tracking. For multi-match mode (if any), carry a residual-fatigue term of ~1–2% sprint capacity at 48 h.
 - Agents / claims: allowed: "players typically lose a few percent of sprint speed by the end of a match, and it can take 2–3 days to recover" (supported, test data). Allowed with caution: "already at half-time some sprint capacity is lost" (few studies). Not allowed: "fatigue ruins passing in matches" (11 vs 11 LSPT CIs cross zero; overall technical effect trivial to small).

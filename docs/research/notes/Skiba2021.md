@@ -26,7 +26,7 @@ Not in the docling .md (all equations dropped). Forms above are from the text; t
 - Neither form is clearly better on data; authors recommend running both and picking the one that fits the situation.
 - τ should be individual and mode-specific; the group equation does not generalise (Bartram elite cyclists faster, Skiba's own pros slower).
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: nothing new for parameters. Supports keeping a two-compartment truth as a plausible physiology.
 - Fatigue estimator: **our estimator is the ODE form.** Implement it exactly, test it against Table 1, and remember it may recover too fast in some data and predict exhaustion too early in hard intermittent work.
 - Agents / claims: "battery at 0%" must never be stated as "exhausted". Even in the lab the model only gets near zero. Put an uncertainty band of at least ±10–20% of D′ on the battery (W′ error 7–20%).

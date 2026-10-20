@@ -88,7 +88,7 @@ Percent changes in the text = mean difference / match average × 100 (checked: e
 - Acc/Dec is a mean of |a|, mixing accelerations and decelerations; no "high Acc/Dec" category.
 - The PDF is the accepted manuscript (watermarked), not the final typeset version; page numbers here are manuscript pages.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: second calibration curve for temporary fatigue in high-speed running: about −64 to −89% in minute 1, about −4 to −43% at minute 3, about −6 to −31% at minute 5 (≥ 5 m/s). Total distance and mean |a| must drop only ~10–18% in minute 1 and be back by minute 3. Peaks of high-speed running should be spread evenly over the match and not depend on score; peaks of total distance and mean |a| should mostly occur in the first 15 min and rarely in the last 30 min.
 - Fatigue estimator: supports tracking high-speed running separately from total distance. A TD-based fatigue signal will miss most of the temporary effect. Expect a large post-peak drop in HSR for 3–5 min.
 - Agents / claims: supported: "after his most intense spell of high-speed running, players typically run much less at high speed for the next few minutes, while their total running is back to normal within about 3 minutes." Avoid: "fatigue was independent of the score" — only the timing/count of peak HID spells was independent of score; the post-peak response was not tested by score.

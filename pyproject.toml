@@ -1,7 +1,7 @@
 [project]
-name = "secondwind"
+name = "runningbattery"
 version = "0.1.0"
-description = "Second Wind: estimate and explain football player fatigue from tracking data"
+description = "Running Battery: hard running from football tracking data, and what it would leave a typical professional"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.12,<3.13"
@@ -15,7 +15,7 @@ dependencies = [
 [project.optional-dependencies]
 # Offline calibration against open data (IDSSE). Never needed to run the demo.
 calib = ["floodlight>=1.2"]
-# Replay as GIF or still frames (python -m secondwind.sim.replay --gif / --stills). The HTML
+# Replay as GIF or still frames (python -m runningbattery.sim.replay --gif / --stills). The HTML
 # replay needs nothing extra.
 replay = ["matplotlib>=3.9"]
 agents = [

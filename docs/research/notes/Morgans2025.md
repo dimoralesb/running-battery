@@ -101,7 +101,7 @@ $$ y_{ij} = \beta_0 + \beta_{pos}\,\mathrm{pos}_{ij} + \beta_{rank}\,\Delta R_{i
 - No acceleration data; no match status (score) control; no fatigue-related analysis (no time periods).
 - Second Spectrum's filtering algorithms are not public (p.121).
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: per-position in-possession HSR and sprint rates (W > CF > FB > CM > CB). OP sprint rates by position and opponent rank. Add context modifiers: out-of-possession HSR falls ~0.04 m/min per place of rank advantage, and is ~0.37 m/min higher away. These give the simulator realistic **non-fatigue** reasons for running to vary.
 - Fatigue estimator: important confounder. A drop in out-of-possession HSR can come from facing a weaker opponent (or playing at home), not from fatigue. The estimator should compare players against **context-matched** baselines, or at least use in-possession running (which is mostly set by position) differently from OP running.
 - Agents / claims: the verifier should block "player X ran less out of possession, so he is tired" unless opponent strength/venue is accounted for. Allowed claim: "In one EPL team over 3 seasons, OP high-speed running fell as the rank advantage over the opponent grew, and was slightly higher away (ES ~0.24)."

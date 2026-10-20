@@ -36,7 +36,7 @@ def test_claims_register_sources_are_in_the_bib():
     """The feed shows each claim's sources on screen."""
     import json
 
-    reg = json.loads((ROOT / "src" / "secondwind" / "agents" / "claims.json").read_text())
+    reg = json.loads((ROOT / "src" / "runningbattery" / "agents" / "claims.json").read_text())
     entries = bib_entries()
     keys = {k for c in reg["claims"] for k in c.get("sources") or []}
     missing = sorted(k for k in keys if not resolves(k, entries))

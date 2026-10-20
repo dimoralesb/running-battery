@@ -9,7 +9,7 @@ Evidence strength: **low.** Frontiers (our rule: only if nothing better exists).
 - **Comparing players needs a common (absolute) threshold**; individual thresholds are for prescribing one player's training (Discussion).
 - Numbers quoted second-hand (not checked): speed at VO₂max of professionals 16.2–16.5 km/h (4.5–4.6 m/s) [Tønnessen 2013]; VT2 about 15 km/h (4.2 m/s) [Abt & Lovell 2009]; the "accepted" anaerobic threshold of elite players 14.4 km/h (4.0 m/s) [Andrzejewski 2015]; match-derived CS 13.7–14.4 km/h [Lord 2019, J Hum Kinet].
 
-## Use in Second Wind
+## Use in Running Battery
 - **What we claim (decision 14)**: supports the typical-pro framing. We can't know each player's CS from positions, and comparing players needs one common reference anyway. "Running that would leave a typical professional at X%" is that common reference, stated as such.
 - **CS prior**: the second-hand professional values (anaerobic threshold 4.0–4.2 m/s; speed at VO₂max 4.5–4.6 m/s, which at 83% [Kramer2020] gives CS ≈ 3.8 m/s) sit at or below our 4.1 m/s, inside our SD of 0.3. Not checked at source, so not used to move the default; listed as a counterpoint in synthesis 3.2.3.
 - **Do not use** the "validated" match-derived CS of 13.7–14.4 km/h: same method as [Lord2020], whose "CS" is a fitting artefact.

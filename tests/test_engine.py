@@ -11,13 +11,13 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from secondwind.engine import params as P
-from secondwind.engine.__main__ import main as engine_main
-from secondwind.engine.battery import prior_draws, run, tau, weighted_quantiles
-from secondwind.engine.estimate import chance_map, compute, estimate
-from secondwind.engine.signals import Seconds, calibrate_chance, metabolic_power, red_zone
-from secondwind.io import SIGNALS, Match, read_signals, write_match
-from secondwind.schema import (
+from runningbattery.engine import params as P
+from runningbattery.engine.__main__ import main as engine_main
+from runningbattery.engine.battery import prior_draws, run, tau, weighted_quantiles
+from runningbattery.engine.estimate import chance_map, compute, estimate
+from runningbattery.engine.signals import Seconds, calibrate_chance, metabolic_power, red_zone
+from runningbattery.io import SIGNALS, Match, read_signals, write_match
+from runningbattery.schema import (
     Ball,
     ClubTestValues,
     Generator,
@@ -30,7 +30,7 @@ from secondwind.schema import (
     TrackingFrame,
 )
 
-ENGINE = Path(__file__).resolve().parents[1] / "src" / "secondwind" / "engine"
+ENGINE = Path(__file__).resolve().parents[1] / "src" / "runningbattery" / "engine"
 HZ = round(P.FRAME_RATE_HZ)
 
 

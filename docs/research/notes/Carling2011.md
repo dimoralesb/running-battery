@@ -81,7 +81,7 @@ None.
 - No context: score line, tactics, opponent quality, pressure on the ball carrier (authors, p. 70).
 - AMISCO data from 2007–2010; HSR threshold 14.4 km/h (lower than the 19.8 km/h often used today); not comparable to SkillCorner broadcast tracking or modern optical values without adjustment.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: targets for a Ligue 1 midfielder: ~126 → 121 m/min total distance 1st vs 2nd half; HSR (>4.0 m/s) ~31 → 27 m/min from first to last 15 min; peak 5-min HSR ~48 m/min followed by ~29 m/min. Keep pass completion flat across periods (≈66–71% in every 15-min bin). Allow ~20–25% fewer passes/possessions in the last 5 min, mostly via less ball-in-play time.
 - Fatigue estimator: confirms that the physical signal (HSR per period, post-peak drop) is visible in 10 Hz tracking even when event-level skill is not. The estimator should rely on running, not on events.
 - Agents / claims: allowed: "his high-speed running fell after that intense spell" and "players are on the ball less in the closing minutes". Not allowed: "his passing accuracy dropped because he was tired" (no change in completion at any time scale). Not allowed: "the busy week made him worse" (no change across 3 games in 7 days).

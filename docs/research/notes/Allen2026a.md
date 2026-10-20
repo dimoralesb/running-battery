@@ -24,7 +24,7 @@ None.
 - TRACAB→2S conversion across seasons.
 - Team totals including subs.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: **validation target: the two teams' running totals in a match should correlate strongly (r ≈ 0.7)**. Our generator must make teams respond to each other (both teams run in the same phases), not draw totals independently.
 - Fatigue estimator: none.
 - Agents / claims: winners outrun losers only slightly (sprint +5%, ES 0.29; TD +0.7%, ES 0.22). "They won because they ran more" → **not supported**. "Teams that sprint more tend to finish higher" → **weakly supported** (rs .32, 2015–24) but see Allen2026b (r .25 in 2019–24).

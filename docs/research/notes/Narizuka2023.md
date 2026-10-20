@@ -75,7 +75,7 @@ $$m\,\frac{d^2\vec x}{dt^2} = F(t)\,\vec n - k(t)\,\frac{d\vec x}{dt}$$
 - Velocity from 1-s differences smooths acceleration onsets.
 - Only sprint-like (boundary) behaviour is modelled; no energy, fatigue or reaction time.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: use the vector form $\dot{\vec v} = (V_{max}\vec n - \vec v)/\tau$ for player movement toward the target, with per-player parameters drawn from sensible ranges, not the paper's pooled short-Δt values. Suggested defaults (synthesis of this paper's long-Δt values, diPrampero2005 and Bangsbo2006; my recommendation, flag as such):
   - τ = 1/α: default ≈ 1.1 s, range ≈ 0.9–1.4 s (Narizuka Δt = 2–5 s: 0.96–1.2 s; di Prampero subject 7: 1.42 s; Fujimura–Sugihara: 0.77 s).
   - V_max: default ≈ 8.5 m/s (30.6 km/h), range ≈ 7.5–9.5 m/s (27–34 km/h) (Bangsbo2006 match peak ≈ 8.9 m/s; Narizuka long-Δt ≈ 9.4–10 m/s envelope; sprinters 9.5–10 m/s).

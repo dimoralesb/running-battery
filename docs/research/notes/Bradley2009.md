@@ -103,7 +103,7 @@ None.
 - Only full-match players; only matches between similar-ranked teams; no score-state control. The authors say the end-game deficit could also be a slower game pace (p.167).
 - HIR (> 14.4 km/h) is dominated by the 14.4-19.8 km/h band. The ~20% end-game drop is mostly in that band. HSR and sprint did **not** differ between halves.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: event structure. About 35 sprints per match (> 25.1 km/h), about 75 VHIR bouts, time-above-threshold proportions, VHIR recovery gaps of ~50-100 s by position (WM 51 s, CM 62 s, A 73 s, FB 74 s, CB 101 s). Use it for **shape** (within-half decline, end-game ~20% drop in > 4 m/s running, post-peak drop of ~45% vs peak / ~6% vs mean). Scale absolute levels to modern Second Spectrum targets.
 - Fatigue estimator: (1) post-peak 5-min drop (~45% vs peak, 6% below mean) = "transient fatigue" signature; (2) recovery time between VHIR bouts rises from ~65 s to ~83 s (+28%) from first to last 15 min → candidate feature "inter-effort recovery time". (3) Top speed barely changes, so fatigue shows in volume and frequency of efforts, not in top speed. This is a warning for our "low energy lowers top speed" assumption.
 - Agents / claims: allowed: "In 2005/06 EPL data (ProZone), running above 14.4 km/h was ~20% lower in the last 15 min than in the first 15 min, for all positions." The verifier must check the threshold: it's > 14.4 km/h, not > 19.8 km/h. Claims that HSR (> 19.8) drops ~20% by the end are **not** supported by this paper's half-by-half data.

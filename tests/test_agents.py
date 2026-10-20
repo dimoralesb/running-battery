@@ -14,12 +14,12 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from secondwind.agents import feed as feed_mod
-from secondwind.agents.tools import MOMENT_KINDS, MatchTools, clock_label, parse_time
-from secondwind.agents.verifier import verify
-from secondwind.engine.estimate import estimate
-from secondwind.io import SIGNALS, Match, write_match, write_signals
-from secondwind.schema import (
+from runningbattery.agents import feed as feed_mod
+from runningbattery.agents.tools import MOMENT_KINDS, MatchTools, clock_label, parse_time
+from runningbattery.agents.verifier import verify
+from runningbattery.engine.estimate import estimate
+from runningbattery.io import SIGNALS, Match, write_match, write_signals
+from runningbattery.schema import (
     Ball,
     Event,
     Generator,
@@ -34,7 +34,7 @@ from secondwind.schema import (
     TrackingFrame,
 )
 
-AGENTS = Path(__file__).resolve().parents[1] / "src" / "secondwind" / "agents"
+AGENTS = Path(__file__).resolve().parents[1] / "src" / "runningbattery" / "agents"
 HZ = 10
 DURATION = (900.0, 600.0)
 POSITIONS = ["GK", "CB", "CB", "FB", "FB", "DM", "CM", "AM", "WM", "WM", "CF"]
@@ -312,7 +312,7 @@ def test_tools_never_open_truth_json(folder, monkeypatch):
 
 def test_mcp_server_serves_the_seven_read_only_tools(folder):
     pytest.importorskip("mcp")
-    from secondwind.agents.mcp_server import build
+    from runningbattery.agents.mcp_server import build
 
     server = build(folder)
 
@@ -390,7 +390,7 @@ def test_moments_say_what_they_are_for():
 def test_highlights_are_measured_ranked_and_verified(folder):
     """Decision 28: H04's two 60-s runs at 7.5 m/s top the longest-run and top-speed lists;
     every kept event was among the top 3 players when it happened; captions pass the rules."""
-    from secondwind.agents import highlights as hl
+    from runningbattery.agents import highlights as hl
 
     m = MatchTools(folder).m
     out = hl.highlights(m)
@@ -414,7 +414,7 @@ def test_highlights_are_measured_ranked_and_verified(folder):
 def test_most_ground_and_recovery_runs(folder, monkeypatch):
     """Decision 29: most ground covered at the final whistle (whole-match players only, the
     top 3), and a recovery run (back towards his own goal within 10 s of his team losing it)."""
-    from secondwind.agents import highlights as hl
+    from runningbattery.agents import highlights as hl
 
     m = MatchTools(folder).m
     lost = hl.losses(m, "home")
@@ -455,8 +455,8 @@ def test_running_split_by_situation(folder, tools):
     """Decision 30: where each team's high-speed running happened, from possession and the
     ball's position only. Home lose the ball at 200 s and win it back at 260 s (period 1); A04
     runs 300–360 s without the ball (ball on the centre spot, so in the middle third)."""
-    from secondwind.agents.tools import SITUATIONS, TRANSITION_S
-    from secondwind.export import team_situations
+    from runningbattery.agents.tools import SITUATIONS, TRANSITION_S
+    from runningbattery.export import team_situations
 
     m = tools.m
     sit = m.situations[1]
@@ -502,9 +502,9 @@ def test_purpose_rules_against_the_truth(folder, monkeypatch):
     recovery-run rule needs his team without the ball, 10 m back and the wrong side of it."""
     from types import SimpleNamespace
 
-    from secondwind.agents.tools import MatchData
-    from secondwind.schema import RunPurpose
-    from secondwind.validate import purposes as P
+    from runningbattery.agents.tools import MatchData
+    from runningbattery.schema import RunPurpose
+    from runningbattery.validate import purposes as P
 
     m = MatchData(folder)
     xy = m.xy[1].copy()

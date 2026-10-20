@@ -27,7 +27,7 @@ Rugby players have moderate CS and very high D′. The authors expected this: ru
 - The female soccer players' D′ is given as 213 m in one paragraph and 188.8 m in another (p.786–787).
 - GPS at 3–4 s per sample is coarse for the first 10–20 s of an all-out run, where speed changes fastest.
 
-## Use in Second Wind
+## Use in Running Battery
 - **Simulator / estimator prior**: an upper reference for D′, not a football prior. The rugby mean (288 m) sits above every football value we have (university 173 [Sutcliffe2025]; mixed field-sport athletes 208 [Kramer2020]) and the authors explain it by the sport. So it does **not** argue for raising our D′ from 180 m (PLAN decision 1 kept 2026-10-17). It does confirm the spread: SD about 50 m again.
 - **Agents / claims**: none.
 

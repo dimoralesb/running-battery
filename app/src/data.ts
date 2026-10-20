@@ -1,4 +1,4 @@
-// The overlay's data: files written by `python -m secondwind.export` (match.json,
+// The overlay's data: files written by `python -m runningbattery.export` (match.json,
 // positions.bin, signals.json, feed.json). All times are video_s: seconds from kick-off with
 // half-time left out, as in feed.json.
 

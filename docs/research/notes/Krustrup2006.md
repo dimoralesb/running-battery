@@ -82,7 +82,7 @@ None (descriptive statistics, ANOVA, t-tests, Pearson correlations).
 - Sprint times are averages of 5 sprints; % changes small (1.6–3.6%) relative to typical test noise (not reported here).
 - No exact recovery time course after intense periods.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: temporary fatigue lowers **repeated-sprint** ability by ~1.5–3.5% in sprint time (first 1–3 min after an intense spell), more in the 2nd half; end-of-match ~3%. Single-sprint top speed in the first effort may be almost unchanged after a 1st-half spell. Recovery to baseline within the remaining minutes of the half. A slow "glycogen" store drained over 90 min (449 → 255 mmol/kg d.w., −42%) is a reasonable hidden state for the end-of-match component.
 - Fatigue estimator: do not use lactate-like accumulation models as the explanation for temporary fatigue; a fast-recovering "D′" component is consistent with the data. Speed loss is small (a few %), so a top-speed-based fatigue signal must handle noise.
 - Agents / claims: supported: "right after an intense spell, players are a few percent slower in repeated sprints; by the end of the half this has recovered"; "late in the game, about half of muscle fibres are low on glycogen". Not supported: "lactic acid made him tired"; "blood lactate shows how tired he is".

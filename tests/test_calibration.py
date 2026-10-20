@@ -1,14 +1,15 @@
 """Calibration tools: the batch statistics (speed and acceleration bands, effort counts, team
 totals, running by phase, JSON report) and the IDSSE comparison (PLAN §2.5). The IDSSE tests
-skip when the data was never downloaded and derived here (``python -m secondwind.sim.idsse``)."""
+skip when the data was never downloaded and derived here
+(``python -m runningbattery.sim.idsse``)."""
 
 import json
 
 import numpy as np
 import pytest
 
-from secondwind.sim import params as P
-from secondwind.sim.batch import (
+from runningbattery.sim import params as P
+from runningbattery.sim.batch import (
     BAND_TOLERANCE,
     TEAM_TARGETS,
     build_report,
@@ -16,8 +17,8 @@ from secondwind.sim.batch import (
     main,
     run_batch,
 )
-from secondwind.sim.idsse import load_derived, player_kinematics, resample
-from secondwind.sim.summary import (
+from runningbattery.sim.idsse import load_derived, player_kinematics, resample
+from runningbattery.sim.summary import (
     ACCEL_EDGES,
     SPEED_CAP,
     SPEED_EDGES,
@@ -39,7 +40,7 @@ def stats() -> list[dict]:
 def idsse() -> list[dict]:
     matches = load_derived()
     if not matches:
-        pytest.skip("IDSSE not derived here (python -m secondwind.sim.idsse)")
+        pytest.skip("IDSSE not derived here (python -m runningbattery.sim.idsse)")
     return matches
 
 

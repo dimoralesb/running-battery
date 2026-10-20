@@ -1,4 +1,4 @@
-# Second Wind: pitch text for the submission form
+# Running Battery: pitch text for the submission form
 
 The rules ask for "a short elevator pitch for your Project including what you built, which
 Microsoft and Azure technologies used, what it does, what problem it solves" (OFFICIAL RULES
@@ -7,7 +7,7 @@ Microsoft and Azure technologies used, what it does, what problem it solves" (OF
 
 ## Short version (one paragraph)
 
-Second Wind shows the story the scoreline doesn't tell: who has done the hard running, when, and
+Running Battery shows the story the scoreline doesn't tell: who has done the hard running, when, and
 what it would cost a typical professional. From tracking positions alone it measures each
 player's high-speed running, top speed and hardest minutes, and four AI agents on Microsoft
 Foundry turn that into a timed, verified feed for a fan or an analyst. A Verifier checks every
@@ -17,7 +17,7 @@ and cannot tell.
 
 ## Full version
 
-**What it is.** Second Wind is an overlay and a team of AI agents that explain the running in a
+**What it is.** Running Battery is an overlay and a team of AI agents that explain the running in a
 football match. It opens on the match's highlights: each clip plays as it happened, then shows
 its numbers and what the agents say about it, each line with its sources and the Verifier's
 verdict; a replay button plays it again in slow motion.
@@ -63,7 +63,7 @@ rules alone never block a valid sentence, and rules plus the LLM catch most unsu
 
 | Statement | Source |
 |---|---|
-| 46 claims (14 supported, 14 qualified, 18 blocked) | `src/secondwind/agents/claims.json`; synthesis §5 |
+| 46 claims (14 supported, 14 qualified, 18 blocked) | `src/runningbattery/agents/claims.json`; synthesis §5 |
 | 5.5 m/s (19.8 km/h) high-speed threshold | README "The overlay"; `engine/params.py` |
 | 10–90% band, calibrated chance; ECE 0.009 to 0.001 | PLAN decision 15; README "Validation" |
 | Precision 0.24 at recall 0.1 for the best positions-only detector | README "What we tested"; `validate/ceiling.py`, dev seeds 1–60 |
@@ -71,7 +71,7 @@ rules alone never block a valid sentence, and rules plus the LLM catch most unsu
 | AUC 0.45, skipped run vs no run asked | PLAN decision 24; `validate/teams.py` |
 | A run's purpose (closing down, on Ju2022's definition): precision 0.21 | PLAN decision 30; `validate/purposes.py`, 76,527 runs |
 | 10 s after a change of possession | our threshold; transitions last 9.3–10.9 s [Bortnik2022, Table 2] |
-| Seven read-only MCP tools | `src/secondwind/agents/mcp_server.py` |
+| Seven read-only MCP tools | `src/runningbattery/agents/mcp_server.py` |
 | gpt-5-mini on Foundry | PLAN decision 18 |
 | 74 papers; 240 matches; 7 IDSSE matches | README; [Bassek2025] |
 | 174 test sentences; rules never block a valid one | `docs/verifier_report.json` |

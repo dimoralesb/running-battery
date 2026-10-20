@@ -89,7 +89,7 @@ Ball time of flight: simulated trajectories with aerodynamic drag and speed-depe
 - Score model ignores defenders and goalkeeper (uses distance only). β is described as a "fudge factor" (footnote 6).
 - Does not model the difficulty of crossing while running at speed (footnote 7), nor the effect of pressure or player speed on delivery (p. 16).
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: the transition model (2D normal around the ball, SD 14 m raw, σ = 23.9 m fitted, weighted by PPCF^α) is a simple, physically sensible way to pick the next event location in the synthetic event layer. The PPCF can decide who wins contested balls.
 - Fatigue estimator: the PPCF has explicit v and a. That is where a fatigue-reduced top speed and acceleration plug in. Footnote 3 itself suggests per-player v and a.
 - Agents / claims: OBSO lets an agent say "the tired full-back left a zone where the opponent had an x% scoring opportunity". This is model output. It must be labelled as such, and is only meaningful with the context checks.

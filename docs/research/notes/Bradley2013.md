@@ -128,7 +128,7 @@ None in the paper.
 - Prozone sampling rate not stated. 2006–09 EPL data; modern EPL is faster.
 - Abstract and text disagree on the post-peak P value (P < 0.05 vs P < 0.01).
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator:
   - 2nd-half decline should depend on first-half load: high-work players lose ~12% HIR in the 2nd half; low-work players lose ~0%.
   - Add a short dip in the first 5–10 min after half-time (cool muscles / tempo), stronger for high-work players and midfielders.

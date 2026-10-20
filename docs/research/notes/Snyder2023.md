@@ -40,7 +40,7 @@ When the running is **imposed** (fixed commands, players told to follow them exa
 - Max speed comes from a single commanded sprint on a short course every 5 min, so the decline may partly be effort, not capacity.
 - Acceleration counts at 0.5 m/s² are not comparable with any match study (the authors say so, p.10).
 
-## Use in Second Wind
+## Use in Running Battery
 - **Simulator**: no calibration target (wrong population, not a match). It supports leaving our generator **without pacing** only as a known simplification: real players spread their effort, so the real fade is gentler and later than an imposed one. Our targets already come from matches (Bradley2009), so they include whatever pacing real players do.
 - **Fatigue estimator**: two points.
   1. Pacing hides fatigue in the output. In a match the player chooses how hard to run, so a tired player running less looks like a player choosing to run less. This is one more reason the behaviour cues we found are weak (next-minute high-speed running effect size about 0.1, PLAN §3.3) and why we report the work done, not who is tired.

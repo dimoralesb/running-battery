@@ -60,7 +60,7 @@ Quality score (p. 4): $Q = \frac{\text{items met}}{16} \times 100\%$. Checked ag
 - Mixed populations (U14 to adult, recreational to semi-pro); almost no elite players. Lab tasks with low ecological validity (authors say so, pp. 11–12, 15).
 - Carling 2011 (match study) is cited (ref 59) but not included, so the claim "no study in game situations" reflects their inclusion rules, not the full literature.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: no numbers to take from here. Use as a guardrail: do not make the simulator's decision quality get worse with fatigue. Skill penalties should be small and mostly on kick speed/precision, not on choices.
 - Fatigue estimator: nothing direct. It supports sprint capacity as the physical marker that fatigue changes (sprint down in 2/2 studies that measured it).
 - Agents / claims: allowed: "in lab tests, tired players shoot less accurately and kick the ball slower." Not allowed: "fatigue made him choose the wrong pass" (cognitive evidence inconclusive; decision quality kept in 3 of 4 decision studies). Not allowed: any tactical claim about one player (1 study, U14, team-level only).

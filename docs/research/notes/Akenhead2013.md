@@ -81,7 +81,7 @@ $$ X_{\%} = 100 \cdot \frac{X_{5\,\mathrm{min}}}{\bar{x}_{45}} $$
 - Only the first 45 min of each half; stoppage time excluded.
 - No context control (score, substitutions of opponents, tactics).
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: the hidden fatigue should reduce **acceleration/deceleration volume** by ~15-21% from the first to the last 15 min, with partial recovery after half-time (P4 ≈ P2), while HSR/sprint distance per half can stay flat. A post-peak dip in high accelerations of ~10% for ~5 min, recovering by 10 min. Note this is volume (fewer metres accelerating), not proof of lower maximal acceleration capacity.
 - Fatigue estimator: rolling high-acceleration/deceleration distance vs the player's own half-mean is a candidate signal, with ~10% transient dips after peaks. Because the numbers come from GPS, our 10 Hz synthetic positions need their own calibration; do not reuse these absolute metres directly. Acceleration from position data requires smoothing; the band results depend on the filter.
 - Agents / claims: allowed: "In a reserve-league GPS study, distance covered while accelerating/decelerating fell ~15-21% from the first to the last 15 min." Not allowed: "players lose acceleration capacity" (they measured output volume, not capacity) or "high accelerations decline significantly" (HACC main effect was n.s., p = 0.08; HDEC was significant only P1 vs P6).

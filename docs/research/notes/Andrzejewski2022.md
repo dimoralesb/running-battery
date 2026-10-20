@@ -19,7 +19,7 @@ None.
 - Totals by phase mostly reflect **how long** a team has the ball; this is why "TD without possession" correlates negatively here but out-of-possession running **per minute** correlates positively in Allen2026b. Not a real contradiction.
 - Bundesliga, older seasons.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: none.
 - Fatigue estimator: none.
 - Agents / claims: supports "technical/possession variables explain success much more than running". Teach the Verifier: compare phases **per minute of that phase**, never as totals.

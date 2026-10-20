@@ -69,7 +69,7 @@ $T_{total} = T_{exec} + T_{pen} - T_{bonus}$, with $T_{exec}$ = time for 16 pass
 - Match notational counts (video, subjective coding) show no significant drop and stable success rate; authors say these counts are crude (p. 940).
 - η² values from a repeated-measures ANOVA are not Cohen's d. Our d values are rough.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: if we add any lab-based pass-accuracy penalty, treat Rampinini as an UPPER BOUND for junior players in a closed drill: error-related penalties rise ~40% by half-time and ~60% by full-time; speed of play ~4–5% slower. Because the in-match success rate did not drop (75% vs 79%), keep the in-game pass completion penalty very small (a few percentage points at most) and let fitness (our hidden aerobic capacity) reduce it.
 - Fatigue estimator: nothing direct. Shows HR mean falls 174 → 165 bpm and lactate 5 → 3 mM in the 2nd half, consistent with lower 2nd-half work.
 - Agents / claims: allowed: "in passing tests, junior players made clearly more passing errors after a match half than when fresh" (lab). Allowed: "fitter players lost less passing accuracy after the same hard running". Not allowed: "he misplaced the pass because he was tired" — the same study found no drop in match pass success.

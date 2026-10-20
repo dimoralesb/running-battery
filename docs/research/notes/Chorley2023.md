@@ -27,7 +27,7 @@ $$\tau_{FC}=45\,e^{-0.014\,\%D_{CP}}+9999\,e^{-0.811\,\%D_{CP}},\qquad \tau_{SC}
 - 9999 constants look like fitting bounds, not physiology.
 - Authors say the repeated-bout slowing could not be split between the two pools.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: **best available recipe for an intensity-dependent two-pool truth model.** Map %D_CP → (CS − v)/CS × 100. Walking/standing ≈ LOW, jogging ≈ MOD/HVY. Effect: recovery while jogging near CS is very slow (τSC thousands of seconds), recovery while walking is fast. This is what drives "players who keep jogging don't recharge".
 - Fatigue estimator: keep one pool; optionally make τ depend on recovery speed the same way.
 - Agents / claims: "recovery is faster when the player walks than when he keeps jogging" is supported in principle (cycling lab), consistent with Skiba-type models.

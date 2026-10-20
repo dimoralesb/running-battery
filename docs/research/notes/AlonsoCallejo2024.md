@@ -21,7 +21,7 @@ None (ASP method as Morin2021).
 - Reserve-team players, GPS, one week; A0 vs F0 compare different units.
 - A0 is extrapolated below 3 m/s, so its error is larger.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: player capacity (A0 ~6.5–7.5 m/s², S0 ~9.2–9.8 m/s) as truth parameters; consistent with Morin2021.
 - Fatigue estimator: **a single match does not give a reliable A–S profile** (A0 ICC 0.23). A within-match "capacity check" is weaker still. Take the A–S profile from **metadata (season/week profile)**, and in-match use only "share of runs near the player's own limit".
 - Agents / claims: "his top-end acceleration has dropped in this match" → **not supported** from tracking alone.

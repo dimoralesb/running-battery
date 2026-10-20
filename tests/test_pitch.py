@@ -4,7 +4,7 @@ by sentence, as the overlay's fixed copy does."""
 import re
 from pathlib import Path
 
-from secondwind.agents.verifier import verify
+from runningbattery.agents.verifier import verify
 
 PITCH = Path(__file__).resolve().parents[1] / "docs" / "PITCH.md"
 

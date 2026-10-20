@@ -55,7 +55,7 @@ None given in the paper. Our conversion only: $SD = SEM \times \sqrt{n}$, $n = 1
 - Shooting success did not fall; numerically it rose in the 2nd half (P = 0.072 between halves). "Less precise" here means larger distance from a corner target, not fewer shots on target.
 - Pass speed loss could be a strategy (speed-accuracy trade-off, authors p. 230): players slowed passes and kept precision.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: if any skill effect is simulated, the defensible one is a small drop in kick/pass ball speed late in the match (≈ −5 to −8% by 75–90 min) with NO drop in pass completion. Dribbling: no change. Sprint capacity: −5% over 15 m by the last 15 min (a lab value close to the hidden-truth top-speed drop we model).
 - Fatigue estimator: supports top-speed decline (−5% in 15 m sprints) as a late-match fatigue marker; matches SilvaJR2018 (~3.5% slower sprint post-match).
 - Agents / claims: allowed: "in a lab simulation, tired players struck the ball a bit slower and shot less precisely, but kept their pass success rate." Not allowed: "he missed the target because he was tired" or "fatigue cost him the pass" (success unchanged). Not allowed for dribbling at all.

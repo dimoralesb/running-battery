@@ -95,7 +95,7 @@ Checked against PDF (p. 5, Box 3).
 - No physical summary numbers (distances, speeds per position) are reported. We have to compute them ourselves.
 - No heart rate, GPS or physiological data. No fatigue ground truth.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: the best real 25 Hz source for (after downsampling to 10 Hz) speed and acceleration distributions per position code, distances per half, high-speed running, and v95 per half (to compare with daSilva2025 Fig. 1). Also event mix and rates (≈ 740 open-play passes, ≈ 200 duels, ≈ 24 shots, ≈ 22 fouls, ≈ 39 throw-ins, ≈ 7.6 corners per match, approx.). Gross/net playing time per half sets the effective ball-in-play time. BallStatus gives dead-ball periods. Formation and position codes give target-position templates. Coordinate system: 105 × 68 m. XML layout and field names (N, T, X, Y, D, S, A, M; BallPossession, BallStatus) are a ready-made schema to imitate.
 - Fatigue estimator: test the estimator's input pipeline on real positions (smoothing, speed, acceleration, metabolic power). Check that a CS/D′ fit from tracking runs on real data. Per-player minute-by-minute high-speed running for peak-spell detection. No ground truth, so this is a "does it look plausible" check only.
 - Agents / claims: none directly. If we quote "calibrated on official Bundesliga data", add "7 matches, 5 of them 2. Bundesliga".

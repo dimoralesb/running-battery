@@ -32,7 +32,7 @@ The 3MT separates athletes from non-athletes mainly by CS and sprint speed, not 
 - Two different pooled CS–VO₂max correlations (0.57 and 0.50) and two D′ differences (−24.76 in Table 1, −24.27 in the text).
 - Non-athletes and athletes had similar VO₂max but very different CS (Table 1; Discussion): VO₂max alone does not set CS.
 
-## Use in Second Wind
+## Use in Running Battery
 - **CS prior (decision 13)**: an independent check of our "CS at 85% of the speed at VO₂max" assumption. Athletes run CS at about 83% of sVO₂max. With our professional derivation (VO₂max 57.6 ml/kg/min, 0.196 ml/kg/m [Modric2020]) the speed at VO₂max is 4.90 m/s and 83% of it is 4.07 m/s (derived), which still rounds to 4.1. No change.
 - **CS spread**: VO₂max explains only 25–50% of CS between players (r 0.5–0.7). So a CS SD derived from the VO₂max spread alone (0.26 m/s from [Carpels2026]) is a floor; widening it to 0.3 was right, if anything still narrow (athletes of mixed sports: 0.50).
 - **D′ prior (decision 1)**: field-sport athletes 208 ± 52 m, active non-athletes 184 ± 64 m. Our 180 ± 54 m sits half an SD below the athletes; no reason to raise it to ~225 (the figure-only grand mean).

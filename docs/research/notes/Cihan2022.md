@@ -14,7 +14,7 @@ Evidence strength: **low; the match data are unusable.** Small regional journal 
 - **The match data cover about 16 minutes, not 90.** Total distance 2,288 ± 482 m, which is what the five speed bands add up to (2,286 m), while the mean speed of 8.34 km/h over 90 min would give about 12.5 km. The times in the heart-rate zones add up to about 985 s (16 min). Maximum match speed 19.5 km/h vs a tested top speed of 28 km/h, and 2.5 m above 21 km/h, are also implausible for a full match.
 - So every match correlation and regression (Tables 3–4, R² up to 0.83 on n = 15 with three predictors) is unusable.
 
-## Use in Second Wind
+## Use in Running Battery
 - **CS prior**: one more test-based value, from trained U17 academy players: CV 4.0 ± 0.26 m/s by a two-run time trial. That is close to our professional prior (4.1 ± 0.3), and its SD matches ours. Academy youth, not professionals, so supporting only.
 - **D′**: the two-run ADC (116 m) is lower than 3MT values (173–288 m); D′ depends on the test.
 - **Claims**: none (the match part is broken).

@@ -47,7 +47,7 @@ $a_{max}(v)$ = maximal forward acceleration a player can produce at running spee
 - Measures forward (tangential) acceleration in the running direction; curved runs and changes of direction are mixed into the cloud.
 - Conflict of interest: Osgnach and di Prampero consult for Exelio (p. 4).
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: give each synthetic player A0 ~ N(7.5, 0.5) m/s² (range ~6.5–8.4) and S0 ~ N(9.3, 0.5) m/s (range ~8.4–10.3) from Table 1; use $a_{max}(v) = A_0(1 - v/S_0)$ as the propulsion limit in the motion model (fits the Narizuka-type first-order sprint model, where $\tau = S_0/A_0 \approx 1.2$ s). Fatigue can lower A0 and/or S0 in the hidden truth.
 - Fatigue estimator: build a baseline A-S profile per player from the first part of a match (or earlier matches), then fit rolling profiles (e.g., per 15 min or per half) and compare A0, S0 against baseline. Use exactly the binning: 3 m/s minimum, 0.2 m/s bins, top-2 per bin, 95% CI outlier removal, refit. Be aware the data within 15 min may be too sparse to reach top speed (S0 extrapolation unstable).
 - Agents / claims: supported: "A-S profile can be estimated from tracking without a test" (training GPS, pro players); "between-phase random error < 8%". Not supported by this paper: "A-S profile drops within a match due to fatigue" (not tested here).

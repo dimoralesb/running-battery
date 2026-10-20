@@ -64,7 +64,7 @@ No D′bal equation is given in the paper.
 - 3MT Smax (≈ 7.45 m/s) is lower than match Smax (≈ 8.0 m/s), so the 3MT underestimates top speed.
 - Sample-size calculation (paired t-test, d = 0.5) does not match a correlation design.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: plausible field-test CS ≈ 3.6 m/s (range ≈ 2.8–4.4) and D′ ≈ 173 ± 54 m (range ≈ 90–325) for amateur/university players. Pro players likely higher CS; Kramer 2020 quasi-norms for field sports ≈ 3.5 m/s and ≈ 225 m (quoted in Liu2021). Target: a typical player spends ~8 min (3–16) above CS per match and the deepest D′bal drop is ~21% (14–35%) of D′.
 - Fatigue estimator: the D′bal-from-GPS idea works in practice, but with a lab CS the battery rarely goes below ~65–80% of D′ in a match. A "low battery" alert near 0 would almost never fire; thresholds should be relative (e.g., deepest 10% of the player's own range) or our τ/CS choices must be justified.
 - Agents / claims: may say "D′ balance has been applied to match GPS in university football (small study)". Must not say "D′bal predicts match performance" — only correlations, mostly trivial or artefactual.

@@ -37,7 +37,7 @@ None.
 - Pooled leagues in Table 3; PL-specific position values not given.
 - Docling garbled Table 2 and Table 4; Table 3 OK only in the PDF layout text.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: **fills the gap on effort counts.** Sprint efforts per match ~7 (CD) to ~14 (WN); HSR efforts ~35–61; high decelerations outnumber high accelerations ~2.5:1. Use as targets for count shapes; scale distances with Allen2024/2025 instead.
 - Fatigue estimator: also relevant because **SkillCorner open data is one of our calibration sources**: expect its VMAX to read ~0.6 m/s low and TD ~0.4 km different vs TRACAB.
 - Agents / claims: "Premier League players accelerate and decelerate more often than in other top leagues" → supported (small effects).

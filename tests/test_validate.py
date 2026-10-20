@@ -5,13 +5,13 @@ inputs only."""
 import numpy as np
 import pytest
 
-from secondwind.schema import TrueParams
-from secondwind.sim import params as SP
-from secondwind.sim.output import prior_settings
-from secondwind.validate.calibrate import binned, fit_map, isotonic
-from secondwind.validate.ceiling import best_precision, player_prior, tired_series
-from secondwind.validate.estimator import calibration, calibration_scores
-from secondwind.validate.teams import agreement, auc
+from runningbattery.schema import TrueParams
+from runningbattery.sim import params as SP
+from runningbattery.sim.output import prior_settings
+from runningbattery.validate.calibrate import binned, fit_map, isotonic
+from runningbattery.validate.ceiling import best_precision, player_prior, tired_series
+from runningbattery.validate.estimator import calibration, calibration_scores
+from runningbattery.validate.teams import agreement, auc
 
 HZ = round(SP.FRAME_RATE_HZ)
 
@@ -89,7 +89,7 @@ def test_fit_map_recovers_a_chance_that_is_twice_too_high():
 
 
 def test_idsse_codes_take_the_nearest_earlier_source_frame():
-    from secondwind.sim.idsse import _codes
+    from runningbattery.sim.idsse import _codes
 
     code = np.arange(10)  # 25 Hz: frames at 0, 0.04, … 0.36 s
     assert _codes(code, 4).tolist() == [0, 2, 5, 7]  # 10 Hz: 0, 0.1, 0.2, 0.3 s
@@ -101,7 +101,7 @@ def test_real_data_measures_on_a_constructed_match():
     energy; the substituted home CF is left out."""
     from test_engine import _match
 
-    from secondwind.validate.real import measure, summarise
+    from runningbattery.validate.real import measure, summarise
 
     m = measure(_match())
     assert m["players"] == 19  # 22 outfield starters minus the substituted H11, minus 2 GKs

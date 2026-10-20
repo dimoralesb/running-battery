@@ -65,7 +65,7 @@ None.
 - Only halves; no 15-min or 5-min periods; no accelerations.
 - Statistical reporting is loose (e.g. "p < 0.5" in the abstract and p.224; probably meant p < 0.05).
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: **sprint event structure**: ~17 sprints per match above 23 km/h, mean ~19 m per sprint (range ~10-33 m), by position (CD ~11, CM ~14, ED/EM/F ~20-22). This is the only source in this group with sprint counts by position. Distances with the ball are 1-2.5% of total: useful for the ball-carrier model. Treat these as old non-EPL numbers. Use them for structure and for ratios between positions, not as absolute targets.
 - Fatigue estimator: halves show no drop at high speeds and a small drop at moderate speeds. This supports the view that whole-half comparisons are a weak fatigue signal; finer windows are needed.
 - Agents / claims: do not cite as "Premier League". Correct label: "Spanish league and Champions League, 2002-04, Amisco".

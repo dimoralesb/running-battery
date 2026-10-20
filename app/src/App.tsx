@@ -225,8 +225,8 @@ export default function App() {
     <div className="app">
       <header className="top">
         <div className="brand">
-          <strong>Second Wind</strong>
-          <span className="muted">who has done the most hard running, and when it costs them</span>
+          <strong>Running Battery</strong>
+          <span className="muted">{copy.tagline}</span>
         </div>
         <div className="controls">
           <div className="toggle" role="group" aria-label="View">

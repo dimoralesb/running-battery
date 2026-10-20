@@ -103,7 +103,7 @@ SGG = G_j when SG holds and G_j ≥ ε. (Eq. 7 is called a "mean difference" in 
 - The 13 m/s "maximum speed" is not a realistic human value (world-class sprinters peak ≈ 12 m/s). It is only a scale constant.
 - Sampling rate, ε and compute cost not reported.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: not needed for generation. The SOG/SGG thresholds (active > 1.5 m/s, δ = 5 m, α = 3 m, w = 3 s) could tag synthetic "space creation" moments if we want them.
 - Fatigue estimator: poor fit. The only way to add fatigue is ad hoc (for example, cap the speed used in Srat and the mean shift, or shrink R). Nothing published supports those changes. Spearman's time-to-intercept has v_max directly and is the better choice.
 - Agents / claims: SOG/SOL language ("lost 3 s of space occupation") is attractive for fans, but the evidence base is one match.

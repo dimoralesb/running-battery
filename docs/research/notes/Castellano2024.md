@@ -23,7 +23,7 @@ Equation 1 as above (from .md text; not checked against PDF image).
 - LaLiga, older TRACAB data; unexplained low TD scale.
 - Team-level only.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: **team running should depend on the opponent's running, effective playing time and own possession.** Coefficients give sensible signs and rough sizes: +0.42 km per extra effective minute; −0.27 km per extra minute of possession; +0.71 km per km the opponent runs. Use as a sanity check, not as exact targets.
 - Fatigue estimator: none.
 - Agents / claims: "Teams run more when the ball is in play longer and when they don't have the ball" → supported. High-speed totals are hard to predict from context.

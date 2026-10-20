@@ -68,7 +68,7 @@ $\bar{x}$ = GLMM-estimated mean of the variable in the 1-min MDP or the followin
 - Single tournament, heat/short-recovery context, CF n = 44 players.
 - No accelerations/decelerations (p. 7).
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: after a 1-min peak, the next minute has about half the total distance (≈ 98 m/min) and almost no HSR/sprint (3 and 0.6 m/min). Insert a likely stoppage/low-tempo minute after peaks: ball in play ~57% of the following minute vs ~82% in the peak minute. Defenders (CD, FB) drift to their own third after a peak (own-third time 34 → 48% CD, 28 → 43% FB); CF and WM stay higher (opp-third 42 → 51% CF).
 - Fatigue estimator: do not treat "near-zero HSR in the minute after a peak" as evidence of fatigue by itself; it is the norm (and partly stoppage). The estimator should normalise by ball-in-play time.
 - Agents / claims: Supported: "after the most intense minute, play usually calms down: less ball in play, fewer possession changes, fewer passes." Not supported: "his passing got worse after his sprint" (no quality data). If quoting −93%, must say "versus his most intense minute".

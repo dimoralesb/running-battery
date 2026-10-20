@@ -28,7 +28,7 @@ None.
 - No game state, formation or location in the model.
 - **Docling problems:** the .md starts mid-introduction (abstract lost) and Table 2 rows for Everton–Southampton are merged; Table 5 has blank cells. Abstract read from PDF.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: **phase-specific running rates** (in possession ~133, out of possession ~145, dead ball ~63 m/min per player). Ball-in-play 54–63%. Out-of-possession HID/min > in-possession HID/min for most teams. Possession share and opponent strength shift these as in Table 5.
 - Fatigue estimator: normalising by ball-in-play time (synthesis §3.4) is essential; TIP/TOOP per minute is the right denominator for comparing phases.
 - Agents / claims: "Successful teams press harder out of possession (per minute) and run less with the ball" → **supported as association**. "Running more overall wins games" → **not supported** in 2019–24 (TD r .04).

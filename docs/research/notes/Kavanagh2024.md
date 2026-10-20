@@ -118,7 +118,7 @@ With the group means this gives 0.7(4.63) + 0.3(9.53) = 6.10 m/s, but the paper 
 - Formula/value mismatch for the 30% ASR threshold (see above).
 - Per-90 extrapolation for players with < 90 min, but matches averaged 95.5 min, so "whole match" totals are partly per-90 and partly per-real-time.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: per-position (D/M/F) calibration targets for Second Spectrum 25 Hz: TD, HSRD, HIRD, sprint, split by possession phase (Tables 2 and 4). **Top speed targets**: season-max PS about 9.4-9.8 m/s (33.7-35.4 km/h), SD 0.3-0.4 m/s between players. Use the phase-time split (TIP 23%, OTIP 32%, BOP 45% of 95.5 min) for the simulator's phase durations. Note that OTIP running intensity > TIP intensity for D and M.
 - Fatigue estimator: supports using **% of each player's own peak speed** (e.g. 85% PS) for sprint-type load and for "near top speed" detection. For HSR, generic 5.5 m/s gives almost the same information as a 30% ASR threshold in elite players. So use generic 5.5 m/s for HSR, but a relative threshold (85% PS) for high-end efforts. CS / D' are not addressed. MAS (4.6 m/s) is a rough proxy for critical speed (CS is usually a bit below MAS/vVO2max).
 - Agents / claims: "Forwards sprint more than defenders" is only true in possession. Over the whole match, sprint distance did not differ between groups in this sample. "Relative thresholds always change the picture" is overstated: for HSR, r = 0.98.

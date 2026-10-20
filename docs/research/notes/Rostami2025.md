@@ -14,5 +14,5 @@ Evidence strength: **very low; not used for numbers.** Health Nexus is a young j
 - Regressing 400 m and 1600 m times on a CV and ADC computed from those same times is circular (Table 7).
 - No correction for many tests on 60 players split into six positions.
 
-## Use in Second Wind
+## Use in Running Battery
 None for calibration. It only adds a two-run ADC (~175 m) to the pile showing that footballers' D′ mostly comes out in the 100–210 m range, with the value depending on the test.

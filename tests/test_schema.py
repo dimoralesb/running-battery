@@ -4,8 +4,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from secondwind.io import read_match, read_truth, write_match
-from secondwind.schema import (
+from runningbattery.io import read_match, read_truth, write_match
+from runningbattery.schema import (
     Ball,
     ClubTestValues,
     Event,
@@ -196,5 +196,5 @@ def test_exported_json_schemas_are_up_to_date():
     for name, schema in json_schemas().items():
         path = ROOT / "schemas" / f"{name}.schema.json"
         assert json.loads(path.read_text()) == schema, (
-            f"{path.name} is stale: run `uv run python -m secondwind.schema`"
+            f"{path.name} is stale: run `uv run python -m runningbattery.schema`"
         )

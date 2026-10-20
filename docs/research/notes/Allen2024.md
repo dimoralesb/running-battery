@@ -64,7 +64,7 @@ None.
 - Positions from Opta labels; 307 players played ≥ 3 positions (Table 3, p.780).
 - **Text vs table:** the results text (p.781) says CB, FB, CM, AM and CF had small SprD increases, but Table 4 shows CM (p = 0.1) and AM (p = 0.065) as **not significant**. The abstract and Table 4 agree; the results sentence is wrong.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: **the position shape for calibration.** Take the 2018/19 values (all 8 positions, with SDs for the spread between players) and scale each metric so a full XI adds up to the 2024/25 team totals in Allen2025 (TD ×1.033, HID ×1.059, SprD ×1.163). See synthesis §4.2. The GK row (about 4.6–4.7 km, almost no HID) fills the gap noted with Allen2025.
 - Fatigue estimator: none directly. The 5.5 / 7.0 m/s thresholds with 0.5 s / 1 s dwell are the EPL convention; use them.
 - Agents / claims: position norms are now sourced: "for a centre-back, about 120–140 m of sprinting is typical". Use them as ranges, with the season they come from. Keep the attribution rule: the +30% HID 2006–13 is Barnes 2014 (cited), not Allen.

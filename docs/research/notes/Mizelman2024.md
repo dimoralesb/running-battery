@@ -68,7 +68,7 @@ Note (our observation, not in paper): CS3 and OmSD both give $S(0) = S_{max}$, u
 - Collegiate players, one team, 6 weeks, mostly practices (only 7 games). No positional breakdown. Doppler speed preferred but positional differentiation discussed (p. 2064).
 - Smax estimates (8.6–10.2 m/s, max 12 m/s) are above typical player top speeds (~9 m/s); 12 m/s is the filter limit, so some values sit at the bound.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: do NOT use these CS/D′ as the hidden physiological truth. A "true" CS should be closer to lab/3MT values (~3.4–4 m/s; see Sutcliffe2025, Liu2021). Use Table 2 peak speeds (3.60 m/s at 60 s, 2.56 m/s at 180 s, 2.32 at 300 s, 2.17 at 600 s) only as a sanity check for collegiate-level synthetic profiles; professional values are higher (~200/150/120 m/min at 1/3/10 min).
 - Fatigue estimator: the method (rolling max-mean speed for every duration, fit CS3 or OmSD on 2–600 s) is a valid way to get each player's speed-duration profile from tracking alone. But the resulting "CS" (~2 m/s) used as a W′bal threshold would make the battery drain almost all the time a player jogs. Options: (a) fit only on longer durations (CS2 on 120–600 s, which the authors say fits well, p. 2064), (b) treat the asymptote as a lower bound and use a prior from 3MT values, (c) validate on synthetic data where we know the true CS. Global profiles need many sessions; one session gives very noisy D′ (52 ± 44 m).
 - Agents / claims: may say "CS-model fits summarise peak running demands"; may NOT say "CS and D′ from match data equal physiological CS/D′" (authors explicitly deny this).

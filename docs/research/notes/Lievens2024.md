@@ -27,7 +27,7 @@ Equations 1–2 (mono, bi-exponential) are missing from the .md; the τ formulas
 - "Partial depletion" is assumed from the CP model, not measured.
 - Recovery intensity fixed at 90% GET.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: one-pool recovery is acceptable for partial depletion. Add a cap: after large depletion, recovery tops out below 100% for minutes (~83% here) → a natural source of **residual fatigue** for the end-of-match decline.
 - Fatigue estimator: **supports a one-pool estimator.** Its fast τ (32–82 s) is cycling; in runners the fitted τ was ~5× slower than the standard formula [Bellenger2025], so we use τ = k·D′/(CS − v) with k ≈ 4 (synthesis §3.2.2).
 - Agents / claims: "players recover a large share of their high-intensity capacity in the first 30 seconds" is supported in the lab (+21–23% of W′), with a cycling caveat.

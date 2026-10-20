@@ -71,7 +71,7 @@ $x_k$ = distance (m) or count in transition $k$; $t_k$ = its duration (s); $N$ =
 - No time course after transitions (no post-transition recovery data).
 - A+D in transitions is only 145% of match average, which may be low because ~10-s windows capture few discrete events.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: phase types and rates. ~50 transitions per team per match (32–68), ~10 s each (peak 22–27 s); mix PT 28%, NT 31%, FA 26%, HP 16%. During transitions: ~3.4 m/s average speed (TD ~200 m/min), HSRD ~6.6× and sprint ~9× the match average; NT has highest total distance and A+D, PT the most sprinting, HP high A+D but low running. About half of all sprint distance and ~38% of HSR should occur in transitions.
 - Fatigue estimator: transition episodes are where large chunks of high-speed load come from; a "transition counter" can help explain battery drops.
 - Agents / claims: Supported: "counter-attacks and the moments right after losing the ball are among the most intense phases of play." Precise version: losing the ball (NT) = highest total running and accel/decel rate; winning it (PT) = most sprinting. Must mention it is one Polish team, GPS.

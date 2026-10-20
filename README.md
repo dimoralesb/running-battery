@@ -1,8 +1,8 @@
-# Second Wind
+# Running Battery
 
-> The story the scoreline doesn't tell: who has done the most hard running, and when it costs them.
+> How much hard running each football player has done, and what it would leave a typical professional.
 
-Second Wind measures from tracking data how much hard running each football player has done and what it would cost a typical professional, and explains it to fans and analysts through AI agents on Microsoft Foundry. It is an entry for the Microsoft x Premier League "Inside the Game" hackathon.
+Running Battery measures from tracking data how much hard running each football player has done and what it would cost a typical professional, and explains it to fans and analysts through AI agents on Microsoft Foundry. It is an entry for the Microsoft x Premier League "Inside the Game" hackathon.
 
 All match data is **synthetic**: we built a generator whose players get tired according to published sports science, with a hidden "true" fatigue we use to test our estimator.
 
@@ -13,7 +13,7 @@ Add `?match=natural`, `&mode=analyst`, `&view=full&t=<seconds>`, `&hl=<kind>&ste
 - Project plan: [docs/PLAN.md](docs/PLAN.md)
 - Build plan: [docs/BUILD_PLAN.md](docs/BUILD_PLAN.md)
 - Evidence base (74 papers): [docs/RESEARCH_SYNTHESIS.md](docs/RESEARCH_SYNTHESIS.md); citation keys such as [Leifsson2024] are in [docs/References.bib](docs/References.bib)
-- Data format: [src/secondwind/schema.py](src/secondwind/schema.py), JSON Schemas in [schemas/](schemas/)
+- Data format: [src/runningbattery/schema.py](src/runningbattery/schema.py), JSON Schemas in [schemas/](schemas/)
 
 ## How it works
 
@@ -170,12 +170,12 @@ synthetic matches, it does not hold up from positions, and the Verifier blocks i
 - **"He is tired."** With each player's true fitness, the generator's own physiology finds the
   tired moments almost perfectly (precision 0.99); without it, the best any positions-only
   detector reaches is precision 0.24 at recall 0.1, and our battery reaches 0.17 (dev seeds 1–60,
-  [validate/ceiling.py](src/secondwind/validate/ceiling.py)). The same running drains players of
+  [validate/ceiling.py](src/runningbattery/validate/ceiling.py)). The same running drains players of
   different fitness very differently. So we say what the running would cost a *typical*
   professional (claims 11 and 33).
 - **"Which team is more tired."** Home-minus-away differences pick the team with more
   short-term tiredness 47–58% of the time (chance) and the team with more late-match wear at most
-  68% (60 matches, [validate/teams.py](src/secondwind/validate/teams.py)). We show the measured
+  68% (60 matches, [validate/teams.py](src/runningbattery/validate/teams.py)). We show the measured
   running instead: team totals per ball-in-play minute, and how a gap changed (claim 35).
 - **"He ran slower than he could when it mattered."** After his team lost the ball, a slow defender had no
   run asked by his role in 94% of cases and skipped one in 5%; speed tells a skipped run from no
@@ -189,7 +189,7 @@ synthetic matches, it does not hold up from positions, and the Verifier blocks i
   the ball" [Ju2022, Table 1]: his team without the ball, the gap to the ball shrinking by 3 m or
   more and ending within 5 m) matches the generator's hidden close-down runs with precision 0.21
   (base rate 0.04) and recall 0.25; in the opponents' third, 0.31 and 0.03 (76,527 runs, dev seeds
-  1–60, thresholds fixed before the first run, [validate/purposes.py](src/secondwind/validate/purposes.py)).
+  1–60, thresholds fixed before the first run, [validate/purposes.py](src/runningbattery/validate/purposes.py)).
   The split above shows where the running happened instead, and the Verifier blocks "pressing" and
   "closing down" (claim 39). A recovery-run rule does better (precision 0.68, recall 0.37 with
   Ju2022's "to be goal side when out of position"), but a recovery-run share would still come out
@@ -318,10 +318,10 @@ uv sync --all-extras && uv run pytest              # 1 test skips without the ID
 uv run ruff check . && uv run ruff format --check .
 (cd app && npm ci && npm run build)                # the overlay, into app/dist
 D=data/synthetic/demo/story
-uv run python -m secondwind.sim --seed 2028 --story press-fade --out $D   # the story match
-uv run python -m secondwind.engine $D                                     # signals.json
-uv run --extra agents python -m secondwind.agents.feed $D --favourite H04 --offline --out $D/feed.json
-uv run python -m secondwind.export $D --out app/public/data/story --feed $D/feed.json
+uv run python -m runningbattery.sim --seed 2028 --story press-fade --out $D   # the story match
+uv run python -m runningbattery.engine $D                                     # signals.json
+uv run --extra agents python -m runningbattery.agents.feed $D --favourite H04 --offline --out $D/feed.json
+uv run python -m runningbattery.export $D --out app/public/data/story --feed $D/feed.json
 cd app && npm run dev                              # http://localhost:5173/?match=story
 ```
 
@@ -334,16 +334,16 @@ cd app && npm run dev                              # http://localhost:5173/?matc
 uv sync --all-extras                 # Python 3.12 environment
 uv run pytest                        # tests
 uv run ruff check . && uv run ruff format --check .
-uv run python -m secondwind.schema   # re-export JSON Schemas after changing the models
-uv run python -m secondwind.sim --seed 1 --out data/synthetic/m0001   # generate one match
-uv run python -m secondwind.sim.summary data/synthetic/m0001          # summarise it
-uv run python -m secondwind.sim.replay data/synthetic/m0001 --start 12:00 --purposes  # replay.html
-uv run python -m secondwind.sim.batch --seeds 1-30 --json report.json # means over 30 matches
+uv run python -m runningbattery.schema   # re-export JSON Schemas after changing the models
+uv run python -m runningbattery.sim --seed 1 --out data/synthetic/m0001   # generate one match
+uv run python -m runningbattery.sim.summary data/synthetic/m0001          # summarise it
+uv run python -m runningbattery.sim.replay data/synthetic/m0001 --start 12:00 --purposes  # replay.html
+uv run python -m runningbattery.sim.batch --seeds 1-30 --json report.json # means over 30 matches
 ```
 
 Calibration against IDSSE [Bassek2025] (offline only; the data never goes into the repo or the
 demo): `uv sync --extra calib`, `uv run python scripts/fetch_idsse.py` (~2.4 GB), then
-`uv run python -m secondwind.sim.idsse` once (writes small derived files next to the raw data in
+`uv run python -m runningbattery.sim.idsse` once (writes small derived files next to the raw data in
 the git-ignored `data/raw/idsse/`), and add `--idsse` to `sim.batch` to compare speed and
 acceleration bands. Replay as a GIF or still frames needs matplotlib (`--extra replay`), then add
 `--gif` or `--stills 6`.
@@ -351,21 +351,21 @@ acceleration bands. Replay as a GIF or still frames needs matplotlib (`--extra r
 Estimator and validation:
 
 ```bash
-uv run python -m secondwind.engine data/synthetic/m0001                 # signals.json
-uv run python -m secondwind.validate.batch data/synthetic/validation    # estimator vs truth
-uv run python -m secondwind.validate.calibrate data/synthetic/dev       # refit the chance map (dev seeds only)
-uv run python -m secondwind.validate.real data/synthetic/dev --jobs 4   # IDSSE vs synthetic
-uv run python -m secondwind.validate.figures                            # docs/figures/*.png
+uv run python -m runningbattery.engine data/synthetic/m0001                 # signals.json
+uv run python -m runningbattery.validate.batch data/synthetic/validation    # estimator vs truth
+uv run python -m runningbattery.validate.calibrate data/synthetic/dev       # refit the chance map (dev seeds only)
+uv run python -m runningbattery.validate.real data/synthetic/dev --jobs 4   # IDSSE vs synthetic
+uv run python -m runningbattery.validate.figures                            # docs/figures/*.png
 ```
 
 Agents (`uv sync --extra agents`; Foundry settings in `.env`, keyless auth via `az login`):
 
 ```bash
 uv run python scripts/foundry_smoke.py                                  # model access, quota, latency
-uv run python -m secondwind.agents.mcp_server data/synthetic/demo/story # MCP server (stdio)
-uv run python -m secondwind.agents.feed data/synthetic/demo/story --favourite H04  # feed.json (add --offline)
-uv run python -m secondwind.agents.highlights data/synthetic/demo/story # physical highlights
-uv run python -m secondwind.agents.verifier_suite --llm --json docs/verifier_report.json
+uv run python -m runningbattery.agents.mcp_server data/synthetic/demo/story # MCP server (stdio)
+uv run python -m runningbattery.agents.feed data/synthetic/demo/story --favourite H04  # feed.json (add --offline)
+uv run python -m runningbattery.agents.highlights data/synthetic/demo/story # physical highlights
+uv run python -m runningbattery.agents.verifier_suite --llm --json docs/verifier_report.json
 scripts/demo.sh                                                         # both demo matches + feeds
 ```
 

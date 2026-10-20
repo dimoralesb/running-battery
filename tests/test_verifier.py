@@ -8,8 +8,15 @@ from pathlib import Path
 
 import pytest
 
-from secondwind.agents.verifier import RULES, register, verify
-from secondwind.agents.verifier_suite import BLOCKED, CONTEXT, PARAPHRASES, VALID, cases, run_rules
+from runningbattery.agents.verifier import RULES, register, verify
+from runningbattery.agents.verifier_suite import (
+    BLOCKED,
+    CONTEXT,
+    PARAPHRASES,
+    VALID,
+    cases,
+    run_rules,
+)
 
 REPORT = Path(__file__).resolve().parents[1] / "docs" / "verifier_report.json"
 # Context cases the rules get wrong on purpose: naming the time ("after the break") without

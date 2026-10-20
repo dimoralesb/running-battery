@@ -59,7 +59,7 @@ None in the paper. Unit conversion used above: $v_{m/s} = v_{km/h}/3.6$.
 - No context (score, phase, ball possession), no fatigue state, no comparison of early vs late peaks.
 - The "range" values in the abstract (29.11–31.64 km/h etc.) are ranges of **position means**, not of individuals.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: realistic shape of a maximal sprint: start from ~10 km/h (2.8 m/s), accelerate over ~4–5 s to peak, then decelerate faster (~2–3 s) to ~10–15 km/h, no full stop. Position peak speeds (8.1–8.8 m/s) are usable as priors for top speed in a Brazilian-league-like team (check against Premier League data).
 - Fatigue estimator: tells us that top speed in matches is reached from flying starts and only for a moment; the estimator's "observed top speed" is a noisy, rare event and depends on space/context. It gives **no** information about how fatigue changes speed after the peak.
 - Agents / claims: could support "players reach top speed from a jog, not from standing" and "they brake harder than they accelerate". Must not be used for "after his sprint he was tired".

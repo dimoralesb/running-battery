@@ -7,13 +7,13 @@ whole-match truth series are checked in test_sim.py."""
 import numpy as np
 import pytest
 
-from secondwind.schema import RunPurpose, TrueParams
-from secondwind.sim import params as P
-from secondwind.sim.match import MatchEngine
-from secondwind.sim.output import draw_tempo
-from secondwind.sim.physiology import Physiology, tau_fast_curve, tau_slow_curve
-from secondwind.sim.roles import Run
-from secondwind.sim.rosters import make_teams
+from runningbattery.schema import RunPurpose, TrueParams
+from runningbattery.sim import params as P
+from runningbattery.sim.match import MatchEngine
+from runningbattery.sim.output import draw_tempo
+from runningbattery.sim.physiology import Physiology, tau_fast_curve, tau_slow_curve
+from runningbattery.sim.roles import Run
+from runningbattery.sim.rosters import make_teams
 
 
 def _params(n: int = 1, **kw) -> list[TrueParams]:
@@ -164,7 +164,7 @@ def test_skipped_runs_one_per_situation():
 def test_hi_run_forecast():
     """``forecast_hi_run``: a long run at full speed is a high-intensity run, a short gap or a
     wanted speed below HI_SPEED is not, and a run already at speed needs only HI_MIN_S."""
-    from secondwind.sim.movement import forecast_hi_run
+    from runningbattery.sim.movement import forecast_hi_run
 
     a0, s0 = 7.4, 9.3
     assert forecast_hi_run(30.0, 9.0, 0.0, a0, s0, 8.0)
@@ -305,7 +305,7 @@ def test_peak_window_and_recovery_after_it():
     """A 60 s spell at 2 m/s per second of high-speed running in an otherwise even 0.1 m/s
     half: the peak window starts there, and the minutes after it are compared with the match
     average without the peak [Leifsson2024]."""
-    from secondwind.sim.fatigue_checks import _leifsson, _peak
+    from runningbattery.sim.fatigue_checks import _leifsson, _peak
 
     half = np.full((2700, 2), 0.1)
     half[1000:1060, 0] = 2.0
@@ -336,7 +336,7 @@ def test_legacy_engine_uses_the_fatigue_off_calibration():
 def test_substitution_plans():
     """3–5 per team, like for like, never the goalkeeper, each slot once, in the windows (a
     window before HALF_TIME_SUB_BEFORE is made at half-time), ids 12 and up."""
-    from secondwind.sim.rosters import plan_substitutions
+    from runningbattery.sim.rosters import plan_substitutions
 
     counts = []
     for seed in range(200):
@@ -359,8 +359,8 @@ def test_substitution_plans():
 def test_substitution_at_a_stoppage():
     """A substitution due at a dead ball: the slot gets the substitute's id, A0, S0 and full
     pools and tank; the event names both players; the frames record the change."""
-    from secondwind.schema import EventType
-    from secondwind.sim.rosters import SimPlayer, SubPlan
+    from runningbattery.schema import EventType
+    from runningbattery.sim.rosters import SimPlayer, SubPlan
 
     rng = np.random.default_rng(0)
     teams = make_teams(rng)
@@ -388,7 +388,7 @@ def test_wider_prior_reaches_outside_the_estimator_prior():
     """``VARY_PLAYERS`` draws some CS and D′ outside the estimator's prior ranges (PLAN §3.2);
     the default prior never does. Overrides reach the physiology's settings."""
     rng = np.random.default_rng(0)
-    from secondwind.sim.rosters import true_params
+    from runningbattery.sim.rosters import true_params
 
     wide = [true_params(rng, P.VARY_PLAYERS) for _ in range(2000)]
     plain = [true_params(rng) for _ in range(2000)]

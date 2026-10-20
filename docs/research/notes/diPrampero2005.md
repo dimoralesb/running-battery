@@ -93,7 +93,7 @@ E_tot = total energy (J/kg); A_ns = anaerobic energy (J/kg); t_e = performance t
 - Acceleration is obtained from the fitted exponential, not from raw data. This smooths step-to-step swings. Buchheit2015 argues that soccer accelerations are shorter and not mono-exponential, so the model may not transfer.
 - Minor inconsistencies: flat cost 3.6 vs 3.8 J/kg/m; unit typo "3.6 J/kg/min" (p. 2812); peak ES 0.64 (Table 2) vs "about 0.70" (p. 2813).
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: the speed law s(t) = s_max(1 − e^(−t/τ)) and a_f = (s_max − s)/τ is a good straight-line sprint model and matches Narizuka2023's model. Sprinter reference values: s_max ≈ 9.5–10 m/s, τ ≈ 1.4 s, initial acceleration s_max/τ ≈ 6–7 m/s² (Table 2: 6.42 m/s²). Football players should be set a bit lower in top speed (see Bangsbo2006: peak ≈ 8.9 m/s).
 - Fatigue estimator: gives the derivation behind Osgnach2010. Adds two things Osgnach does not use: (1) the air-resistance term k'v² (≈ +8 W/kg at 9.5 m/s; at football top speeds ≈ 8–9 m/s it is smaller but not zero); (2) a clear statement that the downhill (deceleration) part of the polynomial is valid down to ES = −0.45 (a ≈ −4.4 m/s²).
 - Agents / claims: allowed: "the first steps of a sprint can cost 10× more energy per metre than steady running" (peak C ≈ 44 vs 3.6–3.8 J/kg/m, sprinters). Must say it is from track sprinters, not footballers.

@@ -1,6 +1,6 @@
-# Second Wind: Build Plan
+# Running Battery: Build Plan
 
-**Status (2026-10-19):** approved and in progress, about seven days ahead. Done: Wed 14 to Tue 20, Wed 21 (MCP server, claims register, Verifier v1 and v2), Thu 22 (agents and the feed, on Foundry: decision 18), Fri 23 (overlay: replay, batteries, flat-out pulse, reachable-area circles labelled "model", traces, the team chart, the verified feed; light, dark and phone checked), Sat 24 (public site on Azure Static Web Apps, Free: decision 26), Sun 25 (README: data card, realism table with the † rows re-run, charts, Verifier table, what we don't claim). The feed holds to its prompts in code (decision 25); physical highlights (decision 28); the Highlights view as the default, football's words for our terms ("intense spell") and two more highlights (decision 29); "his hardest minutes" for that window and where each team's running happened, with pressing tested against the hidden truth and left out (decision 30); team names in full, "level", and the lines the video's moments need, with the site's feed regenerated (decision 31). The battery back in every view, with broadcast graphics (decision 32). Mon 26's pitch text ([PITCH.md](PITCH.md)) and clean-clone test are done (§7). The unused test Container App and its environment are deleted. Next (the user's call, 2026-10-19: more changes first): the video (§6) and making the repository public (§7). Science frozen (decision 17).
+**Status (2026-10-20):** renamed Running Battery (decision 35); next, the overlay's redesign as a cleaned-up broadcast (brief in `.design-foundations/research/`), then the video. **Before (2026-10-19):** approved and in progress, about seven days ahead. Done: Wed 14 to Tue 20, Wed 21 (MCP server, claims register, Verifier v1 and v2), Thu 22 (agents and the feed, on Foundry: decision 18), Fri 23 (overlay: replay, batteries, flat-out pulse, reachable-area circles labelled "model", traces, the team chart, the verified feed; light, dark and phone checked), Sat 24 (public site on Azure Static Web Apps, Free: decision 26), Sun 25 (README: data card, realism table with the † rows re-run, charts, Verifier table, what we don't claim). The feed holds to its prompts in code (decision 25); physical highlights (decision 28); the Highlights view as the default, football's words for our terms ("intense spell") and two more highlights (decision 29); "his hardest minutes" for that window and where each team's running happened, with pressing tested against the hidden truth and left out (decision 30); team names in full, "level", and the lines the video's moments need, with the site's feed regenerated (decision 31). The battery back in every view, with broadcast graphics (decision 32). Mon 26's pitch text ([PITCH.md](PITCH.md)) and clean-clone test are done (§7). The unused test Container App and its environment are deleted. Next (the user's call, 2026-10-19: more changes first): the video (§6) and making the repository public (§7). Science frozen (decision 17).
 Deadline: October 27, 2026, 11:59 pm PT. Design and sources are in [PLAN.md](PLAN.md). Numbers and targets are in [RESEARCH_SYNTHESIS.md](RESEARCH_SYNTHESIS.md) ("synthesis §x").
 Solo developer. Python 3.12 for everything except the front end (React + Vite + TypeScript). English only. Azure free account ($200 credit); Foundry access confirmed on October 17 (gpt-5-mini; PLAN decision 18).
 
@@ -73,7 +73,9 @@ can be recorded again from its link. Story match, favourite H04 (the site's feed
 feed's or a highlight caption, all checked by the Verifier. Since decision 32 each clip has a lower third with the
 player's battery as it plays, and the team sheet under the controls: at 24:37 it reads 82%,
 and in the 35:01 hardest-minutes clip it drains from 74% to about 62% as he runs. Base URL:
-`https://happy-bay-06ca1e90f.3.azurestaticapps.net/?match=story`.
+`https://happy-bay-06ca1e90f.3.azurestaticapps.net/?match=story`. Since decision 35 the site and
+the video carry the name Running Battery with its tagline; the shots below get updated once the
+redesign is in.
 
 | Time | Shot (add to the base URL) | Says |
 |---|---|---|
@@ -93,7 +95,7 @@ Checked on 2026-10-19 unless marked open.
 
 - [ ] **Repository public.** The rules: "Your repository must be public for your entry to be
   considered." It is private now; the user makes it public when the last changes are in
-  (`gh repo edit dimoralesb/second-wind --visibility public --accept-visibility-change-consequences`).
+  (`gh repo edit dimoralesb/running-battery --visibility public --accept-visibility-change-consequences`).
   History checked: one author; no `.env`, keys, endpoint or subscription id, IDSSE data, papers
   or rules text in any commit (only our IDSSE loader scripts).
 - [ ] **Project pitch** in the form: [PITCH.md](PITCH.md), short or full version. The rules set

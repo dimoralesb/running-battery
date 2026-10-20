@@ -20,7 +20,7 @@ None.
 ## Limitations
 - One team, divisions mixed, many post-hoc tests; tables (1A–1C, 2–6) mostly garbled in the .md.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: none beyond "opponent quality nudges running up slightly".
 - Fatigue estimator: none.
 - Agents / claims: supports "running totals barely differ between wins, draws and losses" for a single team.

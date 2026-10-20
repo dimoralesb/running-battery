@@ -86,7 +86,7 @@ None new. P_GPS uses Osgnach2010 (see that note). The paper does not print the e
 - Text inconsistencies: 29% (abstract) vs 23% (Results) effort underestimation; the CL of the −51.3% bias; Table 1 power rows do not add up.
 - No per-activity breakdown (e.g., accelerations vs constant speed vs change of direction) was measured; only effort vs recovery phases.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: none directly. Could justify adding a "hidden" energy cost in the simulator for actions the estimator cannot see (ball work, turns, EPOC after efforts), so the estimator is tested against a realistic gap.
 - Fatigue estimator: (1) report drill/window averages of metabolic power, not "distance > 20 W/kg" (the authors' explicit recommendation, p. 1153: CV 73.6%, ICC 0.09 for > 20 W/kg distance vs CV 8.0% for average P_GPS); (2) expect a systematic underestimate: ~23–29% during movement, ~85% during standing recovery; (3) add an EPOC/recovery term if we want energy rather than locomotor load.
 - Agents / claims: the verifier should block any claim of "X kcal burned" as a measurement and any claim based on small differences in "high metabolic power distance". Allowed: "locomotor metabolic power is an estimate; in a youth soccer drill it was about a quarter lower than measured oxygen use during efforts, with a typical error of ~14–20%".

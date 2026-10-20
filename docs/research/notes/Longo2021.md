@@ -17,7 +17,7 @@ None.
 ## Limitations
 - Non-standard thresholds; percent-of-distance metrics; one season; data from match reports.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: none.
 - Fatigue estimator: none.
 - Agents / claims: only as background: better teams spend slightly more distance at higher speeds; effects are tiny (0.5 percentage points). Not worth citing in the overlay.

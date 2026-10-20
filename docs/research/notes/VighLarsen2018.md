@@ -24,7 +24,7 @@ None.
 - LPS (ZXY) counts not comparable with optical or GPS counts.
 - Table 1 is scrambled in the .md and in the PDF layout text; only partial position values recovered.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: relative target: **acc/dec per half −10% or so, larger than HIR (−6%) and TD (−5%), sprint ~flat.**
 - Fatigue estimator: acceleration counts may be a more sensitive within-match fatigue signal than HSR, but evidence is thin and the counts are system-dependent.
 - Agents / claims: "accelerations drop more than running distance in the second half" → mixed (this study and Akenhead2013 yes; others no, per the paper's discussion).

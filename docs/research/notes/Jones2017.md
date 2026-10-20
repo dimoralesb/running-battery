@@ -65,7 +65,7 @@ Linear CP form (Fig. 1b): work $= CP \cdot t + W'$; distance $= CS \cdot t + D'$
 - No biexponential W′ recovery is fitted in this review; recovery is described as curvilinear/exponential and "faster early than late" (p. S74). Two-compartment idea is in Skiba2012 Eq. 5 only.
 - All evidence is cycling / knee extension, small samples.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: the Ferguson numbers (W′ back to ~36%, ~64%, ~86% after 2, 6, 15 min) give a target recovery curve for the hidden truth; a fast (PCr-like, τ ~ 57 s) plus slow (W′-like, τ ~ 334 s) two-compartment truth is well grounded here.
 - Fatigue estimator: τ default range 200–580 s from cycling; shorter (~210–340 s) for short work bouts (Fig. 6). The Skiba 2015 form τ = D′/(CS − v) is a parameter-free alternative (our adaptation). Keep "no recharge when v > CS".
 - Agents / claims: supported: "the authors of the model suggest it could monitor team-sport players via GPS (speeds relative to CS) to inform substitutions" (p. S76) — a proposal, not a validated use. Field evidence: W′bal near 0 coincided with exhaustion in 8 triathletes (cycling).

@@ -10,17 +10,17 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from secondwind.io import EVENTS, METADATA, TRACKING, TRUTH, read_match, read_truth
-from secondwind.schema import X_LIMIT, Y_LIMIT, EventType, MatchMetadata, Position, RunPurpose
-from secondwind.sim import movement, spacing
-from secondwind.sim import params as P
-from secondwind.sim.batch import parse_seeds
-from secondwind.sim.match import MatchEngine, PeriodFrames
-from secondwind.sim.output import CLEAN_COPY, observe, read_clean_copy, simulate
-from secondwind.sim.replay import load_window, write_html
-from secondwind.sim.rosters import make_teams
-from secondwind.sim.runs import speeds
-from secondwind.sim.summary import (
+from runningbattery.io import EVENTS, METADATA, TRACKING, TRUTH, read_match, read_truth
+from runningbattery.schema import X_LIMIT, Y_LIMIT, EventType, MatchMetadata, Position, RunPurpose
+from runningbattery.sim import movement, spacing
+from runningbattery.sim import params as P
+from runningbattery.sim.batch import parse_seeds
+from runningbattery.sim.match import MatchEngine, PeriodFrames
+from runningbattery.sim.output import CLEAN_COPY, observe, read_clean_copy, simulate
+from runningbattery.sim.replay import load_window, write_html
+from runningbattery.sim.rosters import make_teams
+from runningbattery.sim.runs import speeds
+from runningbattery.sim.summary import (
     BALL_IN_PLAY_BAND,
     POSSESSION_BAND,
     TARGETS,
@@ -54,7 +54,7 @@ def generate(jobs: list[tuple[int, Path, list[str]]]) -> list[subprocess.Popen]:
     """Start the CLI for several matches at once, as a user would. Wait with ``finish``."""
     return [
         subprocess.Popen(
-            [sys.executable, "-m", "secondwind.sim", "--seed", str(seed), "--out", str(folder)]
+            [sys.executable, "-m", "runningbattery.sim", "--seed", str(seed), "--out", str(folder)]
             + extra,
             stdout=subprocess.DEVNULL,
         )
@@ -240,7 +240,7 @@ def test_positions_inside_schema_limits(summaries):
 
 def test_summary_cli_runs(folders):
     out = subprocess.run(
-        [sys.executable, "-m", "secondwind.sim.summary", str(folders[1])],
+        [sys.executable, "-m", "runningbattery.sim.summary", str(folders[1])],
         capture_output=True,
         text=True,
         check=True,
@@ -307,7 +307,7 @@ def test_truth_series_with_fatigue(sim1):
     """Pools and tank stay fractions; the tank never rises within a half and gets some back at
     half-time; capacity falls by at most CAPACITY_MAX_LOSS; ``tired`` is the pool term below
     TIRED_BELOW (values rounded to 0.001); some players get tired and skip runs."""
-    from secondwind.sim.physiology import below
+    from runningbattery.sim.physiology import below
 
     tired_any = False
     for p in sim1.truth.players:
@@ -357,7 +357,7 @@ def test_capacity_holds_every_frame(sim1):
 def test_fatigue_checks_on_a_match(sim1):
     """``sim.fatigue_checks`` on a whole match: every pipeline gives numbers, tired players
     skip a larger share of hard runs than fresh ones, and the table prints."""
-    from secondwind.sim import fatigue_checks
+    from runningbattery.sim import fatigue_checks
 
     out = fatigue_checks.summarise([fatigue_checks.sim_measure(sim1)])
     assert len(out["leifsson"]) == 9 and all(len(v) == 5 for v in out["leifsson"].values())
@@ -811,7 +811,7 @@ def test_replay_html(folders, tmp_path):
 
 def test_replay_stills(folders, tmp_path):
     pytest.importorskip("matplotlib")
-    from secondwind.sim.replay import write_stills
+    from runningbattery.sim.replay import write_stills
 
     out = tmp_path / "stills.png"
     write_stills(load_window(folders[1], start=600.0, seconds=4.0), out, 2)
@@ -822,8 +822,8 @@ def test_story_controls_press_until_the_hour_and_sub_the_exposed_full_back():
     """Story controls (PLAN §2.3; sim.story): the press is on for the pressing team only, until
     press_until_min; the story substitution takes the exposed full-back's slot, like for like,
     and keeps the number of substitutions."""
-    from secondwind.sim.rosters import make_teams, plan_substitutions
-    from secondwind.sim.story import STORIES, story_subs
+    from runningbattery.sim.rosters import make_teams, plan_substitutions
+    from runningbattery.sim.story import STORIES, story_subs
 
     story = STORIES["press-fade"]
     assert story.pressing(0, 59 * 60.0) and not story.pressing(0, 60 * 60.0)

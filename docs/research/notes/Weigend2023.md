@@ -25,7 +25,7 @@ Hydraulic ODEs are in Weigend 2021 (not in our corpus). ODE form as in Skiba2021
 - Bartram "observations" are themselves model predictions.
 - Expensive fitting; 8 parameters with no football meaning.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: **optional second truth model** (stretch goal). Fit once for a "typical player" (scaled CP/W′ → CS/D′), then run some synthetic matches with hydraulic truth to show our one-pool estimator still tracks fatigue when the truth model is different. Fitting time makes per-player fits impractical in 13 days.
 - Fatigue estimator: no.
 - Agents / claims: none.

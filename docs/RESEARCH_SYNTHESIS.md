@@ -1,4 +1,4 @@
-# Second Wind: Research Synthesis
+# Running Battery: Research Synthesis
 
 What 74 papers let us build, and what they don't. (45 in the first pass; then the published Allen2024, Allen2025 and 18 more, added on 2026-10-14; MarquesJimenez2017 and Snyder2023 added on 2026-10-17; eight critical-speed papers added later on 2026-10-17: Kramer2018 and Carpels2026 (until then abstract only), Kramer2020, Lord2020, Roecker2017, Pimenta2025, Cihan2022, Rostami2025.)
 
@@ -24,7 +24,7 @@ Prepared 2026-10-14.
    - After 1–2-min peaks it is back to normal within 2–3 min.
    - Sprint distance (>7 m/s [25.2 km/h]) recovers more slowly. It is still −12% at minute 5.
    - In the Premier League, the drop includes the defensive runs. Out of possession, after a peak spell players do less high-intensity **Covering** (22–44% less) and **Recovery Running** (34–43% less) than their match average [Ju2022, p.975; 50 EPL matches].
-   - This is the core story of Second Wind, and it is well supported.
+   - This is the core story of Running Battery, and it is well supported.
 2. **Run a "battery" model on positions alone.** Every equation we need is published and checked against the PDFs:
    - metabolic power [Osgnach2010; diPrampero2005];
    - W′/D′ balance [Skiba2012; Jones2017], in the differential form described by its authors [Skiba2021]. Its recharge speed for **running** is uncertain: cycling lab data give τ of 32–82 s [Lievens2024], but the only running test needed τ ≈ 360 s, about 5× slower than the standard formula [Bellenger2025] (section 3.2.1b);
@@ -1258,7 +1258,7 @@ This is a methods contribution no published paper makes. It is the strongest rig
 
 1. **"Red zone" spell.** A player's rolling 1–2 min HSR passes about 90% of their own peak. The overlay pulses their battery.
 2. **"Exposed on the turnover."** The team loses the ball (negative transition) while a defender is in a post-peak window. Show the gap they didn't close, alongside the recovery-run statistic [Ju2022; Bortnik2022].
-3. **"Second wind."** The moment a player's high-speed output is back to their normal level after a spell, about 2–5 min later [Leifsson2024]. This literally names the project, and it gives a positive story too.
+3. **"Second wind."** The moment a player's high-speed output is back to their normal level after a spell, about 2–5 min later [Leifsson2024]. It gave the project its first name (Second Wind, renamed Running Battery on 2026-10-20), and it gives a positive story too.
 4. **"Fresh legs."** Substitute impact: the sub's HIR per minute vs the player they replaced and vs the team [Bradley2013; Hills2018].
 5. **"The legs drop, the passing doesn't."** Analyst chart: HSR per 15-min block next to a flat pass-completion line [Carling2011]. This shows the Verifier's honesty visually.
 6. **"Not tired, tactical."** When running drops but the context check explains it ("3–0 up, sitting deep"), the agent says so. This is a responsible-AI moment judges can see.

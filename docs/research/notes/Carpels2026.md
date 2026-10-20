@@ -20,7 +20,7 @@ In this club the first team was fitter but did not run more, in training or in m
 - "Sixteen matches" are listed as 11 league + 1 cup + 5 Europa League = 17 (Methods, Match).
 - The .md and the PDF text layer both garble Tables 1–3 (columns shifted, SDs split across cells). The first-team columns above were read from `pdftotext -layout`.
 
-## Use in Second Wind
+## Use in Running Battery
 - **CS spread (decision 13)**: the cleanest between-player spread of aerobic fitness in a professional first team we have (6% CV), already used to set the CS SD (synthesis 3.2.3). Now read in full; the numbers hold.
 - **Agents / claims**: strong support for "how much a player runs does not tell you how fit he is". Less fit academy players out-ran fitter professionals in comparable matches. That blocks "he ran more, so he's fitter" and "he ran less, so he's less fit" (claim 34) and backs our framing of work done rather than capacity (decision 14).
 - **Simulator**: not a calibration target (Scottish Premiership 2018–19, GPS, scaled minutes); EPL targets come from Allen2024/2025.

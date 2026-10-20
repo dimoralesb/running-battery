@@ -122,7 +122,7 @@ $$\Delta PC_v(\xi) = \lambda_s \log \xi + b$$
 - No significance tests or CIs, except SD bars in Figs. 7–8.
 - No validation of PC against real outcomes (for example, who actually won the ball).
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: no direct parameters for movement. If the simulator wants to "feel" fatigue in space control, the same model can be run on synthetic frames with each player's hidden effective top speed. Typical v95 values (≈5.1/5.3/5.4 m/s for D/M/F, Fig. 1) are a realism target for the 95th percentile of the synthetic speed distribution per half.
 - Fatigue estimator: gives the bridge "fatigue → lower effective top speed → less pitch control". Set ξ_i(t) = v_eff,i(t) / v95_i,fresh, where v_eff comes from our estimator (battery/peak-spell state). **The size of the speed drop must come from other papers** (sprint/peak-speed decline studies), not from this one.
 - Agents / claims: supported: "in a pitch-control model, a slower player controls less space, and the loss is larger when defending" (model result, Figs. 7–8). "Slowing a whole team by 10% cuts its pitch control in a roughly logarithmic way" (Fig. 6, model). Not supported: any number in m², any claim that LaLiga players were measured to lose space because of fatigue, any claim that forwards lose most when tired (that is true only for speed gains).

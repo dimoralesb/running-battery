@@ -24,7 +24,7 @@ Bi-exponential form above (Eq. 7 in paper); prediction equations from 30 s and 2
 - Cycling; recovery at 50 W only (low intensity).
 - Small n, large individual variation.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: values for a **two-pool truth model**: fast pool ~50%, τ ~20 s; slow pool ~50%, τ ~400 s, slowing to ~550–700 s after repeated hard efforts. Our current truth (τ₁ 60 s, τ₂ 330 s, 60/40 split; synthesis §3.2.4) has a fast pool that is too slow.
 - Fatigue estimator: no change (one pool).
 - Agents / claims: "fatigue builds over repeated efforts because the slow part of recovery gets slower" is supported in cycling lab data only.

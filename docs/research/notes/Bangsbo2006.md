@@ -98,7 +98,7 @@ None.
 - Distances come from older video time-motion analysis (Mohr 2003); not comparable with modern 10–25 Hz optical tracking thresholds.
 - The fatigue mechanism is left open (glycogen in some fibres at the end; possibly K⁺ for temporary fatigue; not lactate, pH, CP or ATP).
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: (1) peak sprint speed ≈ 8.9 m/s (32 km/h) as a cap; (2) 150–250 intense actions per match; (3) temporary fatigue: high-intensity output drops below the game average for ~5 min after the most intense period, and repeated-sprint ability drops ~3% then recovers within the half; (4) end-of-match fatigue: lower high-intensity running in the final 15 min, ~3% slower sprints after the game; (5) large spread between players in the same role (2.0 vs 3.5 km high intensity). The hidden "true" fatigue can have a slow glycogen-like component (end of game) and a fast component (minutes, after intense spells).
 - Fatigue estimator: no direct formula. Supports a two-timescale fatigue estimate (fast recovery + slow depletion).
 - Agents / claims: allowed: "average heart rate in elite matches is around 85% of maximum, peaking near 98%" and "average oxygen use ≈ 70% of maximum" (review, older studies). Must not claim that lactate causes fatigue (the review argues against it). Must not present glycogen numbers as measured for our players.

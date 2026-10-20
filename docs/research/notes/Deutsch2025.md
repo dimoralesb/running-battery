@@ -22,7 +22,7 @@ Angle: θ = 180° − arccos( (V₁·V₂) / (|V₁||V₂|) ) (Methods; from tex
 - One season, 2016/17; no context (phase, score).
 - Heavy 1 Hz filter smooths short movements; counts depend on it.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: realistic **turn counts and shapes** (~80–110 per outfield player per match, mostly sharp turns at low speed). Our movement model should include sharp low-speed turns, not only straight runs.
 - Fatigue estimator: **gives us a published, reproducible preprocessing recipe for 25 Hz optical data** (Butterworth 1 Hz zero-lag + central differences + sanity cut-offs), filling the gap in synthesis §3.1. Same package (floodlight) we plan to use for IDSSE.
 - Agents / claims: none on fatigue (no time course).

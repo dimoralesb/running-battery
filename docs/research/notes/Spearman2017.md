@@ -94,7 +94,7 @@ a = 0.93, b = 0.14 (per m), c = 0.02.
 - No reaction time, no κ (defender advantage), no offside rule in this version.
 - The pitch-control extension ignores ball flight time (stationary ball).
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: σ = 0.45 s and λ = 4.3 s⁻¹ can drive a simple "who wins the loose ball / pass" rule in the event layer, so outcomes follow from positions and speeds (including fatigue-reduced speeds). Ball drag constants (Eq. 1) give realistic ball flight if we model it.
 - Fatigue estimator: not directly. A fatigue-reduced v_max (and a_max) enters Eq. 2, which is the natural hook for "slower to get there".
 - Agents / claims: allowed: "the model gives an x% chance he would have got there first". Back it with the model, not with fatigue evidence.

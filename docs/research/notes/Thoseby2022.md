@@ -96,7 +96,7 @@ Uniform-distribution reference (my addition, to interpret the HSD result): a uni
 - GPS (10 Hz GNSS) values for AveAcc depend heavily on filtering; not comparable with optical tracking accelerations.
 - Within-half timing only; nothing on the whole-match (0–90) distribution, extra time, or score state.
 
-## Use in Second Wind
+## Use in Running Battery
 - Simulator: place each player's peak short HSD burst (1–5 min) uniformly in time within each half (mean ~22 min, SD ~13–14 min of a ~47–50 min half). Place the "high-tempo" phases that drive TD and accel/decel peaks early in each half: the start of the peak 3–10 min TD window should have median ~7–12 min and IQR roughly 2–25 min. A simple way: raise the team tempo / ball-in-play probability in the first ~15 min of each half, and let HSD bursts come from match events (counters, transitions) at any time. Do not attach one big intense spell per half; self-containment < 55% means several separate near-peak bursts.
 - Fatigue estimator: the post-peak flag ("within ~5 min of a peak spell") can fire at any minute for HSD, so the estimator must not assume peaks are early. For TD/accel, an early-half peak followed by a drop is the NORMAL pattern, not a fatigue sign.
 - Agents / claims: allowed: "the most intense high-speed bursts can come at any time in a half". Not allowed: "he must be tired, his hardest spell was at the start of the half" (TD and accel peaks are early in nearly everyone).
