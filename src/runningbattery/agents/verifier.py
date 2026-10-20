@@ -62,7 +62,7 @@ STATE = r"(tired|exhausted|fatigued|knackered|spent|shattered|out on his feet|do
 # Baselines that make a percentage meaningful (G1, claim 24).
 BASELINE = (
     r"\b(than|vs\.?|versus|compared (?:with|to)|match average|average|normal|usual|peak|"
-    r"first 15|kick-off|first half|reserve|typical professional|of the time|chance|earlier|"
+    r"first 15|kick-off|first half|reserve|typical (?:professional|pro)|of the time|chance|earlier|"
     r"of the (last|first|next) (\d+|one|two|three|five|ten|fifteen) min\w*|team-?mates|"
     r"of (that|the|this) (period|time|spell|block|window)|"
     r"top speed|opponents?|of (his|their|the team's|[A-Z]\w+'s) high-speed running|"

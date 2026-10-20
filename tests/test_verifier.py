@@ -123,6 +123,7 @@ def test_report_covers_this_suite():
     # same prompt gave 92/96, 98/101, 98/102, 99/103 and 97/104 (held-out F1 3/6 in the last);
     # prompt revision 6 with decision 31's cases, 106/108 (F1 5/6; one LLM call timed out),
     # then with G11's wording made clear on 174 sentences, 106/108 (F1 5/6).
+    # Decision 37 ("typical pro" as a rule-24 baseline), same prompt: 103/108 (F1 4/6).
     assert rep["report"]["llm"]["caught_rate"] >= 0.93
 
 

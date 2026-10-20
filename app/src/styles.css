@@ -112,7 +112,7 @@ body { margin: 0; background: var(--background); color: var(--text); font-family
   font-size: var(--text-base); line-height: var(--leading-body); }
 button, select, input { font: inherit; color: inherit; }
 .num { font-variant-numeric: tabular-nums; }
-.app { --col: clamp(424px, calc((100vh - 470px) * 1.514 + 32px), 1180px);
+.app { --col: clamp(424px, calc((100vh - 490px) * 1.514 + 32px), 1180px);
   width: min(var(--col), 100%); margin: 0 auto; padding: var(--space-4) var(--space-4) var(--space-6); }
 @media (max-width: 520px) { .app { padding: var(--space-3) var(--space-4) var(--space-6); } }
 p { margin: 0; }
@@ -281,10 +281,15 @@ select { background: var(--surface); border: 1px solid var(--border); border-rad
 .speeds { display: flex; }
 .speeds button.on, .choice button.on { color: var(--text); font-weight: 600; text-decoration: underline;
   text-decoration-thickness: 2px; text-underline-offset: 5px; }
+/* A clip's bar: a video player's, the progress bar with its time above the buttons. */
+.clip-bar { flex-direction: column; align-items: stretch; gap: 0; padding-top: 0; }
+.clip-bar .scrub, .clip-bar .controls { display: flex; align-items: center; gap: var(--space-1); }
+.clip-bar .controls { flex-wrap: wrap; }
+.scrub input[type="range"] { flex: 1; accent-color: var(--text); margin: 0; }
+.scrub .time { color: var(--text-secondary); font-size: var(--text-sm); min-width: 6.5em; text-align: right; }
 @media (max-width: 520px) {
-  .playbar:not(.transport) { flex-wrap: wrap; gap: 0; }
-  .playbar:not(.transport) button { flex: 1; min-height: 44px; padding: 0; }
-  .playbar .status { flex-basis: 100%; text-align: right; }
+  .clip-bar .controls { gap: 0; }
+  .clip-bar .controls > button { flex: 1 1 22%; min-height: 44px; padding: 0; }
 }
 
 /* Tab bar (quiet) and panel. */

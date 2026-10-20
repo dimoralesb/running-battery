@@ -7,8 +7,8 @@ Running Battery measures from tracking data how much hard running each football 
 All match data is **synthetic**: we built a generator whose players get tired according to published sports science, with a hidden "true" fatigue we use to test our estimator.
 
 **Try it:** https://happy-bay-06ca1e90f.3.azurestaticapps.net/?match=story (the story match, fan mode; the favourite is the left-back the story is about).
-It opens on the **Highlights**: each clip plays once as it happened, then shows its details (numbers, sources and the Verifier's verdicts); "Replay" plays it again in slow motion, and "Full match" is the whole replay.
-Add `?match=natural`, `&mode=analyst`, `&view=full&t=<seconds>`, `&hl=<kind>&step=details` (or `&step=replay` for the slow-motion replay) or `&theme=dark` to the address.
+It opens on the **Highlights**: each clip plays once as it happened, then shows its details (numbers, sources and the Verifier's verdicts); "Replay" plays it again (a progress bar, Play/Pause and ½× 1× 2× work like a video player's), and "Full match" is the whole replay.
+Add `?match=natural`, `&mode=analyst`, `&view=full&t=<seconds>`, `&hl=<kind>&step=details` (or `&step=replay` for the replay) or `&theme=dark` to the address.
 
 - Project plan: [docs/PLAN.md](docs/PLAN.md)
 - Build plan: [docs/BUILD_PLAN.md](docs/BUILD_PLAN.md)
@@ -54,22 +54,26 @@ up, the ball is out of play or the player has just come on must say so, and ever
 one of the facts. The paraphrases are blocked claims in other words, and the fact checks are
 sentences that do or do not agree with their facts (F1); both were written before the rules or
 the prompt that could catch them and never used to tune them. On 174 test sentences
-([docs/verifier_report.json](docs/verifier_report.json), prompt revision 6):
+([docs/verifier_report.json](docs/verifier_report.json), prompt revision 7, run on 2026-10-20 after
+decision 37 added "typical pro" to rule 24's baselines):
 
 | | Unsupported sentences caught | Valid sentences blocked |
 |---|---|---|
 | Rules alone | 75 / 108 (paraphrases 2 / 23, fact checks 0 / 6) | 0 / 66 |
-| Rules + LLM | 106 / 108 (paraphrases 23 / 23, fact checks 5 / 6) | 2 / 66 |
+| Rules + LLM | 103 / 108 (paraphrases 23 / 23, fact checks 4 / 6) | 1 / 66 |
 
 The LLM still misses sentences that mislead without a wrong number: claim 3 ("about a third fewer
 recovery runs right after their hardest minutes") used as the lead-in to a defender's own speed
-after a turnover, and one of the six held-out fact checks ("his fastest run so far" when it was
-not). With prompt revision 5 (166 sentences, 97/104) it also missed "the lowest point of his
+after a turnover, "the lowest point of his match" when it was not, a team comparison with the
+wrong percentage ("roughly 22% less"), and two of the six held-out fact checks ("his fastest run
+so far" when it was not, and "less high-speed running per minute than his team-mates" since
+coming on). The previous run of the same prompt (2026-10-20, before the rule change) caught
+106 / 108 (fact checks 5 / 6) and blocked 2 / 66. With prompt revision 5 (166 sentences, 97/104) it also missed "the lowest point of his
 match" when it was not and three of the six held-out fact checks, so the LLM pass is a second net,
 not a guarantee. A general finding about short bursts used to explain a 76- or 197-second spell,
-which it missed in every run, is now blocked by a rule (claim 2, below). The two valid sentences it
-blocked are the typical-pro chance worded with "in the red" and "He ran less after the break than
-before it" (claim 15). The rules never block a valid sentence; the LLM pass varies by a sentence
+which it missed in every run, is now blocked by a rule (claim 2, below). The valid sentence it
+blocked is "He ran less after the break than before it" (claim 15); the previous run also blocked
+the typical-pro chance worded with "in the red". The rules never block a valid sentence; the LLM pass varies by a sentence
 or two from run to run (the first run of revision 6, on 173 sentences: 106/108, 1/65, with one
 LLM check timed out).
 
@@ -113,7 +117,7 @@ back-to-back runs), what the feed says about it, the run's speed second by secon
 against the published one. Fans see one short label under each line ("Verified · measured",
 "Verified · our estimate", "Verified · published research") that opens to the claim, the papers
 and the check; analysts see the full citation and verdict, and the 10–90% band as the first line.
-**Replay** plays the clip again at half speed, with the numbers growing; **Next** starts the next
+**Replay** plays the clip again at the clip speed (1× unless the viewer picks ½× or 2×), with the numbers growing; the progress bar seeks within the clip; **Next** starts the next
 clip and gives back the tab the viewer was on. "Play highlights" leaves the details up for 6 s
 before the next clip. The circles show where the player and his two nearest opponents could get to
 in one second, labelled "model" (the Fujimura–Sugihara motion model with Narizuka's fit at
@@ -134,8 +138,8 @@ with its band and his high-speed running. To keep one obvious place to look, the
 current feed line is about gets a ring and the lower third; the flat-out pulse
 (90% or more of his top speed so far) and the hardest-minutes ring show only for him, the selected
 and the favourite player, and the key is in Settings. Both teams' high-speed running per
-ball-in-play minute is one chart, "who's doing the running". Under it, **where the running
-happened** (decision 30) splits each team's high-speed running by situation of play, from who
+ball-in-play minute is one chart, "High-speed running per minute". Under it, **high-speed running
+by situation** (decision 30) splits each team's high-speed running by situation of play, from who
 had the ball and where it was, as metres per minute of that situation (G5): the first 10 s after
 losing the ball, the first 10 s after winning it (transitions last 9.3–10.9 s on average
 [Bortnik2022, Table 2]), settled on the ball, and without the ball with it in the opponents'

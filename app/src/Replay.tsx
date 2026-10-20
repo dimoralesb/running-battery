@@ -3,7 +3,7 @@ import { type Entry, type Item, type MatchData, type Mode, clockLabel } from "./
 import { Blocked, Verdict, splitSources } from "./Feed";
 
 // The clip's details (decisions 29 and 34): shown when the clip is over, and growing with the
-// run during the slow-motion replay; the numbers, the run's speed second by second, the published
+// run during the replay; the numbers, the run's speed second by second, the published
 // number it is compared with, and the feed's lines with their sources and the Verifier's verdict.
 const WIDTH = 640;
 const HEIGHT = 170;

@@ -23,7 +23,7 @@ import { TeamChart } from "./TeamChart";
 import { Trace } from "./Trace";
 
 const SPEEDS = [1, 5, 20];
-const REPLAY_SPEED = 0.5; // the Replay button plays the clip again at half speed (slow motion)
+const CLIP_SPEEDS = [0.5, 1, 2]; // a clip and its replay play at 1× unless the viewer picks another
 const LAPSE_SPEED = 120; // most ground covered: the whole match in under a minute
 const AUTO_DETAILS_MS = 6000; // "Play highlights": the details stay this long before the next clip
 const FOCUS_BEFORE = 8; // full match: a feed moment is in focus from 8 s before to 6 s after
@@ -31,7 +31,7 @@ const FOCUS_AFTER = 6;
 // Start state from the URL (for links and video capture): ?view=full&match=story&t=3500&
 // mode=analyst&player=H04; the Highlights view takes ?hl=<kind> (the match's best of a kind),
 // ?moment=<kind or moment id> (with &player=), or ?item=<n>, then &step=watch|details|replay
-// (plays it, opens it finished with its details, or plays the slow replay) and &auto=1 (play the
+// (plays it, opens it finished with its details, or plays the replay) and &auto=1 (play the
 // clips one after another). JOURNEY.md "Deep links" lists the screen and tab each one opens.
 const QUERY = new URLSearchParams(window.location.search);
 // Dark by default (DESIGN.md); ?theme=light or Settings › Theme for light.
@@ -39,7 +39,7 @@ const THEME = QUERY.get("theme") === "light" ? "light" : "dark";
 
 type View = "highlights" | "full";
 // Each clip plays once (watch), then shows its details on its last frame; Replay plays it
-// again at half speed with the details growing (decision 34).
+// again with the details growing (decision 34; at the clip speed since decision 37).
 type Step = "watch" | "details" | "replay";
 // The tabs under the pitch (decision 36); one open at a time.
 type Tab = "clips" | "team" | "details" | "settings";
@@ -98,6 +98,7 @@ export default function App() {
   const [now, setNow] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(5);
+  const [clipSpeed, setClipSpeed] = useState(1);
   const [mode, setMode] = useState<Mode>(QUERY.get("mode") === "analyst" ? "analyst" : "fan");
   const [selected, setSelected] = useState<string | null>(null);
   const [favourite, setFavourite] = useState<string | null>(null);
@@ -145,8 +146,8 @@ export default function App() {
       setNow(it.lapse ? it.end : it.end + 2);
       setPlaying(false);
     } else {
-      setNow(it.lapse ? 0 : Math.max(it.start - 3, 0));
-      setSpeed(it.lapse ? LAPSE_SPEED : st === "watch" ? 1 : REPLAY_SPEED);
+      setNow(clipFrom(it));
+      setSpeed(it.lapse ? LAPSE_SPEED : clipSpeed);
       setPlaying(true);
     }
     if (st === "watch") {
@@ -217,8 +218,7 @@ export default function App() {
   // When the clip (or its replay) is over, stop on its last frame with the details.
   useEffect(() => {
     if (view !== "highlights" || !cur || !playing || !data) return;
-    const end = Math.min(cur.lapse ? cur.end : cur.end + 2, data.duration - 1);
-    if (now < end) return;
+    if (now < clipTo(cur, data.duration)) return;
     setPlaying(false);
     setStep("details");
     borrowDetails();
@@ -304,6 +304,14 @@ export default function App() {
     setAuto(false);
     setSpeed(5);
   };
+  // Dragging a finished clip back plays its end again as a replay (the details grow with it).
+  const seekClip = (v: number) => {
+    setNow(v);
+    if (cur && step === "details" && v < clipTo(cur, data.duration)) {
+      setStep("replay");
+      borrowDetails();
+    }
+  };
   const toHighlights = () => (cur ? start(cur, "watch") : items[0] && start(items[0], "watch"));
   const stepName = step === "watch" ? copy.stepWatch : step === "replay" ? copy.stepReplay : copy.stepDetails;
   const band = mode === "analyst" && cur?.player ? reading(data, players[cur.player], now) : null;
@@ -362,16 +370,36 @@ export default function App() {
             : sel && lowerThird(copy.ltFollow, clockLabel(data.meta, now), sel.team, sel.name, sel.id)}
 
         {view === "highlights" && cur ? (
-          <div className="playbar">
-            <button onClick={() => prev && start(prev, "watch")} disabled={!prev}>{copy.prev}</button>
-            <button className={step === "details" ? "outline" : ""}
-                    onClick={() => start(cur, "replay")}>{copy.replayButton}</button>
-            <button onClick={() => setPlaying((p) => !p)} disabled={step === "details"}>
-              {playing ? copy.pause : copy.play}
-            </button>
-            <button className={step === "details" ? "outline" : ""}
-                    onClick={() => next && start(next, "watch")} disabled={!next}>{copy.next}</button>
-            <span className="status num">{stepName}{ix >= 0 ? ` · ${ix + 1} / ${items.length}` : ""}</span>
+          <div className="playbar clip-bar">
+            <div className="scrub">
+              <input type="range" min={clipFrom(cur)} max={clipTo(cur, data.duration)} step={cur.lapse ? 1 : 0.1}
+                     value={Math.min(Math.max(now, clipFrom(cur)), clipTo(cur, data.duration))}
+                     onChange={(e) => seekClip(Number(e.target.value))} aria-label={copy.clipTime} />
+              <span className="time num">
+                {mmss(now - clipFrom(cur))} / {mmss(clipTo(cur, data.duration) - clipFrom(cur))}
+              </span>
+            </div>
+            <div className="controls">
+              <button onClick={() => prev && start(prev, "watch")} disabled={!prev}>{copy.prev}</button>
+              <button className={step === "details" ? "outline" : ""}
+                      onClick={() => start(cur, "replay")}>{copy.replayButton}</button>
+              <button onClick={() => (step === "details" ? start(cur, "replay") : setPlaying((p) => !p))}>
+                {playing ? copy.pause : copy.play}
+              </button>
+              <button className={step === "details" ? "outline" : ""}
+                      onClick={() => next && start(next, "watch")} disabled={!next}>{copy.next}</button>
+              {!cur.lapse && (
+                <div className="speeds" role="group" aria-label={copy.speed}>
+                  {CLIP_SPEEDS.map((x) => (
+                    <button key={x} className={clipSpeed === x ? "on" : ""} aria-pressed={clipSpeed === x}
+                            onClick={() => { setClipSpeed(x); setSpeed(x); }}>
+                      <span className="num">{x === 0.5 ? "½" : x}×</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              <span className="status num">{stepName}{ix >= 0 ? ` · ${ix + 1} / ${items.length}` : ""}</span>
+            </div>
           </div>
         ) : (
           <div className="playbar transport">
@@ -556,6 +584,21 @@ export default function App() {
       <footer className="footer">{copy.disclaimer}</footer>
     </div>
   );
+}
+
+/** A clip plays from 3 s before its first run to 2 s after its end; a whole-match clip from
+ * kick-off to its end. */
+function clipFrom(it: Item) {
+  return it.lapse ? 0 : Math.max(it.start - 3, 0);
+}
+function clipTo(it: Item, duration: number) {
+  return Math.min(it.lapse ? it.end : it.end + 2, duration - 1);
+}
+
+/** Seconds as m:ss. */
+function mmss(s: number) {
+  const t = Math.max(Math.round(s), 0);
+  return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`;
 }
 
 /** A team's three-letter code for the score bug on a phone ("Westerlyn Albion" → "WES"). */

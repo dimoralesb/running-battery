@@ -271,9 +271,9 @@ Lowest pairs: light away dot on `--surface` 3.03 and on the page 3.14, away mark
 | Charge (fill) | `--charge`, flat, inset 3 px from the shell on every side | `--accent-solid`, inset 2 px |
 | Empty part | nothing: the plate (fill vs empty 16.05:1) | nothing: the surface |
 | Percentage | outside the shell, right of the nub, `--text-4xl` 800 tabular `--charge`, min-width "100%" right-aligned | `--text-sm` 700 tabular `--text` |
-| Caption | "What this running would leave a typical professional" (`ltBatterySub`), `--text-xs` `--plate-text-2`, under the gauge | the sheet's sub-heading carries it |
+| Caption | "Expected for a typical pro after the same running" (`ltBatterySub`; wording changed by the user, decision 37), `--text-xs` `--plate-text-2`, under the gauge | the sheet's sub-heading carries it |
 | Analyst band | two square brackets in `--charge-band` spanning the 10th–90th percentile: a 2 px ⌐¬ above the shell and a 2 px └┘ below it, each 6 px tall, standing clear of the shell so they never cross the charge; "(71–92%)" `--text-sm` `--plate-text-2` beside the % on the same row | same shape in `--gauge-band`, 4 px tall |
-| Spoken name | `role="meter"`, `aria-valuenow`, label "What this running would leave a typical professional: 83%" (+ band in Analyst) | same |
+| Spoken name | `role="meter"`, `aria-valuenow`, label "Battery expected for a typical pro: 83%" (+ band in Analyst) | same |
 
 Sizes: lower third 168 × 44 px (phone 132 × 36 px); Team sheet 48 × 16 px; pitch icon 3.6 × 1.6 pitch units above the marker, shell on a `--plate` ground so it reads on grass; brand mark 24 × 12 px, 1.5 px outline, empty.
 
