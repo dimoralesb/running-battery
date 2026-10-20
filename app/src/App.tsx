@@ -16,7 +16,7 @@ import {
 import { BrandMark, LowerThird, TeamSheet, reading } from "./Battery";
 import { Feed } from "./Feed";
 import { Highlights, reel } from "./Highlights";
-import { Legend, Pitch } from "./Pitch";
+import { Legend, Pitch, reachShown } from "./Pitch";
 import { Replay } from "./Replay";
 import { SplitChart } from "./SplitChart";
 import { TeamChart } from "./TeamChart";
@@ -353,13 +353,16 @@ export default function App() {
           {view === "highlights" && cur ? (
             <Pitch data={data} now={now} mode={mode} view={step === "watch" ? "watch" : "replay"}
                    selected={selected} favourite={favourite} allBatteries={false} item={cur} focus={null}
-                   reachLabel={copy.reachLabel} flatLabel={copy.flatLabel} onSelect={setSelected} />
+                   flatLabel={copy.flatLabel} onSelect={setSelected} />
           ) : (
             <Pitch data={data} now={now} mode={mode} view="full" selected={selected}
                    favourite={favourite} allBatteries={allBatteries} item={null} focus={focus}
-                   reachLabel={copy.reachLabel} flatLabel={copy.flatLabel} onSelect={setSelected} />
+                   flatLabel={copy.flatLabel} onSelect={setSelected} />
           )}
           {view === "highlights" && step === "details" && <span className="pitch-flag">{copy.clipEnded}</span>}
+          {view === "highlights" && cur && reachShown(cur, now) && (
+            <span className="pitch-flag left">{copy.reachLabel}</span>
+          )}
         </div>
 
         {view === "highlights" && cur

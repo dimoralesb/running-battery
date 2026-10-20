@@ -120,8 +120,9 @@ and the check; analysts see the full citation and verdict, and the 10–90% band
 **Replay** plays the clip again at the clip speed (1× unless the viewer picks ½× or 2×), with the numbers growing; the progress bar seeks within the clip; **Next** starts the next
 clip and gives back the tab the viewer was on. "Play highlights" leaves the details up for 6 s
 before the next clip. The circles show where the player and his two nearest opponents could get to
-in one second, labelled "model" (the Fujimura–Sugihara motion model with Narizuka's fit at
-Δt = 1 s, radius 6.2 m [Narizuka2023, p.5–6]). The Clips tab shows each team's fastest second so
+in one second, named by a pitch flag "Circles: 1-second reach (model)" (the Fujimura–Sugihara
+motion model with Narizuka's fit at Δt = 1 s, radius 6.2 m [Narizuka2023, p.5–6]); the Details
+tab says what they mean: where two circles overlap, those players could meet within a second. The Clips tab shows each team's fastest second so
 far.
 
 **The battery is the one bold graphic** (decisions 32, 33, 36). The lower third names the clip or

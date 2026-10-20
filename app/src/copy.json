@@ -10,8 +10,8 @@
   "batteriesAll": "Batteries: every outfield player",
   "legendFlatOut": "Flat out: a run at 90% or more of his top speed so far",
   "flatLabel": "flat out",
-  "legendReach": "Model: where a player could get to in 1 second, from a published motion model",
-  "reachLabel": "model: reach in 1 s",
+  "legendReach": "1-second reach (model): the ground a player could cover in the next second, from a published model of how players move",
+  "reachLabel": "Circles: 1-second reach (model)",
   "redZone": "These are {name}'s hardest minutes so far: his high-speed running at its peak.",
   "postPeak": "Just after {name}'s hardest minutes so far.",
   "offPitch": "{name} is not on the pitch at this point.",
@@ -160,5 +160,7 @@
   "teamTipBlock": "From {block}",
   "teamTipRate": "{team}: {rate} m a minute",
   "fastestTeam": "Fastest so far, {team}: {name}, {v} m/s ({kmh} km/h)",
-  "clipTime": "Clip time"
+  "clipTime": "Clip time",
+  "reachNote": "Circles: the ground each player could cover in the next second, from a published model of how players move. Where two circles overlap, those players could meet within a second.",
+  "reachNoteAnalyst": "Circles: the ground each player could cover in the next second, from the Fujimura–Sugihara motion model as fitted to match tracking by Narizuka2023 (p.5–6): a radius of about 6.2 m, centred where his current velocity would take him in 0.58 s. Where two circles overlap, those players could meet within a second."
 }

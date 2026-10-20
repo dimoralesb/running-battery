@@ -225,7 +225,7 @@ export function Replay({ data, item, now, mode, name, replaying, band, text, onS
         </article>
       )}
       {lines.map((e, k) => <Line key={k} e={e} mode={mode} text={text} />)}
-      {item.reach && <p className="sub">{text.legendReach}</p>}
+      {item.reach && <p className="sub">{mode === "analyst" ? text.reachNoteAnalyst : text.reachNote}</p>}
       {blocked.length > 0 && (
         <>
           <h4>{text.verdictBlocked}</h4>

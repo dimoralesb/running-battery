@@ -25,6 +25,12 @@ const REACH_A = (1 - Math.exp(-ALPHA)) / ALPHA;
 const REACH_R = VMAX * (1 - REACH_A);
 const REACH_WINDOW = 6; // shown from 6 s before to 6 s after the clip's key second
 const REACH_OPPONENTS = 2;
+
+/** Whether a clip shows its reachable areas now (the page names them in a pitch flag, since a
+ * label inside the pitch landed on other players; decision 37). */
+export function reachShown(item: Item, now: number) {
+  return item.reach && Math.abs(now - item.at) <= REACH_WINDOW;
+}
 const TRAIL_STEP = 0.2; // s between trail points (the positions are at 5 Hz)
 const LAPSE_STEP = 2; // s between trail points for a whole match (most ground covered)
 const STRIPES = 12; // mown stripes across the pitch, as on a broadcast
@@ -44,7 +50,6 @@ interface Props {
   allBatteries: boolean;
   item: Item | null; // the clip (watch and replay)
   focus: string | null; // full match: the player of the feed moment on screen
-  reachLabel: string;
   flatLabel: string;
   onSelect: (id: string) => void;
 }
@@ -175,7 +180,7 @@ function Trail({ data, item, now, j }: { data: MatchData; item: Item; now: numbe
 }
 
 export function Pitch({ data, now, mode, view, selected, favourite, allBatteries, item, focus,
-                        reachLabel, flatLabel, onSelect }: Props) {
+                        flatLabel, onSelect }: Props) {
   const { meta } = data;
   const ball = position(data, meta.ids.length, now);
   const peaks = useMemo(
@@ -196,9 +201,8 @@ export function Pitch({ data, now, mode, view, selected, favourite, allBatteries
   const showBattery = (id: string) => allBatteries || id === selected || id === favourite;
 
   // Reachable areas (model) at a clip's turnover: the player and his nearest opponents.
-  const reach: { id: string; team: string; cx: number; cy: number; main: boolean }[] = [];
-  if (clip && clip.reach && clip.player && clip.player in col
-      && Math.abs(now - clip.at) <= REACH_WINDOW) {
+  const reach: { id: string; team: string; cx: number; cy: number }[] = [];
+  if (clip && reachShown(clip, now) && clip.player && clip.player in col) {
     const me = here[col[clip.player]];
     if (me.xy) {
       const others = here
@@ -209,7 +213,7 @@ export function Pitch({ data, now, mode, view, selected, favourite, allBatteries
         const before = position(data, col[h.p.id], now - 1) ?? h.xy!;
         const [vx, vy] = [h.xy![0] - before[0], h.xy![1] - before[1]];
         reach.push({ id: h.p.id, team: h.p.team, cx: h.xy![0] + REACH_A * vx,
-                     cy: -(h.xy![1] + REACH_A * vy), main: h === me });
+                     cy: -(h.xy![1] + REACH_A * vy) });
       }
     }
   }
@@ -229,7 +233,6 @@ export function Pitch({ data, now, mode, view, selected, favourite, allBatteries
       {reach.map((r) => (
         <g key={`reach-${r.id}`} className={`reach ${r.team}`}>
           <circle cx={r.cx} cy={r.cy} r={REACH_R} />
-          {r.main && <text x={r.cx} y={r.cy - REACH_R - 0.6} className="reach-label">{reachLabel}</text>}
         </g>
       ))}
       {here.map(({ p, xy, s, i }) => {
