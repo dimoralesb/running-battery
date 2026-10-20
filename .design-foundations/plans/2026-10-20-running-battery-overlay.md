@@ -115,3 +115,11 @@ over the green pitch; contrast of white text on both team colours.
   show an empty battery.
 - Then mock (`/design-for-ai:mock`), user sign-off, build in `app/`, Verifier on new copy, light/dark
   and 360/390 px checks, decision 36.
+
+## Execution log
+
+### Phase 1: Screen spec (Gate: Standard)
+- [x] BUILD: Discovery + design + production complete (sonnet)
+- [x] REVIEW: PASS (haiku; one Major: the tab named "Feed" is weak scent for a clip's details)
+- [x] Committed
+Summary: JOURNEY.md holds the overlay's page spec (Watch, Details, Replay, Full match; tabs Clips, Team sheet, Feed, Settings), maps every current element and all 13 URL parameters, lists new copy to verify (incl. the analyst trace tooltip, which lacked "typical professional"), and leaves seven defaults open for sign-off.
