@@ -1,4 +1,5 @@
 import { useState } from "react";
+import copy from "./copy.json";
 import { type Meta } from "./data";
 
 // Who's doing the running (synthesis §9.1 idea 8, first called "tug of war"): both teams' high-speed running per ball-in-play minute
@@ -45,7 +46,7 @@ export function TeamChart({ meta, now, title, sub, yTitle, onSeek }: Props) {
     return best;
   };
   return (
-    <figure className="chart team-chart card">
+    <figure className="chart team-chart">
       <figcaption><strong>{title}</strong><span className="sub">{sub}</span></figcaption>
       <div className="legend">
         <span><i className="swatch home" />{home.name}</span>
@@ -108,13 +109,15 @@ export function TeamChart({ meta, now, title, sub, yTitle, onSeek }: Props) {
       <div className="tooltip" aria-live="polite">
         {h ? (
           <>
-            <strong>from {h.clock}</strong>
-            <span>{home.name} {h.home.hsr ?? "–"} m a minute</span>
-            <span>{away.name} {h.away.hsr ?? "–"} m a minute</span>
-            <span className="muted">ball in play {Math.round(h.home.in_play_s / 60)} min</span>
+            <strong className="num">{copy.teamTipBlock.replace("{block}", h.clock)}</strong>
+            {[home, away].map((t) => (
+              <span key={t.id} className="num">{copy.teamTipRate.replace("{team}", t.name)
+                .replace("{rate}", String(h[t.id as "home" | "away"].hsr ?? "–"))}</span>
+            ))}
+            <span className="sub num">{copy.teamInPlay.replace("{n}", String(Math.round(h.home.in_play_s / 60)))}</span>
           </>
         ) : (
-          <span className="muted">Hover for values; click to jump there. Dashed: half-time.</span>
+          <span className="sub">{copy.teamChartHint}</span>
         )}
       </div>
     </figure>

@@ -143,6 +143,9 @@ def test_overlay_copy_passes_the_verifier():
         "block": "0:00–15:00",
         "situation": "First 10 s after losing the ball",
         "rate": 433,
+        "n": 3,
+        "claim": "11",
+        "stage": "rules",
     }
     for key, text in copy.items():
         if key.startswith("_"):

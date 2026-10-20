@@ -98,6 +98,9 @@ function Chart({ s, meta, now, height, values, max, unit, title, yTitle, band, h
   );
 }
 
+const fill = (t: string, v: Record<string, string | number>) =>
+  t.replace(/\{(\w+)\}/g, (_, k) => String(v[k] ?? ""));
+
 export function Trace({ signals: s, meta, now, name, text, onSeek }: Props) {
   const [hover, setHover] = useState<number | null>(null);
   const band = s.lo && s.hi ? ([s.lo, s.hi] as [number[], number[]]) : undefined;
@@ -115,14 +118,18 @@ export function Trace({ signals: s, meta, now, name, text, onSeek }: Props) {
         {h !== null ? (
           <>
             <strong>{clockLabel(meta, s.start + h)}</strong>
-            <span>battery {s.battery[h]}%{band ? ` (${s.lo![h]}–${s.hi![h]}%)` : ""}</span>
-            {s.low_chance && <span>typical-pro chance {s.low_chance[h]}%</span>}
-            <span>{s.hsr_1min[h]} m in the last minute</span>
-            {s.red_zone[h] ? <span>his hardest minutes so far</span> : null}
+            <span className="num">{fill(band ? text.traceTip : text.traceTipFan,
+              { pct: s.battery[h], lo: s.lo?.[h] ?? "", hi: s.hi?.[h] ?? "" })}</span>
+            {s.low_chance && (
+              <span className="num">{fill(text.traceLowTip, {
+                chance: s.low_chance[h] < 1 ? "less than 1%" : `about ${s.low_chance[h]}%`,
+              })}</span>
+            )}
+            <span className="num">{fill(text.traceHsrTip, { v: s.hsr_1min[h] })}</span>
+            {s.red_zone[h] ? <span>{text.traceHardest}</span> : null}
           </>
         ) : (
-          <span className="muted">Hover a chart for values; click to jump there. Shaded:
-            his hardest minutes. Dashed: half-time.</span>
+          <span className="sub">{text.traceHint}</span>
         )}
       </div>
     </div>

@@ -10,25 +10,21 @@ interface Props {
   all: Highlight[];
   meta: Meta;
   now: number;
-  active: Highlight | null;
-  reelOn: boolean;
   text: Record<string, string>;
   onPick: (h: Highlight) => void;
   onReel: () => void;
 }
 
-export function Highlights({ all, now, active, reelOn, text, onPick, onReel }: Props) {
+export function Highlights({ all, now, text, onPick, onReel }: Props) {
   if (!all.length) return null;
   return (
-    <section className="card highlights">
+    <section className="highlights">
       <div className="hl-head">
         <div>
           <h3>{text.hlTitle}</h3>
           <p className="muted small">{text.hlSub}</p>
         </div>
-        <button className={reelOn ? "on" : ""} onClick={onReel}>
-          {reelOn ? text.hlStop : text.hlPlay}
-        </button>
+        <button className="outline" onClick={onReel}>{text.hlPlay}</button>
       </div>
       <div className="hl-grid">
         {KINDS.map((kind) => {
@@ -42,12 +38,12 @@ export function Highlights({ all, now, active, reelOn, text, onPick, onReel }: P
               <ol>
                 {top.map((h) => (
                   <li key={`${h.player.id}-${h.video_s}`}>
-                    <button className={`hl-item${active === h ? " on" : ""}`}
+                    <button className="hl-item"
                             onClick={() => onPick(h)} title={h.caption}>
                       <span className={`dot ${h.player.team}`} aria-hidden="true" />
                       <span className="hl-name">{h.player.name}</span>
-                      <strong>{highlightValue(h)}</strong>
-                      <span className="muted">{h.clock}</span>
+                      <strong className="num">{highlightValue(h)}</strong>
+                      <span className="muted num">{h.clock}</span>
                     </button>
                   </li>
                 ))}

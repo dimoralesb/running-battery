@@ -96,32 +96,44 @@ caught 0 of 2 before it and 2 of 2 after, with both valid ones passing.
 
 ## The overlay
 
-`app/` opens on the **Highlights** (decision 29): one clip at a time, in match order, from the
-match's best physical moments and the feed's moments. Each clip plays once, as it happened, at
-normal speed, with only that player's path on the pitch (the others dimmed), the dashed circles
-where a turnover matters, and one line of caption. When it is over it stops on its last frame and
-shows its **details** (decision 34): the numbers (top speed, distance, metres above 5.5 m/s, the
-gap timer between back-to-back runs), the run's speed second by second, his number against the
-published one, and what the feed says about it with each line's sources and the Verifier's
-verdict. **Replay** plays it again at half speed, with the numbers growing with the run; then
-"Next". "Play highlights" leaves the details up for 6 s before the next clip. The circles show where
-the player and his two nearest opponents could get to in one second, labelled "model" (the
-Fujimura–Sugihara motion model with Narizuka's fit at Δt = 1 s, radius 6.2 m [Narizuka2023,
-p.5–6]). The score bar shows each team's fastest second so far.
+`app/` is a match broadcast, cleaned up (decision 36; the screens in [JOURNEY.md](JOURNEY.md),
+the look in [DESIGN.md](DESIGN.md)). One column as wide as the pitch: the brand line ("Running
+Battery · synthetic match" and what it shows), the score bug with each team's colour, the pitch,
+one lower third docked under it, a quiet play bar, then four tabs: **Clips**, **Team sheet**,
+**Details** and **Settings** (view, fan or analyst, match, favourite player, dark or light, the
+key). While a clip plays, only the score, the pitch and the lower third ask for attention.
 
-**The battery in every view** (decision 32). Under the pitch, a broadcast lower third names the
-clip or moment and its player and shows his battery as the clip plays: what his running so far
-would leave a typical professional, as a continuous fill with the percentage (decision 33), and
-for analysts with its 10–90% band. A team sheet under the controls lists both line-ups with each
-player's battery, live; a click follows that player in the full match. Goalkeepers get none. The
-look is broadcast graphics: a score bug, a condensed face (Barlow Condensed), a mown-stripe pitch.
+It opens on the **Highlights** (decision 29): one clip at a time, in match order, from the
+match's best physical moments and the feed's moments. Each clip plays once, as it happened, at
+normal speed, with only that player's path on the pitch (the others dimmed), in white, fading
+towards its start with an arrowhead where he is, and the dashed circles where a turnover matters.
+When it is over it stops on its last frame ("Clip ended · last frame") and the **Details** tab
+opens (decision 34): the numbers (top speed, distance, metres above 5.5 m/s, the gap timer between
+back-to-back runs), what the feed says about it, the run's speed second by second and his number
+against the published one. Fans see one short label under each line ("Verified · measured",
+"Verified · our estimate", "Verified · published research") that opens to the claim, the papers
+and the check; analysts see the full citation and verdict, and the 10–90% band as the first line.
+**Replay** plays the clip again at half speed, with the numbers growing; **Next** starts the next
+clip and gives back the tab the viewer was on. "Play highlights" leaves the details up for 6 s
+before the next clip. The circles show where the player and his two nearest opponents could get to
+in one second, labelled "model" (the Fujimura–Sugihara motion model with Narizuka's fit at
+Δt = 1 s, radius 6.2 m [Narizuka2023, p.5–6]). The Clips tab shows each team's fastest second so
+far.
+
+**The battery is the one bold graphic** (decisions 32, 33, 36). The lower third names the clip or
+moment and its player and shows his battery as the clip plays: what his running so far would leave
+a typical professional, a squared shell with a near-white charge that never changes colour with its
+level, the percentage beside it, and for analysts the 10–90% band as brackets. A team moment shows
+each team's high-speed running per minute in play instead. The Team sheet tab lists both line-ups
+with each player's battery, live; a click follows that player in the full match. Goalkeepers get
+none. The empty shell is the logo.
 
 **Full match** is the whole replay. In fan mode it shows a battery icon for the selected and
 favourite players (a tick shows all of them); in analyst mode the selected player's battery trace
 with its band and his high-speed running. To keep one obvious place to look, the player the
-current feed line is about gets a ring and that line sits under the pitch; the flat-out pulse
+current feed line is about gets a ring and the lower third; the flat-out pulse
 (90% or more of his top speed so far) and the hardest-minutes ring show only for him, the selected
-and the favourite player, and the key is folded away. Both teams' high-speed running per
+and the favourite player, and the key is in Settings. Both teams' high-speed running per
 ball-in-play minute is one chart, "who's doing the running". Under it, **where the running
 happened** (decision 30) splits each team's high-speed running by situation of play, from who
 had the ball and where it was, as metres per minute of that situation (G5): the first 10 s after
@@ -134,9 +146,10 @@ and a team moment's Replay shows its own block. In the story match's first half,
 high-speed running came in those 10 s, in 29% of the time the ball was in play (449 m per minute after losing the ball against 95 settled on the ball). It says where the
 running happened, never why: "pressing" is a purpose, and positions don't show it (below). Each
 feed line shows its claim,
-sources and the Verifier's verdict, and a toggle shows what the Verifier blocked. The overlay's
-own fixed sentences (`app/src/copy.json`) pass the Verifier too. Light and dark mode; phone
-layout with a 16 px gutter and no sideways scroll.
+sources and the Verifier's verdict, and a toggle shows what the Verifier blocked. All of the
+overlay's own text, labels and tooltips included (`app/src/copy.json`), passes the Verifier too.
+Dark by default, light in Settings; phone layout with a 16 px gutter, plain dots on the pitch and
+no sideways scroll.
 
 **Highlights** are measured from positions and named as football names them: **top speed**
 (against the average match top speed for his position [SilvaH2025, Table 1]), the **longest

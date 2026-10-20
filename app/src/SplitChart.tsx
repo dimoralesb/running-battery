@@ -47,7 +47,7 @@ export function SplitChart({ meta, blocks, scope, text }: Props) {
   const name = (team: string) => teams.find((x) => x.id === team)?.name ?? team;
   const empty = !blocks.length || teams.every((x) => sum(x.id, 1) === 0);
   return (
-    <figure className="chart split-chart card">
+    <figure className="chart split-chart">
       <figcaption>
         <strong>{text.splitChart}</strong>
         <span className="sub">{text.splitChartSub} {scope}</span>

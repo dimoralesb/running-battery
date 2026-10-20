@@ -1,6 +1,6 @@
 # JOURNEY.md
 
-<!-- The structural and temporal design spec for the Running Battery overlay (`app/`). Pairs with DESIGN.md (visual tokens; Phase 2, ready to lock). For visual tokens, see DESIGN.md. Written 2026-10-20, Phase 1 of `.design-foundations/plans/2026-10-20-running-battery-overlay.md`. -->
+<!-- The structural and temporal design spec for the Running Battery overlay (`app/`). Pairs with DESIGN.md (visual tokens; locked 2026-10-20). For visual tokens, see DESIGN.md. Written 2026-10-20, Phase 1 of `.design-foundations/plans/2026-10-20-running-battery-overlay.md`. -->
 
 Scope: the overlay only. Out of scope: the data, the agents' lines, the science, new features. The spec describes today's overlay as it is in the code, then where each part goes in the cleaned-up broadcast.
 
@@ -79,7 +79,7 @@ Overlay (one page, the URL's parameters set where it opens)
 1. **Score bug**, top-left: both team names in full, a team colour chip beside each name, the score, the running match clock. Capitals only here. On phone ≤ 520 px: three-letter codes (WES, RAV) next to the chips; the lower third and tabs still use the full names.
 2. **Brand line**, top-right: the battery mark (an outline, never a reading, never a fill level), "Running Battery", next to it, small, "· synthetic match" (`brandSynthetic`; always visible, signed off 2026-10-20), and the tagline "How much hard running each player has done, and what it would leave a typical professional" (`tagline`). The name never appears without the tagline (decision 14). On phone the line sits above the score bug and the tagline wraps to two lines.
 3. **Pitch**: the mown-stripe pitch with white lines and the two team colours. In a clip: the star player ringed, his run trail (thin path, thick where he ran above 5.5 m/s) with an arrowhead at the current position or a tail fading toward the start (fix 8), his battery icon above him (Fan), the ball, the other markers at normal strength. A pitch flag "Clip ended · last frame" appears top-right in Details only. Height budget below.
-4. **Lower third**, docked inside the pitch, bottom-left, lifted at least 24 px off the touchline (phone: below the pitch). Row 1: the moment name and its clock ("Caught on the break · 24:37"). Row 2: shirt number, player name, position. Battery slot: the gauge (outline shell, continuous fill, the 10–90% band as a bracket in Analyst), the percentage, and under the gauge "What this running would leave a typical professional" (`ltBatterySub`). Nothing else: no caption, no feed line, no band sentence (decision 5 in the discovery file).
+4. **Lower third**, docked directly under the pitch at every width (DESIGN.md lock decision 1: inside the pitch it hid a player and the start of his run). Row 1: the moment name and its clock ("Caught on the break · 24:37"). Row 2: shirt number, player name, position. Battery slot: the gauge (outline shell, continuous fill, the 10–90% band as a bracket in Analyst), the percentage, and under the gauge "What this running would leave a typical professional" (`ltBatterySub`). Nothing else: no caption, no feed line, no band sentence (decision 5 in the discovery file).
 5. **Play bar**, under the pitch (low emphasis): Highlights: Previous · Replay · Play/Pause · Next, then on the right the step name (Watch, Details, Slow-motion replay) and "7 / 19". Full match: Play/Pause · match-time slider · speed 1× 5× 20×.
 6. **Tab bar**: Clips · Team sheet · Details · Settings. Selected = primary text, weight 600, 2 px underline in the text colour.
 7. **Tab panel**: the open tab's content (below).
@@ -102,7 +102,7 @@ Overlay (one page, the URL's parameters set where it opens)
 3. The Details step borrows the Details tab: if the tab was opened by the clip's end, the next Watch (Next, Previous, a clip row, auto) returns to the tab the viewer was on (Clips if none chosen). If the viewer clicked any tab during Details, that tab stays.
 4. Changing View in Settings leaves the viewer in Settings (they are mid-change); the pitch and play bar change at once.
 
-**Pitch and frame height budget (laptop; column width signed off 2026-10-20):** pitch height = min(frame width ÷ 1.514, 100vh − 330 px), floor 280 px; the frame column is as wide as the pitch and centred (score bug on its left edge, brand on its right, tabs and panel in the same column). At 1440×900: top 72 px, pitch ≤ 570 px (863 px wide), play bar 44, tab bar 48, panel starts at y≈746, about 150 px of panel visible: the first line and the numbers strip. At 1280×720: pitch 390 px, panel starts at y≈568. Fix (1).
+**Pitch and frame height budget (laptop; column width signed off 2026-10-20):** as built, column width = (100vh − 470 px) × 1.514 + 32 px, between 424 and 1180 px, so the lower third fits under the pitch and the first line of the details shows at 1440×900 (column ≈ 678 px); first draft: pitch height = min(frame width ÷ 1.514, 100vh − 330 px), floor 280 px; the frame column is as wide as the pitch and centred (score bug on its left edge, brand on its right, tabs and panel in the same column). At 1440×900: top 72 px, pitch ≤ 570 px (863 px wide), play bar 44, tab bar 48, panel starts at y≈746, about 150 px of panel visible: the first line and the numbers strip. At 1280×720: pitch 390 px, panel starts at y≈568. Fix (1).
 
 ---
 
@@ -165,7 +165,7 @@ In this order, applied at once, no Save: **View** (Highlights | Full match), **A
 |---|---|---|
 | Frame | one centred column the width of the pitch (budget above) | one full-width column, 16 px gutters |
 | Score bug / brand | bug left, brand right, one row | brand line above; bug with codes (WES, RAV) and chips; the clock stays |
-| Lower third | inside the pitch, bottom-left | below the pitch; rows stacked; gauge and percentage always visible (gauge under the name, not beside it) |
+| Lower third | under the pitch, full column width | under the pitch; rows stacked; gauge and percentage always visible (gauge under the name, not beside it) |
 | Analyst band | bracket on the gauge and "(71–92%)" beside the percentage, same row; no second row | the same, on the gauge's row; the band sentence is in the Details tab and the gauge's spoken name |
 | Play bar | one row | one row of four 44 px buttons; step name and "n / N" on a second line |
 | Tabs | four text tabs | four tabs sharing the width (≈ 260 px of text at 14 px) |

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { type Entry, type Item, type MatchData, type Mode, clockLabel } from "./data";
-import { Sources, VERDICT } from "./Feed";
+import { Blocked, Verdict, splitSources } from "./Feed";
 
 // The clip's details (decisions 29 and 34): shown when the clip is over, and growing with the
 // run during the slow-motion replay; the numbers, the run's speed second by second, the published
@@ -16,6 +16,8 @@ interface Props {
   now: number;
   mode: Mode;
   name: string;
+  replaying: boolean;
+  band: string | null; // analyst: the battery's 10–90% band, as the first line
   text: Record<string, string>;
   onSeek: (v: number) => void;
 }
@@ -35,7 +37,7 @@ function speeds(d: MatchData, pid: string, a: number, b: number): (number | null
   return out;
 }
 
-function Stats({ data, item, now, text }: Omit<Props, "mode" | "name" | "onSeek">) {
+function Stats({ data, item, now, replaying, text }: Omit<Props, "mode" | "name" | "band" | "onSeek">) {
   const pid = item.player!;
   const a = item.lapse ? 0 : Math.floor(item.start - 3);
   const until = Math.min(now, item.end + 2);
@@ -48,7 +50,7 @@ function Stats({ data, item, now, text }: Omit<Props, "mode" | "name" | "onSeek"
   const rows: [string, string, string?][] = item.lapse
     ? [[text.statDistanceMatch, `${(dist / 1000).toFixed(2)} km`]]
     : [
-        [text.statSpeedNow, `${cur.toFixed(1)} m/s`, `${kmh(cur)} km/h`],
+        ...(replaying ? [[text.statSpeedNow, `${cur.toFixed(1)} m/s`, `${kmh(cur)} km/h`] as [string, string, string]] : []),
         [text.statTop, `${top.toFixed(1)} m/s`, `${kmh(top)} km/h`],
         [text.statDistance, `${Math.round(dist)} m`],
         [text.statHsr, `${Math.round(hsr)} m`],
@@ -65,7 +67,7 @@ function Stats({ data, item, now, text }: Omit<Props, "mode" | "name" | "onSeek"
   return (
     <dl className="stats">
       {rows.map(([k, x, sub]) => (
-        <div key={k}><dt>{k}</dt><dd>{x}{sub && <span className="muted"> ({sub})</span>}</dd></div>
+        <div key={k}><dt>{k}</dt><dd className="num">{x}{sub && <span className="unit"> ({sub})</span>}</dd></div>
       ))}
     </dl>
   );
@@ -73,7 +75,7 @@ function Stats({ data, item, now, text }: Omit<Props, "mode" | "name" | "onSeek"
 
 /** The run's speed second by second (one series, so no legend: the title names it), or for
  * the most ground covered his distance since kick-off. */
-function SpeedChart({ data, item, now, name, text, onSeek }: Omit<Props, "mode">) {
+function SpeedChart({ data, item, now, name, text, onSeek }: Omit<Props, "mode" | "replaying" | "band">) {
   const [hover, setHover] = useState<number | null>(null);
   const pid = item.player!;
   const a = item.lapse ? 0 : Math.floor(item.start - 3);
@@ -141,7 +143,7 @@ function SpeedChart({ data, item, now, name, text, onSeek }: Omit<Props, "mode">
               : `${values[hover].toFixed(1)} m/s (${kmh(values[hover])} km/h)`}</span>
           </>
         ) : (
-          <span className="muted">{text.chartHint}</span>
+          <span className="sub">{text.chartHint}</span>
         )}
       </div>
     </figure>
@@ -178,56 +180,60 @@ function Compare({ item, name, text }: { item: Item; name: string; text: Record<
         <div key={label} className="cmp-row">
           <span className="cmp-label">{label}</span>
           <span className="cmp-track"><span className={`cmp-bar ${cls}`} style={{ width: `${(100 * v) / max}%` }} /></span>
-          <span className="cmp-value">{v} {unit}</span>
+          <span className="cmp-value num">{v} {unit}</span>
         </div>
       ))}
-      <p className="muted small">{pub.source}</p>
+      <p className="sub">{pub.source}</p>
     </figure>
   );
 }
 
-function Line({ e }: { e: Entry }) {
+function Line({ e, mode, text }: { e: Entry; mode: Mode; text: Record<string, string> }) {
   return (
-    <article className={`entry ${e.team}${e.verdict === "blocked" ? " blocked" : ""}`}>
-      <p>{e.verdict === "blocked" ? <s>{e.sentence}</s> : e.sentence}</p>
-      {e.verdict === "blocked" && e.verifier.findings.map((f, j) => (
-        <p key={j} className="small reason">
-          {f.stage === "llm" ? "LLM check" : "Rule"} · {f.claim}: {f.message}
-        </p>
-      ))}
-      <div className="foot">
-        <span className={`badge ${e.verdict}`}>{VERDICT[e.verdict]}</span>
-        <Sources e={e} />
-      </div>
+    <article className={`line${e.verdict === "blocked" ? " blocked" : ""}`}>
+      {e.verdict === "blocked" ? <Blocked e={e} text={text} /> : <p>{e.sentence}</p>}
+      {e.verdict !== "blocked" && <Verdict e={e} mode={mode} text={text} />}
     </article>
   );
 }
 
-export function Replay({ data, item, now, mode, name, text, onSeek }: Props) {
+export function Replay({ data, item, now, mode, name, replaying, band, text, onSeek }: Props) {
   const lines = item.momentId
+    ? data.feed.entries.filter((e) => e.moment_id === item.momentId && e.mode === mode && e.shown)
+    : [];
+  const blocked = item.momentId
     ? data.feed.entries.filter((e) => e.moment_id === item.momentId && e.mode === mode
-                                      && (e.shown || e.verdict === "blocked"))
+                                      && e.verdict === "blocked")
     : [];
   const over = now >= item.end;
+  const [cites, fields] = item.h ? splitSources(item.h.sources) : [[], []];
   return (
-    <section className="replay card">
-      {item.player && <Stats data={data} item={item} now={now} text={text} />}
-      {item.player && <SpeedChart data={data} item={item} now={now} name={name} text={text} onSeek={onSeek} />}
-      {over && <Compare item={item} name={name} text={text} />}
+    <section className="replay">
+      {item.player && <Stats data={data} item={item} now={now} replaying={replaying} text={text} />}
       <h3>{text.linesTitle}</h3>
+      {band && <article className="line"><p>{band}</p></article>}
       {item.h && (
-        <article className={`entry ${item.team}`}>
+        <article className="line">
           <p>{item.caption}</p>
-          <div className="foot">
-            <span className="badge pass">{text.hlChecked}</span>
-            <details className="sources">
-              <summary>Measured · {item.h.sources.filter((s) => !s.includes(" ") && !s.includes(".")).join(", ")}</summary>
-              <ul>{item.h.sources.filter((s) => s.includes(" ") || s.includes(".")).map((s) => <li key={s}><code>{s}</code></li>)}</ul>
-            </details>
-          </div>
+          <details className="verdict" open={mode === "analyst"}>
+            <summary>{mode === "analyst" ? `${text.hlChecked} · ${text.measuredFact}` : text.verdictMeasured}</summary>
+            <ul>
+              {cites.length > 0 && <li>{cites.join(", ")}</li>}
+              {fields.map((f) => <li key={f}><code>{f}</code></li>)}
+            </ul>
+          </details>
         </article>
       )}
-      {lines.map((e, k) => <Line key={k} e={e} />)}
+      {lines.map((e, k) => <Line key={k} e={e} mode={mode} text={text} />)}
+      {item.reach && <p className="sub">{text.legendReach}</p>}
+      {blocked.length > 0 && (
+        <>
+          <h4>{text.verdictBlocked}</h4>
+          {blocked.map((e, k) => <Line key={k} e={e} mode={mode} text={text} />)}
+        </>
+      )}
+      {item.player && <SpeedChart data={data} item={item} now={now} name={name} text={text} onSeek={onSeek} />}
+      {over && <Compare item={item} name={name} text={text} />}
     </section>
   );
 }

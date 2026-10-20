@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import copy from "./copy.json";
 import {
   type Item, type MatchData, type Mode, type Signals, highlightValue, position,
   signalIndex,
@@ -27,6 +28,7 @@ const REACH_OPPONENTS = 2;
 const TRAIL_STEP = 0.2; // s between trail points (the positions are at 5 Hz)
 const LAPSE_STEP = 2; // s between trail points for a whole match (most ground covered)
 const STRIPES = 12; // mown stripes across the pitch, as on a broadcast
+const FADE_STEPS = 6; // the trail fades towards its start in this many steps, so it shows direction
 
 // Three views (decision 29): the full match, and a clip's Watch and Replay-with-details steps,
 // which show only the clip's player path (and the reachable areas at a turnover).
@@ -96,12 +98,7 @@ function flatOutPeaks(s: Signals): number[] {
   return out;
 }
 
-export function Legend({ mode, text, allBatteries, onAllBatteries }: {
-  mode: Mode;
-  text: Record<string, string>;
-  allBatteries: boolean;
-  onAllBatteries: (b: boolean) => void;
-}) {
+export function Legend({ mode, text }: { mode: Mode; text: Record<string, string> }) {
   return (
     <details className="legend-box">
       <summary>{text.key}</summary>
@@ -113,15 +110,8 @@ export function Legend({ mode, text, allBatteries, onAllBatteries }: {
         <span><svg viewBox="-1.2 -1.2 2.4 2.4" className="key"><circle r={0.9} className="flat-key" /></svg>
           {text.legendFlatOut}</span>
         {mode === "fan" && (
-          <>
-            <span><svg viewBox="-3 -0.4 6 1.8" className="key wide"><BatteryIcon pct={60} x={0} y={0} /></svg>
-              {text.legendBattery}</span>
-            <label className="check">
-              <input type="checkbox" checked={allBatteries}
-                     onChange={(e) => onAllBatteries(e.target.checked)} />
-              {allBatteries ? text.batteriesAll : text.batteriesSome}
-            </label>
-          </>
+          <span><svg viewBox="-3 -0.4 6 1.8" className="key wide"><BatteryIcon pct={60} x={0} y={0} /></svg>
+            {text.legendBattery}</span>
         )}
         <span><svg viewBox="-1.2 -1.2 2.4 2.4" className="key"><circle r={0.8} className="fav-key" /></svg>
           {text.legendFavourite}</span>
@@ -131,7 +121,8 @@ export function Legend({ mode, text, allBatteries, onAllBatteries }: {
 }
 
 /** The clip's player path from its start to now: thin, with his high-speed runs (the clip's
- * segments) drawn thick, and a highlight's value at the end once it is over. */
+ * segments) drawn thick, fading towards its start and with an arrowhead where he is, so it shows
+ * which way he ran; a highlight's value at the end once it is over. */
 function Trail({ data, item, now, j }: { data: MatchData; item: Item; now: number; j: number }) {
   if (now < item.start - 3) return null;
   const until = Math.min(now, item.end);
@@ -147,12 +138,37 @@ function Trail({ data, item, now, j }: { data: MatchData; item: Item; now: numbe
   const runs = item.segments.map(([a, b]) => pts.filter(([, , v]) => v >= a - 1e-6 && v <= b + 1e-6))
     .filter((ps) => ps.length > 1);
   const [ex, ey] = pts[pts.length - 1];
+  // The direction at the end, from a point about a second back (for the arrowhead).
+  const [bx, by] = pts[Math.max(pts.length - 1 - Math.round(1 / step), 0)];
+  const len = Math.hypot(ex - bx, ey - by);
+  const [ux, uy] = len > 0.3 ? [(ex - bx) / len, (ey - by) / len] : [0, 0];
+  const t0 = pts[0][2];
+  const span = Math.max(pts[pts.length - 1][2] - t0, 1e-6);
+  const fade = (v: number) => 0.3 + 0.7 * Math.min(Math.floor(((v - t0) / span) * FADE_STEPS) + 1, FADE_STEPS) / FADE_STEPS;
+  // Split into steps of equal time, each drawn more opaque than the one before.
+  const chunks = (ps: [number, number, number][]) => {
+    const out: { ps: [number, number, number][]; o: number }[] = [];
+    for (const p of ps) {
+      const o = fade(p[2]);
+      const last = out[out.length - 1];
+      if (last && last.o === o) last.ps.push(p);
+      else out.push({ ps: last ? [last.ps[last.ps.length - 1], p] : [p], o });
+    }
+    return out.filter((c) => c.ps.length > 1);
+  };
   return (
-    <g className={`trail ${item.team}${item.lapse ? " lapse" : ""}`}>
-      <path d={d(pts)} className="trail-path" />
-      {runs.map((ps, k) => <path key={k} d={d(ps)} className="trail-run" />)}
+    <g className={`trail${item.lapse ? " lapse" : ""}`}>
+      {chunks(pts).map((c, k) => <path key={k} d={d(c.ps)} className="trail-path" style={{ opacity: c.o }} />)}
+      {runs.flatMap((ps, k) => chunks(ps).map((c, m) => (
+        <path key={`${k}-${m}`} d={d(c.ps)} className="trail-run" style={{ opacity: c.o }} />
+      )))}
+      {(ux !== 0 || uy !== 0) && (
+        <path className="trail-arrow" d={`M${(ex + ux * 3.9).toFixed(2)},${(ey + uy * 3.9).toFixed(2)}`
+          + `L${(ex + ux * 2.6 - uy * 1.0).toFixed(2)},${(ey + uy * 2.6 + ux * 1.0).toFixed(2)}`
+          + `L${(ex + ux * 2.6 + uy * 1.0).toFixed(2)},${(ey + uy * 2.6 - ux * 1.0).toFixed(2)}Z`} />
+      )}
       {item.h && now >= item.end && (
-        <text x={ex + 3.2} y={ey - 3.2} className="trail-label">{highlightValue(item.h)}</text>
+        <text x={ex + 3.2} y={ey + 5} className="trail-label">{highlightValue(item.h)}</text>
       )}
     </g>
   );
@@ -200,7 +216,7 @@ export function Pitch({ data, now, mode, view, selected, favourite, allBatteries
 
   return (
     <svg className={`pitch view-${view}`} viewBox={`${-L / 2 - 2} ${-W / 2 - 2} ${L + 4} ${W + 4}`}
-         role="img" aria-label="Replay of the synthetic match">
+         role="img" aria-label={copy.pitchLabel}>
       <rect x={-L / 2 - 2} y={-W / 2 - 2} width={L + 4} height={W + 4} className="grass" />
       {Array.from({ length: STRIPES }, (_, k) => (
         <rect key={k} x={-L / 2 + (k * L) / STRIPES} y={-W / 2 - 2} width={L / STRIPES} height={W + 4}
@@ -221,7 +237,8 @@ export function Pitch({ data, now, mode, view, selected, favourite, allBatteries
         const [x, y] = [xy[0], -xy[1]];
         const isSel = p.id === selected;
         const star = clip ? p.id === clip.player : inFocus(p.id);
-        const dim = clip ? !star && !(clip.reach && reach.some((r) => r.id === p.id)) : false;
+        // A team clip has no star player, so nothing is dimmed.
+        const dim = clip && clip.player ? !star && !(clip.reach && reach.some((r) => r.id === p.id)) : false;
         const red = !clip && star && i !== null && s.red_zone[i] === 1;
         const since = clip || !star ? undefined
           : (peaks[p.id] ?? []).map((v) => now - v).find((d) => d >= 0 && d < PULSE_S);
