@@ -28,6 +28,9 @@ export interface Meta {
   situations: string[]; // situations of play, in order (agents/tools.py SITUATIONS)
   team_situations: SituationBlock[];
   substitutions: { video_s: number; team: string; off: string; on: string; clock: string }[];
+  // What each feed moment's clip shows, [start, end] (export.moment_clips, decision 38); null:
+  // no clip (its player does nothing above 5.5 m/s in it); missing: the default window.
+  clips?: Record<string, [number, number] | null>;
 }
 
 export interface TeamBlock {
@@ -148,6 +151,31 @@ export function clockLabel(meta: Meta, v: number): string {
   return c >= end ? `${end / 60}+${mmss(c - end)}` : mmss(c);
 }
 
+const GAP_FILL_S = 2.4; // tracking loses a player for up to 2 s (sim/params.py DROPOUT_S)
+
+/** Where column j must have been at replay time v while the tracking lost him for a moment:
+ * straight between his positions either side of a gap of at most GAP_FILL_S (decision 38), or
+ * null (no gap, or a longer one: off the pitch). Drawn faded; the estimator still sees the gap. */
+export function gapFill(d: MatchData, j: number, v: number): [number, number] | null {
+  const cols = d.meta.ids.length + 1;
+  const hz = d.meta.pos_hz;
+  const f = Math.min(Math.max(Math.round(v * hz), 0), d.meta.frames - 1);
+  const at = (k: number) => (k * cols + j) * 2;
+  if (d.pos[at(f)] !== d.meta.missing) return null;
+  const reach = Math.ceil(GAP_FILL_S * hz);
+  let a = f - 1;
+  while (a >= 0 && f - a <= reach && d.pos[at(a)] === d.meta.missing) a--;
+  let b = f + 1;
+  while (b < d.meta.frames && b - f <= reach && d.pos[at(b)] === d.meta.missing) b++;
+  if (a < 0 || b >= d.meta.frames || b - a - 1 > reach
+      || d.pos[at(a)] === d.meta.missing || d.pos[at(b)] === d.meta.missing) return null;
+  const w = (v * hz - a) / (b - a);
+  return [
+    (d.pos[at(a)] * (1 - w) + d.pos[at(b)] * w) / 10,
+    (d.pos[at(a) + 1] * (1 - w) + d.pos[at(b) + 1] * w) / 10,
+  ];
+}
+
 /** x, y in metres for column j at replay time v (linear between frames), or null. */
 export function position(d: MatchData, j: number, v: number): [number, number] | null {
   const cols = d.meta.ids.length + 1;
@@ -211,6 +239,7 @@ export interface Item {
   caption: string;
   h?: Highlight;
   momentId?: string;
+  momentKind?: string; // the feed moment's kind, also when it shares a highlight's clip
   lapse: boolean; // the whole match at once (most ground covered)
 }
 
@@ -223,7 +252,7 @@ export function fastSegments(s: Signals | undefined, a: number, b: number): [num
   const out: [number, number][] = [];
   if (!s) return out;
   for (let v = Math.ceil(a); v <= b; v++) {
-    const i = v - s.start;
+    const i = Math.floor(v - s.start); // a substitute's signals start mid-second
     const fast = i >= 0 && i < s.speed.length && s.speed[i] > HI_SPEED && s.speed[i] <= 110;
     const last = out[out.length - 1];
     if (fast && last && last[1] === v) last[1] = v + 1;
@@ -243,25 +272,56 @@ export function itemOfHighlight(h: Highlight): Item {
   };
 }
 
+/** Seconds two clips share. */
+function overlap(a: Item, b: Item): number {
+  return Math.min(a.end, b.end) - Math.max(a.start, b.start);
+}
+
 /** The Highlights view's clips in match order: the match's best highlights (as the reel) and
- * the feed's moments, each with its first verified line in this mode. */
+ * the feed's moments, each with its first verified line in this mode. One clip per action
+ * (decision 38): a moment that shares more than half of the shorter clip with a highlight of the
+ * same player becomes that clip's line; one that shares more than half of the longer clip with
+ * another player's highlight (the same run seen twice) takes its place. */
 export function queue(d: MatchData, mode: Mode, best: Highlight[]): Item[] {
   const items = best.map(itemOfHighlight);
+  const moments: Item[] = [];
   for (const m of d.feed.moments) {
     const lines = d.feed.entries.filter((e) => e.moment_id === m.moment_id && e.mode === mode
                                                && e.shown);
     if (!lines.length) continue;
+    const window = d.meta.clips?.[m.moment_id];
+    if (window === null) continue; // nothing to see: the line stays in the full match
     const e = lines[0];
     const pid = e.player?.id ?? null;
-    const [start, end] = [Math.max(m.video_s - MOMENT_BEFORE, 0), m.video_s + MOMENT_AFTER];
-    items.push({
+    const [start, end] = window
+      ?? [Math.max(m.video_s - MOMENT_BEFORE, 0), m.video_s + MOMENT_AFTER];
+    moments.push({
       id: m.moment_id, source: "moment", kind: m.kind, player: pid, team: e.team,
-      clock: m.clock, at: m.video_s, start, end,
-      segments: pid ? fastSegments(d.signals[pid], start, end) : [], caption: e.sentence,
-      momentId: m.moment_id, lapse: false,
+      clock: window ? clockLabel(d.meta, start) : m.clock, at: window ? start : m.video_s,
+      start, end, segments: pid ? fastSegments(d.signals[pid], start, end) : [],
+      caption: e.sentence, momentId: m.moment_id, momentKind: m.kind, lapse: false,
     });
   }
-  return items.sort((a, b) => a.at - b.at);
+  const shared = (a: Item, b: Item) => {
+    const len = a.player === b.player ? Math.min : Math.max;
+    return !a.lapse && overlap(a, b) > 0.5 * len(a.end - a.start, b.end - b.start);
+  };
+  const out: Item[] = [];
+  for (const m of moments) {
+    if (out.some((o) => o.player === m.player && shared(o, m))) continue; // the same run again
+    const k = items.findIndex((h) => shared(h, m));
+    if (k < 0) {
+      out.push(m);
+    } else if (items[k].player === m.player && !items[k].momentId) {
+      const h = items[k];
+      items[k] = { ...h, momentId: m.momentId, momentKind: m.kind,
+                   start: Math.min(h.start, m.start), end: Math.max(h.end, m.end) };
+    } else {
+      items.splice(k, 1);
+      out.push(m);
+    }
+  }
+  return [...items, ...out].sort((a, b) => a.at - b.at);
 }
 
 /** The top n so far of one kind, one per player (the best of each), best first. */

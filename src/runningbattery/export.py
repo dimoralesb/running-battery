@@ -12,7 +12,8 @@
   whole percentages). ``match.json`` also has both teams' running per ball-in-play minute in
   5-min blocks, and where it happened (decision 30): per 15-min block, metres above 5.5 m/s
   and ball-in-play seconds per situation of play (``tools.SITUATIONS``).
-- ``feed.json``: the agents' feed, copied as it is.
+- ``feed.json``: the agents' feed, copied as it is. ``match.json`` ``clips`` gives each feed
+  moment the part of the match its clip shows (decision 38, ``moment_clips``).
 - ``highlights.json``: the physical highlights (``agents.highlights``, decision 28), with their
   captions (checked by the Verifier's rules) and the run's times for the trail on the pitch.
 
@@ -30,12 +31,25 @@ import numpy as np
 
 from runningbattery.agents.feed import FEED
 from runningbattery.agents.highlights import highlights
-from runningbattery.agents.tools import SITUATIONS, MatchData
+from runningbattery.agents.tools import (
+    MAX_PLAUSIBLE_SPEED,
+    SITUATIONS,
+    MatchData,
+    counter_end_t,
+)
+from runningbattery.engine import params as EP
 from runningbattery.io import TRACKING
 
 POS_HZ = 5
 TEAM_BLOCK_S = 300.0  # 5-min blocks for the team-running chart
 MISSING = -32768
+# A feed moment's clip (decision 38): the overlay plays from CLIP_BEFORE seconds before the
+# window's start to CLIP_AFTER after its end (``clipFrom``, ``clipTo`` in App.tsx); a moment with
+# no window here keeps the overlay's default (DEFAULT_BEFORE / DEFAULT_AFTER around its second).
+CLIP_BEFORE, CLIP_AFTER = 3.0, 2.0
+DEFAULT_BEFORE, DEFAULT_AFTER = 8.0, 4.0
+SECOND_WIND_LOOKBACK_S = 120.0  # second wind: his runs in the 2 min that brought him back
+QUIET_KINDS = {"not_tired_tactical"}  # quiet by design: kept even with no high-speed second
 
 
 def team_running(m: MatchData) -> list[dict]:
@@ -71,7 +85,72 @@ def team_situations(m: MatchData) -> list[dict]:
     return out
 
 
-def export(folder: Path, out: Path) -> dict:
+def player_runs(m: MatchData, pid: str) -> list[tuple[float, float, float]]:
+    """His runs above 5.5 m/s as (start, end, metres), video_s, from the 1-s speed."""
+    s = m.series[pid]
+    v = np.array([m.video_s(int(p), float(t)) for p, t in zip(s.period, s.t, strict=True)])
+    fast = (s.cols["speed"] > EP.HI_SPEED) & (s.cols["speed"] <= MAX_PLAUSIBLE_SPEED)
+    runs: list[tuple[float, float, float]] = []
+    i = 0
+    while i < len(fast):
+        if not fast[i]:
+            i += 1
+            continue
+        j = i
+        while j + 1 < len(fast) and fast[j + 1] and v[j + 1] - v[j] < 1.5:
+            j += 1
+        runs.append((float(v[i]), float(v[j] + 1.0), float(s.cols["speed"][i : j + 1].sum())))
+        i = j + 1
+    return runs
+
+
+def moment_clips(m: MatchData, feed: dict) -> dict[str, list[float] | None]:
+    """What each feed moment's clip shows (decision 38), as [start, end] in video_s, or None for
+    a moment with no clip (its player does nothing above 5.5 m/s in it; the line stays in the
+    full match's commentary). Moments measured over minutes get the part that shows them:
+    caught on the break, the turnover to the end of the counter (``tools.counter_end_t``);
+    second wind, his longest run in the 2 min before it; fresh legs, the substitute's longest run
+    in his minutes on. Moments missing here keep the overlay's default."""
+    out: dict[str, list[float] | None] = {}
+    runs = {pid: player_runs(m, pid) for pid in m.series}
+    for mo in feed.get("moments", []):
+        mid, kind, at = mo["moment_id"], mo["kind"], float(mo["video_s"])
+        pid = mid.split(":")[1]
+        if pid not in m.series:
+            continue  # a team moment
+        window = None
+        if kind == "exposed_on_turnover":
+            per, t = int(mo["period"]), float(mo["t"])
+            start = next(
+                (e for e in m.events if e.period == per and abs(e.t - t) < 0.15
+                 and e.phase is not None and e.phase.value == "positive_transition"),
+                None,
+            )  # fmt: skip
+            chain = [e.t for e in m.events if start is not None and e.period == per
+                     and e.possession_id == start.possession_id]  # fmt: skip
+            window = [at, at + counter_end_t(t, chain) - t]
+        elif kind in ("second_wind", "fresh_legs"):
+            lo = at - SECOND_WIND_LOOKBACK_S if kind == "second_wind" else -1.0
+            mine = [r for r in runs[pid] if lo <= r[0] <= at]
+            if not mine:
+                out[mid] = None
+                continue
+            a, b, _ = max(mine, key=lambda r: r[2])
+            window = [a, b]
+        played = (
+            (window[0] - CLIP_BEFORE, window[1] + CLIP_AFTER)
+            if window
+            else (at - DEFAULT_BEFORE - CLIP_BEFORE, at + DEFAULT_AFTER + CLIP_AFTER)
+        )
+        shows = any(a < played[1] and b > played[0] for a, b, _ in runs[pid])
+        if not shows and kind not in QUIET_KINDS:
+            out[mid] = None
+        elif window:
+            out[mid] = [round(window[0], 1), round(window[1], 1)]
+    return out
+
+
+def export(folder: Path, out: Path, feed_path: Path | None = None) -> dict:
     m = MatchData(folder)
     out.mkdir(parents=True, exist_ok=True)
     ids = list(m.players)
@@ -142,10 +221,13 @@ def export(folder: Path, out: Path) -> dict:
             for s in m.metadata.substitutions
         ],  # fmt: skip
     }
+    feed_path = feed_path or folder / FEED
+    if feed_path.exists():
+        meta["clips"] = moment_clips(m, json.loads(feed_path.read_text()))
     (out / "match.json").write_text(json.dumps(meta, indent=1, ensure_ascii=False))
     (out / "highlights.json").write_text(json.dumps(highlights(m), indent=1, ensure_ascii=False))
-    if (folder / FEED).exists():
-        shutil.copyfile(folder / FEED, out / FEED)
+    if feed_path.exists():
+        shutil.copyfile(feed_path, out / FEED)
     return meta
 
 
@@ -155,9 +237,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--feed", type=Path, help="use this feed.json instead of the folder's")
     args = parser.parse_args(argv)
-    meta = export(args.folder, args.out)
-    if args.feed:
-        shutil.copyfile(args.feed, args.out / FEED)
+    meta = export(args.folder, args.out, args.feed)
     size = sum(f.stat().st_size for f in args.out.iterdir()) / 1e6
     print(f"wrote {args.out}: {meta['frames']} frames, {len(meta['ids'])} players, {size:.1f} MB")
 

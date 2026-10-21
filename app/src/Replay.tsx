@@ -31,7 +31,7 @@ function speeds(d: MatchData, pid: string, a: number, b: number): (number | null
   const s = d.signals[pid];
   const out: (number | null)[] = [];
   for (let v = Math.floor(a); v <= b; v++) {
-    const i = v - (s?.start ?? 0);
+    const i = Math.floor(v - (s?.start ?? 0)); // a substitute's signals start mid-second
     out.push(s && i >= 0 && i < s.speed.length && s.speed[i] <= 110 ? s.speed[i] / 10 : null);
   }
   return out;
@@ -206,25 +206,31 @@ export function Replay({ data, item, now, mode, name, replaying, band, text, onS
                                       && e.verdict === "blocked")
     : [];
   const over = now >= item.end;
+  const about = item.momentKind ? text[`about_${item.momentKind}`] : undefined;
   const [cites, fields] = item.h ? splitSources(item.h.sources) : [[], []];
   return (
     <section className="replay">
       {item.player && <Stats data={data} item={item} now={now} replaying={replaying} text={text} />}
       <h3>{text.linesTitle}</h3>
-      {band && <article className="line"><p>{band}</p></article>}
-      {item.h && (
-        <article className="line">
-          <p>{item.caption}</p>
-          <details className="verdict" open={mode === "analyst"}>
-            <summary>{mode === "analyst" ? `${text.hlChecked} · ${text.measuredFact}` : text.verdictMeasured}</summary>
-            <ul>
-              {cites.length > 0 && <li>{cites.join(", ")}</li>}
-              {fields.map((f) => <li key={f}><code>{f}</code></li>)}
-            </ul>
-          </details>
-        </article>
-      )}
-      {lines.map((e, k) => <Line key={k} e={e} mode={mode} text={text} />)}
+      {[
+        band && <article key="band" className="line"><p>{band}</p></article>,
+        item.h && (
+          <article key="caption" className="line">
+            <p>{item.caption}</p>
+            <details className="verdict" open={mode === "analyst"}>
+              <summary>{mode === "analyst" ? `${text.hlChecked} · ${text.measuredFact}` : text.verdictMeasured}</summary>
+              <ul>
+                {cites.length > 0 && <li>{cites.join(", ")}</li>}
+                {fields.map((f) => <li key={f}><code>{f}</code></li>)}
+              </ul>
+            </details>
+          </article>
+        ),
+        ...lines.map((e, k) => <Line key={k} e={e} mode={mode} text={text} />),
+      ].filter(Boolean).flatMap((el, k) =>
+        // What this kind of moment is, after the clip's first line (decision 38): the first
+        // line stays above the fold at 1440×900 (JOURNEY fix 1).
+        k === 0 && about ? [el, <p key="about" className="sub about">{about}</p>] : [el])}
       {blocked.length > 0 && (
         <>
           <h4>{text.verdictBlocked}</h4>

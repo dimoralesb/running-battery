@@ -96,6 +96,12 @@ NOT_FATIGUE = (
     r"(rather than|not|isn'?t|is not|instead of|no sign of|nothing to do with)\s+"
     r"(a sign of |just |simply )?(fatigue|tiredness|being tired)"
 )
+# A scoreline in a sentence ("a 3–0 lead", "leading 2-1"): G13 checks it against the score.
+SCORELINE = (
+    r"\b(\d{1,2})\s*[–-]\s*(\d{1,2})\s+(?:lead|win|victory|defeat|deficit|scoreline|advantage|"
+    r"up|down)\b|\b(?:at|leading|led|trailing|behind|ahead|up|down|lead of)\s+(\d{1,2})\s*[–-]\s*"
+    r"(\d{1,2})\b(?![:%.\d])"
+)
 # Claims whose wording holds an example, not a finding ("about 40%", "13 km", "a 3–0 lead"):
 # its numbers must come from the facts.
 EXAMPLE_WORDING = {"11", "12", "13"}
@@ -394,14 +400,41 @@ def context_findings(text: str, context: dict, claim_id: str | None) -> list[Fin
                            "being about him; give it as a general finding, his own numbers "
                            "apart"))  # fmt: skip
     # G5 (decision 37 feed, 59:59): "Westerlyn Albion ran 234 m/min without the ball" is the
-    # team's high-speed running; without the word it reads as all running.
+    # team's high-speed running; without the word it reads as all running. Decision 38's feed
+    # (31:38): "He averaged 23 m/min." for one player, so it holds for players too.
     if (
-        context.get("team_moment")
+        "facts" in context
         and re.search(r"\d\s*m\s*(/\s*min|per\s+minute|a\s+minute)", text)
         and not re.search(r"high-speed|above 5\.5|sprint", text)
     ):
-        out.append(Finding("G5", "Say which running a team's metres per minute are: high-speed "
+        out.append(Finding("G5", "Say which running the metres per minute are: high-speed "
                            "running (above 5.5 m/s)"))  # fmt: skip
+    # G10 (decision 38 feed, 45+1:04): "were level at 1–1" in a block where one team did 5% more;
+    # "level" is a difference of 0% (decision 31).
+    gap = (context.get("facts") or {}).get("vs_opponent")
+    gap = gap.get("value") if isinstance(gap, dict) else gap
+    if isinstance(gap, int | float) and abs(gap) >= 0.5 and re.search(r"\blevel\b", text):
+        out.append(Finding("G10", f"\"Level\" means no difference; the teams were {abs(gap):.0f}% "
+                           "apart in this block"))  # fmt: skip
+    # G13 (decision 38, found on the site's feed, 86:33): "while his team sat on a 3–0 lead" at
+    # 5–2, claim 13's example scoreline copied; each number was in the facts (lead 3, 0 touches).
+    score = context.get("score") or (context.get("context") or {}).get("score")
+    if isinstance(score, dict) and {"home", "away"} <= score.keys():
+        actual = sorted((int(score["home"]), int(score["away"])))
+        for m in re.finditer(SCORELINE, text, FLAGS):
+            a, b = (int(x) for x in m.groups() if x is not None)
+            if sorted((a, b)) != actual:
+                was = f"{score['home']}–{score['away']}"
+                out.append(Finding("G13", f"The score was {was} (home–away); a scoreline is "
+                                   "the score at that moment"))  # fmt: skip
+                break
+    # G14 (decision 38 feed, 75:59): "only 1% above the player he replaced over the same
+    # minutes"; the replaced player's rate is over his own minutes on the pitch.
+    if re.search(r"\bhe replaced\b[^.;]*\bsame minutes\b", text) and not re.search(
+        r"team-?mates", text
+    ):
+        out.append(Finding("G14", "The player he replaced is compared over that player's own "
+                           "minutes, not the same minutes; only the team-mates are"))  # fmt: skip
     offered = context.get("claims_offered")
     if offered is not None and claim_id and str(claim_id) not in offered:
         out.append(Finding(str(claim_id), f"Claim {claim_id} is not offered for this moment "

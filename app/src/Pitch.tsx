@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import copy from "./copy.json";
 import {
-  type Item, type MatchData, type Mode, type Signals, highlightValue, position,
+  type Item, type MatchData, type Mode, type Signals, gapFill, highlightValue, position,
   signalIndex,
 } from "./data";
 
@@ -98,6 +98,8 @@ export function Legend({ mode, text }: { mode: Mode; text: Record<string, string
           {text.legendRedZone}</span>
         <span><svg viewBox="-1.2 -1.2 2.4 2.4" className="key"><circle r={0.9} className="flat-key" /></svg>
           {text.legendFlatOut}</span>
+        <span><svg viewBox="-1.2 -1.2 2.4 2.4" className="key"><circle r={0.8} className="est-key" /></svg>
+          {text.legendGap}</span>
         {mode === "fan" && (
           <span><svg viewBox="-3 -0.4 6 1.8" className="key wide"><BatteryIcon pct={60} x={0} y={0} /></svg>
             {text.legendBattery}</span>
@@ -177,9 +179,10 @@ export function Pitch({ data, now, mode, view, selected, favourite, allBatteries
   // Where everyone is. In the full match only the players in focus (selected, favourite, the
   // feed moment's player) get rings and pulses, so there is one obvious place to look.
   const here = meta.players.map((p, j) => {
-    const xy = position(data, j, now);
+    const seen = position(data, j, now);
+    const xy = seen ?? gapFill(data, j, now); // lost by the tracking for a moment: faded
     const s = data.signals[p.id];
-    return { p, xy, s, i: xy ? signalIndex(s, now) : null };
+    return { p, xy, est: !seen && !!xy, s, i: xy ? signalIndex(s, now) : null };
   });
   const inFocus = (id: string) => id === selected || id === favourite || id === focus;
   const showBattery = (id: string) => allBatteries || id === selected || id === favourite;
@@ -196,7 +199,7 @@ export function Pitch({ data, now, mode, view, selected, favourite, allBatteries
       {clip && clip.player && clip.player in col && (
         <Trail data={data} item={clip} now={now} j={col[clip.player]} />
       )}
-      {here.map(({ p, xy, s, i }) => {
+      {here.map(({ p, xy, est, s, i }) => {
         if (!xy) return null;
         const [x, y] = [xy[0], -xy[1]];
         const isSel = p.id === selected;
@@ -207,7 +210,8 @@ export function Pitch({ data, now, mode, view, selected, favourite, allBatteries
         const since = clip || !star ? undefined
           : (peaks[p.id] ?? []).map((v) => now - v).find((d) => d >= 0 && d < PULSE_S);
         return (
-          <g key={p.id} className={`player ${p.team}${isSel ? " sel" : ""}${dim ? " dim" : ""}`}
+          <g key={p.id}
+             className={`player ${p.team}${isSel ? " sel" : ""}${dim ? " dim" : ""}${est ? " est" : ""}`}
              onClick={() => onSelect(p.id)} role="button" aria-label={`${p.shirt} ${p.name}`}>
             <circle cx={x} cy={y} r={3} className="hit" />
             {since !== undefined && (

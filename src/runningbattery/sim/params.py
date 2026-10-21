@@ -153,14 +153,16 @@ SPRINT_RUN_S = (3.0, 6.0)  # how long a sprint run may last, s. Our assumption.
 # Re-fitted on 2026-10-17 for the professional prior (CS 4.1 m/s, with the tank re-fitted): fewer
 # runs are skipped, so sprint rose (team +13%); FB +0.2%, DM −0.1%, CM +0.3%, AM −0.8% against the
 # values before, which brings HID within ±5% except FB (the one-knob trade-off) and the team's
-# sprint back to about +7% (120 and 240 seeds).
+# sprint back to about +7% (120 and 240 seeds). Decision 38 (shots on clear chances, the ball
+# rolling to its player): fewer turnovers cut midfield high-speed running 1-3 points, so DM, CM
+# and AM rose 0.3, 0.9 and 0.5% (60 seeds).
 POSITION_EFFORT = {
     Position.GK: 0.990,
     Position.CB: 0.962,
     Position.FB: 1.030,
-    Position.DM: 1.054,
-    Position.CM: 1.055,
-    Position.AM: 1.047,
+    Position.DM: 1.058,
+    Position.CM: 1.064,
+    Position.AM: 1.052,
     Position.WM: 1.063,
     Position.CF: 0.978,
 }
@@ -556,6 +558,17 @@ PASS_LENGTH_PREF, PASS_LENGTH_SD = 16.0, 9.0  # m, receiver choice
 PASS_FORWARD_GAIN = (0.10, 0.08, 0.02)  # per metre towards goal, by third (own, middle, final)
 PASS_FORWARD_GAIN_TRANSITION = 0.22
 PASS_BASE_SUCCESS = 0.93
+# Where a pass is cut out: the first point along it the interceptor can reach before the ball,
+# running at INTERCEPT_SPEED after INTERCEPT_REACT_S (our assumption). A ball that arrives more
+# than BALL_REACH metres from the player who is to take it rolls on to him at BALL_ROLL_SPEED
+# (as a loose ball does, about 8 m/s), at most BALL_ROLL_MAX times, instead of jumping to his
+# feet (decision 38: the ball moved 4-7 m in 0.1 s at receptions and interceptions). Our
+# assumption.
+INTERCEPT_SPEED = 6.0  # m/s
+INTERCEPT_REACT_S = 0.3
+BALL_REACH = 1.0  # m
+BALL_ROLL_SPEED = 8.0  # m/s
+BALL_ROLL_MAX = 3
 # Offside [IFAB2025, Law 11]: a receiver in the opponent's half, ahead of both the ball and the
 # second-last opponent, when the ball is played; not from throw-ins, goal kicks or corners.
 # About 2.3 per match [Bassek2025, Fig. 3; approx.]. Attackers hold their shape this far
@@ -596,8 +609,24 @@ PRESSURE_RADIUS = 5.0  # m; the nearest opponent within this distance logs a pre
 # Shots. xG per shot 0.11 ± 0.15 [Bassek2025, p.6]. The logistic xG curve and the shot rate
 # are our assumption, tuned to about 24 shots per match [Bassek2025, p.6].
 SHOT_RANGE = 30.0  # m from the goal centre
-SHOT_RATE = 0.78  # chance of shooting on release, at the goal line; falls with distance
+SHOT_RATE = (
+    0.33  # chance of shooting on release, lane blocked, at the goal line; falls with distance
+)
 SHOT_RATE_SCALE = 16.0  # m
+# A shooting lane is blocked when an outfield opponent is goal-side of the ball within
+# SHOT_LANE_HALF metres of the line from the ball to the goal centre. With a clear lane the
+# chance is SHOT_RATE_CLEAR up to SHOT_CLOSE metres out, falling with SHOT_CLEAR_SCALE beyond;
+# inside SHOT_CLOSE metres it is at least SHOT_CLOSE_MIN even when blocked. A player with a clear
+# lane who does not shoot carries on at goal for SHOT_CARRY_ON_S seconds and decides again, at
+# most SHOT_CARRY_ON_MAX times, instead of passing back (decision 38: a player through on goal
+# passed backwards). Our assumption, tuned with SHOT_RATE to the shots per match above.
+SHOT_LANE_HALF = 8.0  # m
+SHOT_RATE_CLEAR = 0.95
+SHOT_CLEAR_SCALE = 33.0  # m: about 0.7 at 18 m and 0.55 at 25 m
+SHOT_CLOSE = 8.0  # m
+SHOT_CLOSE_MIN = 0.8
+SHOT_CARRY_ON_S = (0.5, 1.0)
+SHOT_CARRY_ON_MAX = 2
 XG_COEF = (-1.1, -0.11, 1.6)  # intercept, per m of distance, per rad of goal-mouth angle
 SHOT_SPLIT = dict(saved=0.30, wide=0.45, blocked=0.25)  # non-goals [Bassek2025, Fig. 3; approx.]
 SAVE_TO_CORNER = 0.4

@@ -318,8 +318,8 @@ def test_truth_series_with_fatigue(sim1):
             assert np.all(np.diff(tank[period == h]) <= 0)
         if (period == 1).any():
             assert tank[period == 2][0] >= tank[period == 1][-1]
-        else:  # a substitute comes on fresh
-            assert tank[0] == 1.0 and s.fast_pool[0] == 1.0
+        else:  # a substitute comes on fresh; his first record is up to 0.9 s later
+            assert tank[0] >= 0.99 and s.fast_pool[0] >= 0.99
         assert min(s.speed_mult) >= 1 - P.CAPACITY_MAX_LOSS - 1e-9
         ff = p.params.fast_fraction
         left = ff * np.array(s.fast_pool) + (1 - ff) * np.array(s.slow_pool)
@@ -472,6 +472,47 @@ def test_push_apart_judges_team_mates_at_closest_approach():
     assert np.allclose(mates[:, 0], 0.0)
     assert np.allclose(movement.push_apart(pos + vel, np.array([0, 0])), 0.0)
     assert np.allclose(movement.push_apart(pos, np.array([0, 1]), vel=vel), 0.0)
+
+
+def test_ball_moves_to_its_player(sim1):
+    """The ball never jumps to a player's feet: in play it moves at most 40 m/s between frames (a
+    hard shot or pass is about 30), at receptions, interceptions and won tackles too (decision 38:
+    it moved 4-7 m in 0.1 s)."""
+    for pf in sim1.periods:
+        speed = np.hypot(*np.diff(pf.ball[:, :2], axis=0).T) * P.FRAME_RATE_HZ
+        alive = pf.alive[1:] & pf.alive[:-1]
+        assert speed[alive].max() <= 40.0, (pf.period, speed[alive].max())
+
+
+def test_clear_chances_end_in_shots(sim1):
+    """Inside 25 m with no outfield defender goal-side within 8 m of the line to goal, players
+    shoot (some after carrying on at goal) rather than pass back (decision 38: 13 of 23 such
+    chances in the story match were backward passes)."""
+    home_up = sim1.metadata.teams[0].attacks_positive_x_in_period_1
+    clear, shots = 0, 0
+    for e in sim1.events:
+        if e.type not in (EventType.PASS, EventType.SHOT) or e.subtype in (
+            "corner", "free_kick", "throw_in", "goal_kick", "kick_off",
+        ):  # fmt: skip
+            continue
+        home = e.team_id == "home"
+        up = home_up if e.period == 1 else not home_up
+        goal = np.array([(1.0 if up == home else -1.0) * P.HALF_LENGTH, 0.0])
+        a = np.array([e.start.x, e.start.y])
+        seg = goal - a
+        dist = float(np.hypot(*seg))
+        if dist > 25.0:
+            continue
+        pf = sim1.periods[e.period - 1]
+        k = min(round(e.t * P.FRAME_RATE_HZ), len(pf.alive) - 1)
+        q = (pf.pos[k, 12:22] if home else pf.pos[k, 1:11]) - a
+        along = q @ seg / dist
+        across = np.abs(seg[0] * q[:, 1] - seg[1] * q[:, 0]) / dist
+        if np.any((along > 0) & (along <= dist) & (across <= 8.0)):
+            continue
+        clear += 1
+        shots += e.type == EventType.SHOT
+    assert clear >= 3 and shots >= 0.8 * clear, (shots, clear)
 
 
 def test_dead_ball_separation():

@@ -127,6 +127,11 @@ def test_report_covers_this_suite():
     # With the G12 rule and its two cases, 176 sentences: 106/109 (F1 4/6), 3/67 false blocks.
     # Rule 33 ("reserve") and the team G5 check with their three cases, 179: 106/111, 4/68;
     # rule 33 with "his estimated typical-pro reserve", 180: 110/112, 0/68 (F1 5/6).
+    # Decision 38's G13 (a scoreline is the score then) and its two cases, 182: rules 80/113,
+    # 0/69; rules + LLM 109/113, 3/69 (F1 3/6). G5 for players and G10's "level" with four
+    # cases (two older cases reworded to say high-speed), 186: 82/115, 0/71; 113/115, 5/71 (F1 5/6).
+    # G14 (the player he replaced, not "over the same minutes") and two cases, 188: 83/116, 0/72;
+    # rules + LLM 112/116, 4/72 (F1 5/6, paraphrases 22/23).
     assert rep["report"]["llm"]["caught_rate"] >= 0.93
 
 

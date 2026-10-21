@@ -297,7 +297,7 @@ One plate **docked directly under the pitch**, full column width, at every width
 
 ## Pitch (kept; tokens only)
 
-Mown stripes `--grass` / `--grass-alt` (7.5 m bands), lines `--pitch-line` 0.35 units; the ball stays white with a near-black edge (kept as today). Markers in the dark-ground team pair with numbers in `--on-team` (5.12 / 4.80:1), edge `rgba(0,0,0,0.5)` 0.25 units. The star player: a 0.5-unit `--on-pitch` ring; his run trail in `--trail` (thin dashed path, thick above 5.5 m/s), with an arrowhead at his current position (fix 8). Labels on grass in `--on-pitch` with a 0.5-unit dark halo. Flag "Clip ended · last frame": a small plate, top-right, `--text-xs` `--plate-text-2`.
+Mown stripes `--grass` / `--grass-alt` (7.5 m bands), lines `--pitch-line` 0.35 units; the ball stays white with a near-black edge (kept as today). Markers in the dark-ground team pair with numbers in `--on-team` (5.12 / 4.80:1), edge `rgba(0,0,0,0.5)` 0.25 units. The star player: a 0.5-unit `--on-pitch` ring; his run trail in `--trail` (thin dashed path, thick above 5.5 m/s), with an arrowhead at his current position (fix 8). Labels on grass in `--on-pitch` with a 0.5-unit dark halo. **A player the tracking lost for a moment** (a gap of at most 2.4 s, decision 38, approved by the user 2026-10-20): drawn on the straight line between where the tracking last and next saw him, the whole marker at 0.5 opacity (0.2 if also dimmed in a clip); the Key explains it. No new colour or token. Flag "Clip ended · last frame": a small plate, top-right, `--text-xs` `--plate-text-2`.
 
 ## Play bar and tab bar (quiet)
 

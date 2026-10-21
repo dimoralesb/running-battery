@@ -665,6 +665,9 @@ class Roles:
             if f.result in ("intercepted", "clear"):
                 role(f.to, f.end, P.CHASE_SPEED, RunPurpose.INTERCEPTION)
                 anchored[f.to] = True
+            elif f.result == "won":  # a tackle won: he steps to the ball (match.take_ball)
+                role(f.to, f.end, P.CHASE_SPEED, None)
+                anchored[f.to] = True
             elif f.to >= 0 and f.result in ("complete", "aerial", "offside"):
                 chase = (
                     P.BEHIND_EFFORT

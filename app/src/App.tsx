@@ -63,8 +63,7 @@ function itemFromUrl(d: MatchData, list: Item[]): Item | undefined {
   const m = QUERY.get("moment");
   if (m) {
     const p = QUERY.get("player");
-    return list.find((i) => i.source === "moment" && (i.id === m || i.kind === m)
-                            && (!p || i.player === p));
+    return list.find((i) => (i.momentId === m || i.momentKind === m) && (!p || i.player === p));
   }
   const n = Number(QUERY.get("item"));
   return Number.isInteger(n) && n >= 1 ? list[n - 1] : undefined;

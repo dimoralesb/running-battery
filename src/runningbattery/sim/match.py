@@ -77,6 +77,8 @@ class Flight:
     to: int = -1  # player who gets it at t1 (receiver, interceptor, keeper, blocker)
     challenger: int = -1  # opponent in an aerial duel
     receiver_wins: bool = True
+    event: int = -1  # index of the pass or shot event in ``events``, updated if the ball rolls on
+    rolls: int = 0  # times the ball has rolled on to its player (``BALL_ROLL_*``)
 
 
 @dataclass
@@ -89,6 +91,7 @@ class Touch:
     carry_speed: float
     duel_at: float | None
     header: bool
+    carry_ons: int = 0  # times he carried on at goal instead of releasing (``SHOT_CARRY_ON_*``)
 
 
 @dataclass
@@ -364,11 +367,57 @@ class MatchEngine:
         u, v = self.to_uv(team, self.pos[c])
         d_goal = math.hypot(GOAL_U - u, v)
         if self.positions[c] != Position.GK and d_goal < P.SHOT_RANGE:
-            rate = P.SHOT_RATE * math.exp(-d_goal / P.SHOT_RATE_SCALE)
+            clear = not self.lane_blocked(team, self.pos[c])
+            if clear:
+                rate = P.SHOT_RATE_CLEAR * math.exp(
+                    -max(d_goal - P.SHOT_CLOSE, 0.0) / P.SHOT_CLEAR_SCALE
+                )
+            else:
+                rate = P.SHOT_RATE * math.exp(-d_goal / P.SHOT_RATE_SCALE)
+            if d_goal < P.SHOT_CLOSE:
+                rate = max(rate, P.SHOT_CLOSE_MIN)
             if self.rng.random() < rate:
                 self.shoot(t, c, tc.header)
                 return
+            if clear and d_goal >= P.SHOT_CLOSE and tc.carry_ons < P.SHOT_CARRY_ON_MAX:
+                self.carry_on(t, tc)
+                return
         self.play_pass(t, c, self.pos[c].copy())
+
+    def lane_blocked(self, team: int, xy: np.ndarray) -> bool:
+        """Whether an outfield opponent is goal-side of ``xy`` within ``SHOT_LANE_HALF`` metres
+        of the line from it to the centre of the goal ``team`` attacks."""
+        a = self.to_uv(team, xy)
+        seg = np.array([GOAL_U, 0.0]) - a
+        length = max(float(np.hypot(*seg)), 1e-6)
+        q = self.to_uv(team, self.pos[self.members(1 - team)[1:]]) - a
+        along = q @ seg / length
+        across = np.abs(seg[0] * q[:, 1] - seg[1] * q[:, 0]) / length
+        return bool(np.any((along > 0) & (along <= length) & (across < P.SHOT_LANE_HALF)))
+
+    def carry_on(self, t: float, tc: Touch) -> None:
+        """Clear of the defence but not shooting yet: he keeps running at goal for a moment
+        and decides again (``SHOT_CARRY_ON_*``)."""
+        c = tc.player
+        start = self.pos[c].copy()
+        to_goal = self.to_uv(int(self.team_of[c]), np.array([GOAL_U, 0.0])) - start
+        hold = self.rng.uniform(*P.SHOT_CARRY_ON_S)
+        step = to_goal / max(float(np.hypot(*to_goal)), 1e-6) * tc.carry_speed * hold
+        carry_to = self.inside(start + step, edge=1.5)
+        self.touch = Touch(c, t, snap(t + hold), start, carry_to, tc.carry_speed, None, False,
+                           tc.carry_ons + 1)  # fmt: skip
+
+    def take_ball(self, t: float, player: int) -> None:
+        """``player`` takes the ball where it is: at once if it is within ``BALL_REACH`` metres of
+        him, otherwise it rolls to him first (``roll_on``), so it never jumps to his feet."""
+        ball = self.ball_xy[:2].copy()
+        if np.hypot(*(self.pos[player] - ball)) <= P.BALL_REACH:
+            self.start_touch(player, t)
+            return
+        self.flight = Flight(ball, ball.copy(), t, t, 0.0, "won", by=player, to=player)
+        self.mode = "flight"
+        self.touch = None
+        self.roll_on(t, self.flight)
 
     def ground_duel(self, t: float, opp: int) -> None:
         rng = self.rng
@@ -390,7 +439,7 @@ class MatchEngine:
             self.log(EventType.BALL_LOSS, t, c, subtype="tackled", start=where)
             if rng.random() < P.DUEL_TACKLER_KEEPS:
                 self.gain_possession(int(self.team_of[opp]), t, True, where)
-                self.start_touch(opp, t)
+                self.take_ball(t, opp)
             else:
                 self.kick_loose(t, where, rng.uniform(3.0, 8.0), opp)
         else:
@@ -533,6 +582,7 @@ class MatchEngine:
             body_part=BodyPart.OTHER if restart == "throw_in" else BodyPart.FOOT,
             restart=restart is not None,
         )
+        f.event = len(self.events) - 1
         self.flight = f
         self.mode = "flight"
         self.touch = None
@@ -554,7 +604,7 @@ class MatchEngine:
             kind = "loose"
         if kind == "intercepted":
             opp, s = self.nearest_to_segment(1 - team, f.start, f.end)
-            s = max(s, 0.3)
+            s = self.intercept_point(opp, f, flight_s, max(s, 0.3))
             f.end = f.start + s * (f.end - f.start)
             f.t1 = snap(f.t0 + flight_s * s)
             f.to = opp
@@ -565,6 +615,16 @@ class MatchEngine:
         offset = rng.uniform(3.0, 8.0) * np.array([math.cos(angle), math.sin(angle)])
         f.end = self.inside(f.end + offset)
         f.result, f.to = "loose", -1
+
+    def intercept_point(self, opp: int, f: Flight, flight_s: float, s: float) -> float:
+        """Where along the pass (0–1) ``opp`` cuts it out: the first point from 0.3 on that he
+        can reach before the ball at ``INTERCEPT_SPEED`` after ``INTERCEPT_REACT_S``; if none,
+        the point nearest him (the ball then rolls on to him, ``roll_on``)."""
+        grid = np.linspace(0.3, 1.0, 15)
+        pts = f.start + grid[:, None] * (f.end - f.start)
+        t_def = P.INTERCEPT_REACT_S + np.hypot(*(pts - self.pos[opp]).T) / P.INTERCEPT_SPEED
+        ok = np.flatnonzero(t_def <= grid * flight_s)
+        return float(grid[ok[0]]) if len(ok) else s
 
     @staticmethod
     def over_nearest_line(b: np.ndarray, reach: float) -> np.ndarray | None:
@@ -638,15 +698,41 @@ class MatchEngine:
             body_part=BodyPart.HEAD if header else BodyPart.FOOT,
             xg=xg,
         )
+        f.event = len(self.events) - 1
         self.flight = f
         self.mode = "flight"
         self.touch = None
 
     # --- Flight arrival ----------------------------------------------------------------------
 
+    def roll_on(self, t: float, f: Flight) -> bool:
+        """If the player who is to take the ball is more than ``BALL_REACH`` metres from where
+        it arrives, it rolls on towards him at ``BALL_ROLL_SPEED`` instead of jumping to his feet
+        (at most ``BALL_ROLL_MAX`` times); the pass or shot event's end moves with it."""
+        if f.to < 0 or f.rolls >= P.BALL_ROLL_MAX:
+            return False
+        if f.result not in ("complete", "intercepted", "saved", "won") and not (
+            f.result == "aerial" and f.receiver_wins
+        ):
+            return False
+        gap = float(np.hypot(*(self.pos[f.to] - f.end)))
+        if gap <= P.BALL_REACH:
+            return False
+        f.start, f.end = f.end.copy(), self.pos[f.to].copy()
+        f.t0, f.t1 = t, snap(t + max(gap / P.BALL_ROLL_SPEED, 0.1))
+        f.peak_z, f.rolls = 0.0, f.rolls + 1
+        if f.result == "aerial":  # he was not under it: no header, no duel; it bounces to him
+            f.result = "complete"
+        if f.event >= 0:
+            ev = self.events[f.event]
+            ev["end"], ev["end_t"] = self.event_point(f.end), f.t1
+        return True
+
     def arrive(self, t: float) -> None:
         rng = self.rng
         f = self.flight
+        if self.roll_on(t, f):
+            return
         result = f.result
         if result == "complete":
             self.receive(t, f.to, header=f.peak_z > 2.0)
@@ -656,6 +742,8 @@ class MatchEngine:
         elif result == "intercepted":
             self.gain_possession(int(self.team_of[f.to]), t, True, f.end)
             self.log(EventType.INTERCEPTION, t, f.to, start=f.end, outcome=Outcome.SUCCESS)
+            self.start_touch(f.to, t)
+        elif result == "won":
             self.start_touch(f.to, t)
         elif result == "clear":
             self.clearance(t, f.to, f.end)

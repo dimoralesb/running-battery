@@ -186,6 +186,8 @@ select { background: var(--surface); border: 1px solid var(--border); border-rad
 .player .shirt { font-family: var(--font); font-size: 1.6px; text-anchor: middle; fill: var(--on-team);
   font-weight: 700; font-variant-numeric: tabular-nums; pointer-events: none; }
 .player.dim { opacity: 0.35; }
+.player.est { opacity: 0.5; } /* lost by the tracking for a moment, drawn between (decision 38) */
+.player.dim.est { opacity: 0.2; }
 .player .focus { fill: none; stroke: var(--on-pitch); stroke-width: 0.5; }
 .player .redzone { fill: none; stroke: var(--warning); stroke-width: 0.6; }
 .player .fav { fill: none; stroke: var(--on-pitch); stroke-width: 0.25; stroke-dasharray: 0.6 0.4; }
@@ -214,6 +216,13 @@ select { background: var(--surface); border: 1px solid var(--border); border-rad
   animation: lt-in var(--dur-standard) var(--ease-out); }
 @keyframes lt-in { from { opacity: 0; transform: translateY(8px); } }
 .lt-who { min-width: 0; }
+/* Laptop: the two columns stay side by side (DESIGN.md "Two columns"); a long name breaks inside
+   its column instead of pushing the battery under it and the details below the fold. */
+@media (min-width: 701px) {
+  .lower-third { flex-wrap: nowrap; }
+  .lt-who { flex: 1 1 auto; }
+  .lower-third .lt-player { white-space: normal; }
+}
 .lt-tag { color: var(--plate-text-2); font-size: var(--text-base); font-weight: 500; }
 .lt-name { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-2xl);
   line-height: var(--leading-tight); margin-top: 2px; min-width: 0; }
@@ -401,6 +410,7 @@ select { background: var(--surface); border: 1px solid var(--border); border-rad
 .focus-key { fill: none; stroke: var(--text); stroke-width: 0.5; }
 .redzone-key { fill: none; stroke: var(--warning); stroke-width: 0.6; }
 .flat-key { fill: none; stroke: var(--text); stroke-width: 0.35; }
+.est-key { fill: var(--text); opacity: 0.5; }
 .fav-key { fill: none; stroke: var(--text); stroke-width: 0.25; stroke-dasharray: 0.6 0.4; }
 .legend .battery .shell { fill: var(--background); stroke: var(--accent-solid); stroke-width: 0.12; }
 .legend .battery .cell { fill: none; }

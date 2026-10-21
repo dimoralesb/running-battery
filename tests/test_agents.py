@@ -549,3 +549,45 @@ def test_favourite_gets_his_best_moment_and_wordings_keep_their_claim():
     assert (
         feed_mod.as_fact(b, "fact", "Albion did 433 m per minute after losing the ball.") == "fact"
     )
+
+
+def test_moment_clips_show_the_moment(tools):
+    """A moment measured over minutes gets the part of the match that shows it, and a moment
+    whose player does nothing above 5.5 m/s gets no clip, except a quiet one (decision 38)."""
+    from runningbattery.export import CLIP_AFTER, CLIP_BEFORE, moment_clips, player_runs
+
+    m = tools.m
+    runs = {pid: player_runs(m, pid) for pid in m.series}
+    pid = max(runs, key=lambda p: len(runs[p]))
+    a, b, _ = max(runs[pid], key=lambda r: r[2])
+    at = a + 60.0
+    best = max((r for r in runs[pid] if at - 120.0 <= r[0] <= at), key=lambda r: r[2])
+    s = m.series[pid]
+    on = [m.video_s(int(p), float(t)) for p, t in zip(s.period, s.t, strict=True)]
+    quiet = next(
+        v for v in on[60:]
+        if not any(r[0] < v + 4 + CLIP_AFTER and r[1] > v - 8 - CLIP_BEFORE for r in runs[pid])
+    )  # fmt: skip
+    feed = {"moments": [
+        {"moment_id": f"second_wind:{pid}:1:1", "kind": "second_wind", "video_s": at},
+        {"moment_id": f"flat_out:{pid}:1:2", "kind": "flat_out", "video_s": quiet},
+        {"moment_id": f"not_tired_tactical:{pid}:1:3", "kind": "not_tired_tactical",
+         "video_s": quiet},
+        {"moment_id": "tug_of_war:home:1:4", "kind": "tug_of_war", "video_s": 100.0},
+    ]}  # fmt: skip
+    clips = moment_clips(m, feed)
+    assert clips[f"second_wind:{pid}:1:1"] == [round(best[0], 1), round(best[1], 1)]
+    assert clips[f"flat_out:{pid}:1:2"] is None
+    assert f"not_tired_tactical:{pid}:1:3" not in clips
+    assert "tug_of_war:home:1:4" not in clips
+
+
+def test_caught_on_the_break_needs_the_counter_near_him_or_a_shot(tools):
+    """Decision 38: a clip showed him 34 m from a counter that went elsewhere."""
+    from runningbattery.agents.tools import COUNTER_MAX_S, COUNTER_MIN_S, COUNTER_NEAR_M
+
+    for x in tools.find_moments("exposed_on_turnover", limit=100)["moments"]:
+        f = x["facts"]
+        near = f["ball_nearest_him_in_counter"]["value"]
+        assert near <= COUNTER_NEAR_M or f["counter_xg"]["value"] > 0 or f["counter_goal"]
+        assert COUNTER_MIN_S <= f["counter_seconds"]["value"] <= COUNTER_MAX_S

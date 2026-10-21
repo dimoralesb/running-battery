@@ -287,15 +287,18 @@ CONTEXT = [
                 "vs_match_average": {"value": 5.0, "unit": "%"}},
       "context": {"in_play_last_5min": 0.42}}, None, False),
     # Found in the fifth feeds (2026-10-18): a rules false block, "the player he replaced" was
-    # not read as a baseline (BASELINE fixed).
-    ("Since coming on he has done 9.3 m/min, about 5% below the player he replaced (9.8 m/min).",
+    # not read as a baseline (BASELINE fixed). Reworded for decision 38 (a player's metres per
+    # minute say high-speed, G5): it tests the baseline.
+    ("Since coming on he has done 9.3 m/min of high-speed running, about 5% below the player he "
+     "replaced (9.8 m/min).",
      "analyst", {"facts": {"sub_hsr_per_min": {"value": 9.3, "unit": "m/min"},
                            "replaced_player_hsr_per_min": {"value": 9.8, "unit": "m/min"},
                            "vs_replaced_player": {"value": -5.0, "unit": "%"}}}, None, True),
     # Found in the sixth feeds (2026-10-18): a rules false block, the LLM's non-breaking hyphen
-    # ("team‑mates", U+2011) hid the baseline (the rules now read it as "-") …
-    ("He has done 9.8 m/min, 25% below the player he replaced but 49% above his team‑mates "
-     "over the same minutes.", "analyst",
+    # ("team‑mates", U+2011) hid the baseline (the rules now read it as "-"); reworded for
+    # decision 38 (G5 for players) …
+    ("He has done 9.8 m/min of high-speed running, 25% below the player he replaced but 49% above "
+     "his team‑mates over the same minutes.", "analyst",
      {"facts": {"sub_hsr_per_min": {"value": 9.8, "unit": "m/min"},
                 "vs_replaced_player": {"value": -25.0, "unit": "%"},
                 "vs_teammates": {"value": 49.0, "unit": "%"}}}, None, True),
@@ -423,6 +426,55 @@ CONTEXT = [
       "facts": {"team_hsr_per_min_without_ball": {"value": 234, "unit": "m/min"},
                 "team_hsr_per_min_with_ball": {"value": 214, "unit": "m/min"},
                 "block": "45:00–60:00"}}, None, True),
+    # Found on the site's feed (decision 38, 86:33): claim 13's example scoreline copied word
+    # for word at 2–5 (his team three up); each number was in the facts (a lead of 3, 0 touches)
+    # and both passes let it through. G13 was written from it. The true scoreline is fine.
+    ("His running dropped while his team sat on a 3–0 lead, so this may be tactical rather than "
+     "fatigue.", "fan",
+     {"context": {"score": {"home": 2, "away": 5}, "lead": {"value": 3, "unit": "goals"}},
+      "non_fatigue_reasons": [{"code": "big_lead", "text": "a big lead (2–5)"}],
+      "facts": {"touches_last_5min": {"value": 0, "unit": "touches"}},
+      "claims_offered": ["13", "14", "9b"]}, "13", False),
+    ("His running dropped while his team sat on a 5–2 lead, so this may be tactical rather than "
+     "fatigue.", "fan",
+     {"context": {"score": {"home": 2, "away": 5}, "lead": {"value": 3, "unit": "goals"}},
+      "non_fatigue_reasons": [{"code": "big_lead", "text": "a big lead (2–5)"}],
+      "facts": {"touches_last_5min": {"value": 0, "unit": "touches"}},
+      "claims_offered": ["13", "14", "9b"]}, "13", True),
+    # Found on the site's feed (decision 38): a player's metres per minute without saying they
+    # are high-speed running (31:38; G5 read only team moments), and "level" for two teams 5%
+    # apart, in an LLM rewrite that also slipped in the score (45+1:04; G10 now reads "level"
+    # against the gap). Both passes let them through; the worded-out versions are fine.
+    ("He averaged 23 m/min.", "fan",
+     {"facts": {"last_2min_hsr_per_min": {"value": 23.4, "unit": "m/min"}}}, None, False),
+    ("He averaged 23 m of high-speed running per minute in the last 2 minutes.", "fan",
+     {"facts": {"last_2min_hsr_per_min": {"value": 23.4, "unit": "m/min"}}}, None, True),
+    ("Westerlyn Albion and Ravensholt Albion were level at 1–1 in 30:00–45+1:05; earlier in the "
+     "match Westerlyn Albion's high-speed running was 91% higher than Ravensholt Albion's.",
+     "analyst",
+     {"team_moment": True, "team_names": ["Westerlyn Albion", "Ravensholt Albion"],
+      "context": {"score": {"home": 1, "away": 1}},
+      "facts": {"vs_opponent": {"value": 5, "unit": "%"},
+                "earlier_gap_vs_opponent": {"value": 91, "unit": "%"},
+                "block": "30:00–45+1:05"}}, None, False),
+    ("In 30:00–45+1:05 Westerlyn Albion did 5% more high-speed running per ball-in-play minute "
+     "than Ravensholt Albion, down from 91% more earlier.", "analyst",
+     {"team_moment": True, "team_names": ["Westerlyn Albion", "Ravensholt Albion"],
+      "context": {"score": {"home": 1, "away": 1}},
+      "facts": {"vs_opponent": {"value": 5, "unit": "%"},
+                "earlier_gap_vs_opponent": {"value": 91, "unit": "%"},
+                "block": "30:00–45+1:05"}}, None, True),
+    # … and "over the same minutes" for the player he replaced, whose rate is over his own
+    # minutes on the pitch (75:59; G14 was written from it). With the team-mates it is right.
+    ("He is only 1% above the player he replaced over the same minutes.", "fan",
+     {"facts": {"sub_hsr_per_min": {"value": 15.5, "unit": "m/min"},
+                "vs_replaced_player": {"value": 1, "unit": "%"},
+                "vs_teammates": {"value": 64, "unit": "%"}}}, None, False),
+    ("He did 64% more high-speed running per minute than his team-mates over the same minutes "
+     "and 1% more than the player he replaced.", "fan",
+     {"facts": {"sub_hsr_per_min": {"value": 15.5, "unit": "m/min"},
+                "vs_replaced_player": {"value": 1, "unit": "%"},
+                "vs_teammates": {"value": 64, "unit": "%"}}}, None, True),
     # … the player's own state as a share, in an LLM rewrite on the site's feed (claim 33; the
     # rule read only percentages) …
     ("Earlier in the match he fell to about 0.64 of a typical professional's short-term reserve; "

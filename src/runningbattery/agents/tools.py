@@ -83,6 +83,12 @@ MOMENT_KINDS = {
                  "second), measured [Kavanagh2024; Bradley2009]", ["36", "37", "10"]),
 }  # fmt: skip
 TEAM_KINDS = {"tug_of_war"}
+# A caught-on-the-break moment needs the counter to come within COUNTER_NEAR_M metres of him or
+# to end in a shot; the counter is the opponents' possession, followed for at most COUNTER_MAX_S
+# seconds and at least COUNTER_MIN_S (the clip shows it, decision 38). Our assumption.
+COUNTER_NEAR_M = 15.0
+COUNTER_MAX_S = 15.0
+COUNTER_MIN_S = 6.0
 BLOCK_S = 900.0  # 15-min blocks, as the published end-of-match comparisons [Bradley2009]
 TEAM_GAP = 15.0  # % between the teams for a team-running moment (our assumption)
 GAP_CLOSED = 7.5  # % below which a gap counts as closed (our assumption)
@@ -192,6 +198,13 @@ class Series:
         lo = int(np.searchsorted(key, a[0] * 1e5 + a[1], side="left"))
         hi = int(np.searchsorted(key, b[0] * 1e5 + b[1], side="right"))
         return slice(lo, hi)
+
+
+def counter_end_t(t: float, chain_t: list[float]) -> float:
+    """When a counter that starts at ``t`` ends for the clip: its possession's last event, kept
+    between ``COUNTER_MIN_S`` and ``COUNTER_MAX_S`` seconds after ``t``."""
+    last = max((x for x in chain_t if x >= t), default=t)
+    return min(max(last, t + COUNTER_MIN_S), t + COUNTER_MAX_S)
 
 
 class MatchData:
@@ -1058,6 +1071,7 @@ class MatchTools:
             chain = by_poss.get(pid_, [])
             shot = max((x.xg or 0.0 for x in chain if x.type.value == "shot"), default=0.0)
             goal = any(x.type.value == "goal" for x in chain)
+            counter_end = counter_end_t(e.t, [x.t for x in chain if x.period == e.period])
             for pid, s in m.series.items():
                 info = m.players[pid]
                 if info["team"] != lost or info["position"] not in DEFENDERS:
@@ -1073,6 +1087,13 @@ class MatchTools:
                 d0 = float(np.hypot(*(m.xy[e.period][k, j] - m.ball[e.period][k])))
                 d8 = float(np.hypot(*(m.xy[e.period][k8, j] - m.ball[e.period][k8])))
                 spd = s.cols["speed"][i + 1 : i + 9]
+                k_end = min(max(m.second(e.period, counter_end), k + 1), len(m.alive[e.period]))
+                gap = np.hypot(*(m.xy[e.period][k:k_end, j] - m.ball[e.period][k:k_end]).T)
+                nearest = float(np.nanmin(gap)) if np.isfinite(gap).any() else d0
+                # A turnover the clip can show: the counter came his way or ended in a shot
+                # (decision 38: one clip showed him 34 m from a counter that went elsewhere).
+                if nearest > COUNTER_NEAR_M and shot == 0.0 and not goal:
+                    continue
                 facts = {
                     "distance_to_ball_at_turnover": q(
                         d0, "m", "tracking players[].x,y and ball", 0
@@ -1095,6 +1116,12 @@ class MatchTools:
                     "low_chance": q(s.cols["low_chance"][i], "chance", sig + "low_chance"),
                     "counter_xg": q(shot, "xG", "events.jsonl shot xg in this possession"),
                     "counter_goal": goal,
+                    "counter_seconds": q(
+                        counter_end - e.t, "s", "events.jsonl this possession, at most 15 s", 0
+                    ),
+                    "ball_nearest_him_in_counter": q(
+                        nearest, "m", "tracking players[].x,y and ball, each second", 0
+                    ),
                     "window_after_turnover": q(8, "s", "tracking, 8 s after the turnover"),
                     "losing_team": lost,
                 }
@@ -1117,6 +1144,7 @@ class MatchTools:
                     + float(s.cols["low_chance"][i]) * 3
                     + (0.5 if s.cols["red_zone"][i] else 0.0)
                     + max(d8 - d0, 0.0) / 10.0
+                    + (1.0 if nearest <= COUNTER_NEAR_M else 0.0)
                 )
                 out.append(
                     self._moment(
@@ -1217,7 +1245,8 @@ class MatchTools:
                 "teammates_hsr_per_min_same_minutes": q(team_rate, "m/min", HSR_SRC, 1),
                 "vs_replaced_player": q(
                     pct(rate_on, rate_off),
-                    "% above (+) or below (−) the player he replaced",
+                    "% above (+) or below (−) the player he replaced, against that player's "
+                    "own minutes on the pitch (not the same minutes)",
                     HSR_SRC,
                     0,
                 ),
