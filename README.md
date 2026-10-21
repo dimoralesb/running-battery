@@ -10,12 +10,31 @@ All match data is **synthetic**: we built a generator whose players get tired ac
 It opens on the **Highlights**: each clip plays once as it happened, then shows its details (numbers, sources and the Verifier's verdicts); "Replay" plays it again (a progress bar, Play/Pause and ½× 1× 2× work like a video player's), and "Full match" is the whole replay.
 Add `?match=natural`, `&mode=analyst`, `&view=full&t=<seconds>`, `&hl=<kind>&step=details` (or `&step=replay` for the replay) or `&theme=dark` to the address.
 
+![Running Battery broadcast overlay](docs/figures/overlay.png)
+
 - Project plan: [docs/PLAN.md](docs/PLAN.md)
 - Build plan: [docs/BUILD_PLAN.md](docs/BUILD_PLAN.md)
 - Evidence base (74 papers): [docs/RESEARCH_SYNTHESIS.md](docs/RESEARCH_SYNTHESIS.md); citation keys such as [Leifsson2024] are in [docs/References.bib](docs/References.bib)
 - Data format: [src/runningbattery/schema.py](src/runningbattery/schema.py), JSON Schemas in [schemas/](schemas/)
 
 ## How it works
+
+```mermaid
+flowchart TD
+    SIM["1. Synthetic Match Generator (sim/)<br/>10 Hz tracking + events · 74 papers · hidden short-term pools & 90-min tank"]
+    ENG["2. Short-Term D' Battery & Signal Engine (engine/)<br/>Per-second speed, HSR, hardest minutes · 200-draw typical-pro battery & calibrated chance"]
+    MCP["3. Read-Only MCP Server (agents/mcp_server.py)<br/>7 tools: match_summary, player_signals, find_moments, team_running, moment_context, claim, verify<br/>Every number returned with {value, unit, source} · never reads truth.json"]
+    AG["4. Multi-Agent Pipeline on Microsoft Foundry (Agent Framework · gpt-5-mini)<br/>Tactical (selects moments) → Narrator (drafts from 46 claims) → Personalization (fan/analyst, favourite)"]
+    VER["5. Two-Stage Verifier (agents/verifier.py + llm_verifier.py)<br/>Stage 1: deterministic rules (0 / 72 false blocks) · Stage 2: structured-output LLM check (can only block)"]
+    APP["6. Broadcast Overlay on Azure Static Web Apps (app/)<br/>React + TypeScript · 5 Hz pitch & run trails · live lower third · verified & blocked commentary"]
+
+    SIM -->|"tracking.jsonl, events.jsonl, metadata.json"| ENG
+    ENG -->|"signals.json"| MCP
+    MCP <-->|"tool calls (stdio)"| AG
+    AG -->|"candidate lines"| VER
+    VER -->|"feed.json (verified + blocked)"| APP
+    ENG -->|"positions.bin, signals.json, highlights.json"| APP
+```
 
 1. **Generator** (`sim/`): a 10 Hz match with events, a sprint motion model [Narizuka2023], role behaviours and a hidden physiology (two short-term pools and a whole-match tank) that changes which hard runs players make.
 2. **Estimator** (`engine/`): from positions alone, per player and second, the running (high-speed distance, his hardest minutes so far, energy) and what it would leave a typical professional (a battery with a 10–90% band, and a calibrated chance of falling below half of it).
