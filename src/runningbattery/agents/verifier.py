@@ -118,7 +118,10 @@ SPELLED = (
 )
 WINDOW = r"(?<![\w.])(1|2|5|10|15|30|45|60|90)\s*(-|\s)?(min\w*|second\w*|s\b|metres?)"
 # Claim 2's finding, in its own words, and a length of time in digits ("82 s", "4 min").
-CLAIM_2 = r"short bursts?|shaken off|five-minute spell takes|sprinting takes longer"
+CLAIM_2 = (
+    r"short bursts?|shaken off|(?:five-minute spell|five hard minutes) takes?|"
+    r"sprinting takes longer"
+)
 DURATION = r"(?<![\w.])\d+(?:\.\d+)?\s*(s|secs?|seconds?|mins?|minutes?)\b"
 
 
@@ -192,6 +195,11 @@ RULES: tuple[Rule, ...] = (
          r"\b(battery|tank|reserve)\b[^.]*\b(empty|drained|flat|dead)\b"),
     Rule("G9", "A share of the player's own reserve; use the typical-professional wording",
          r"\d+\s*(%|percent)\s+of\s+(his|her|their own)\s+(reserve|battery|D′|D')"),
+    Rule("G9", "Give the short-term reserve as a percentage (e.g. 59%), not a raw decimal",
+         r"\b0\.\d+\s+of\s+(a\s+|their\s+|the\s+)?(typical\s+professional'?s\s+)?(short-term\s+)?"
+         r"reserve\b|\breserve\b[^.]*\(\s*(?:about\s+)?0\.\d+\s*\)"),
+    Rule("2", "Claim 2 is about recovery time; keep 'shaken off' or 'recover'",
+         r"\b(five-minute spell|five hard minutes)\s+takes?\b", unless=r"shaken off|recover"),
     # 20–22: errors blamed on fatigue.
     Rule("20", "Pass accuracy holds up under fatigue in matches (claim 20)",
          r"(misplac\w*|wayward|sloppy|errant|stray|poor|bad|loose)\s+(pass|touch)|"
@@ -391,6 +399,9 @@ def context_findings(text: str, context: dict, claim_id: str | None) -> list[Fin
     ):
         out.append(Finding("2", "Claim 2 is a general finding about 1- and 5-minute peaks; give "
                            "his own numbers on their own, not as its example"))  # fmt: skip
+    if str(claim_id) == "2" and not _found(r"shaken off|recover", text):
+        out.append(Finding("2", "Claim 2 is about recovery time; keep 'shaken off' or "
+                           "'recover'"))  # fmt: skip
     # G12 (decision 37, found on the site's feed): "Marco Tarvsall: losing the ball forces the
     # hardest running of the game." A published finding opened with a player's name reads as
     # being about him (he had jogged). Measured templates ("fact") may open with his name.

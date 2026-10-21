@@ -430,7 +430,7 @@
    "team_name": "Ravensholt Harriers",
    "kind": "second_wind",
    "moment_id": "second_wind:A10:1:2090",
-   "sentence": "Short bursts are shaken off in a minute or two; a five-minute spell takes about five minutes, and sprinting takes longer.",
+   "sentence": "Short bursts are shaken off in a minute or two; five hard minutes take about five minutes to recover from, and sprinting takes longer.",
    "claim": "2",
    "sources": [
     "Leifsson2024",
@@ -599,8 +599,8 @@
     "stage": "llm",
     "findings": [
      {
-      "claim": "F1",
-      "message": "The sentence asserts the current moment is the lowest so far, but the facts show the modelled typical-professional battery now (0.59) is higher than the lowest point so far (0.56), so it contradicts the data.",
+      "claim": "F1 (statement contradicts facts); 19c qualifier (requires the 'lowest' claim to match the measured lowest and comparison to teammates—no teammate data here).",
+      "message": "The sentence asserts this moment is his lowest so far, but the data show his lowest point so far (0.56 of a typical professional's short-term reserve) is lower than the current estimate (0.59), so the claim is false.",
       "stage": "llm"
      }
     ]
@@ -621,11 +621,9 @@
    "team_name": "Westerlyn Town",
    "kind": "red_zone",
    "moment_id": "red_zone:H10:1:2624",
-   "sentence": "By our estimate, his running has left a typical professional at about 0.59 of their short-term reserve — marginally above his lowest point this match (0.56).",
-   "claim": "19c",
+   "sentence": "Callum Ashdane: his hardest minutes so far (tenth time), a 1-min peak of 68 m above 5.5 m/s (19.8 km/h), against a published mean peak of 62 m [Leifsson2024].",
+   "claim": "fact",
    "sources": [
-    "Bellenger2025",
-    "Skiba2021",
     "Leifsson2024, Table 1",
     "engine.hi_speed",
     "signals.players[].series.battery",
@@ -636,7 +634,7 @@
     "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch"
    ],
    "mode": "analyst",
-   "verdict": "rewritten",
+   "verdict": "fallback",
    "shown": true,
    "verifier": {
     "stage": "llm",
@@ -1148,8 +1146,8 @@
     "signals.players[].series.t"
    ],
    "mode": "fan",
-   "verdict": "pass",
-   "shown": true,
+   "verdict": "repeat",
+   "shown": false,
    "verifier": {
     "stage": "llm",
     "findings": []

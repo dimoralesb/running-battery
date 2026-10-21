@@ -56,7 +56,18 @@ def reel(all_: list[dict], end: float) -> list[dict]:
     return out + top_so_far(all_, "most_ground", end, 1)
 
 
-def queue(feed: dict, clips: dict, hls: list[dict], mode: str) -> list[dict]:
+def clock_label(match: dict, v: float) -> str:
+    """data.ts ``clockLabel``."""
+    p2 = next((p for p in match["periods"] if p["period"] == 2), None)
+    second = p2 is not None and v >= p2["video_start"]
+    t = v - p2["video_start"] if second else v
+    c = t + (2700.0 if second else 0.0)
+    end = 5400.0 if second else 2700.0
+    mmss = lambda s: f"{int(s // 60)}:{int(s % 60):02d}"  # noqa: E731
+    return f"{int(end // 60)}+{mmss(c - end)}" if c >= end else mmss(c)
+
+
+def queue(match: dict, feed: dict, clips: dict, hls: list[dict], mode: str) -> list[dict]:
     """data.ts ``queue``: one clip per action."""
     items = [
         dict(id=f"hl:{h['kind']}:{h['player']['id']}:{h['video_s']}", kind=h["kind"],
@@ -83,7 +94,8 @@ def queue(feed: dict, clips: dict, hls: list[dict], mode: str) -> list[dict]:
         )
         moments.append(dict(id=m["moment_id"], kind=m["kind"],
                             player=(lines[0].get("player") or {}).get("id"),
-                            clock=m["clock"], at=m["video_s"] if window == "default" else start,
+                            clock=m["clock"] if window == "default" else clock_label(match, start),
+                            at=m["video_s"] if window == "default" else start,
                             start=start, end=end, lapse=False, moment=m["moment_id"]))  # fmt: skip
 
     def shared(a: dict, b: dict) -> bool:
@@ -212,7 +224,7 @@ def main() -> None:
              for e in events if e["type"] == "shot"]  # fmt: skip
 
     end = match["periods"][-1]["video_start"] + match["periods"][-1]["duration_s"]
-    items = queue(feed, match.get("clips", {}), reel(hl, end), mode)
+    items = queue(match, feed, match.get("clips", {}), reel(hl, end), mode)
     report = []
     for it in items:
         a = 0.0 if it["lapse"] else max(it["start"] - CLIP_BEFORE, 0.0)

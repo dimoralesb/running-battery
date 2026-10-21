@@ -632,7 +632,7 @@
    "team_name": "Westerlyn Albion",
    "kind": "second_wind",
    "moment_id": "second_wind:H04:1:1898",
-   "sentence": "Short bursts are shaken off in a minute or two; a five-minute spell takes about five minutes, and sprinting takes longer.",
+   "sentence": "Short bursts are shaken off in a minute or two; five hard minutes take about five minutes to recover from, and sprinting takes longer.",
    "claim": "2",
    "sources": [
     "Leifsson2024",
@@ -1196,8 +1196,8 @@
     "tracking.ball_status"
    ],
    "mode": "fan",
-   "verdict": "pass",
-   "shown": true,
+   "verdict": "repeat",
+   "shown": false,
    "verifier": {
     "stage": "llm",
     "findings": []
@@ -2210,8 +2210,8 @@
     "signals.players[].series.t"
    ],
    "mode": "fan",
-   "verdict": "pass",
-   "shown": true,
+   "verdict": "repeat",
+   "shown": false,
    "verifier": {
     "stage": "llm",
     "findings": []
@@ -2414,53 +2414,12 @@
     "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch"
    ],
    "mode": "analyst",
-   "verdict": "blocked",
-   "shown": false,
-   "verifier": {
-    "stage": "llm",
-    "findings": [
-     {
-      "claim": "F1",
-      "message": "A fact field (fastest_in_match_so_far = false) contradicts the sentence's claim that this is his fastest run so far, so the sentence disagrees with the provided facts (F1).",
-      "stage": "llm"
-     }
-    ]
-   }
-  },
-  {
-   "t": 1992.0,
-   "period": 2,
-   "clock": "78:12",
-   "video_s": 4757.7,
-   "player": {
-    "id": "A12",
-    "name": "Marco Jorrsall",
-    "shirt": 12,
-    "team": "away"
-   },
-   "team": "away",
-   "team_name": "Ravensholt Albion",
-   "kind": "flat_out",
-   "moment_id": "flat_out:A12:2:1992",
-   "sentence": "He hit 7.6 m/s (27 km/h) — a little above his earlier top of 7.5 m/s in the match.",
-   "claim": "fact",
-   "sources": [
-    "SilvaH2025, Table 1 (Brazil, GNSS)",
-    "engine.hi_speed",
-    "signals.players[].series.battery",
-    "signals.players[].series.energy",
-    "signals.players[].series.low_chance",
-    "signals.players[].series.speed (fastest second)",
-    "signals.players[].series.speed > 5.5 m/s (19.8 km/h), per minute on the pitch"
-   ],
-   "mode": "analyst",
-   "verdict": "rewritten",
+   "verdict": "pass",
    "shown": true,
    "verifier": {
     "stage": "llm",
     "findings": []
-   },
-   "original": "This was his fastest run of the match so far at 7.6 m/s (27 km/h)."
+   }
   },
   {
    "t": 1992.0,

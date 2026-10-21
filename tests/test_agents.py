@@ -227,7 +227,7 @@ def test_flat_out_is_near_his_top_speed_so_far(tools):
     flat = tools.find_moments("flat_out", player="H04")["moments"]
     assert flat and 700.0 <= flat[0]["t"] <= 760.0
     f = flat[0]["facts"]
-    assert 90 <= f["share_of_top_speed"]["value"] <= 100 and not f["new_personal_best"]
+    assert 90 <= f["share_of_top_speed"]["value"] <= 100 and not f["his_fastest_so_far"]
     assert (
         f["peak_speed_kmh"]["value"] == round(f["peak_speed"]["value"] * 3.6)
         or abs(f["peak_speed_kmh"]["value"] - f["peak_speed"]["value"] * 3.6) < 1
@@ -370,6 +370,24 @@ def test_general_sentences_at_most_twice_per_mode():
     # Decision 31: a bare claim id ("11: He has done…"), never a clock.
     assert feed_mod.unlabel("9a: Albion did more.") == "Albion did more."
     assert feed_mod.unlabel("60:00–75:00 — level.") == "60:00–75:00 — level."
+    rep = [
+        {
+            "moment_id": "m",
+            "mode": "fan",
+            "shown": True,
+            "verdict": "fallback",
+            "sentence": "Since coming on, he has done 15.5 m/min, 64% more than his team-mates.",
+        },
+        {
+            "moment_id": "m",
+            "mode": "fan",
+            "shown": True,
+            "verdict": "pass",
+            "sentence": "That's 64% more than his team-mates over the same minutes.",
+        },
+    ]
+    feed_mod.cap_repeated_numbers(rep)
+    assert [x["shown"] for x in rep] == [True, False] and rep[1]["verdict"] == "repeat"
 
 
 def test_moments_say_what_they_are_for():
@@ -573,12 +591,15 @@ def test_moment_clips_show_the_moment(tools):
         {"moment_id": f"flat_out:{pid}:1:2", "kind": "flat_out", "video_s": quiet},
         {"moment_id": f"not_tired_tactical:{pid}:1:3", "kind": "not_tired_tactical",
          "video_s": quiet},
+        {"moment_id": f"exposed_on_turnover:{pid}:1:200", "kind": "exposed_on_turnover",
+         "period": 1, "t": 200.5, "video_s": 200.5},
         {"moment_id": "tug_of_war:home:1:4", "kind": "tug_of_war", "video_s": 100.0},
     ]}  # fmt: skip
     clips = moment_clips(m, feed)
     assert clips[f"second_wind:{pid}:1:1"] == [round(best[0], 1), round(best[1], 1)]
     assert clips[f"flat_out:{pid}:1:2"] is None
     assert f"not_tired_tactical:{pid}:1:3" not in clips
+    assert clips[f"exposed_on_turnover:{pid}:1:200"] == [200.5, 206.5]
     assert "tug_of_war:home:1:4" not in clips
 
 

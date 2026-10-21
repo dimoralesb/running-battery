@@ -924,8 +924,8 @@ class MatchTools:
                 "peak_speed": q(peak, "m/s", sig, 1),
                 "peak_speed_kmh": q(peak * 3.6, "km/h", sig, 0),
                 "top_speed_so_far": q(top, "m/s (his fastest second before this run)", sig, 1),
-                "new_personal_best": peak >= top + NEW_BEST_MARGIN,
-                "fastest_in_match_so_far": fastest,
+                "his_fastest_so_far": peak >= top + NEW_BEST_MARGIN,
+                "fastest_of_any_player_so_far": fastest,
                 "published_match_peak_for_position": q(MATCH_PEAK[info["position"]], "m/s, "
                                                        "mean match peak for his position",
                                                        "SilvaH2025, Table 1 (Brazil, GNSS)", 2),

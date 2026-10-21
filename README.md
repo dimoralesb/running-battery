@@ -53,27 +53,31 @@ It runs fixed rules first, then an LLM pass that can only block, against the cla
 up, the ball is out of play or the player has just come on must say so, and every number must be
 one of the facts. The paraphrases are blocked claims in other words, and the fact checks are
 sentences that do or do not agree with their facts (F1); both were written before the rules or
-the prompt that could catch them and never used to tune them. On 188 test sentences
-([docs/verifier_report.json](docs/verifier_report.json), prompt revision 7, run on 2026-10-20 after
+the prompt that could catch them and never used to tune them. On 190 test sentences
+([docs/verifier_report.json](docs/verifier_report.json), prompt revision 7, run on 2026-10-21 after
 decision 37's rule changes ("typical pro" as a rule-24 baseline, G12: a published finding opened
 with a player's name, rule 33 reading "his (estimated) typical-pro reserve", and G5 asking a team's
 metres per minute to say they are high-speed running) and decision 38's rules, each from a line on the site's feed: G13, a scoreline is the score at
 that moment (claim 13's example "a 3–0 lead" at 5–2); G5 for players too ("He averaged 23
-m/min."); "level" only for no difference (two teams 5% apart); and G14, the player a substitute
-replaced is not compared "over the same minutes"):
+m/min."); "level" only for no difference (two teams 5% apart); G14, the player a substitute
+replaced is not compared "over the same minutes"; G9, the short-term reserve as a percentage rather
+than a raw decimal; and claim 2 keeping "shaken off" or "recover"):
 
 | | Unsupported sentences caught | Valid sentences blocked |
 |---|---|---|
-| Rules alone | 83 / 116 (paraphrases 2 / 23, fact checks 0 / 6) | 0 / 72 |
-| Rules + LLM | 112 / 116 (paraphrases 22 / 23, fact checks 5 / 6) | 4 / 72 |
+| Rules alone | 85 / 118 (paraphrases 2 / 23, fact checks 0 / 6) | 0 / 72 |
+| Rules + LLM | 114 / 118 (paraphrases 23 / 23, fact checks 4 / 6) | 4 / 72 |
 
 The LLM still misses sentences that mislead without a wrong number: claim 3 ("about a third fewer
 recovery runs right after their hardest minutes") used as the lead-in to a defender's own speed
-after a turnover, and one of the six held-out fact checks ("his fastest run so far" when it was
-not). The LLM pass varies: the eight runs on 2026-10-20, as the suite grew from 174 to 188
-sentences, caught 106 / 108, 103 / 108, 106 / 109, 106 / 111, 110 / 112, 109 / 113, 113 / 115
-and 112 / 116 and blocked 2 / 66, 1 / 66, 3 / 67, 4 / 68, 0 / 68, 3 / 69, 5 / 71 and 4 / 72
-valid sentences (the 182-sentence run missed three of the six fact checks; the last missed one
+after a turnover, a team comparison with the wrong percentage ("roughly 22% less") and two of the
+six held-out fact checks ("his fastest run so far" when it was not, and a substitute doing less
+high-speed running than his team-mates when he did more). The LLM pass varies: the nine runs on
+2026-10-20–21, as the suite grew from 174 to 190
+sentences, caught 106 / 108, 103 / 108, 106 / 109, 106 / 111, 110 / 112, 109 / 113, 113 / 115,
+112 / 116 and 114 / 118 and blocked 2 / 66, 1 / 66, 3 / 67, 4 / 68, 0 / 68, 3 / 69, 5 / 71,
+4 / 72 and 4 / 72
+valid sentences (the 182-sentence run missed three of the six fact checks; the 188-sentence run missed one
 paraphrase, "They swarmed the man on the ball to win it back high up the pitch"); the earlier runs also missed "the lowest
 point of his match" when it was not, a team comparison with the wrong percentage ("roughly 22%
 less") and a second fact check. With prompt revision 5 (166 sentences, 97/104) it also missed "the lowest point of his
@@ -82,8 +86,8 @@ not a guarantee. A general finding about short bursts used to explain a 76- or 1
 which it missed in every run, is now blocked by a rule (claim 2, below). In this run it blocked
 four valid sentences: "He ran less after the break than before it" (claim 15), the typical-pro
 chance worded with "in the red", "Fewer touches, partly because the ball was out of play more" and
-"Without the ball, Ravensholt are covering more ground per minute than with it". Earlier runs
-also blocked "His team kept the ball for most of the last five minutes, so he ran less; likely not
+"He did 64% more high-speed running per minute than his team-mates over the same minutes and 1% more than the player he replaced". Earlier runs
+also blocked "Without the ball, Ravensholt are covering more ground per minute than with it", "His team kept the ball for most of the last five minutes, so he ran less; likely not
 fatigue", "86% below his match average", a drop in running put down to a long stoppage and a
 team's share of its high-speed running in the 10 s after the ball changed hands. The rules never block a valid sentence; the LLM pass varies by a sentence
 or two from run to run (the first run of revision 6, on 173 sentences: 106/108, 1/65, with one

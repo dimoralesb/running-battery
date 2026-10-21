@@ -471,7 +471,7 @@ def template(b: dict, mode: str) -> list[tuple[str, str]]:
             _v(b, "share_of_top_speed"),
         )
         run = f", {f['running']}" if f.get("running") else ""
-        if f.get("fastest_in_match_so_far"):
+        if f.get("fastest_of_any_player_so_far"):
             out.append(
                 (
                     "fact",
@@ -479,7 +479,7 @@ def template(b: dict, mode: str) -> list[tuple[str, str]]:
                     "of anyone in the match so far.",
                 )
             )
-        elif f.get("new_personal_best"):
+        elif f.get("his_fastest_so_far"):
             out.append(
                 ("fact", f"{name}'s fastest run of the match so far: {v} m/s ({kmh} km/h){run}.")
             )
@@ -553,7 +553,7 @@ Rules (a Verifier blocks anything else):
   whole feed. For not_tired_tactical moments, say what fits instead of fatigue (the reason).
 - Write "hardly any" rather than "0.0 m/min". Never start a sentence with a label such as
   "fact:".
-- fastest_in_match_so_far means so far: "the fastest of anyone in the match so far".
+- fastest_of_any_player_so_far means so far: "the fastest of anyone in the match so far".
 - Never say or imply that a team is more tired, fresher or fitter than the other (claim 35):
   compare their measured running per ball-in-play minute instead. Never read effort or intent
   from speed ("didn't try", "gave up", "jogged back", "should have sprinted"; claim 38): give the
@@ -586,7 +586,7 @@ Rules (a Verifier blocks anything else):
   the third time his team have lost the ball just after his hardest minutes so far"; for the
   favourite: "This is the third time <his name>'s team have lost the ball…"), not "exposed"
   and not "he is facing".
-- A flat_out run with new_personal_best: say it is his fastest of the match so far, never a
+- A flat_out run with his_fastest_so_far: say it is his fastest of the match so far, never a
   share of his top speed above 100%.
 - A gap that closed: say the two sides were level, never "0% more".
 - Claims 1 (after his hardest 5 minutes), 7 (the last 15 minutes) and 36 (top speed late on) are
@@ -715,6 +715,7 @@ async def entries_for(b: dict, mode: str, lines: list[tuple[str, str]], agent) -
             fv, _ = await check(b, mode, fc, fs, agent)
             if fv.ok:
                 out.append(_entry(b, mode, fc, fs, fv, "fallback", sentence))
+    cap_repeated_numbers(out)
     return out
 
 
@@ -759,6 +760,32 @@ def cap_general(entries: list[dict]) -> None:
         seen[key] = seen.get(key, 0) + 1
         if seen[key] > MAX_GENERAL:
             e["shown"], e["verdict"] = False, "repeat"
+
+
+CLOCK = r"\b\d+(?:\+\d+)?:\d+\b"
+
+
+def _numbers(sentence: str) -> list[float]:
+    bare = re.sub(CLOCK, " ", sentence)
+    bare = re.sub(verifier.WINDOW, " ", bare, flags=verifier.FLAGS)
+    return verifier.numbers_in(bare)
+
+
+def cap_repeated_numbers(entries: list[dict]) -> None:
+    """Hold back a shown line whose numbers all appear in an earlier shown line of the same
+    moment and mode (decision 38 feeds: a fallback template followed by the second line)."""
+    seen: dict[tuple[str, str], list[float]] = {}
+    for e in entries:
+        if not e.get("shown") or "moment_id" not in e or "sentence" not in e:
+            continue
+        key = (e["moment_id"], e["mode"])
+        nums = _numbers(e["sentence"])
+        prev = seen.get(key, [])
+        if nums and all(any(abs(x - a) <= 1.0 or abs(x - 100.0 * a) <= 1.0 for a in prev)
+                        for x in nums):  # fmt: skip
+            e["shown"], e["verdict"] = False, "repeat"
+        else:
+            seen[key] = prev + nums
 
 
 async def refill(briefs: list[dict], entries: list[dict], agent) -> list[dict]:
@@ -846,6 +873,7 @@ async def build(
         for mode in MODES:
             mine = [e for e in entries if e["moment_id"] == b["moment_id"] and e["mode"] == mode]
             entries += [e for e in await must_say(b, mode, mine, agent, fav) if e not in mine]
+    cap_repeated_numbers(entries)
     entries += await refill(briefs, entries, agent)
     entries.sort(key=lambda e: (e["video_s"], e["mode"]))
     return {

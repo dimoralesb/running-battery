@@ -476,12 +476,20 @@ CONTEXT = [
                 "vs_replaced_player": {"value": 1, "unit": "%"},
                 "vs_teammates": {"value": 64, "unit": "%"}}}, None, True),
     # … the player's own state as a share, in an LLM rewrite on the site's feed (claim 33; the
-    # rule read only percentages) …
+    # rule read only percentages), a raw reserve decimal in natural's feed (43:44, G9), and
+    # claim 2's middle clause cut off from its recovery verb …
     ("Earlier in the match he fell to about 0.64 of a typical professional's short-term reserve; "
      "right now he's at about 0.68, by our estimate.", "analyst",
      {"facts": {"typical_pro_battery_now": {"value": 0.68, "unit": "share"},
                 "lowest_typical_pro_battery_so_far": {"value": 0.64, "unit": "share"}}}, "19c",
      False),
+    ("By our estimate, his running has left a typical professional at about 0.59 of their "
+     "short-term reserve — marginally above his lowest point this match (0.56).", "analyst",
+     {"facts": {"typical_pro_battery_now": {"value": 0.59, "unit": "share"},
+                "lowest_typical_pro_battery_so_far": {"value": 0.56, "unit": "share"}}}, "19c",
+     False),
+    ("A five-minute spell takes about five minutes.", "fan",
+     {"facts": {"minutes_after_hardest_minutes": {"value": 5.0, "unit": "min"}}}, "2", False),
     # … and claim 3 used as the lead-in to his own speed after a turnover, which reads as fewer
     # recovery runs from him because of his hardest minutes (the LLM rewrote it into this).
     ("In the Premier League, players make about a third fewer high-speed recovery runs right "

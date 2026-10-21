@@ -49,7 +49,8 @@ MISSING = -32768
 CLIP_BEFORE, CLIP_AFTER = 3.0, 2.0
 DEFAULT_BEFORE, DEFAULT_AFTER = 8.0, 4.0
 SECOND_WIND_LOOKBACK_S = 120.0  # second wind: his runs in the 2 min that brought him back
-QUIET_KINDS = {"not_tired_tactical"}  # quiet by design: kept even with no high-speed second
+# Kept even when the moment's player has no high-speed second: quiet by design, or a counter.
+QUIET_KINDS = {"not_tired_tactical", "exposed_on_turnover"}
 
 
 def team_running(m: MatchData) -> list[dict]:

@@ -4,13 +4,13 @@
   "attribution": "Rule subset ported from Impeccable (pbakaus/impeccable), Apache-2.0, with modifications — see file header. Catalog: references/visual/ai-tells.md.",
   "status": "ran",
   "sources": [
-    "/home/diego/WD/Documents/Codes/Hacktaton_MS_Premier_League/.design-foundations/mocks/running-battery-watch.html",
-    "/home/diego/WD/Documents/Codes/Hacktaton_MS_Premier_League/.design-foundations/mocks/running-battery-details.html"
+    ".design-foundations/mocks/running-battery-watch.html",
+    ".design-foundations/mocks/running-battery-details.html"
   ],
   "rules": 16,
   "findings": [
     {
-      "source": "/home/diego/WD/Documents/Codes/Hacktaton_MS_Premier_League/.design-foundations/mocks/running-battery-watch.html",
+      "source": ".design-foundations/mocks/running-battery-watch.html",
       "rule": "nested-cards",
       "category": "layout",
       "severity": "high",
@@ -18,7 +18,7 @@
       "line": 174
     },
     {
-      "source": "/home/diego/WD/Documents/Codes/Hacktaton_MS_Premier_League/.design-foundations/mocks/running-battery-details.html",
+      "source": ".design-foundations/mocks/running-battery-details.html",
       "rule": "nested-cards",
       "category": "layout",
       "severity": "high",
