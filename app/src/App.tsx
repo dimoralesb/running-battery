@@ -171,9 +171,12 @@ export default function App() {
         setNow(hasT ? t : d.feed.moments[0]?.video_s ?? 0);
         setSelected(QUERY.get("player") ?? d.feed.favourite
                     ?? d.feed.entries.find((e) => e.player)?.player?.id ?? null);
-        setFavourite(QUERY.get("favourite") ?? d.feed.favourite ?? null);
+        const fav = QUERY.get("favourite") ?? d.feed.favourite ?? null;
+        setFavourite(fav);
         const list = queue(d, mode, reel(d.highlights, d.duration));
-        const it = view === "highlights" ? itemFromUrl(d, list) ?? list[0] : undefined;
+        const defaultItem = list.find((i) => i.momentId && (!fav || i.player === fav))
+          ?? list.find((i) => i.momentId) ?? list[0];
+        const it = view === "highlights" ? itemFromUrl(d, list) ?? defaultItem : undefined;
         if (it) {
           const st = QUERY.get("step");
           start(it, st === "replay" || st === "details" ? st : "watch");
@@ -315,6 +318,10 @@ export default function App() {
   const stepName = step === "watch" ? copy.stepWatch : step === "replay" ? copy.stepReplay : copy.stepDetails;
   const band = mode === "analyst" && cur?.player ? reading(data, players[cur.player], now) : null;
 
+  const hasBlocked = (it: Item) =>
+    Boolean(it.momentId && data.feed.entries.some(
+      (e) => e.moment_id === it.momentId && e.mode === mode && e.verdict === "blocked",
+    ));
   const clipRow = (it: Item, n: number | null) => (
     <li key={`${it.id}-${n ?? "x"}`}>
       <button className={`clip-row${cur && it.id === cur.id ? " on" : ""}`}
@@ -324,7 +331,9 @@ export default function App() {
         <span className="clip-kind">{label(it)}</span>
         <span className="clip-who">{who(it)}</span>
         <span className="clip-clock num">{it.clock}</span>
-        <span className="clip-now">{cur && it.id === cur.id ? copy.nowPlaying : ""}</span>
+        <span className="clip-now">
+          {cur && it.id === cur.id ? copy.nowPlaying : hasBlocked(it) ? copy.clipBlocked : ""}
+        </span>
       </button>
     </li>
   );

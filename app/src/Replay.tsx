@@ -205,6 +205,7 @@ export function Replay({ data, item, now, mode, name, replaying, band, text, onS
     ? data.feed.entries.filter((e) => e.moment_id === item.momentId && e.mode === mode
                                       && e.verdict === "blocked")
     : [];
+  const allBlocked = data.feed.entries.filter((e) => e.mode === mode && e.verdict === "blocked");
   const over = now >= item.end;
   const about = item.momentKind ? text[`about_${item.momentKind}`] : undefined;
   const [cites, fields] = item.h ? splitSources(item.h.sources) : [[], []];
@@ -236,6 +237,20 @@ export function Replay({ data, item, now, mode, name, replaying, band, text, onS
           <h4>{text.verdictBlocked}</h4>
           {blocked.map((e, k) => <Line key={k} e={e} mode={mode} text={text} />)}
         </>
+      )}
+      {allBlocked.length > 0 && (
+        <details className="verdict">
+          <summary>{fill(text.allBlocked, { n: allBlocked.length })}</summary>
+          <div className="blocked-list">
+            <p className="sub">{text.blocked}</p>
+            {allBlocked.map((e, k) => (
+              <article key={k} className="line blocked">
+                <p className="line-meta num">{e.clock} · {e.player?.name ?? e.team_name}</p>
+                <Blocked e={e} text={text} />
+              </article>
+            ))}
+          </div>
+        </details>
       )}
       {item.player && <SpeedChart data={data} item={item} now={now} name={name} text={text} onSeek={onSeek} />}
       {over && <Compare item={item} name={name} text={text} />}

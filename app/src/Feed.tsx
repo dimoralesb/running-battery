@@ -31,13 +31,17 @@ export function Verdict({ e, mode, text }: { e: Entry; mode: Mode; text: Record<
     : e.claim === "fact" ? text.verdictMeasured
     : e.claim === "11" ? text.verdictEstimate : text.verdictResearch;
   const verdict = blocked ? text.verdictBlocked : text[`verdict_${e.verdict}`];
+  const pipe = e.verdict === "fallback" || e.verdict === "template"
+    ? text.checkedByTemplate : text.checkedBy;
+  const mcp = e.kind === "tug_of_war" ? text.mcpTeam : text.mcpPlayer;
   return (
     <details className="verdict" open={mode === "analyst"}>
       <summary>{mode === "analyst" ? `${verdict} · ${cite}` : short}</summary>
       <ul>
         {mode === "fan" && <li>{cite}</li>}
         {fields.map((f) => <li key={f}><code>{f}</code></li>)}
-        {e.verifier.stage && <li>{fill(text.checkedBy, { stage: e.verifier.stage })}</li>}
+        {e.verifier.stage && <li>{fill(pipe, { stage: e.verifier.stage })}</li>}
+        <li>{mcp}</li>
         {e.original && <li>{text.beforeVerifier} <s>{e.original}</s></li>}
       </ul>
     </details>
