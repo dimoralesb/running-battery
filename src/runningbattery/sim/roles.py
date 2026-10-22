@@ -573,6 +573,16 @@ class Roles:
         for i, a in zip(np.array(h.mates)[np.argsort(rel)], angles, strict=True):
             role(int(i), at + P.HUDDLE_RING * np.array([np.cos(a), np.sin(a)]), P.WALL_SPEED, None)
 
+    def dead_pace(self, i: int, spot: np.ndarray, t: float) -> float:
+        """Wanted speed (share of S0, before the work rate) of a set-piece job while the ball is
+        dead: the pace that reaches ``spot`` once ``SET_PIECE_DUE`` of the dead time has gone,
+        from a walk (``SET_PIECE_WALK``) up to the jog (``WALL_SPEED``)."""
+        e = self.e
+        r = e.restart
+        left = max(r.t_dead + P.SET_PIECE_DUE * (r.t - r.t_dead) - t, 1.0)
+        need = float(np.hypot(*(spot - e.pos[i]))) / left / (e.s0[i] * self.effort[i])
+        return min(max(need, P.SET_PIECE_WALK), P.WALL_SPEED)
+
     def behind_ball(self) -> np.ndarray:
         """Unit vector from the ball to where the taker stands (``TAKER_BEHIND``)."""
         e = self.e
@@ -713,23 +723,24 @@ class Roles:
             if set_piece:
                 if self.plan_for is not r:
                     self.plan_for, self.plan = r, e.set_piece_plan(self.wander_rng)
-                # Everyone jogs up, like the wall; attackers hold their spots, the markers settle
+                # Everyone goes up, like the wall; attackers hold their spots, the markers settle
                 # round them.
                 for i, spot, holds in self.plan:
-                    role(i, spot, P.WALL_SPEED, None)
+                    role(i, spot, self.dead_pace(i, spot, t), None)
                     anchored[i] = holds
             if r.kind == "free_kick":
-                # The wall jogs into place; anchored, so the push-apart leaves its spacing alone.
+                # The wall forms; anchored, so the push-apart leaves its spacing alone.
                 wall = self.wall(set_piece)
                 for i, spot in wall:
-                    role(i, spot, P.WALL_SPEED, None)
+                    role(i, spot, self.dead_pace(i, spot, t), None)
                     anchored[i] = True
                 if wall:
                     self.keep_off_wall(tgt, [spot for _, spot in wall])
             if r.huddle is not None and t < r.huddle.t_end:
                 self.huddle(r.huddle, t, role, anchored)
             behind = 0.3 if r.kind == "throw_in" else P.TAKER_BEHIND
-            role(r.taker, r.spot + self.behind_ball() * behind, P.WALL_SPEED, None)
+            spot = r.spot + self.behind_ball() * behind
+            role(r.taker, spot, self.dead_pace(r.taker, spot, t), None)
             anchored[r.taker] = True
         for k in (0, 1):
             gk = int(e.members(k)[0])

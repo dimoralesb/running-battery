@@ -285,6 +285,18 @@ class MatchData:
         n = len(self.alive[period])
         return int(min(max(math.floor(t), 0), n - 1))
 
+    def gap_at(self, period: int, t: float, j: int) -> float:
+        """Player column ``j``'s distance to the ball at ``t``, between the 1-Hz samples
+        (decision 40: read at the whole second before, "8 s later" said 4 m for 6.6 m)."""
+        n = len(self.alive[period])
+        k = int(min(max(math.floor(t), 0), max(n - 2, 0)))
+        f = min(max(t - k, 0.0), 1.0) if n > 1 else 0.0
+        xy, ball = self.xy[period], self.ball[period]
+        k1 = min(k + 1, n - 1)
+        a = xy[k, j] + f * (xy[k1, j] - xy[k, j])
+        b = ball[k] + f * (ball[k1] - ball[k])
+        return float(np.hypot(*(a - b)))
+
     # --- Lookups ---------------------------------------------------------------------------
 
     def player(self, ref: str) -> dict[str, Any]:
@@ -1100,10 +1112,9 @@ class MatchTools:
                     continue
                 spells = self._spells(pid)
                 k = m.second(e.period, e.t)
-                k8 = min(k + 8, len(m.alive[e.period]) - 1)
                 j = m.col[pid]
-                d0 = float(np.hypot(*(m.xy[e.period][k, j] - m.ball[e.period][k])))
-                d8 = float(np.hypot(*(m.xy[e.period][k8, j] - m.ball[e.period][k8])))
+                d0 = m.gap_at(e.period, e.t, j)
+                d8 = m.gap_at(e.period, min(e.t + 8.0, len(m.alive[e.period]) - 1.0), j)
                 spd = s.cols["speed"][i + 1 : i + 9]
                 k_end = min(max(m.second(e.period, counter_end), k + 1), len(m.alive[e.period]))
                 gap = np.hypot(*(m.xy[e.period][k:k_end, j] - m.ball[e.period][k:k_end]).T)

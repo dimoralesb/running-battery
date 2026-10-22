@@ -537,8 +537,9 @@ def _engine():
 
 
 def _hold(engine, seconds: float, t0: float = 5.0) -> np.ndarray:
-    """Hold the current dead ball (never taken) for ``seconds``; positions of every frame."""
-    engine.restart.t = np.inf
+    """Hold the current dead ball for ``seconds``, due at their end but never taken (set-piece
+    jobs pace themselves to it, ``Roles.dead_pace``); positions of every frame."""
+    engine.restart.t = t0 + seconds
     frames = []
     for k in range(round(seconds * P.FRAME_RATE_HZ)):
         t = t0 + k / P.FRAME_RATE_HZ
@@ -676,6 +677,90 @@ def test_goal_huddle():
     assert _team_mate_gaps(at)[0].min() > P.SEPARATION_DEAD - 0.15
     u = engine.to_uv(0, frames[-1][:11])[:, 0]
     assert np.all(u < 0.0)  # back in their own half, the opponents kick off
+
+
+def test_dead_ball_jobs_pace_to_the_restart_and_brake():
+    """When the ball goes dead, a sprinting player brakes at once (below HI_SPEED within 0.5 s,
+    ``DEAD_BRAKE_ABOVE``), and nobody is above HI_SPEED after 1.5 s. Set-piece jobs pace
+    themselves to the restart (``Roles.dead_pace``): a walk with time to spare, the jog when
+    there is none; with a corner 30 s away they go up slower than with it 8 s away, and still
+    reach their spots in time. The jog cap stays clearly below HI_SPEED for every player
+    (decision 40)."""
+    cap = P.WALL_SPEED * max(P.POSITION_EFFORT.values()) * P.S0_RANGE[1]
+    assert cap < P.HI_SPEED - 0.4, cap
+    engine = _engine()
+    engine.schedule_restart("throw_in", 0, np.array([0.0, P.HALF_WIDTH]), 5.0, np.zeros(2))
+    engine.restart.t = 65.0
+    i = engine.restart.taker
+    near, far = engine.pos[i] + [2.0, 0.0], engine.pos[i] + [80.0, 0.0]
+    assert engine.roles.dead_pace(i, near, 5.0) == P.SET_PIECE_WALK
+    assert engine.roles.dead_pace(i, far, 30.0) == P.WALL_SPEED  # past due (29 s)
+    pace = engine.roles.dead_pace(i, engine.pos[i] + [60.0, 0.0], 5.0)
+    assert pace == pytest.approx(
+        60.0 / (P.SET_PIECE_DUE * 60.0) / (engine.s0[i] * engine.roles.effort[i])
+    )
+    mean = {}
+    for seconds in (30.0, 8.0):
+        engine = _engine()
+        spot = engine.to_uv(0, np.array([P.HALF_LENGTH, -P.HALF_WIDTH]))
+        engine.schedule_restart("corner", 0, spot, 5.0, spot.copy())
+        sprinters = [3, 8, 14]
+        engine.vel[sprinters] = [8.0, 0.0]
+        frames = _hold(engine, seconds)
+        speed = np.hypot(*np.diff(frames, axis=0).transpose(2, 0, 1)) * P.FRAME_RATE_HZ
+        assert np.all(speed[4, sprinters] < P.HI_SPEED), speed[4, sprinters]
+        assert speed[round(1.5 * P.FRAME_RATE_HZ) :].max() < P.HI_SPEED
+        jobs = [i for i, _, _ in engine.roles.plan] + [engine.restart.taker]
+        mean[seconds] = np.median(speed[15:60, jobs].mean(axis=0))  # 1.5–6 s after dead
+        if seconds == 30.0:
+            gaps = [np.hypot(*(frames[-1, i] - at)) for i, at, holds in engine.roles.plan if holds]
+            assert max(gaps) < 1.0, np.round(gaps, 2)
+    assert mean[30.0] < mean[8.0] - 0.5, mean
+
+
+def test_clearances_go_behind_only_close_to_goal():
+    """An out clearance goes behind for a corner only from within CLEAR_CORNER_DEPTH of the
+    goal line, as a short deflection (CLEAR_DEFLECT wider, off the posts); from further out
+    it goes over the touchline ahead of the clearer. About CLEAR_OUT of them go out either way
+    (decision 40: a keeper's clearance from 15 m went over his own line)."""
+    engine = _engine()
+    d = 3  # team 0's left-back
+    for depth in (2.0, 12.0):
+        ends = []
+        for k in range(400):
+            where = engine.to_uv(0, np.array([-P.HALF_LENGTH + depth, -8.0]))
+            engine.clearance(5.0 + k, d, where)
+            ends.append((engine.to_uv(0, engine.flight.end), engine.flight.result))
+        uv = np.array([e for e, _ in ends])
+        out = np.array([r == "out" for _, r in ends])
+        behind = uv[:, 0] < -P.HALF_LENGTH
+        assert abs(out.mean() - P.CLEAR_OUT) < 0.07, out.mean()
+        if depth > P.CLEAR_CORNER_DEPTH:
+            assert not behind.any()
+            assert np.all(np.abs(uv[out, 1]) > P.HALF_WIDTH) and np.all(uv[out, 0] > -40.0)
+        else:
+            share = behind.sum() / out.sum()
+            assert abs(share - P.CLEAR_OUT_CORNER) < 0.1, share
+            wide = np.abs(uv[behind, 1]) - 8.0
+            assert np.all((wide >= P.CLEAR_DEFLECT[0] - 1e-9) & (wide <= P.CLEAR_DEFLECT[1]))
+
+
+def test_carries_in_the_box_head_for_goal():
+    """Inside the opponents' penalty area a carry aims at the goal, not straight upfield, so a
+    player who receives near the goal line does not run to the byline (decision 40: a cross
+    taken 3 m out ended 6 m wide, passed back)."""
+    engine = _engine()
+    c = 10  # team 0's centre-forward
+    u, v = P.HALF_LENGTH - 12.0, 8.0  # far enough from the lines that no carry is clipped
+    angles = []
+    for k in range(300):
+        engine.pos[c] = engine.to_uv(0, np.array([u, v]))
+        engine.vel[c] = 0.0
+        engine.start_touch(c, 5.0 + k)
+        step = engine.to_uv(0, engine.touch.carry_to) - np.array([u, v])
+        angles.append(np.arctan2(step[1], step[0]))
+    aim = np.arctan2(-v, P.HALF_LENGTH - u)
+    assert abs(np.median(angles) - aim) < 0.15, (np.median(angles), aim)  # straight on: -0.08
 
 
 def test_free_kicks_keep_distance_over_a_match(sim1):

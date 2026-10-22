@@ -12,7 +12,9 @@ the shorter gaps it draws faded; shots, and passes on a clear chance (inside 25 
 defender goal-side within 8 m of the line to goal); the ball moving faster than 40 m/s between
 frames while in play; team-mates within 0.7 m in play (noted while the ball is dead, when walls and
 corner packs may stand closer); players off the pitch; a keeper more than 25 m off his line while
-his team defends; and two clips sharing more than 2 s. Then the match totals.
+his team defends; a player above 5.5 m/s (over 1 s of tracking) more than 1.5 s after the ball
+went dead; a clearance that goes out behind the clearer's own goal line from further out than
+``CLEAR_CORNER_DEPTH`` (decision 40); and two clips sharing more than 2 s. Then the match totals.
 Synthetic data only.
 """
 
@@ -24,6 +26,8 @@ import sys
 
 import numpy as np
 
+from runningbattery.sim.params import CLEAR_CORNER_DEPTH
+
 HALF_L, HALF_W = 52.5, 34.0
 HI = 5.5  # m/s, high-speed running
 CLIP_BEFORE, CLIP_AFTER = 3.0, 2.0  # App.tsx clipFrom / clipTo
@@ -31,6 +35,7 @@ MOMENT_BEFORE, MOMENT_AFTER = 8.0, 4.0  # data.ts, a moment's default window
 GAP_FILL_S = 2.4  # data.ts gapFill
 PRIORITY = ["longest_run", "recovery_run", "top_speed", "back_to_back", "busiest_minute"]
 RESTARTS = {"corner", "free_kick", "throw_in", "goal_kick", "kick_off", "penalty"}
+DEAD_GRACE_S = 1.5  # time to stop after the ball goes dead (decision 40)
 
 
 def top_so_far(all_: list[dict], kind: str, now: float, n: int) -> list[dict]:
@@ -102,8 +107,7 @@ def queue(match: dict, feed: dict, clips: dict, hls: list[dict], mode: str) -> l
 
     def shared(a: dict, b: dict) -> bool:
         ov = min(a["end"], b["end"]) - max(a["start"], b["start"])
-        size = min if a["player"] == b["player"] else max
-        return not a["lapse"] and ov > 0.5 * size(a["end"] - a["start"], b["end"] - b["start"])
+        return not a["lapse"] and ov > 0.5 * min(a["end"] - a["start"], b["end"] - b["start"])
 
     out: list[dict] = []
     for m in moments:
@@ -112,6 +116,10 @@ def queue(match: dict, feed: dict, clips: dict, hls: list[dict], mode: str) -> l
         if any(ov(o, m) > 0.5 * min(ln(o), ln(m)) for o in out):  # the same action (decision 39)
             continue
         k = next((i for i, h in enumerate(items) if shared(h, m)), None)
+        if k is None and m["player"]:  # touching the same player's highlight (decision 40)
+            pad = CLIP_BEFORE + CLIP_AFTER
+            k = next((i for i, h in enumerate(items) if not h["lapse"] and h["moment"] is None
+                      and h["player"] == m["player"] and ov(h, m) > -pad), None)  # fmt: skip
         if k is None:
             out.append(m)
         elif items[k]["player"] == m["player"] and items[k]["moment"] is None:
@@ -200,6 +208,48 @@ def main() -> None:
             far = float(np.nanmax(off[f : g + 1]))
             keeper_far.append((pid, float(vt[f]), float(vt[g] + 0.1), far))
             f = g + 1
+
+    dead_runs = []  # (player, from, to, top m/s, s after dead): above 5.5 m/s once settled
+    half_w = 5  # frames: speed over 1 s of tracking, centred
+    t_dead = np.full(n, np.nan)  # when the ball last went dead, for each dead frame
+    for f in range(n):
+        if not alive[f]:
+            same = f > 0 and not alive[f - 1] and period[f - 1] == period[f]
+            t_dead[f] = t_dead[f - 1] if same else vt[f]
+    lo, hi = np.arange(n) - half_w, np.arange(n) + half_w
+    ok = (lo >= 0) & (hi < n)
+    lo, hi = np.clip(lo, 0, n - 1), np.clip(hi, 0, n - 1)
+    dead_all = (
+        ok & ~alive & ~alive[lo] & ~alive[hi] & (t_dead[lo] == t_dead) & (t_dead[hi] == t_dead)
+    )
+    settled = dead_all & (vt - t_dead >= DEAD_GRACE_S)
+    v1 = (
+        np.hypot(*(pos[hi] - pos[lo]).transpose(2, 0, 1))
+        / np.maximum(vt[hi] - vt[lo], 1e-6)[:, None]
+    )
+    fast = settled[:, None] & (v1 > HI)
+    for k, pid in enumerate(ids):
+        f = 0
+        while f < n:
+            if not fast[f, k]:
+                f += 1
+                continue
+            g = f
+            while g + 1 < n and fast[g + 1, k] and t_dead[g + 1] == t_dead[f]:
+                g += 1
+            top = float(np.nanmax(v1[f : g + 1, k]))
+            dead_runs.append((pid, float(vt[f]), float(vt[g] + 0.1), top, float(vt[f] - t_dead[f])))
+            f = g + 1
+
+    behind_far = []  # (video s, player, metres from his own goal line)
+    for e in events:
+        if e["type"] != "clearance":
+            continue
+        own_x = -attack_sign(e["team_id"], e["period"]) * HALF_L
+        depth = abs(own_x - e["start"]["x"])
+        behind = np.sign(e["end"]["x"]) == np.sign(own_x) and abs(e["end"]["x"]) > HALF_L
+        if behind and depth > CLEAR_CORNER_DEPTH:
+            behind_far.append((vstart[e["period"]] + e["t"], e["player_id"], round(depth, 1)))
 
     chances = []  # releases inside 25 m with no outfield defender goal-side within 8 m of the line
     for e in events:
@@ -298,6 +348,15 @@ def main() -> None:
         if kf:
             r["flags"].append("keeper over 25 m off his line while defending: " + ", ".join(
                 f"{p} {x:.1f}+{y - x:.1f}s, {m:.1f} m" for p, x, y, m in kf))  # fmt: skip
+        dr = [(p, x, y, m, s) for p, x, y, m, s in dead_runs if x < b and y > a]
+        if dr:
+            r["flags"].append("above 5.5 m/s with the ball dead: " + ", ".join(
+                f"{name[p]} {x:.1f}+{y - x:.1f}s ({s:.1f} s after dead), top {m:.1f} m/s"
+                for p, x, y, m, s in dr))  # fmt: skip
+        for v, p, depth in (c for c in behind_far if a <= c[0] <= b):
+            r["flags"].append(
+                f"clearance behind own goal line at {v:.1f}s by {name[p]}, {depth} m out"
+            )
         report.append(r)
     for i, r in enumerate(report):
         for q in report[i + 1 :]:
@@ -319,6 +378,14 @@ def main() -> None:
         clear_chances_forward_pass=sum(c["type"] == "pass" and not c["backward"] for c in chances),
         ball_jumps=len(jumps),
         keeper_far_episodes=len(keeper_far),
+        dead_ball_fast=len(dead_runs),
+        clips_dead_ball_fast=sum(
+            1 for r in report if any(f.startswith("above 5.5 m/s with") for f in r["flags"])
+        ),
+        clearances_behind_far=len(behind_far),
+        clips_clearance_behind_far=sum(
+            1 for r in report if any(f.startswith("clearance behind") for f in r["flags"])
+        ),
         tracking_gaps=sum(1 for _, x, y in gaps if y - x >= 0.3),
         tracking_gaps_over_fill=sum(1 for _, x, y in gaps if y - x > GAP_FILL_S),
     )
@@ -337,7 +404,8 @@ def main() -> None:
             print(f"          · {x}")
     print(json.dumps(totals, indent=1))
     if "--json" in sys.argv:
-        out = dict(totals=totals, clips=report, chances=chances, keeper_far=keeper_far, jumps=jumps)
+        out = dict(totals=totals, clips=report, chances=chances, keeper_far=keeper_far, jumps=jumps,
+                   dead_runs=dead_runs, behind_far=behind_far)  # fmt: skip
         json.dump(out, open(sys.argv[sys.argv.index("--json") + 1], "w"), indent=1)
 
 

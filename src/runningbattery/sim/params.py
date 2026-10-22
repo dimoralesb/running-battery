@@ -164,13 +164,19 @@ SPRINT_RUN_S = (3.0, 6.0)  # how long a sprint run may last, s. Our assumption.
 # within GK_MAX_OFF): midfielders' high-speed running fell 3-4 points (DM −7.2%, CM −6.8%, 60
 # seeds), so MID_SUPPORT_CHANCE and MID_PRESS_CHANCE rose and CB, FB, DM, CM and AM 0.4, 0.4,
 # 0.6, 0.7 and 1.6% (120 and 240 seeds): high-speed running per position within ±5%, sprint
-# distance FB +13%, DM and CM +10%, team +7% (240 seeds).
+# distance FB +13%, DM and CM +10%, team +7% (240 seeds). Decision 40 (set-piece jobs paced
+# to the restart, below 5 m/s; no sprint carried on after the whistle): high-speed running per
+# position fell about 2 points, all of it while the ball was dead (in play, per minute, it did
+# not move), FB −6.1% and CM −5.7% (120 seeds), so FB and CM rose 0.9 and 0.6%. With box
+# carries aimed at goal too (same decision): high-speed running per position within ±5% (FB
+# −4.2, DM −4.4, CM −4.6, AM −4.2%), sprint distance FB +17%, DM +8%, CM +11%, team +7% (240
+# seeds).
 POSITION_EFFORT = {
     Position.GK: 0.990,
     Position.CB: 0.966,
-    Position.FB: 1.034,
+    Position.FB: 1.043,
     Position.DM: 1.064,
-    Position.CM: 1.071,
+    Position.CM: 1.077,
     Position.AM: 1.068,
     Position.WM: 1.063,
     Position.CF: 0.978,
@@ -684,7 +690,18 @@ FREE_KICK_LINE_JITTER = 1.0
 # Clearances when a pass into the box is intercepted.
 CLEAR_IN_BOX = 0.6
 CLEAR_OUT = 0.45  # chance the clearance goes out of play
-CLEAR_OUT_CORNER = 0.4  # and, if so, that it goes behind for a corner (else a throw-in)
+# A clearance goes behind for a corner only as a block or a deflection close to goal, not as a
+# lob from further out: from within CLEAR_CORNER_DEPTH metres of the goal line (the goal area,
+# 5.5 m [IFAB2025, Law 1]), an out clearance goes behind with CLEAR_OUT_CORNER, CLEAR_DEFLECT
+# metres wider than the clearer stands (off the posts), at most CLEAR_DEFLECT_Z metres high;
+# every other out clearance goes over the touchline ahead of him, for a throw-in. Our
+# assumption (decision 40): before it, 40% of out clearances were aimed behind from anywhere
+# in the box, up to 25 m wide (a keeper's clearance from 15 m out went over his own line).
+# CLEAR_OUT_CORNER tuned to the corners per match (summary.TARGETS).
+CLEAR_CORNER_DEPTH = 5.5
+CLEAR_OUT_CORNER = 1.0
+CLEAR_DEFLECT = (1.0, 4.0)
+CLEAR_DEFLECT_Z = 1.5
 
 # Dead-ball time before each restart, s: lognormal(median, sigma). Our assumption, tuned so the
 # ball is in play about 55% of the match [Kavanagh2024, p.80; Allen2026b, Table 2].
@@ -717,12 +734,23 @@ WALL_RANGE = 30.0
 WALL_NEAR = 22.0
 WALL_SIZE = (3, 4)
 WALL_GAP = 0.75  # 0.6 before decision 39 (wall players within 0.7 m of each other)
-# Wall players, and the attackers and markers of a set piece, jog into place at this share of
-# S0, below HI_SPEED for every player (at most
-# 0.5 × 1.063 × 10.3 = 5.47 m/s [19.7 km/h], derived from POSITION_EFFORT and S0_RANGE; the
-# match tempo applies in play only, and fatigue only slows). Our
-# assumption.
-WALL_SPEED = 0.5
+# Set-piece jobs while the ball is dead (wall players, the attackers and markers of a set piece,
+# the taker) go to their spots at the pace that gets them there once SET_PIECE_DUE of the dead
+# time has gone, leaving the rest to settle (``Roles.dead_pace``; at a corner, about 13 of
+# 32 s): from a walk, SET_PIECE_WALK of S0 (about 2 m/s),
+# up to a jog, WALL_SPEED of S0, clearly below HI_SPEED for every player: at most
+# 0.45 × 1.077 × 10.3 = 4.99 m/s [18.0 km/h] (the largest POSITION_EFFORT, CM, and the top of
+# S0_RANGE; the match tempo and the story's press apply in play only, and fatigue only slows).
+# The goal huddle runs at WALL_SPEED. Our assumption (decision 40): before it every job jogged
+# at 0.5 of S0 whatever the time to the restart (a corner waits about 32 s, DEAD_TIME), up to
+# 5.52 m/s once decision 39 raised POSITION_EFFORT.
+WALL_SPEED = 0.45
+SET_PIECE_WALK = 0.2
+SET_PIECE_DUE = 0.4
+# When the ball goes dead, a player faster than HI_SPEED brakes at BRAKE_MAX down to it (no
+# sprint carried on after the whistle), then eases to his wanted speed as usual. Our
+# assumption (decision 40).
+DEAD_BRAKE_ABOVE = HI_SPEED
 # Attackers stay at least 1 m from a wall of three or more [IFAB2025, Law 13]: their targets and
 # the push keep them WALL_CLEAR from it (1 m plus a margin, our assumption).
 WALL_CLEAR = 1.5

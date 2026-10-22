@@ -306,7 +306,7 @@ def push_apart(
 @njit(cache=True)
 def _step_kernel(
     pos, vel, target, speed_cap, a0, s0, calm, push, has_push, calm_tau, tau, calm_alpha,
-    brake, turn, dt,
+    brake, turn, dt, brake_above,
 ):  # fmt: skip
     """``step`` in a loop over players: the same arithmetic in the same order as the numpy
     version (``einsum`` of two components = x·x + y·y)."""
@@ -344,6 +344,8 @@ def _step_kernel(
         a_along = ax * lx + ay * ly
         cx, cy = ax - a_along * lx, ay - a_along * ly
         a_max_now = max(a0[i] * (1.0 - speed / s0[i]), 0.0)
+        if speed > brake_above and speed > want_speed:  # the ball is dead: stop sprinting
+            a_along = min(a_along, max(-brake, (max(want_speed, brake_above) - speed) / dt))
         a_along = min(max(a_along, -brake), a_max_now)
         across = math.hypot(cx, cy)
         f = turn / across if across > turn else 1.0
@@ -368,6 +370,7 @@ def step(
     s0: np.ndarray,
     calm: np.ndarray | None = None,
     push: np.ndarray | None = None,
+    brake_above: float = np.inf,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Advance every player one frame towards its target. All arrays are per player.
 
@@ -380,6 +383,8 @@ def step(
     Speeding up is capped at a_max(v), braking at ``BRAKE_MAX`` (the part of the acceleration
     along the current velocity), turning at ``TURN_MAX`` (the part across it); turning adds a
     little speed in a discrete step, so the new speed is kept within a_max(v) and S0.
+    A player faster than ``brake_above`` (and than he wants) brakes at ``BRAKE_MAX`` down to it
+    (``DEAD_BRAKE_ABOVE`` while the ball is dead).
     """
     n = len(pos)
 
@@ -403,4 +408,5 @@ def step(
         float(P.BRAKE_MAX),
         float(P.TURN_MAX),
         float(P.DT),
+        float(brake_above),
     )

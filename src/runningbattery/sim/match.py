@@ -321,9 +321,12 @@ class MatchEngine:
             if self.physiology is not None:
                 speed *= self.physiology.carry(player)  # slower, so shorter [Fang2024, Fig. 1]
         start = self.pos[player].copy()
-        # Carry towards the opponent's goal, with a spread of angles and a pull to the middle.
+        # Carry towards the opponent's goal, with a spread of angles and a pull to the middle;
+        # inside their penalty area, at the goal (decision 40: from the goal line straight
+        # upfield ran him to the byline).
         u, v = self.to_uv(team, start)
-        angle = rng.normal(-0.01 * v, P.CARRY_ANGLE_SD[self.zone(team, start)])
+        aim = math.atan2(-v, GOAL_U - u) if u > GOAL_U - P.BOX_DEPTH else -0.01 * v
+        angle = rng.normal(aim, P.CARRY_ANGLE_SD[self.zone(team, start)])
         heading = self.to_uv(team, np.array([math.cos(angle), math.sin(angle)]))
         carry_to = self.inside(start + heading * speed * hold, edge=1.5)
         duel_at = None
@@ -820,13 +823,23 @@ class MatchEngine:
     def clearance(
         self, t: float, d: int, where: np.ndarray, body_part: BodyPart = BodyPart.FOOT
     ) -> None:
+        """Upfield, 25–50 m; out of play with ``CLEAR_OUT``: behind for a corner only from
+        within ``CLEAR_CORNER_DEPTH`` of the goal line, a short deflection behind near where the
+        clearer stands, off the posts; otherwise over the touchline ahead of him."""
         rng = self.rng
         team = int(self.team_of[d])
-        end_uv = self.to_uv(team, where) + np.array([rng.uniform(25, 50), rng.normal(0, 15)])
+        at_uv = self.to_uv(team, where)
+        end_uv = at_uv + np.array([rng.uniform(25, 50), rng.normal(0, 15)])
         end = self.to_uv(team, end_uv)
+        peak = 8.0
         if rng.random() < P.CLEAR_OUT:
-            if rng.random() < P.CLEAR_OUT_CORNER:
-                end_uv = np.array([-GOAL_U - 1.0, np.sign(end_uv[1] or 1.0) * rng.uniform(5, 25)])
+            # Both draws are made whatever the clearer's depth, so the draw order holds.
+            corner = rng.random() < P.CLEAR_OUT_CORNER
+            wide = rng.uniform(*P.CLEAR_DEFLECT) if corner else 0.0
+            if corner and at_uv[0] < -GOAL_U + P.CLEAR_CORNER_DEPTH:
+                v = min(max(abs(at_uv[1]) + wide, P.GOAL_HALF_WIDTH + 0.5), P.HALF_WIDTH - 1.0)
+                end_uv = np.array([-GOAL_U - 1.0, np.sign(at_uv[1] or end_uv[1] or 1.0) * v])
+                peak = P.CLEAR_DEFLECT_Z
             else:
                 end_uv[1] = np.sign(end_uv[1] or 1.0) * (P.HALF_WIDTH + 1.0)
             end = self.to_uv(team, end_uv)
@@ -837,7 +850,7 @@ class MatchEngine:
         self.log(EventType.CLEARANCE, t, d, start=where, end=end, body_part=body_part)
         dist = float(np.hypot(*(end - where)))
         self.lose_control()
-        self.flight = Flight(where.copy(), end, t, snap(t + dist / 18.0), 8.0, result, by=d)
+        self.flight = Flight(where.copy(), end, t, snap(t + dist / 18.0), peak, result, by=d)
         self.mode = "flight"
 
     def update_loose(self, t: float) -> None:
@@ -1055,7 +1068,10 @@ class MatchEngine:
         a0, s0 = self.a0, self.s0
         if self.physiology is not None:
             a0, s0 = a0 * self.physiology.accel_mult, s0 * self.physiology.speed_mult
-        self.pos, self.vel = movement.step(self.pos, self.vel, target, cap, a0, s0, calm, push)
+        brake = P.DEAD_BRAKE_ABOVE if self.mode == "dead" else np.inf
+        self.pos, self.vel = movement.step(
+            self.pos, self.vel, target, cap, a0, s0, calm, push, brake
+        )
         return purpose
 
     def run_period(self, period: int, n_frames: int, kick_team: int) -> PeriodFrames:

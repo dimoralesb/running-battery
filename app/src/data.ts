@@ -289,6 +289,9 @@ export function itemOfHighlight(h: Highlight): Item {
 }
 
 /** Seconds two clips share. */
+/** Seconds a clip plays around its window: 3 before, 2 after (App.tsx `clipFrom`, `clipTo`). */
+const PLAYED_PAD = 5;
+
 function overlap(a: Item, b: Item): number {
   return Math.min(a.end, b.end) - Math.max(a.start, b.start);
 }
@@ -296,10 +299,12 @@ function overlap(a: Item, b: Item): number {
 /** The Highlights view's clips in match order: the match's best highlights (as the reel) and
  * the feed's moments, each with its first verified line in this mode. One clip per action
  * (decision 38): a moment that shares more than half of the shorter clip with a highlight of the
- * same player becomes that clip's line; one that shares more than half of the longer clip with
- * another player's highlight (the same run seen twice) takes its place; one that shares more than
- * half of the shorter clip with a moment already in the list (the same action, from either
- * side) gets no clip. */
+ * same player becomes that clip's line; one that shares more than half of the shorter clip with
+ * another player's highlight (the same action seen twice; decision 40, the longer clip before)
+ * takes its place; one that shares more than half of the shorter clip with a moment already in
+ * the list (the same action, from either side) gets no clip. A moment whose played clip touches
+ * the same player's highlight (3 s before and 2 s after each, `clipFrom`/`clipTo` in App.tsx)
+ * also becomes that clip's line, so his two clips do not replay the same seconds (decision 40). */
 export function queue(d: MatchData, mode: Mode, best: Highlight[]): Item[] {
   const items = best.map(itemOfHighlight);
   const moments: Item[] = [];
@@ -320,10 +325,8 @@ export function queue(d: MatchData, mode: Mode, best: Highlight[]): Item[] {
       caption: e.sentence, momentId: m.moment_id, momentKind: m.kind, lapse: false,
     });
   }
-  const shared = (a: Item, b: Item) => {
-    const len = a.player === b.player ? Math.min : Math.max;
-    return !a.lapse && overlap(a, b) > 0.5 * len(a.end - a.start, b.end - b.start);
-  };
+  const shared = (a: Item, b: Item) =>
+    !a.lapse && overlap(a, b) > 0.5 * Math.min(a.end - a.start, b.end - b.start);
   const out: Item[] = [];
   for (const m of moments) {
     // The same run again, or the same action seen from another player (decision 39: a defender
@@ -331,7 +334,11 @@ export function queue(d: MatchData, mode: Mode, best: Highlight[]): Item[] {
     // the full match.
     const len = (x: Item) => x.end - x.start;
     if (out.some((o) => overlap(o, m) > 0.5 * Math.min(len(o), len(m)))) continue;
-    const k = items.findIndex((h) => shared(h, m));
+    let k = items.findIndex((h) => shared(h, m));
+    if (k < 0 && m.player) {
+      k = items.findIndex((h) => !h.lapse && !h.momentId && h.player === m.player
+                                 && overlap(h, m) > -PLAYED_PAD);
+    }
     if (k < 0) {
       out.push(m);
     } else if (items[k].player === m.player && !items[k].momentId) {
