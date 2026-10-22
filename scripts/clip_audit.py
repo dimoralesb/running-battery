@@ -4,13 +4,15 @@
         [fan|analyst] [--json out.json]
 
 Rebuilds the clip list as the overlay does (``reel`` in Highlights.tsx, ``queue`` in data.ts,
-played from 3 s before a clip's start to 2 s after its end, ``clipFrom``/``clipTo`` in App.tsx)
+played from 3 s before a clip's start to 2 s after its end within its half, ``clipFrom``/``clipTo``
+in App.tsx)
 and reports, per clip: the clip player's top speed and metres above 5.5 m/s (flagged below
 5.5 m/s); players the tracking loses for longer than the overlay fills (2.4 s, drawn nowhere) and
 the shorter gaps it draws faded; shots, and passes on a clear chance (inside 25 m, no outfield
 defender goal-side within 8 m of the line to goal); the ball moving faster than 40 m/s between
-frames while in play; team-mates within 0.7 m; players off the pitch; a keeper more than 25 m off
-his line while his team defends; and two clips sharing more than 2 s. Then the match totals.
+frames while in play; team-mates within 0.7 m in play (noted while the ball is dead, when walls and
+corner packs may stand closer); players off the pitch; a keeper more than 25 m off his line while
+his team defends; and two clips sharing more than 2 s. Then the match totals.
 Synthetic data only.
 """
 
@@ -105,7 +107,9 @@ def queue(match: dict, feed: dict, clips: dict, hls: list[dict], mode: str) -> l
 
     out: list[dict] = []
     for m in moments:
-        if any(o["player"] == m["player"] and shared(o, m) for o in out):
+        ln = lambda x: x["end"] - x["start"]  # noqa: E731
+        ov = lambda a, b: min(a["end"], b["end"]) - max(a["start"], b["start"])  # noqa: E731
+        if any(ov(o, m) > 0.5 * min(ln(o), ln(m)) for o in out):  # the same action (decision 39)
             continue
         k = next((i for i, h in enumerate(items) if shared(h, m)), None)
         if k is None:
@@ -218,7 +222,7 @@ def main() -> None:
             continue
         back = e["type"] == "pass" and attack_sign(team, per) * (e["end"]["x"] - a[0]) < 0
         chances.append(dict(v=vstart[per] + e["t"], type=e["type"], player=e["player_id"],
-                            dist=round(dist, 1), backward=back, to=e.get("related_player_id"),
+                            dist=round(dist, 1), backward=bool(back), to=e.get("related_player_id"),
                             outcome=e.get("outcome")))  # fmt: skip
     shots = [(vstart[e["period"]] + e["t"], e["player_id"], e.get("subtype"), e.get("xg"))
              for e in events if e["type"] == "shot"]  # fmt: skip
@@ -227,8 +231,10 @@ def main() -> None:
     items = queue(match, feed, match.get("clips", {}), reel(hl, end), mode)
     report = []
     for it in items:
-        a = 0.0 if it["lapse"] else max(it["start"] - CLIP_BEFORE, 0.0)
-        b = min(it["end"] if it["lapse"] else it["end"] + CLIP_AFTER, end - 1)
+        half = next(q for q in reversed(match["periods"]) if q["video_start"] <= it["start"])
+        h0, h1 = half["video_start"], half["video_start"] + half["duration_s"] - 0.1
+        a = 0.0 if it["lapse"] else max(it["start"] - CLIP_BEFORE, h0)
+        b = min(it["end"] if it["lapse"] else min(it["end"] + CLIP_AFTER, h1), end - 1)
         if it["lapse"]:  # the whole match at 120×: check only its last seconds
             a = b - 5
         f0, f1 = frame_at(a), frame_at(b)
@@ -267,19 +273,25 @@ def main() -> None:
         j = [(v, s) for v, s in jumps if a <= v <= b]
         if j:
             r["flags"].append("ball jumps: " + ", ".join(f"{v:.1f}s {s:.0f} m/s" for v, s in j))
-        close, offp = set(), set()
+        close, close_dead, offp = set(), set(), set()
         for f in range(f0, f1 + 1):
             for tm in ("home", "away"):
                 ks = [col[p] for p in ids if team_of[p] == tm and not np.isnan(pos[f, col[p], 0])]
                 xy = pos[f, ks]
                 dd = np.hypot(*(xy[:, None] - xy[None]).transpose(2, 0, 1))
                 for u, w in zip(*np.nonzero(np.triu(dd < 0.7, 1)), strict=True):
-                    close.add("-".join(sorted((ids[ks[u]], ids[ks[w]]))))
+                    (close if alive[f] else close_dead).add(
+                        "-".join(sorted((ids[ks[u]], ids[ks[w]])))
+                    )
             if alive[f]:
                 out = (np.abs(pos[f, :, 0]) > HALF_L + 1) | (np.abs(pos[f, :, 1]) > HALF_W + 1)
                 offp.update(ids[o] for o in np.flatnonzero(out))
         if close:
-            r["flags"].append("team-mates within 0.7 m: " + ", ".join(sorted(close)))
+            r["flags"].append("team-mates within 0.7 m in play: " + ", ".join(sorted(close)))
+        if close_dead:
+            r["notes"].append(
+                "team-mates within 0.7 m, ball dead: " + ", ".join(sorted(close_dead))
+            )
         if offp:
             r["flags"].append("off the pitch in play: " + ", ".join(sorted(offp)))
         kf = [(p, x, y, m) for p, x, y, m in keeper_far if x < b and y > a]

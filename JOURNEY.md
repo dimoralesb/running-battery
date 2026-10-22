@@ -122,7 +122,7 @@ The clip stops on its last frame. Lower third unchanged. Pitch flag "Clip ended 
 4. **"Against the published number"** (`compare`) for highlight clips, once the clip is over.
 5. **Team clip** ("Team high-speed running"): instead of 1, 3, 4: the team running chart and that 15-minute block's "High-speed running by situation" chart, after the lines.
 
-**Verdict labels (fix 4).** Fan: each line has one short label, "Verified · measured" (claim "fact"), "Verified · our estimate" (claim 11, the typical-professional line), "Verified · published research" (any other claim); a click opens the claim number and the papers, the measured fields, "Checked by", and the sentence before the Verifier if it was rewritten. Analyst: the full citation open by default ("Claim 11 · Skiba2012, Jones2017", the verdict, the checking stage), and the lower third's band sentence (`ltBand`) as the first analyst line. A highlight's caption (a measured line) reads "Verified · measured" for fans; analysts keep `hlChecked` ("Measured; checked by the Verifier's rules") with its sources. Blocked lines are labelled "Blocked by the Verifier" in both.
+**Verdict labels (fix 4).** Fan: each line has one short label, "Verified · measured" (claim "fact"), "Verified · our estimate" (claims 11, 12, 17 and 19c, our model's estimates: the typical-professional line, "the lowest point of his match by our estimate"; decision 39), "Verified · published research" (any other claim); a click opens the claim number and the papers, the measured fields, "Checked by", and the sentence before the Verifier if it was rewritten. Analyst: the full citation open by default ("Claim 11 · Skiba2012, Jones2017", the verdict, the checking stage), and the lower third's band sentence (`ltBand`) as the first analyst line. A highlight's caption (a measured line) reads "Verified · measured" for fans; analysts keep `hlChecked` ("Measured; checked by the Verifier's rules") with its sources. Blocked lines are labelled "Blocked by the Verifier" in both.
 
 **Primary CTA:** Next (equal weight with Replay: both outlined, neutral; the ended state is carried by the pitch flag and the status text, not by a filled button).
 **Exit:** Next → next clip, Watch; Replay → Replay; `auto=1` → next Watch after 6 s.
@@ -317,7 +317,7 @@ Not in the URL: the open tab, speed, the blocked-lines checkbox, marker clicks.
 | `clipEnded` | Clip ended · last frame | pitch flag, Details |
 | `detailsWait` | This clip's details open when it ends. | Details tab during Watch |
 | `verdictMeasured` | Verified · measured | verdict label |
-| `verdictEstimate` | Verified · our estimate | verdict label (claim 11) |
+| `verdictEstimate` | Verified · our estimate | verdict label (claims 11, 12, 17, 19c) |
 | `verdictResearch` | Verified · published research | verdict label |
 | `verdictBlocked` | Blocked by the Verifier | verdict label |
 | `papers` | Papers | opened source |

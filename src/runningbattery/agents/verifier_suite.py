@@ -545,6 +545,12 @@ CONTEXT = [
      "was 13.4 m/min.", "analyst",
      {"facts": {"minutes_after_hardest_minutes": {"value": 9.0, "unit": "min"},
                 "last_2min_hsr_per_min": {"value": 13.4, "unit": "m/min"}}}, None, True),
+    # Found on the site's feed (decision 39, 52:00): a percentage of "running" that is his
+    # high-speed running (G5 now reads percentages too); worded out it is fine.
+    ("Marco Tarvsall did 96% less running than his match average in the last 5 min.", "fan",
+     {"facts": {"vs_match_average": {"value": -96, "unit": "%"}}}, None, False),
+    ("Marco Tarvsall did 96% less high-speed running than his match average in the last 5 min.",
+     "fan", {"facts": {"vs_match_average": {"value": -96, "unit": "%"}}}, None, True),
 ]  # fmt: skip
 
 

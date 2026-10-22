@@ -133,7 +133,8 @@ def test_report_covers_this_suite():
     # G14 (the player he replaced, not "over the same minutes") and two cases, 188: 83/116, 0/72;
     # rules + LLM 112/116, 4/72 (F1 5/6, paraphrases 22/23). G9 (reserve as %, not 0.59) and
     # claim 2 (keep "shaken off" or "recover") with two cases, 190: 85/118, 0/72; 114/118, 4/72
-    # (F1 4/6, paraphrases 23/23).
+    # (F1 4/6, paraphrases 23/23). Decision 39's G5 for a percentage of "running" and its two
+    # cases, 192: 86/119, 0/73; 116/119, 1/73 (F1 4/6, paraphrases 23/23).
     assert rep["report"]["llm"]["caught_rate"] >= 0.93
 
 

@@ -223,7 +223,13 @@ def test_team_running_and_tug_of_war(tools):
     assert tools.find_moments("tug_of_war", player="H04")["moments"] == []  # team moments only
 
 
-def test_flat_out_is_near_his_top_speed_so_far(tools):
+def test_flat_out_is_near_his_top_speed_so_far(tools, monkeypatch):
+    """H04's second run reaches 94% of his first: before the 75th minute that is no moment
+    (decision 39: below FLAT_OUT_EARLY_SHARE); at the 90% bar it is, with these facts."""
+    import runningbattery.agents.tools as T
+
+    assert tools.find_moments("flat_out", player="H04")["moments"] == []
+    monkeypatch.setattr(T, "FLAT_OUT_EARLY_SHARE", T.FLAT_OUT_SHARE)
     flat = tools.find_moments("flat_out", player="H04")["moments"]
     assert flat and 700.0 <= flat[0]["t"] <= 760.0
     f = flat[0]["facts"]
@@ -233,6 +239,20 @@ def test_flat_out_is_near_his_top_speed_so_far(tools):
         or abs(f["peak_speed_kmh"]["value"] - f["peak_speed"]["value"] * 3.6) < 1
     )
     assert "SilvaH2025" in f["published_match_peak_for_position"]["source"]
+
+
+def test_hardest_minutes_spells_close_together_count_once():
+    """Decision 39: spells less than EPISODE_GAP_S apart in a half are one time ("for the eighth
+    time" at 19:50 was a flickering flag); a new half starts a new one."""
+    from types import SimpleNamespace
+
+    from runningbattery.agents.tools import EPISODE_GAP_S, episodes
+
+    t = np.array([0, 10, 20, 30, 100, 300, 5], float)
+    s = SimpleNamespace(t=t, period=np.array([1, 1, 1, 1, 1, 1, 2]))
+    spells = [(0, 1), (2, 3), (4, 4), (5, 5), (6, 6)]  # gaps 10, 70, 200 s, then half 2
+    assert EPISODE_GAP_S == 60.0
+    assert episodes(spells, s) == [1, 1, 2, 3, 4]
 
 
 def test_touches_are_measured_and_gate_claim_14(tools):
@@ -392,7 +412,8 @@ def test_general_sentences_at_most_twice_per_mode():
 
 def test_moments_say_what_they_are_for():
     """Decision 31: a substitute against his team-mates, the favourite caught on the break with
-    the typical-pro line, and a team moment's comparison; the others need nothing."""
+    the typical-pro line, and a team moment's comparison; decision 39: a second wind against his
+    match average; the others need nothing."""
     bat = {"typical_pro_battery_now": {"value": 0.83, "unit": "share"}}
     exposed = {"kind": "exposed_on_turnover", "player": {"id": "H04"}, "facts": bat}
     assert feed_mod.needs(exposed, "H04") == feed_mod.FAVOURITE_EXPOSED_SAYS
@@ -402,7 +423,27 @@ def test_moments_say_what_they_are_for():
     assert feed_mod.needs(sub) == feed_mod.FRESH_LEGS_SAYS
     team = {"kind": "tug_of_war", "facts": {"pattern": "gap closed"}}
     assert feed_mod.needs(team) == feed_mod.MUST_SAY["gap closed"]
+    assert feed_mod.needs({"kind": "second_wind", "facts": {}}) == feed_mod.SECOND_WIND_SAYS
     assert feed_mod._pro(exposed)[1].startswith("That running would leave a typical professional")
+
+
+def test_a_counter_that_ended_in_a_goal_says_so():
+    """Decision 39: caught on the break by a counter that scored, a line says the goal ("his own
+    goal" does not count); without the goal nothing is added."""
+    player = {"id": "H04", "name": "Marco Tarvsall", "shirt": 3, "team": "home",
+              "team_name": "Westerlyn Albion"}  # fmt: skip
+    b = {"kind": "exposed_on_turnover", "player": player, "facts": {"counter_goal": True},
+         "claims": [], "non_fatigue_reasons": [], "context": {}, "moment_id": "m",
+         "_when": {"t": 1.0, "period": 1, "clock": "0:01", "video_s": 1.0}}  # fmt: skip
+    line = {"shown": True, "sentence": "He ran back towards his own goal."}
+    out = asyncio.run(feed_mod.must_say(b, "fan", [line], None))
+    assert [e["sentence"] for e in out[1:]] == [
+        "The counter-attack after Westerlyn Albion lost the ball ended in a goal."
+    ]
+    said = {"shown": True, "sentence": "This is the fourth time, and that counter ended in a goal."}
+    assert asyncio.run(feed_mod.must_say(b, "fan", [said], None)) == [said]
+    b["facts"]["counter_goal"] = False
+    assert asyncio.run(feed_mod.must_say(b, "fan", [line], None)) == [line]
 
 
 def test_highlights_are_measured_ranked_and_verified(folder):
@@ -548,7 +589,8 @@ def test_purpose_rules_against_the_truth(folder, monkeypatch):
 
 def test_favourite_gets_his_best_moment_and_wordings_keep_their_claim():
     """Decision 30: the favourite's best-ranked turnover joins the feed even when another of his
-    was picked; a register wording tagged "fact" is that claim."""
+    was picked, and (decision 39) his turnover that ended in a goal; a register wording tagged
+    "fact" is that claim."""
 
     def mo(i, kind, pid, v, score):
         return {"id": i, "kind": kind, "player": {"id": pid}, "video_s": v, "score": score}
@@ -558,6 +600,11 @@ def test_favourite_gets_his_best_moment_and_wordings_keep_their_claim():
                                   mo("c", "fresh_legs", "H16", 2000.0, 1.0)]}  # fmt: skip
     assert feed_mod.ensure_favourite(["a"], found, {"H04", "H16"}) == ["a", "b", "c"]
     assert feed_mod.ensure_favourite(["b", "c"], found, {"H04", "H16"}) == ["b", "c"]
+    # Decision 39: and his turnover that ended in a goal, though it ranks lower.
+    found["g"] = mo("g", "exposed_on_turnover", "H04", 1500.0, 0.5) | {
+        "facts": {"counter_goal": True}
+    }
+    assert feed_mod.ensure_favourite(["b", "c"], found, {"H04", "H16"}) == ["b", "g", "c"]
     w9b = (
         "Without the ball, Premier League players typically cover about 10% more ground per "
         "minute than when they have it."

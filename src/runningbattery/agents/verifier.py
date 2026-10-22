@@ -420,6 +420,16 @@ def context_findings(text: str, context: dict, claim_id: str | None) -> list[Fin
     ):
         out.append(Finding("G5", "Say which running the metres per minute are: high-speed "
                            "running (above 5.5 m/s)"))  # fmt: skip
+    # G5 (decision 39 feed, 52:00): "did 96% less running than his match average" was his
+    # high-speed running; his running in all fell nowhere near 96%.
+    elif (
+        "facts" in context
+        and re.search(r"\d\s*%\s*(less|more|lower|higher|below|above|fewer)\s+running\b", text,
+                      FLAGS)
+        and not re.search(r"high-speed|high-intensity|above 5\.5|sprint", text, FLAGS)
+    ):  # fmt: skip
+        out.append(Finding("G5", "Say which running the percentage is about: high-speed "
+                           "running (above 5.5 m/s)"))  # fmt: skip
     # G10 (decision 38 feed, 45+1:04): "were level at 1–1" in a block where one team did 5% more;
     # "level" is a difference of 0% (decision 31).
     gap = (context.get("facts") or {}).get("vs_opponent")

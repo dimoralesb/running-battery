@@ -287,7 +287,7 @@ def test_tempo_draw_is_clipped():
 def test_tempo_scales_both_teams_work_rate_in_play():
     """The tempo multiplies both teams' work rate on runs and ball roles while the ball is in
     play (still capped at S0); calm movement keeps its speed."""
-    plain, fast = _engine(body=False), _engine(body=False)
+    plain, fast = _engine(body=False, seconds=4.0), _engine(body=False, seconds=4.0)
     fast.roles.tempo = fast.tempo = 1.05
     assert plain.mode != "dead"
     _, cap, _, calm, _ = plain.roles.targets(5.0)

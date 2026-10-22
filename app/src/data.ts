@@ -261,6 +261,22 @@ export function fastSegments(s: Signals | undefined, a: number, b: number): [num
   return out;
 }
 
+/** A highlight clip fast-forwards the stretches between a player's high-speed runs (decision 39:
+ * a back-to-back or busiest-minute clip ran a minute at 1×, mostly between his runs): from
+ * 1.5 s after one run to 2 s before the next, if that is 3 s or more, and never the clip's
+ * first 1.5 s. */
+export const FAST_FORWARD = 4;
+export function quietGaps(runs: [number, number][], from: number, to: number): [number, number][] {
+  const out: [number, number][] = [];
+  let a = from + 1.5;
+  for (const [s0, s1] of [...runs, [to + 2, to + 2]]) {
+    const b = Math.min(s0 - 2, to);
+    if (b - a >= 3) out.push([a, b]);
+    a = Math.max(a, s1 + 1.5);
+  }
+  return out;
+}
+
 export function itemOfHighlight(h: Highlight): Item {
   const lapse = h.kind === "most_ground";
   return {
@@ -281,7 +297,9 @@ function overlap(a: Item, b: Item): number {
  * the feed's moments, each with its first verified line in this mode. One clip per action
  * (decision 38): a moment that shares more than half of the shorter clip with a highlight of the
  * same player becomes that clip's line; one that shares more than half of the longer clip with
- * another player's highlight (the same run seen twice) takes its place. */
+ * another player's highlight (the same run seen twice) takes its place; one that shares more than
+ * half of the shorter clip with a moment already in the list (the same action, from either
+ * side) gets no clip. */
 export function queue(d: MatchData, mode: Mode, best: Highlight[]): Item[] {
   const items = best.map(itemOfHighlight);
   const moments: Item[] = [];
@@ -308,7 +326,11 @@ export function queue(d: MatchData, mode: Mode, best: Highlight[]): Item[] {
   };
   const out: Item[] = [];
   for (const m of moments) {
-    if (out.some((o) => o.player === m.player && shared(o, m))) continue; // the same run again
+    // The same run again, or the same action seen from another player (decision 39: a defender
+    // caught on the break and the attacker's flat-out run on that counter); its lines stay in
+    // the full match.
+    const len = (x: Item) => x.end - x.start;
+    if (out.some((o) => overlap(o, m) > 0.5 * Math.min(len(o), len(m)))) continue;
     const k = items.findIndex((h) => shared(h, m));
     if (k < 0) {
       out.push(m);

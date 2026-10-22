@@ -914,6 +914,7 @@ class MatchEngine:
             uv[10] = (-0.3, 0.0)
             uv[7] = (-3.0, 4.0)
         else:
+            uv[7, 1] = 4.0
             keep = P.RESTART_DISTANCE + P.RESTART_MARGIN  # [IFAB2025, Law 8]
             r = np.hypot(*uv.T)
             push = (r < keep) & (r > 0)

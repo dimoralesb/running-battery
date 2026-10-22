@@ -20,6 +20,11 @@ export const splitSources = (sources: string[]) => {
   return [cites, sources.filter((s) => !cites.includes(s))];
 };
 
+/** Register claims that are our model's estimate, not a published finding (claims.json: the
+ * typical-pro reserve, the steady-running equivalent, the fresh-legs area, "the lowest point of
+ * his match by our estimate"; decision 39: 19c was labelled published research). */
+const ESTIMATE_CLAIMS = new Set(["11", "12", "17", "19c"]);
+
 /** A line's verdict and sources. Fans see one short label and open it for the claim, the papers
  * and the check; analysts get the full citation open (JOURNEY.md, verdict labels). */
 export function Verdict({ e, mode, text }: { e: Entry; mode: Mode; text: Record<string, string> }) {
@@ -29,7 +34,7 @@ export function Verdict({ e, mode, text }: { e: Entry; mode: Mode; text: Record<
     + (cites.length ? ` · ${cites.join(", ")}` : "");
   const short = blocked ? text.verdictBlocked
     : e.claim === "fact" ? text.verdictMeasured
-    : e.claim === "11" ? text.verdictEstimate : text.verdictResearch;
+    : ESTIMATE_CLAIMS.has(e.claim) ? text.verdictEstimate : text.verdictResearch;
   const verdict = blocked ? text.verdictBlocked : text[`verdict_${e.verdict}`];
   const pipe = e.verdict === "fallback" || e.verdict === "template"
     ? text.checkedByTemplate : text.checkedBy;

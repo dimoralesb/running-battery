@@ -1,6 +1,6 @@
 {
  "report": {
-  "n": 190,
+  "n": 192,
   "by_set": {
    "valid": {
     "rules": {
@@ -11,9 +11,9 @@
     },
     "llm": {
      "caught": "0/0",
-     "false_blocks": "1/37",
+     "false_blocks": "0/37",
      "caught_rate": 0.0,
-     "false_block_rate": 0.027
+     "false_block_rate": 0.0
     }
    },
    "blocked": {
@@ -46,16 +46,16 @@
    },
    "context": {
     "rules": {
-     "caught": "43/49",
-     "false_blocks": "0/31",
-     "caught_rate": 0.878,
+     "caught": "44/50",
+     "false_blocks": "0/32",
+     "caught_rate": 0.88,
      "false_block_rate": 0.0
     },
     "llm": {
-     "caught": "47/49",
-     "false_blocks": "3/31",
-     "caught_rate": 0.959,
-     "false_block_rate": 0.097
+     "caught": "49/50",
+     "false_blocks": "1/32",
+     "caught_rate": 0.98,
+     "false_block_rate": 0.031
     }
    },
    "facts": {
@@ -74,16 +74,16 @@
    }
   },
   "rules": {
-   "caught": "85/118",
-   "false_blocks": "0/72",
-   "caught_rate": 0.72,
+   "caught": "86/119",
+   "false_blocks": "0/73",
+   "caught_rate": 0.723,
    "false_block_rate": 0.0
   },
   "llm": {
-   "caught": "114/118",
-   "false_blocks": "4/72",
-   "caught_rate": 0.966,
-   "false_block_rate": 0.056
+   "caught": "116/119",
+   "false_blocks": "1/73",
+   "caught_rate": 0.975,
+   "false_block_rate": 0.014
   }
  },
  "rows": [
@@ -278,15 +278,9 @@
    "should_pass": true,
    "rules_ok": true,
    "rules_findings": [],
-   "llm_ok": false,
+   "llm_ok": true,
    "llm_stage": "llm",
-   "llm_findings": [
-    {
-     "claim": "G1; G2; claim 11",
-     "message": "The sentence lacks the required baseline wording (what 'in the red' means relative to a typical professional's short-term reserve) and must use the register's estimate phrasing for a typical professional's chance (claim 11/G2), so it doesn't meet G1/G2.",
-     "stage": "llm"
-    }
-   ],
+   "llm_findings": [],
    "llm_fact_check": "no facts"
   },
   {
@@ -441,7 +435,7 @@
    "llm_ok": true,
    "llm_stage": "llm",
    "llm_findings": [],
-   "llm_fact_check": "Statement 1: \"He'd just finished a hard spell.\" — no facts.\nStatement 2: \"In general, passing accuracy holds up under fatigue.\" — no facts."
+   "llm_fact_check": "no facts"
   },
   {
    "set": "valid",
@@ -553,7 +547,7 @@
    "llm_ok": true,
    "llm_stage": "llm",
    "llm_findings": [],
-   "llm_fact_check": "Statement 1: 'Top speed hardly drops over a match' — no facts provided.\nStatement 2: 'in the Premier League, players' fastest runs late on are almost as fast as their fastest early on' — no facts provided."
+   "llm_fact_check": "no facts"
   },
   {
    "set": "valid",
@@ -595,7 +589,7 @@
    "llm_ok": true,
    "llm_stage": "llm",
    "llm_findings": [],
-   "llm_fact_check": "No facts. Each statement lacks supporting facts: 'He ran back at 5.8 m/s (21 km/h)' — no facts; '70% of his top speed today' — no facts; 'the gap grew from 4 to 9 m' — no facts."
+   "llm_fact_check": "no facts"
   },
   {
    "set": "valid",
@@ -1634,8 +1628,8 @@
    "llm_stage": "llm",
    "llm_findings": [
     {
-     "claim": "20,21,33",
-     "message": "The sentence blames a specific player's inability to find a team-mate on his legs being heavy—asserting individual fatigue and a causal link— which is blocked by claims 20, 21 and 33.",
+     "claim": "20",
+     "message": "This attributes the reason he 'couldn't find a team-mate' to his legs being heavy (tiredness), which is a blocked causal claim about a player's error (see claim 20).",
      "stage": "llm"
     }
    ],
@@ -1654,12 +1648,12 @@
    "llm_stage": "llm",
    "llm_findings": [
     {
-     "claim": "33, 21",
-     "message": "This attributes a loss of concentration and low energy to the individual player (claims about a player's own tiredness or decision-making caused by fatigue are blocked).",
+     "claim": "21, 33",
+     "message": "This attributes a specific player's loss of concentration to low energy/tiredness, which is a blocked claim (no direct claims about an individual being tired or making errors because of fatigue).",
      "stage": "llm"
     }
    ],
-   "llm_fact_check": "no facts"
+   "llm_fact_check": "Statement: 'His concentration slipped' — no facts. Statement: 'his energy ran low' — no facts. Implied causal link ('as' = because/as a result) between the two — no facts."
   },
   {
    "set": "paraphrase",
@@ -1674,8 +1668,8 @@
    "llm_stage": "llm",
    "llm_findings": [
     {
-     "claim": "22, 33",
-     "message": "The sentence asserts the player was 'running out of juice' and implies the miss was caused by fatigue; both claiming an individual player's tiredness and blaming an error on fatigue are blocked.",
+     "claim": "22",
+     "message": "The sentence blames the missed shot on the player 'running out of juice'—it attributes the error to fatigue, which is a blocked claim.",
      "stage": "llm"
     }
    ],
@@ -1695,7 +1689,7 @@
    "llm_findings": [
     {
      "claim": "33",
-     "message": "This outright states the player's individual level of exhaustion (\"nothing left in his legs\"), which is a blocked claim about a specific player's tiredness or physiology; fatigue claims must be framed as estimates about a typical professional or use the register's approved wording.",
+     "message": "It states the player's own exhaustion (\"There's nothing left in his legs now\"), which is explicitly blocked: we cannot claim an individual is 'tired' or 'running on empty'.",
      "stage": "llm"
     }
    ],
@@ -1714,12 +1708,12 @@
    "llm_stage": "llm",
    "llm_findings": [
     {
-     "claim": "33: Claims that a player 'is tired' or 'has hit the wall' are blocked (individual fatigue/empty-battery statements are not allowed).",
-     "message": "The sentence makes a definite claim about this player's personal fatigue/physiological state, which the register forbids; fatigue statements must be framed as estimates about a typical professional or avoided.",
+     "claim": "33",
+     "message": "This asserts a specific player's fatigue/exhaustion, which is blocked: the system can only give estimates relative to a typical professional using the allowed wording.",
      "stage": "llm"
     }
    ],
-   "llm_fact_check": "Statement: \"Tarvsall has hit the wall.\" — This asserts Tarvsall is exhausted/tired. No facts were provided to support this claim; the system cannot infer an individual player's fatigue or physiological state from no data."
+   "llm_fact_check": "Statement: 'Tarvsall has hit the wall' — asserts that Tarvsall is exhausted / 'hit the wall' (a physiological state). Facts: no facts given."
   },
   {
    "set": "paraphrase",
@@ -1763,7 +1757,7 @@
    "llm_findings": [
     {
      "claim": "30",
-     "message": "This attributes the match result to outworking (running) — Claim 30 blocks saying a team 'won because they ran more' (causal win-by-running statements are not allowed).",
+     "message": "This attributes the win to running (‘they outworked their opponents’), which is blocked: you cannot claim victory was caused by running alone.",
      "stage": "llm"
     }
    ],
@@ -1782,8 +1776,8 @@
    "llm_stage": "llm",
    "llm_findings": [
     {
-     "claim": "30",
-     "message": "This attributes the win to being 'physically' superior / outlasting the opponent — a causal claim that running caused the victory is blocked (claim 30).",
+     "claim": "30, 35",
+     "message": "This claims the team's superior physical endurance caused the win and compares team-level fitness, which is blocked (claims 30 and 35 forbid saying they won because they ran more or that one team was more tired/fitter).",
      "stage": "llm"
     }
    ],
@@ -1802,8 +1796,8 @@
    "llm_stage": "llm",
    "llm_findings": [
     {
-     "claim": "34",
-     "message": "This attributes better fitness to more running (\"he's in better shape than the rest\"), which is explicitly blocked by rule 34.",
+     "claim": "34, 35",
+     "message": "This infers a player's fitness from his running and claims he's fitter than team-mates, which the register forbids (don't equate more running with being fitter or claim team-level fitness).",
      "stage": "llm"
     }
    ],
@@ -1822,8 +1816,8 @@
    "llm_stage": "llm",
    "llm_findings": [
     {
-     "claim": "claim 10",
-     "message": "The sentence asserts a drop in his top speed versus kick-off without the required context (only allowed for repeated efforts or after a peak) and there are no facts to support the comparison.",
+     "claim": "10",
+     "message": "Claim 10 is qualified: statements that a player is slower now are only allowed for repeated efforts or after a peak; this sentence compares his speed to kick‑off without that qualifier or context.",
      "stage": "llm"
     }
    ],
@@ -1842,8 +1836,8 @@
    "llm_stage": "llm",
    "llm_findings": [
     {
-     "claim": "Claim 10 (qualified) and G2",
-     "message": "This asserts absolutely that his top speed 'has gone' with no evidence and without the cautious, estimate wording required for top-speed claims after a peak; fan-mode wording must be restrained (claim 10) and use estimate language (G2).",
+     "claim": "claim 10; G2",
+     "message": "The sentence asserts an absolute loss of top speed ('has gone'), which claim 10 forbids (only a qualified slowing after repeated efforts or a peak is allowed) and it lacks the estimate language required by the fatigue rules.",
      "stage": "llm"
     }
    ],
@@ -1862,8 +1856,8 @@
    "llm_stage": "llm",
    "llm_findings": [
     {
-     "claim": "G4",
-     "message": "This asserts an individual's physiological trait (VO2max) from no tracking facts; the register forbids claims about a player's physiology from movement data.",
+     "claim": "29",
+     "message": "This claims a specific physiological attribute for an individual (VO2max), which the register forbids: physiology cannot be inferred from tracking data.",
      "stage": "llm"
     }
    ],
@@ -1882,8 +1876,8 @@
    "llm_stage": "llm",
    "llm_findings": [
     {
-     "claim": "25",
-     "message": "This asserts a physiological cause (lactic acid building) from a sensation, which is blocked by rule 25 (no lactic‑acid/lactate claims).",
+     "claim": "25; G4",
+     "message": "This asserts lactic-acid buildup in this player's muscles — a specific physiological claim about an individual, which the register forbids.",
      "stage": "llm"
     }
    ],
@@ -1902,8 +1896,8 @@
    "llm_stage": "llm",
    "llm_findings": [
     {
-     "claim": "23, 33",
-     "message": "This states a specific player's inability to produce any more bursts (\"no burst left at all\"), which is a blocked claim about an individual's exhaustion/ability to accelerate.",
+     "claim": "33",
+     "message": "This asserts the individual has no burst left, claiming a player's own fatigue/state, which is blocked (claim 33).",
      "stage": "llm"
     }
    ],
@@ -1922,8 +1916,8 @@
    "llm_stage": "llm",
    "llm_findings": [
     {
-     "claim": "26",
-     "message": "This attributes an individual player's current fatigue to a prior match/trip, which is blocked (we cannot claim a specific player is tired from Wednesday's game or travel).",
+     "claim": "26, 33",
+     "message": "This attributes a specific player's current tiredness to a prior midweek match; the system cannot know an individual player's fatigue or that it comes from Wednesday's trip (claims 26 and 33).",
      "stage": "llm"
     }
    ],
@@ -1943,7 +1937,7 @@
    "llm_findings": [
     {
      "claim": "35",
-     "message": "This asserts a team-level state of exhaustion — saying a side has 'run out of legs' is a claim about their tiredness/fitness, which is blocked (rule 35, and related to rule 33).",
+     "message": "This asserts team-level fatigue ('run out of legs'), which is blocked: the claims register forbids saying a team is more tired or fresher than another based on movement data.",
      "stage": "llm"
     }
    ],
@@ -1963,7 +1957,7 @@
    "llm_findings": [
     {
      "claim": "35",
-     "message": "This sentence claims a team-level difference in who is 'more left in the tank' (one side is fresher/more fatigued), which is a blocked claim about team fatigue/fitness (rule 35).",
+     "message": "This asserts a team-level remaining 'left in the tank' (Albion are fresher/more fatigued than the other XI), which is blocked: we cannot state one team is more tired or has more reserve.",
      "stage": "llm"
     }
    ],
@@ -1983,7 +1977,7 @@
    "llm_findings": [
     {
      "claim": "38",
-     "message": "This sentence attributes a player's intent or willingness ('didn't fancy') without evidence; the register blocks reading effort or intent from positions or speed (claim 38).",
+     "message": "This attributes a lack of intent/desire to the player ('didn't fancy'), which is disallowed: do not read effort or intent from positions.",
      "stage": "llm"
     }
    ],
@@ -2003,7 +1997,7 @@
    "llm_findings": [
     {
      "claim": "38",
-     "message": "The sentence reads the player's effort or intent from his movement ('not putting the yards in'), which is explicitly blocked (no claims that a player 'didn't try' or 'gave up').",
+     "message": "The sentence infers the player's intent/effort from his movement (that he 'isn't putting the yards in' / 'isn't trying'), which is blocked by rule 38.",
      "stage": "llm"
     }
    ],
@@ -2023,7 +2017,7 @@
    "llm_findings": [
     {
      "claim": "38",
-     "message": "This attributes the player's intent or desire ('lack of desire') from the action, which is blocked: we cannot infer effort or motivation from positions or events.",
+     "message": "The sentence reads a player's intent/effort ('lack of desire') from the actions on pitch and blames the outcome on that, which is blocked by rule 38 (do not infer effort/intent or say a player 'gave up' or 'didn't try').",
      "stage": "llm"
     }
    ],
@@ -2043,7 +2037,7 @@
    "llm_findings": [
     {
      "claim": "39",
-     "message": "This reads a defensive intent ('hunted the ball down') from positioning, which is blocked: we cannot infer pressing or intent from positions alone.",
+     "message": "This reads pressing/closing down (intent) from positions—claim 39 forbids inferring a team's pressing from positions alone.",
      "stage": "llm"
     }
    ],
@@ -2062,8 +2056,8 @@
    "llm_stage": "llm",
    "llm_findings": [
     {
-     "claim": "39; G11",
-     "message": "The sentence reads a purpose/pressing intent from positions (‘to win it back’), which is blocked by rule 39, and uses an unnamed plural ('they') rather than naming the team (G11).",
+     "claim": "39",
+     "message": "The sentence attributes an intent ('to win it back') to the team's positioning, which reads a team's purpose from positions and is disallowed.",
      "stage": "llm"
     }
    ],
@@ -2112,7 +2106,7 @@
    "llm_ok": true,
    "llm_stage": "llm",
    "llm_findings": [],
-   "llm_fact_check": "No facts. The sentence asserts that a typical professional would 'likely be in the red' after 'running like this' — there are no running facts provided to check against; the statement is framed as an estimate about a typical professional rather than about the individual."
+   "llm_fact_check": "no facts"
   },
   {
    "set": "context",
@@ -2133,7 +2127,7 @@
    "llm_ok": true,
    "llm_stage": "llm",
    "llm_findings": [],
-   "llm_fact_check": "\"His running dropped\" — no facts: the context does not state a measured drop in his running. \"while his team sat on a 3–0 lead\" — fact: context lists a big_lead (his team leads 3–0), so this matches. \"so this may be tactical rather than fatigue\" — inference: the provided non-fatigue reason supports this qualified suggestion and is not contradicted by the facts."
+   "llm_fact_check": "Statement 1: 'His running dropped' — no facts in the context confirm a measured drop in his running (no facts). Statement 2: 'while his team sat on a 3–0 lead' — context lists a big_lead (3–0), so this is supported. Statement 3: 'so this may be tactical rather than fatigue' — the presence of a non-fatigue reason (big lead) satisfies the context check for attributing the drop to tactics rather than fatigue; no contradiction with the facts."
   },
   {
    "set": "context",
@@ -2212,7 +2206,7 @@
    "llm_ok": true,
    "llm_stage": "llm",
    "llm_findings": [],
-   "llm_fact_check": "Statement 1: 'Just after the restart his running dropped' — no facts in the context confirm a measured drop in his running (no measured running numbers or post-peak flag given). Statement 2: 'which is normal at the start of the second half' — the context lists the start_of_half (the first 10 min of the half) as a non-fatigue reason, so this matches the facts. Statement 3: 'and likely not a sign of fatigue' — the sentence uses estimate language and invokes a non-fatigue explanation (start of half), satisfying the context check required by claim 13; there are no facts about the player's physiological state to contradict this wording."
+   "llm_fact_check": "Statement 1: 'Just after the restart his running dropped' — no facts given about an observed drop in running. Statement 2: 'which is normal at the start of the second half' — context lists a non-fatigue reason ('the first 10 min of the half'), which supports this wording. Statement 3: 'and likely not a sign of fatigue' — the presence of a non-fatigue reason means saying this is 'likely not' fatigue is consistent and not contradicted."
   },
   {
    "set": "context",
@@ -2291,7 +2285,7 @@
    "llm_ok": true,
    "llm_stage": "llm",
    "llm_findings": [],
-   "llm_fact_check": "Statement 1: 'He came on four minutes ago' — matches the context fact (non_fatigue_reasons: just_subbed_on = he came on 4 min ago).\nStatement 2: 'a quiet spell is probably him settling in rather than fatigue' — attributes the quiet spell to a non-fatigue reason (settling in after being substituted). There are no facts about his physiological fatigue, so this is a speculative causal judgment based on the substitution context; it therefore meets the context check required by claim 13 and uses estimate language ('probably')."
+   "llm_fact_check": "Statement 1: \"He came on four minutes ago\" — matches the context fact 'just_subbed_on' which says he came on 4 min ago.\nStatement 2: \"a quiet spell is probably him settling in rather than fatigue\" — the sentence attributes the quiet spell to a non-fatigue reason (settling in) and presents it as a probability. The cited claim 13 allows saying a drop may be tactical rather than fatigue if a non-fatigue context is present; the context contains a recent substitution (a valid non-fatigue reason). There are no facts here that contradict this inference."
   },
   {
    "set": "context",
@@ -2370,7 +2364,7 @@
    "llm_ok": true,
    "llm_stage": "llm",
    "llm_findings": [],
-   "llm_fact_check": "Statement 1: 'With the ball out of play for almost a minute' — facts: the ball has been out of play for 52 s (matches the claim). Statement 2: 'his running dropped' — no facts in the context confirm or contradict a drop in his running (not contradicted). Statement 3: 'that is likely the stoppage, not fatigue' — context lists a non-fatigue reason (ball out of play), satisfying claim 13's context check; wording uses estimate language ('likely') and does not assert the player's physiology or state."
+   "llm_fact_check": "Statement 1: 'With the ball out of play for almost a minute' — the context gives the ball out of play for 52 s, so this matches the facts.\nStatement 2: 'his running dropped' — the provided facts do not state the running actually fell (no running data given here); that is not contradicted by the facts.\nStatement 3: 'that is likely the stoppage, not fatigue' — the context lists the stoppage (ball_out_of_play) as a non-fatigue reason; using 'likely' is estimate language and the context check is satisfied."
   },
   {
    "set": "context",
@@ -2391,7 +2385,7 @@
    "llm_ok": true,
    "llm_stage": "llm",
    "llm_findings": [],
-   "llm_fact_check": "Statement 1: 'His team kept the ball for most of the last five minutes' — supported by the facts: his team had the ball 71% of the last 5 min. Statement 2: 'so he ran less' — no facts provided about his running in the context (no contradiction, but unreported). Statement 3: 'likely not fatigue' — the sentence names a non-fatigue reason (team possession) and uses estimate language ('likely'), satisfying the context check for a tactical explanation."
+   "llm_fact_check": "Statement 1: \"His team kept the ball for most of the last five minutes\" — supported: the context gives that his team had the ball 71% of the last 5 min, which fits \"most of the last five minutes.\" Statement 2: \"so he ran less\" — no facts in the context about this player's running in those five minutes, so this specific claim is not verifiable from the provided facts. Statement 3: \"likely not fatigue\" — supported as an inference: the context lists a clear non-fatigue reason (high team possession) and claim 13 allows the wording that a drop in running may be tactical rather than fatigue; the sentence uses estimate language rather than asserting the player's physiological state."
   },
   {
    "set": "context",
@@ -2418,11 +2412,11 @@
    "llm_findings": [
     {
      "claim": "33",
-     "message": "It asserts the player 'faded' (tired), which is a blocked claim about an individual’s state (rule 33), and the qualifier for a second-half drop (high first-half load) is not met.",
+     "message": "It states the player himself 'faded' (is tired), which the system cannot infer for an individual; such personal-fatigue claims are blocked by rule 33 (and here the low first-half load also fails claim 15's qualifier).",
      "stage": "llm"
     }
    ],
-   "llm_fact_check": "Statement: \"He likely faded after the break.\" Facts: no measured post-break running given; context includes two non-fatigue reasons — this is the start of the half (first 10 min) and his first-half load was 84% of the median (below the 'high first-half load' qualifier). Implication checked: the sentence implies the player became tired/faded after the break. Contradiction: Claim 15 (second-half drop) applies only after a high first-half load, which the facts do not show, and claiming an individual has 'faded' is a paraphrase of blocked claim 33. Conclusion: the facts do not support the inference that he likely faded due to prior running."
+   "llm_fact_check": "Statement: 'He likely faded after the break.' -> This asserts the player became fatigued in the second half. Facts: the context lists the first 10 minutes of the half and shows his first-half load was 84% of the median (not a high first-half load). The qualifier for claim 15 (second-half drop only after a high first-half load) is not met, and per the register individual fatigue statements about a specific player are blocked."
   },
   {
    "set": "context",
@@ -2444,12 +2438,12 @@
    "llm_stage": "llm",
    "llm_findings": [
     {
-     "claim": "15 (qualified) and F1",
-     "message": "There are no measured pre/post running numbers to support the claim, and the qualifier for the second-half drop requires a high first-half load (which the facts show he did not have).",
+     "claim": "claim 15 qualifier (Second-half drop): only applies for high first-half load",
+     "message": "No data are given to show he ran less after the break, and the claim cited requires a high first-half load — the context shows his first-half load was low (84% of the median).",
      "stage": "llm"
     }
    ],
-   "llm_fact_check": "Statement: 'He ran less after the break than before it.' — No measured pre- or post-break running figures are provided in the facts; the only relevant fact is that his first-half load was 84% of the median (i.e. not high). Claim 15 (second-half drop) applies only after a high first-half load, so the facts do not support asserting he ran less after the break."
+   "llm_fact_check": "Statement: 'He ran less after the break than before it.' Facts: no measured minutes-or-minute-rate or distance-before-vs-after values are provided in the context, so there is no factual support for a raw before-vs-after comparison. Context item: his first-half load was 84% of the median (a low first-half load). Cited claim 15 applies only when a player had a high first-half load. Therefore the sentence asserts a second-half drop without the required qualifier and contradicts the applicability condition of the cited claim."
   },
   {
    "set": "context",
@@ -2478,7 +2472,7 @@
    "llm_ok": true,
    "llm_stage": "llm",
    "llm_findings": [],
-   "llm_fact_check": "Statement: 'His high-speed running is 30% below his match average.' Facts: hsr_vs_match_average = -30% (below match average by 30%). Conclusion: statement matches the provided fact; no contradictions. Other provided facts (typical_pro_battery, speed) are not asserted in the sentence."
+   "llm_fact_check": "Statement: 'His high-speed running is 30% below his match average.' Facts: hsr_vs_match_average = -30% (percent below his match average). Direction (below) and magnitude (30%) match the provided fact. No other comparisons or causal claims are made."
   },
   {
    "set": "context",
@@ -2544,7 +2538,7 @@
    "llm_ok": true,
    "llm_stage": "llm",
    "llm_findings": [],
-   "llm_fact_check": "The sentence says his running would leave a typical professional at about 40% of their short-term reserve. The context gives typical_pro_battery = 0.41 (41%), which supports the wording 'about 40%'. No other comparisons or superlatives are made and there are no facts that contradict this claim."
+   "llm_fact_check": "Statement: 'He has done running that would leave a typical professional at about 40% of their short-term reserve.' Fact: the context gives typical_pro_battery = 0.41 (share), which supports 'about 40%'. No other comparisons or reasons are asserted. There are no facts that contradict this estimate."
   },
   {
    "set": "context",
@@ -2610,7 +2604,7 @@
    "llm_ok": true,
    "llm_stage": "llm",
    "llm_findings": [],
-   "llm_fact_check": "Statement 1: 'He reached 6.1 m/s' — matches the provided speed fact (6.1 m/s). Statement 2: '(22 km/h)' — conversion of 6.1 m/s is 21.96 km/h, rounded to 22 km/h (consistent). Statement 3: 'on that recovery run' — the facts do not specify that this speed was on a recovery run (no facts)."
+   "llm_fact_check": "Statement 1: 'He reached 6.1 m/s' — matches facts.speed.value = 6.1 m/s. Statement 2: '(22 km/h)' — 6.1 m/s × 3.6 = 21.96 km/h, rounded to 22 km/h (ok). Statement 3: 'on that recovery run' — the facts do not explicitly label the run as a 'recovery run' (no contradiction, just not supplied)."
   },
   {
    "set": "context",
@@ -2673,10 +2667,16 @@
    "should_pass": false,
    "rules_ok": true,
    "rules_findings": [],
-   "llm_ok": true,
+   "llm_ok": false,
    "llm_stage": "llm",
-   "llm_findings": [],
-   "llm_fact_check": "\"Westerlyn cover 196 m of high-speed running per ball-in-play minute\" — matches fact team_hsr_per_in_play_min = 196.0 m.\n\"their opponents cover 160 m\" — matches fact opponent_hsr_per_in_play_min = 160.0 m.\n\"roughly 22% less\" — matches fact vs_opponent = 22.0% (the sentence presents the opponents as about 22% below Westerlyn). (Note: a direct arithmetic check shows 160 is about 18.4% below 196, but the sentence uses the provided vs_opponent figure of 22%, which is present in the facts.)"
+   "llm_findings": [
+    {
+     "claim": "G1, F1",
+     "message": "The percentage lacks a clear baseline and its direction conflicts with the two given values: the facts support Westerlyn being about 22% more than their opponents, not the opponents being 22% less of Westerlyn.",
+     "stage": "llm"
+    }
+   ],
+   "llm_fact_check": "Statement 1: \"Westerlyn cover 196 m of high-speed running per ball-in-play minute\" — matches fact team_hsr_per_in_play_min = 196.0 m.\nStatement 2: \"their opponents cover 160 m\" — matches fact opponent_hsr_per_in_play_min = 160.0 m.\nStatement 3: \"roughly 22% less\" — the sentence reads as if the opponents are 22% less than Westerlyn; comparing the two values (196 vs 160) the opponents are about 18.4% less (36/196). The facts include a vs_opponent value of 22% which corresponds to Westerlyn being ~22% more than their opponents (36/160 ≈ 22.5%). The sentence's percentage baseline is therefore ambiguous/mismatched with the numeric comparison."
   },
   {
    "set": "context",
@@ -2697,7 +2697,7 @@
    "llm_ok": true,
    "llm_stage": "llm",
    "llm_findings": [],
-   "llm_fact_check": "Statement: 'His high-speed running in the last 5 minutes was 86% below his match average.' Fact: the provided vs_match_average value is -86.0%, which matches the sentence's claim that it was 86% below his match average. No other claims present."
+   "llm_fact_check": "Statement: 'His high-speed running in the last 5 minutes was 86% below his match average.' Fact: vs_match_average = -86.0% (below). The direction and percentage match the provided fact; no other comparisons or reasons are claimed."
   },
   {
    "set": "context",
@@ -2779,11 +2779,11 @@
    "llm_findings": [
     {
      "claim": "F1",
-     "message": "The sentence claims this moment is his lowest point so far, but the provided facts show the current typical-professional battery (0.8) is higher than the recorded lowest so far (0.62), so the statement contradicts the facts.",
+     "message": "The sentence claims this moment is the player's lowest point so far, but the provided facts show the current estimated battery (0.80) is above the earlier low (0.62), so it contradicts the facts.",
      "stage": "llm"
     }
    ],
-   "llm_fact_check": "Statement: \"This is the lowest point of his match so far\" — facts: current typical_pro_battery_now = 0.8 (80% of a typical professional's short-term reserve) while lowest_typical_pro_battery_so_far = 0.62 (62%); current is higher than the recorded lowest, so the claim that this moment is the lowest so far is contradicted by the facts. Statement: \"by our estimate\" — no facts contradict the use of estimate language."
+   "llm_fact_check": "Statement: 'This is the lowest point of his match so far' — facts: current typical_pro_battery_now = 0.8 (share); lowest_typical_pro_battery_so_far = 0.62 (share). The current estimate (0.8) is higher than the earlier lowest (0.62), so the claim that this moment is the lowest so far contradicts the facts. Statement: 'by our estimate' — consistent with estimate language and not contradicted by the facts."
   },
   {
    "set": "context",
@@ -2847,16 +2847,10 @@
    "should_pass": true,
    "rules_ok": true,
    "rules_findings": [],
-   "llm_ok": false,
+   "llm_ok": true,
    "llm_stage": "llm",
-   "llm_findings": [
-    {
-     "claim": "F1",
-     "message": "The sentence gives a reason ('out of play more') for the drop in touches that the facts do not show: there's no baseline proving the ball was out of play more than usual, so offering it as a cause contradicts F1.",
-     "stage": "llm"
-    }
-   ],
-   "llm_fact_check": "Statement 1: \"Fewer touches\" — facts: touches_last_5min = 2 touches, touches_per_5min_so_far = 6.4 touches per 5 min, and fewer_touches_than_usual = true, so the claim that he had fewer touches is supported. Statement 2: \"partly because the ball was out of play more\" — facts: in_play_last_5min = 0.31 (31% in play) are given, but there is no baseline in the facts to show that this is \"more\" out of play than usual or than an earlier period; the reason is not shown by the facts."
+   "llm_findings": [],
+   "llm_fact_check": "Statement 1: \"Fewer touches\" — supported: he had 2 touches in the last 5 minutes vs his match rate of 6.4 touches per 5 min (facts: touches_last_5min = 2; touches_per_5min_so_far = 6.4; fewer_touches_than_usual = true).\nStatement 2: \"partly because the ball was out of play more\" — partially supported: the ball was in play for 31% of the last 5 minutes (fact: in_play_last_5min = 0.31), which can explain fewer touches; there is no explicit fact giving a prior in-play baseline to prove \"more\" than usual, but the ball-in-play data is present as required by the claim's qualifier."
   },
   {
    "set": "context",
@@ -2886,7 +2880,7 @@
    "llm_ok": true,
    "llm_stage": "llm",
    "llm_findings": [],
-   "llm_fact_check": "Statement 1: 'He had 2 touches in the last 5 minutes' — matches fact touches_last_5min = 2 touches. Statement 2: 'against about 6 per 5 minutes in his match so far' — matches fact touches_per_5min_so_far = 6.4 touches per 5 min (2 is fewer than 6.4; 'about 6' is a rounding of 6.4). Statement 3: 'partly because the ball was in play only 31% of the time' — matches fact in_play_last_5min = 0.31 share; the sentence attributes only partial cause, which is the allowed wording under claim 14's qualifier (ball-in-play needed). No facts contradict these statements."
+   "llm_fact_check": "Statement 1: \"He had 2 touches in the last 5 minutes\" — facts: touches_last_5min = 2 touches (matches). Statement 2: \"against about 6 per 5 minutes in his match so far\" — facts: touches_per_5min_so_far = 6.4 touches per 5 min; \"about 6\" is a reasonable rounding and the comparison direction (fewer now than his match average) matches fewer_touches_than_usual = true. Statement 3: \"partly because the ball was in play only 31% of the time\" — facts: in_play_last_5min = 0.31 share; the sentence implies this refers to the same last-5-minute period, which the facts support. No factual contradictions found."
   },
   {
    "set": "context",
@@ -2941,7 +2935,7 @@
    "llm_ok": true,
    "llm_stage": "llm",
    "llm_findings": [],
-   "llm_fact_check": "Statement 1: 'This is the third time' — fact: times_exposed_so_far = 3 turnovers, so the count matches the facts.\nStatement 2: 'his team have lost the ball just after his hardest minutes so far' — fact: the turnovers counted are the moments described (losses just after his hardest minutes), so the characterization matches the facts."
+   "llm_fact_check": "Statement 1: \"This is the third time\" — Fact: times_exposed_so_far = 3 turnovers, so the count matches. Statement 2: \"his team have lost the ball just after his hardest minutes so far\" — Fact: the recorded turnovers are the occasions the team lost the ball in the post-peak window ('just after his hardest minutes'); the facts support this wording. No comparisons or superlatives beyond the count; no facts contradict the sentence."
   },
   {
    "set": "context",
@@ -3010,7 +3004,7 @@
    "llm_ok": true,
    "llm_stage": "llm",
    "llm_findings": [],
-   "llm_fact_check": "Statement 1: 'Since coming on he has done 9.3 m/min of high-speed running.' Fact: sub_hsr_per_min = 9.3 m/min — matches exactly. Statement 2: 'about 5% below the player he replaced (9.8 m/min).' Facts: replaced_player_hsr_per_min = 9.8 m/min and vs_replaced_player = -5.0% — the direction (below) and the numbers are consistent (9.3 is ~5% less than 9.8). No other comparisons or causal reasons are claimed."
+   "llm_fact_check": "\"Since coming on he has done 9.3 m/min of high-speed running\" — matches fact sub_hsr_per_min = 9.3 m/min.\n\"about 5% below the player he replaced (9.8 m/min)\" — matches replaced_player_hsr_per_min = 9.8 m/min and vs_replaced_player = -5.0% (9.3 is ~5.1% below 9.8, so \"about 5% below\" is accurate). No other claims are made."
   },
   {
    "set": "context",
@@ -3039,7 +3033,7 @@
    "llm_ok": true,
    "llm_stage": "llm",
    "llm_findings": [],
-   "llm_fact_check": "Statement 1: \"He has done 9.8 m/min of high-speed running\" — fact: sub_hsr_per_min = 9.8 m/min (matches). Statement 2: \"25% below the player he replaced\" — fact: vs_replaced_player = -25.0% (matches; direction: below; baseline named: the player he replaced, per substitute comparison). Statement 3: \"49% above his team‑mates over the same minutes\" — fact: vs_teammates = 49.0% (matches; direction: above; baseline named: team‑mates over the same minutes). No superlatives or causal reasons present."
+   "llm_fact_check": "Statement 1: 'He has done 9.8 m/min of high-speed running' — matches fact sub_hsr_per_min = 9.8 m/min.\nStatement 2: '25% below the player he replaced' — matches fact vs_replaced_player = -25.0% (below the replaced player). Baseline named: the player he replaced.\nStatement 3: '49% above his team‑mates over the same minutes' — matches fact vs_teammates = 49.0% (above his team-mates). Baseline named: team-mates over the same minutes."
   },
   {
    "set": "context",
@@ -3128,7 +3122,7 @@
    "llm_ok": true,
    "llm_stage": "llm",
    "llm_findings": [],
-   "llm_fact_check": "The sentence states that the ball was in play for 25% of the last five minutes; the facts give in_play_last_5min = 0.25 (share), which matches exactly."
+   "llm_fact_check": "Statement: 'The ball was in play only 25% of the last five minutes.' Fact check: The context gives in_play_last_5min = 0.25 (share). This matches the sentence's claim that the ball was in play 25% of the last five minutes."
   },
   {
    "set": "context",
@@ -3153,7 +3147,7 @@
    "llm_ok": true,
    "llm_stage": "llm",
    "llm_findings": [],
-   "llm_fact_check": "- 'He had 0 touches in the last 5 min' — matches the fact touches_last_5min = 0 touches.\n- 'the ball was in play only 25% of that period' — matches the fact in_play_last_5min = 0.25 (25% of the 5-minute period).\nNo other claims (no fatigue, physiology or causal statements). No contradictions with the provided facts."
+   "llm_fact_check": "Statement 1: 'He had 0 touches in the last 5 min' — facts: touches_last_5min = 0 touches (matches).\nStatement 2: 'the ball was in play only 25% of that period' — facts: in_play_last_5min = 0.25 (25% share) (matches).\nNo comparisons, superlatives or causal claims present."
   },
   {
    "set": "context",
@@ -3205,11 +3199,11 @@
    "llm_findings": [
     {
      "claim": "33",
-     "message": "It asserts this specific player's own fatigue ('had less in the tank'), which the register forbids; estimates must be phrased relative to a typical professional, not about the individual's state.",
+     "message": "It attributes an individual player's internal tiredness ('less in the tank'), which is blocked; only estimates relative to a typical professional are allowed.",
      "stage": "llm"
     }
    ],
-   "llm_fact_check": "Statement 1: \"In the Premier League players make about a third fewer high-speed recovery runs after a peak\" — matches the cited claim (Ju2022); the provided facts do not contradict this. Statement 2: \"and our estimate says he may have had less in the tank here.\" — the context gives only that the team has had 3 turnovers; there are no facts that support a claim about this particular player's internal state. The rules forbid asserting an individual player's tiredness from movement data alone."
+   "llm_fact_check": "Statement 1: \"In the Premier League players make about a third fewer high-speed recovery runs after a peak\" — matches the cited claim (Ju2022) and is supported; no facts contradict it. Statement 2: \"and our estimate says he may have had less in the tank here.\" — asserts an individual player's internal state (less in the tank); there are no facts given that measure this player's short-term reserve, so this is a claim about his personal physiology/state (no facts)."
   },
   {
    "set": "context",
@@ -3356,7 +3350,7 @@
    "llm_ok": true,
    "llm_stage": "llm",
    "llm_findings": [],
-   "llm_fact_check": "Statement 1: \"43% of Albion's high-speed running in 0:00–15:00 came in the first 10 seconds after the ball changed hands.\" — matches the fact team_hsr_share_after_ball_changed_hands = 43% of the team's high-speed running in this block (0:00–15:00). No comparison or superlative to check. Statement 2: \"in 29% of the time the ball was in play.\" — matches the fact time_share_after_ball_changed_hands = 29% of this block's ball-in-play time. No facts contradict either clause."
+   "llm_fact_check": "Statement 1: \"43% of Albion's high-speed running in 0:00–15:00 came in the first 10 seconds after the ball changed hands.\" Fact: team_hsr_share_after_ball_changed_hands = 43% (of the team's high-speed running in this block, block = 0:00–15:00). Direction: matches the fact exactly.\nStatement 2: \"in 29% of the time the ball was in play.\" Fact: time_share_after_ball_changed_hands = 29% (of this block's ball-in-play time). Direction: matches the fact exactly."
   },
   {
    "set": "context",
@@ -3389,11 +3383,11 @@
    "llm_findings": [
     {
      "claim": "F1",
-     "message": "The sentence claims a majority, but the facts show 43% of Albion's high-speed running in 0:00–15:00 was in those moments, so the statement is factually contradicted.",
+     "message": "The sentence claims a majority (>50%) and a specific first-10-second timing, but the facts show 43% for 'after the ball changed hands' and provide no data for the first 10 seconds, so it contradicts the facts.",
      "stage": "llm"
     }
    ],
-   "llm_fact_check": "Statement: \"Most of Albion's high-speed running in 0:00–15:00 came in the first 10 seconds after the ball changed hands.\" Facts: team_hsr_share_after_ball_changed_hands = 43% of the team's high-speed running in this block (contradicts the claim that 'most' (>50%) did); time_share_after_ball_changed_hands = 29% of this block's ball-in-play time (does not support 'most'); team_hsr_per_min_after_losing = 433 m per minute of that situation (shows high intensity but does not make 43% a majority). Conclusion: the sentence's claim that 'most' of the high-speed running came in that moment is contradicted by the given 43% figure."
+   "llm_fact_check": "Statement: \"Most of Albion's high-speed running in 0:00–15:00 came in the first 10 seconds after the ball changed hands.\" 1) \"Most of Albion's high-speed running in 0:00–15:00\" — facts: the team's share after the ball changed hands is 43% of the team's high-speed running in this block (below a majority). 2) \"came in the first 10 seconds after the ball changed hands\" — no facts about the first 10 seconds specifically; the facts only give the total share after the ball changed hands. Conclusion: the sentence asserts a majority and a specific 10-second window; the majority claim contradicts the 43% fact, and the 10-second timing is unsupported."
   },
   {
    "set": "context",
@@ -3633,7 +3627,7 @@
    "llm_ok": true,
    "llm_stage": "llm",
    "llm_findings": [],
-   "llm_fact_check": "The sentence asserts two measured facts. 1) \"62% of Albion's high-speed running in this block came in the first 10 s after the ball changed hands\": matches fact team_hsr_share_after_ball_changed_hands = 62% of the team's high-speed running in this block. 2) \"in 28% of the block's ball-in-play time\": matches fact time_share_after_ball_changed_hands = 28% of this block's ball-in-play time. No comparisons or causal claims are made that contradict the facts."
+   "llm_fact_check": "Statement 1: '62% of Albion's high-speed running in this block came in the first 10 s after the ball changed hands' — fact: team_hsr_share_after_ball_changed_hands = 62% of the team's high-speed running in this block. This matches the facts given.\nStatement 2: 'in 28% of the block's ball-in-play time' — fact: time_share_after_ball_changed_hands = 28% of this block's ball-in-play time. This matches the facts given.\nNo superlatives, comparisons or causal claims were made that contradict the facts."
   },
   {
    "set": "context",
@@ -3727,7 +3721,7 @@
    "llm_ok": true,
    "llm_stage": "llm",
    "llm_findings": [],
-   "llm_fact_check": "Statement: 'Losing the ball forces the hardest running of the game.' Facts: the context gives a single measured value (mean_speed_next_8s = 3.9 m/s) but does not identify a moment of losing the ball or provide comparative running figures; nothing in the facts contradicts this general, research-backed claim."
+   "llm_fact_check": "Statement: 'Losing the ball forces the hardest running of the game.' — This is a general claim about transitions being the most demanding moments (a superlative). Facts provided: mean_speed_next_8s = 3.9 m/s; there are no facts here that measure or contradict whether runs after losing the ball are the hardest, so nothing in the facts contradicts the claim. The sentence does not attribute individual fatigue or physiology. The cited claim (4) supports this wording."
   },
   {
    "set": "context",
@@ -3865,7 +3859,7 @@
    "llm_ok": true,
    "llm_stage": "llm",
    "llm_findings": [],
-   "llm_fact_check": "Statement 1: Time window '45:00–60:00' — fact: block is 45:00–60:00. Statement 2: Team named 'Westerlyn Albion' — fact: team_names includes Westerlyn Albion. Statement 3: '234 m of high-speed running per minute without the ball' — fact: team_hsr_per_min_without_ball = 234 m/min. Statement 4: '214 m with it' — fact: team_hsr_per_min_with_ball = 214 m/min. All statements match the provided facts."
+   "llm_fact_check": "Statement 1: 'In 45:00–60:00' — fact: block = '45:00–60:00'.\nStatement 2: 'Westerlyn Albion did 234 m of high-speed running per minute without the ball' — fact: team_hsr_per_min_without_ball = 234 m/min.\nStatement 3: 'and 214 m with it' — fact: team_hsr_per_min_with_ball = 214 m/min.\nComparison implied (without > with) — facts show 234 m/min > 214 m/min."
   },
   {
    "set": "context",
@@ -3957,7 +3951,7 @@
    "llm_ok": true,
    "llm_stage": "llm",
    "llm_findings": [],
-   "llm_fact_check": "Statement 1: \"His running dropped\" — no facts: the provided facts do not include any measured running or a drop in running (touches_last_5min = 0 touches is not a running metric), so this statement is not supported or contradicted by the facts.\nStatement 2: \"while his team sat on a 5–2 lead\" — checked: the context score is 2–5 (home 2, away 5) and lead value = 3 goals, so the 5–2 lead is consistent with the facts (no contradiction).\nStatement 3: \"so this may be tactical rather than fatigue.\" — checked: non_fatigue_reasons includes a big lead (2–5), which provides a non-fatigue explanation; the hedged wording \"may be\" is estimate language. No fact contradicts this inference."
+   "llm_fact_check": "\"His running dropped\" — no facts: the context gives no running metrics for this player (distance, high-speed running, per-minute change) so the statement about running falling is not supported or contradicted by the provided facts.\n\"while his team sat on a 5–2 lead\" — supported: the score in the facts is 2–5 (a three-goal lead) so the timing/score claim matches the facts.\n\"so this may be tactical rather than fatigue\" — supported: the context lists a non-fatigue reason 'big_lead (2–5)', so offering a tactical explanation passes the context check; touches_last_5min = 0 touches is also consistent with reduced involvement though it is not a direct running measure."
   },
   {
    "set": "context",
@@ -4007,7 +4001,7 @@
    "llm_ok": true,
    "llm_stage": "llm",
    "llm_findings": [],
-   "llm_fact_check": "The sentence states a single measured fact: in the last 2 minutes he averaged 23 m of high-speed running per minute. The provided fact is last_2min_hsr_per_min = 23.4 m/min, so the sentence is a rounded report of that measured value and matches the facts."
+   "llm_fact_check": "Fact: the measured high-speed running in the last 2 minutes is 23.4 m per minute. The sentence says 23 m per minute in the last 2 minutes — this matches the fact (rounded). No other comparisons or claims made."
   },
   {
    "set": "context",
@@ -4089,7 +4083,7 @@
    "llm_ok": true,
    "llm_stage": "llm",
    "llm_findings": [],
-   "llm_fact_check": "Time window: matches the provided block '30:00–45+1:05'. Comparison: the claim that Westerlyn Albion did 5% more high-speed running per ball-in-play minute than Ravensholt Albion matches the fact 'vs_opponent' = 5%. The phrase 'down from 91% more earlier' matches 'earlier_gap_vs_opponent' = 91%. The facts include a team moment flag; they do not contradict the 'per ball-in-play minute' phrasing. No superlatives or causal reasons are asserted."
+   "llm_fact_check": "Time window: the sentence gives 30:00–45+1:05, which matches the facts ('block'). Comparison 1: 'Westerlyn Albion did 5% more high-speed running per ball-in-play minute than Ravensholt Albion' — the facts record vs_opponent = 5% (more), so direction and value match. Comparison 2: 'down from 91% more earlier' — the facts record earlier_gap_vs_opponent = 91% (more), so direction and value match. No superlatives or causal reasons are stated that the facts do not support."
   },
   {
    "set": "context",
@@ -4152,16 +4146,10 @@
    "should_pass": true,
    "rules_ok": true,
    "rules_findings": [],
-   "llm_ok": false,
+   "llm_ok": true,
    "llm_stage": "llm",
-   "llm_findings": [
-    {
-     "claim": "G1",
-     "message": "One percentage (1%) lacks an explicit baseline as required: every percentage must name its baseline (e.g. the replaced player's own minutes).",
-     "stage": "llm"
-    }
-   ],
-   "llm_fact_check": "Statement 1: \"He did 64% more high-speed running per minute than his team-mates over the same minutes\" — matches the fact vs_teammates = 64% (comparison direction: more, baseline: team-mates over the same minutes). Statement 2: \"and 1% more than the player he replaced.\" — matches the fact vs_replaced_player = 1% (comparison direction: more). The sentence does not explicitly state the baseline period for the 1% figure (the replaced player's own minutes)."
+   "llm_findings": [],
+   "llm_fact_check": "Statement 1: \"He did 64% more high-speed running per minute than his team-mates over the same minutes.\" -- Fact: vs_teammates = 64% (m/min comparison over the same minutes) so the direction and baseline match the facts; no superlatives or causal claims. Statement 2: \"and 1% more than the player he replaced.\" -- Fact: vs_replaced_player = 1% so the direction matches; per substitution-comparison rules this refers to the replaced player's own minutes on the pitch. No part of the sentence contradicts the provided facts."
   },
   {
    "set": "context",
@@ -4291,7 +4279,7 @@
    "llm_ok": true,
    "llm_stage": "llm",
    "llm_findings": [],
-   "llm_fact_check": "Statement 1: \"In the Premier League, players make about a third fewer high-speed recovery runs right after their hardest minutes than they normally do.\" — This is a general finding in the claims register (claim 3); there are no facts in the provided context that contradict it (no league-level measurements given). Statement 2: \"here his mean speed in the next 8 s was 3.7 m/s\" — Matches the provided fact mean_speed_next_8s = 3.7 m/s. Statement 3: \"he was 44 m from the ball 8 s later\" — Matches the provided fact distance_to_ball_8s_later = 44 m; the timings align with window_after_turnover = 8 s."
+   "llm_fact_check": "Statement 1: \"In the Premier League, players make about a third fewer high-speed recovery runs right after their hardest minutes than they normally do\" — no facts in the supplied data (general finding from the register). Statement 2: \"here his mean speed in the next 8 s was 3.7 m/s\" — matches fact mean_speed_next_8s = 3.7 m/s. Statement 3: \"he was 44 m from the ball 8 s later\" — matches fact distance_to_ball_8s_later = 44 m. The phrase \"next 8 s\" corresponds to window_after_turnover = 8 s."
   },
   {
    "set": "context",
@@ -4406,7 +4394,7 @@
    "llm_ok": true,
    "llm_stage": "llm",
    "llm_findings": [],
-   "llm_fact_check": "Time window: 'In 60:00–75:00' — facts.block = '60:00–75:00' (matches).\n'45% of Westerlyn Albion's high-speed running came in the first 10 s after the ball changed hands' — facts.team_hsr_share_after_ball_changed_hands = 45% (matches); baseline is the team's high-speed running (named).\n'In 34% of the time the ball was in play' — facts.time_share_after_ball_changed_hands = 34% (matches); baseline is time the ball was in play (named).\nNo statements require inference about a player's physiology, fitness or intent; no contradictions with the facts."
+   "llm_fact_check": "Statement 1: \"In 60:00–75:00, 45% of Westerlyn Albion's high-speed running came in the first 10 s after the ball changed hands.\" — Fact: facts.team_hsr_share_after_ball_changed_hands = 45% for block 60:00–75:00. Matches exactly; baseline given as \"of Westerlyn Albion's high-speed running.\" No comparisons or superlatives. Statement 2: \"in 34% of the time the ball was in play.\" — Fact: facts.time_share_after_ball_changed_hands = 34% for block 60:00–75:00. Matches exactly; baseline given as \"the time the ball was in play.\" No other claims."
   },
   {
    "set": "context",
@@ -4431,7 +4419,7 @@
    "llm_ok": true,
    "llm_stage": "llm",
    "llm_findings": [],
-   "llm_fact_check": "Statement parts checked against facts: \n1) \"This is the third time\" — facts give times_exposed_so_far = 3 turnovers, so the count matches. \n2) \"Marco Tarvsall's team have lost the ball\" — the facts record turnovers (exposures), which supports \"lost the ball.\" \n3) \"just after his hardest minutes so far\" — the times_exposed_so_far field is the count of exposures that occurred just after his hardest minutes, so this phrase matches the fact. \nNo facts contradict these statements."
+   "llm_fact_check": "Statement 1: \"This is the third time\" — facts: times_exposed_so_far = 3 turnovers, so the count matches.\nStatement 2: \"Marco Tarvsall's team have lost the ball\" — facts record turnovers for his team, so this is supported.\nStatement 3: \"just after his hardest minutes so far\" — the times_exposed_so_far field refers to losses occurring just after his hardest minutes, so this phrasing matches the data."
   },
   {
    "set": "context",
@@ -4518,7 +4506,7 @@
    "llm_ok": true,
    "llm_stage": "llm",
    "llm_findings": [],
-   "llm_fact_check": "1) \"Short bursts are shaken off in a minute or two.\" — Context fact: hardest_minutes_duration = 82 s (~1.4 min), which lies within \"a minute or two\"; no contradiction. 2) \"A five-minute spell takes about five minutes.\" — no facts in the context about recovery from a five-minute spell. 3) \"sprinting takes longer.\" — no facts in the context about sprint recovery. No provided fact contradicts any statement."
+   "llm_fact_check": "1) \"Short bursts are shaken off in a minute or two.\" — This is a general claim from the cited register (claim 2). The provided fact (his hardest_minutes_duration = 82 s) sits within a minute or two and does not contradict this wording. 2) \"A five-minute spell takes about five minutes [to recover from].\" — This repeats the register wording; no conflicting facts are given. 3) \"[And] sprinting takes longer.\" — Also register wording; no facts contradict it. No causal reasons about the individual player’s physiology or intent are asserted. Numbers used are those in the claim wording."
   },
   {
    "set": "context",
@@ -4543,7 +4531,57 @@
    "llm_ok": true,
    "llm_stage": "llm",
    "llm_findings": [],
-   "llm_fact_check": "Statement 1: 'He is 9 min after his hardest minutes so far' — fact: minutes_after_hardest_minutes = 9.0 min; matches the provided fact. Statement 2: 'his last 2 min of high-speed running was 13.4 m/min' — fact: last_2min_hsr_per_min = 13.4 m/min; matches the provided fact. No comparisons, superlatives or causal reasons are asserted."
+   "llm_fact_check": "Statement 1: \"He is 9 min after his hardest minutes so far\" — fact: minutes_after_hardest_minutes = 9.0 min (matches).\nStatement 2: \"his last 2 min of high-speed running was 13.4 m/min\" — fact: last_2min_hsr_per_min = 13.4 m/min (matches)."
+  },
+  {
+   "set": "context",
+   "sentence": "Marco Tarvsall did 96% less running than his match average in the last 5 min.",
+   "mode": "fan",
+   "context": {
+    "facts": {
+     "vs_match_average": {
+      "value": -96,
+      "unit": "%"
+     }
+    }
+   },
+   "claim": null,
+   "should_pass": false,
+   "rules_ok": false,
+   "rules_findings": [
+    "G5"
+   ],
+   "llm_ok": false,
+   "llm_stage": "rules",
+   "llm_findings": [
+    {
+     "claim": "G5",
+     "message": "Say which running the percentage is about: high-speed running (above 5.5 m/s)",
+     "stage": "rules"
+    }
+   ],
+   "llm_fact_check": ""
+  },
+  {
+   "set": "context",
+   "sentence": "Marco Tarvsall did 96% less high-speed running than his match average in the last 5 min.",
+   "mode": "fan",
+   "context": {
+    "facts": {
+     "vs_match_average": {
+      "value": -96,
+      "unit": "%"
+     }
+    }
+   },
+   "claim": null,
+   "should_pass": true,
+   "rules_ok": true,
+   "rules_findings": [],
+   "llm_ok": true,
+   "llm_stage": "llm",
+   "llm_findings": [],
+   "llm_fact_check": "Statement 1: \"Marco Tarvsall did 96% less high-speed running\" — matches the provided fact vs_match_average = -96% (unit: %), so the direction and magnitude agree with the facts. Statement 2: \"in the last 5 min\" — no facts given that specify the time window, so the facts do not confirm the 'last 5 min' wording."
   },
   {
    "set": "facts",
@@ -4561,16 +4599,10 @@
    "should_pass": false,
    "rules_ok": true,
    "rules_findings": [],
-   "llm_ok": false,
+   "llm_ok": true,
    "llm_stage": "llm",
-   "llm_findings": [
-    {
-     "claim": "F1",
-     "message": "The facts show his high-speed running was 12% above his match average, so saying it was 'well below' contradicts the data.",
-     "stage": "llm"
-    }
-   ],
-   "llm_fact_check": "Statement: 'His high-speed running in the last 5 minutes is well below his match average.' Facts: hsr_last_5min_vs_match_average = 12.0 (% above (+) or below (−) his match average). The data show +12% (i.e. 12% above his match average). The sentence claims 'well below' (below = less than his match average). Direction: sentence says below, facts show above → contradiction."
+   "llm_findings": [],
+   "llm_fact_check": "Statement: 'His high-speed running in the last 5 minutes is well below his match average.' Fact: hsr_last_5min_vs_match_average = -12.0% (12% below his match average). Direction: below — matches the fact. The sentence's qualifier 'well below' is a qualitative description consistent with a 12% drop and is not contradicted by the facts."
   },
   {
    "set": "facts",
@@ -4591,7 +4623,7 @@
    "llm_ok": true,
    "llm_stage": "llm",
    "llm_findings": [],
-   "llm_fact_check": "The sentence states: 'His high-speed running in the last 5 minutes is 12% above his match average.' Facts: hsr_last_5min_vs_match_average = +12% (12.0% above his match average). Direction: 'above' matches the positive value. No superlatives or causal reasons are given."
+   "llm_fact_check": "Statement: \"His high-speed running in the last 5 minutes is 12% above his match average.\" Fact: hsr_last_5min_vs_match_average = 12.0% above his match average — agrees with the fact. No other comparisons, superlatives or reasons are asserted."
   },
   {
    "set": "facts",
@@ -4613,10 +4645,16 @@
    "should_pass": false,
    "rules_ok": true,
    "rules_findings": [],
-   "llm_ok": true,
+   "llm_ok": false,
    "llm_stage": "llm",
-   "llm_findings": [],
-   "llm_fact_check": "Statement: 'Since coming on he has done less high-speed running per minute than his team-mates.' Facts: sub_hsr_per_min = 13.1 m/min (his measured high-speed running per minute since coming on). vs_teammates = 35.0 % above (+) or below (−) his team-mates over the same minutes — the provided value lacks a sign, so the facts do not confirm the direction of the comparison (they do not contradict it either)."
+   "llm_findings": [
+    {
+     "claim": "F1",
+     "message": "The facts show he did about 35% more high-speed running per minute than his team-mates over the same minutes, so saying he did less contradicts the provided data.",
+     "stage": "llm"
+    }
+   ],
+   "llm_fact_check": "Statement 1: 'Since coming on' — the facts given are for his substitute minutes (sub_hsr_per_min = 13.1 m/min), so the timing matches the facts.\nStatement 2: 'he has done less high-speed running per minute than his team-mates' — the facts give vs_teammates = 35.0% (the % above (+) or below (−) his team-mates over the same minutes). The value is positive (35.0), which indicates he has done about 35% more high-speed running per minute than his team-mates; this contradicts the claim that he did less."
   },
   {
    "set": "facts",
@@ -4641,7 +4679,7 @@
    "llm_ok": true,
    "llm_stage": "llm",
    "llm_findings": [],
-   "llm_fact_check": "Statement: 'Since coming on he has done 35% more high-speed running per minute than his team-mates.' Facts check: the fact set gives sub_hsr_per_min = 13.1 m/min (since coming on) and vs_teammates = +35.0% over the same minutes. Comparison direction (more) matches the +35% fact. The baseline ('his team-mates over the same minutes') matches the provided vs_teammates definition. Units ('per minute') match the m/min fact. No other claims (fatigue, physiology, tactics) are made."
+   "llm_fact_check": "Statement 1: \"Since coming on\" — facts: sub_hsr_per_min is given (13.1 m/min) for the substitute, which is the player's running since he came on (no facts contradict this).\nStatement 2: \"he has done 35% more high-speed running per minute than his team-mates\" — facts: vs_teammates = +35.0% (above his team-mates over the same minutes). Direction (more/above) matches the fact. No superlatives or causal claims present. No facts contradict the sentence."
   },
   {
    "set": "facts",
@@ -4668,11 +4706,11 @@
    "llm_findings": [
     {
      "claim": "F1",
-     "message": "The second clause contradicts the provided facts: eight seconds later he was 14 m from the ball, not closer than 6 m.",
+     "message": "The sentence asserts he was closer 8 seconds later, but the facts show he was 14 m away then (further), so it contradicts the provided data.",
      "stage": "llm"
     }
    ],
-   "llm_fact_check": "Statement 1: 'He was 6 m from the ball when his team lost it' — fact: distance_to_ball_at_turnover = 6 m. This matches the fact.\nStatement 2: 'and closer still eight seconds later' — fact: distance_to_ball_8s_later = 14 m. 'Closer still' implies a distance <6 m, but the fact shows 14 m (further), so this contradicts the facts."
+   "llm_fact_check": "Statement 1: \"He was 6 m from the ball when his team lost it\" — matches the fact distance_to_ball_at_turnover = 6 m. Statement 2: \"and closer still eight seconds later\" — contradicts the fact distance_to_ball_8s_later = 14 m (the player was further away, not closer)."
   },
   {
    "set": "facts",
@@ -4697,7 +4735,7 @@
    "llm_ok": true,
    "llm_stage": "llm",
    "llm_findings": [],
-   "llm_fact_check": "'He was 6 m from the ball when his team lost it' — matches distance_to_ball_at_turnover = 6 m in the facts. 'and 14 m eight seconds later' — matches distance_to_ball_8s_later = 14 m in the facts. No comparisons or causal claims given."
+   "llm_fact_check": "Statement 1: 'He was 6 m from the ball when his team lost it.' Fact: distance_to_ball_at_turnover = 6 m — matches. Statement 2: 'and 14 m eight seconds later.' Fact: distance_to_ball_8s_later = 14 m — matches."
   },
   {
    "set": "facts",
@@ -4727,7 +4765,7 @@
    "llm_ok": true,
    "llm_stage": "llm",
    "llm_findings": [],
-   "llm_fact_check": "The sentence states: 'His fastest run of the match so far is 8.4 m/s (30 km/h).' Facts: peak_speed = 8.4 m/s and peak_speed_kmh = 30 km/h, which match the numbers used. The sentence does not claim a new personal best (facts: new_personal_best = false). No other comparisons or physiological claims are made."
+   "llm_fact_check": "Statement: 'His fastest run of the match so far' — Fact: peak_speed = 8.4 m/s (30 km/h) in the facts; this matches. Statement: '8.4 m/s (30 km/h)' — Fact: peak_speed and peak_speed_kmh equal these values. No other claims (no personal-best, no physiology) are made; facts show new_personal_best = false but the sentence does not assert otherwise."
   },
   {
    "set": "facts",
@@ -4757,7 +4795,7 @@
    "llm_ok": true,
    "llm_stage": "llm",
    "llm_findings": [],
-   "llm_fact_check": "Statement: 'His fastest run of the match so far' — facts: peak_speed = 8.4 m/s (this is the match peak so far) — matches the facts.\nStatement: '8.4 m/s' — facts: peak_speed.value = 8.4 m/s — matches the facts.\nStatement: '(30 km/h)' — facts: peak_speed_kmh.value = 30 km/h — matches the facts.\nNo other claims (no fatigue, no physiology, no comparisons) were made."
+   "llm_fact_check": "Statement 1: 'His fastest run of the match so far' — fact: the context gives peak_speed = 8.4 m/s labelled as the match peak, so this matches the facts. Statement 2: '8.4 m/s (30 km/h)' — fact: peak_speed = 8.4 m/s and peak_speed_kmh = 30 km/h, so the numbers agree. No other comparisons or causal claims are made."
   },
   {
    "set": "facts",
@@ -4788,11 +4826,11 @@
    "llm_findings": [
     {
      "claim": "F1",
-     "message": "The facts contradict the claim: his high-speed running (14.0 m/min) is above, not below, his match average (10.1 m/min).",
+     "message": "The sentence states his high-speed running is below his match average, but the provided data show 14.0 m/min versus a match average of 10.1 m/min (so it is above), contradicting the facts.",
      "stage": "llm"
     }
    ],
-   "llm_fact_check": "Statement 1: \"Five minutes after his spell\" — facts: minutes_after_spell = 5.0 min, matches the sentence's timing. Statement 2: \"his high-speed running is still below his match average\" — facts: measured high-speed running = 14.0 m/min, match average = 10.1 m/min; the sentence says 'below' but the facts show it is above by 3.9 m/min, so this comparison is contradicted by the facts."
+   "llm_fact_check": "Statement element 1: 'Five minutes after his spell' — fact: minutes_after_spell = 5.0 min (matches the timing in the sentence).\nStatement element 2: 'his high-speed running is still below his match average' — facts: last_2min_hsr_per_min = 14.0 m/min; match_average_per_min = 10.1 m/min. Comparison: the measured high-speed running (14.0 m/min) is above his match average (10.1 m/min), so the claim that it is below contradicts the facts."
   },
   {
    "set": "facts",
@@ -4821,11 +4859,11 @@
    "llm_findings": [
     {
      "claim": "F1",
-     "message": "The data show his high-speed running in the last 5 minutes is 12% above his match average, so saying his running 'has dropped' contradicts the facts.",
+     "message": "The facts show his high-speed running in the last 5 minutes is 12% above his match average, so saying it \"has dropped\" contradicts the provided data.",
      "stage": "llm"
     }
    ],
-   "llm_fact_check": "Statement 1: 'His running has dropped since the restart' — facts: in the last 5 minutes his high-speed running is 12.0% above his match average (hsr_last_5min_vs_match_average = +12.0%), so the facts contradict the claim that his running has dropped.\nStatement 2: 'likely because his team kept the ball' — facts: his team had the ball 71% of the last 5 minutes (non_fatigue_reasons), which supports a tactical possession explanation."
+   "llm_fact_check": "Statement 1: \"His running has dropped since the restart.\" Fact: hsr_last_5min_vs_match_average = +12.0% (his high-speed running in the last 5 minutes is about 12% above his match average). This directly contradicts the claim that his running has dropped. Statement 2: \"likely because his team kept the ball.\" Fact: non_fatigue_reasons shows his team had the ball 71% of the last 5 minutes, which supports a tactical-possession explanation if a drop were observed, but does not support a drop that the facts contradict."
   }
  ]
 }

@@ -33,7 +33,7 @@ from numba import njit
 
 from runningbattery.sim import params as P
 
-EDGE = 0.5  # keep shape targets this far inside the lines (m)
+EDGE = 0.6  # keep shape targets this far inside the lines (m)
 
 
 def shape_targets(
@@ -185,6 +185,7 @@ def _push_kernel(
             if i == j or team_of[i] != team_of[j]:
                 continue
             rx, ry = pos[i, 0] - pos[j, 0], pos[i, 1] - pos[j, 1]
+            now_d = math.hypot(rx, ry)
             if look_ahead:
                 wx, wy = vel[i, 0] - vel[j, 0], vel[i, 1] - vel[j, 1]
                 ww = wx * wx + wy * wy
@@ -197,10 +198,17 @@ def _push_kernel(
             short = max(keep - d, 0.0)
             if short == 0.0:
                 continue
+            if anchored[j]:
+                short *= 1.5
             if d > 1e-6:
                 ax, ay = mx / max(d, 1e-6), my / max(d, 1e-6)
+                if look_ahead and now_d < keep and now_d > 1e-6:
+                    ax = 0.5 * ax + 0.5 * (rx / now_d)
+                    ay = 0.5 * ay + 0.5 * (ry / now_d)
+                    an = math.hypot(ax, ay)
+                    if an > 1e-6:
+                        ax, ay = ax / an, ay / an
             elif look_ahead:
-                now_d = math.hypot(rx, ry)
                 if now_d > 1e-6:  # head-on: step aside, each to their own right
                     ax, ay = -ry / max(now_d, 1e-6), rx / max(now_d, 1e-6)
                 else:
@@ -232,6 +240,29 @@ def _push_kernel(
                 if anchored[i]:
                     push[i, 0] = 0.0
                     push[i, 1] = 0.0
+    if look_ahead:
+        for i in range(n):
+            vx, vy = vel[i, 0], vel[i, 1]
+            lim_bx = 52.2 if anchored[i] else 51.9
+            lim_by = 33.7 if anchored[i] else 33.4
+            if (not anchored[i] or abs(vx) > 2.5) and (
+                (pos[i, 0] * vx > 0) or abs(pos[i, 0]) > lim_bx
+            ):
+                bx = pos[i, 0] + vx * abs(vx) / 9.0
+                if abs(bx) > lim_bx:
+                    push[i, 0] -= math.copysign(abs(bx) - lim_bx, bx) / tau
+            if (not anchored[i] or abs(vy) > 2.5) and (
+                (pos[i, 1] * vy > 0) or abs(pos[i, 1]) > lim_by
+            ):
+                by = pos[i, 1] + vy * abs(vy) / 9.0
+                if abs(by) > lim_by:
+                    push[i, 1] -= math.copysign(abs(by) - lim_by, by) / tau
+            lim_x = 52.8 if anchored[i] else 51.9
+            lim_y = 34.3 if anchored[i] else 33.4
+            if abs(pos[i, 0]) > lim_x:
+                push[i, 0] -= math.copysign(abs(pos[i, 0]) - lim_x, pos[i, 0]) / tau
+            if abs(pos[i, 1]) > lim_y:
+                push[i, 1] -= math.copysign(abs(pos[i, 1]) - lim_y, pos[i, 1]) / tau
     for i in range(n):
         size = math.hypot(push[i, 0], push[i, 1])
         f = min(1.0, most / max(size, 1e-9))
@@ -288,13 +319,25 @@ def _step_kernel(
         want_speed = min(min(speed_cap[i], s0[i]), dist / arrive)
         hx, hy = (gx / dist, gy / dist) if dist > 1e-6 else (0.0, 0.0)
         wx, wy = hx * want_speed, hy * want_speed
+        psize = 0.0
         if has_push:
-            most = max(want_speed, math.hypot(push[i, 0], push[i, 1]))
-            wx, wy = wx + push[i, 0], wy + push[i, 1]
+            px, py = push[i, 0], push[i, 1]
+            psize = math.hypot(px, py)
+            if psize > 0.5:
+                dot = (wx * px + wy * py) / psize
+                if dot < 0.0:
+                    wx -= dot * (px / psize)
+                    wy -= dot * (py / psize)
+                    w_tan = math.hypot(wx, wy)
+                    if w_tan > 1e-6 and psize < 3.5:
+                        wx *= want_speed / w_tan
+                        wy *= want_speed / w_tan
+            most = max(want_speed, psize)
+            wx, wy = wx + px, wy + py
             size = math.hypot(wx, wy)
             f = min(1.0, most / max(size, 1e-9))
             wx, wy = wx * f, wy * f
-        alpha = a0[i] / s0[i] * (calm_alpha if calm[i] else 1.0)
+        alpha = a0[i] / s0[i] * (calm_alpha if (calm[i] and psize <= 0.5) else 1.0)
         ax, ay = alpha * (wx - vel[i, 0]), alpha * (wy - vel[i, 1])
         speed = math.hypot(vel[i, 0], vel[i, 1])
         lx, ly = (vel[i, 0] / speed, vel[i, 1] / speed) if speed > 1e-6 else (hx, hy)

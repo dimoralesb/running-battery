@@ -6,6 +6,7 @@ sound plausible, not to match any real club or player (none were checked against
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 import numpy as np
@@ -138,6 +139,7 @@ def club_test_values(rng: np.random.Generator, truth: TrueParams) -> ClubTestVal
 def _player_name(rng: np.random.Generator, used: set[str]) -> str:
     while True:
         name = f"{rng.choice(FIRST_NAMES)} {rng.choice(SURNAME_START)}{rng.choice(SURNAME_END)}"
+        name = re.sub(r"(.)\1\1+", r"\1\1", name)  # "Yarr" + "rigg" is Yarrigg, not Yarrrigg
         if name not in used:
             used.add(name)
             return name

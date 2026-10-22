@@ -1,14 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import copy from "./copy.json";
 import {
+  FAST_FORWARD,
   type Item,
   MATCHES,
   type MatchData,
   type Mode,
   clockLabel,
+  fastSegments,
   itemOfHighlight,
   loadMatch,
   queue,
+  quietGaps,
   score,
   signalIndex,
   topSoFar,
@@ -136,16 +139,16 @@ export default function App() {
   };
 
   // Play a clip (watch, replay), or open it finished with its details.
-  const start = (it: Item, st: Step) => {
+  const start = (it: Item, st: Step, d: MatchData = data!) => {
     setCur(it);
     setStep(st);
     setView("highlights");
     if (it.player) setSelected(it.player);
     if (st === "details") {
-      setNow(it.lapse ? it.end : it.end + 2);
+      setNow(clipTo(it, d));
       setPlaying(false);
     } else {
-      setNow(clipFrom(it));
+      setNow(clipFrom(it, d));
       setSpeed(it.lapse ? LAPSE_SPEED : clipSpeed);
       setPlaying(true);
     }
@@ -179,7 +182,7 @@ export default function App() {
         const it = view === "highlights" ? itemFromUrl(d, list) ?? defaultItem : undefined;
         if (it) {
           const st = QUERY.get("step");
-          start(it, st === "replay" || st === "details" ? st : "watch");
+          start(it, st === "replay" || st === "details" ? st : "watch", d);
           if (hasT) setNow(t);
         } else if (view === "highlights") {
           setView("full"); // no clips in this mode: open the full match
@@ -190,6 +193,17 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matchId]);
 
+  // A highlight clip fast-forwards between the player's high-speed runs (quietGaps).
+  const gaps = useMemo(() => {
+    if (view !== "highlights" || !data || !cur || cur.source !== "highlight" || cur.lapse
+        || !cur.player) return [];
+    const [a, b] = [clipFrom(cur, data), clipTo(cur, data)];
+    return quietGaps(fastSegments(data.signals[cur.player], a, b), a, b);
+  }, [view, data, cur]);
+  const gapsRef = useRef(gaps);
+  gapsRef.current = gaps;
+  const skipping = playing && gaps.some(([a, b]) => now >= a && now < b);
+
   // Play: advance replay time with the wall clock.
   const last = useRef<number | null>(null);
   useEffect(() => {
@@ -198,7 +212,8 @@ export default function App() {
     const tick = (ms: number) => {
       if (last.current !== null) {
         const dt = ((ms - last.current) / 1000) * speed;
-        setNow((v) => Math.min(v + dt, data.duration - 1));
+        const ff = (v: number) => (gapsRef.current.some(([a, b]) => v >= a && v < b) ? FAST_FORWARD : 1);
+        setNow((v) => Math.min(v + dt * ff(v), data.duration - 1));
       }
       last.current = ms;
       raf = requestAnimationFrame(tick);
@@ -220,7 +235,7 @@ export default function App() {
   // When the clip (or its replay) is over, stop on its last frame with the details.
   useEffect(() => {
     if (view !== "highlights" || !cur || !playing || !data) return;
-    if (now < clipTo(cur, data.duration)) return;
+    if (now < clipTo(cur, data)) return;
     setPlaying(false);
     setStep("details");
     borrowDetails();
@@ -309,7 +324,7 @@ export default function App() {
   // Dragging a finished clip back plays its end again as a replay (the details grow with it).
   const seekClip = (v: number) => {
     setNow(v);
-    if (cur && step === "details" && v < clipTo(cur, data.duration)) {
+    if (cur && step === "details" && v < clipTo(cur, data)) {
       setStep("replay");
       borrowDetails();
     }
@@ -380,11 +395,11 @@ export default function App() {
         {view === "highlights" && cur ? (
           <div className="playbar clip-bar">
             <div className="scrub">
-              <input type="range" min={clipFrom(cur)} max={clipTo(cur, data.duration)} step={cur.lapse ? 1 : 0.1}
-                     value={Math.min(Math.max(now, clipFrom(cur)), clipTo(cur, data.duration))}
+              <input type="range" min={clipFrom(cur, data)} max={clipTo(cur, data)} step={cur.lapse ? 1 : 0.1}
+                     value={Math.min(Math.max(now, clipFrom(cur, data)), clipTo(cur, data))}
                      onChange={(e) => seekClip(Number(e.target.value))} aria-label={copy.clipTime} />
               <span className="time num">
-                {mmss(now - clipFrom(cur))} / {mmss(clipTo(cur, data.duration) - clipFrom(cur))}
+                {mmss(now - clipFrom(cur, data))} / {mmss(clipTo(cur, data) - clipFrom(cur, data))}
               </span>
             </div>
             <div className="controls">
@@ -406,7 +421,9 @@ export default function App() {
                   ))}
                 </div>
               )}
-              <span className="status num">{stepName}{ix >= 0 ? ` · ${ix + 1} / ${items.length}` : ""}</span>
+              <span className="status num">
+                {skipping ? copy.fastForward : stepName}{ix >= 0 ? ` · ${ix + 1} / ${items.length}` : ""}
+              </span>
             </div>
           </div>
         ) : (
@@ -594,13 +611,20 @@ export default function App() {
   );
 }
 
-/** A clip plays from 3 s before its first run to 2 s after its end; a whole-match clip from
- * kick-off to its end. */
-function clipFrom(it: Item) {
-  return it.lapse ? 0 : Math.max(it.start - 3, 0);
+/** A clip plays from 3 s before its first run to 2 s after its end, within its half (a clip
+ * near half-time never runs into the second-half kick-off); a whole-match clip from kick-off to
+ * its end. */
+function clipFrom(it: Item, d: MatchData) {
+  return it.lapse ? 0 : Math.max(it.start - 3, half(it, d).video_start);
 }
-function clipTo(it: Item, duration: number) {
-  return Math.min(it.lapse ? it.end : it.end + 2, duration - 1);
+function clipTo(it: Item, d: MatchData) {
+  if (it.lapse) return Math.min(it.end, d.duration - 1);
+  const p = half(it, d);
+  return Math.min(it.end + 2, p.video_start + p.duration_s - 0.1, d.duration - 1);
+}
+/** The half a clip starts in. */
+function half(it: Item, d: MatchData) {
+  return d.meta.periods.filter((p) => p.video_start <= it.start).at(-1) ?? d.meta.periods[0];
 }
 
 /** Seconds as m:ss. */

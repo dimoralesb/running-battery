@@ -72,7 +72,14 @@ MUST_SAY = {
 # favourite's caught-on-the-break moment says what his running would cost (claim 11); the
 # Narrator left both out of a regenerated feed.
 FRESH_LEGS_SAYS = r"\bteam-?mates\b"
+# Decision 39: a second wind says his running against his match average (the site's 42:55 showed
+# only "He's about 5.2 minutes after his hardest minutes.").
+SECOND_WIND_SAYS = r"\bmatch average\b"
+# Decision 39: a quiet spell says why it may not be fatigue (the site's fan lines at 52:00 gave
+# only "96% less running" and "0 touches").
+QUIET_SAYS = verifier.NOT_FATIGUE
 FAVOURITE_EXPOSED_SAYS = r"\btypical professional\b"
+COUNTER_GOAL_SAYS = r"(?<!own )\bgoal\b(?![ -]side)|\bscor(e|ed|ing)\b"
 ORDINAL = {1: "first", 2: "second", 3: "third", 4: "fourth", 5: "fifth", 6: "sixth",
            7: "seventh", 8: "eighth", 9: "ninth", 10: "tenth"}  # fmt: skip
 
@@ -107,21 +114,17 @@ def ensure_favourite(picked: list[str], found: dict[str, dict], ids: set[str]) -
     FAVOURITE_MIN), at least a minute from the other player moments. For the first
     FAVOURITE_ARC kinds his best-ranked moment is added even when another of that kind was
     picked: the Tactical agent once picked his second turnover and left out the third, the
-    story's (decision 30)."""
+    story's (decision 30). A turnover of his that ended in a goal is added too: the agent once
+    picked two others and left out the one that cost a goal (decision 39)."""
     chosen = [found[i] for i in picked]
     mine = [m for m in chosen if who(m) in ids]
-    for n, kind in enumerate(FAVOURITE_KINDS):
-        if n >= FAVOURITE_ARC and len(mine) >= FAVOURITE_MIN:
-            break
-        have = [m for m in mine if m["kind"] == kind]
-        best = max((m for m in found.values() if m["kind"] == kind and who(m) in ids),
-                   key=lambda m: m["score"], default=None)  # fmt: skip
-        if have and (n >= FAVOURITE_ARC or best is None or best in have):
-            continue
+
+    def add(kind: str, goal: bool = False) -> None:
         for mo in sorted(found.values(), key=lambda m: -m["score"]):
             if (
                 mo["kind"] == kind
                 and who(mo) in ids
+                and (not goal or mo.get("facts", {}).get("counter_goal"))
                 # A minute from the other player moments; a team moment at a block's end may be
                 # nearer (its clip is a different picture; decision 37: all of the favourite's
                 # best turnovers fell within 60 s of one and his story dropped out).
@@ -131,7 +134,20 @@ def ensure_favourite(picked: list[str], found: dict[str, dict], ids: set[str]) -
             ):
                 chosen.append(mo)
                 mine.append(mo)
-                break
+                return
+
+    for n, kind in enumerate(FAVOURITE_KINDS):
+        if n >= FAVOURITE_ARC and len(mine) >= FAVOURITE_MIN:
+            break
+        have = [m for m in mine if m["kind"] == kind]
+        best = max((m for m in found.values() if m["kind"] == kind and who(m) in ids),
+                   key=lambda m: m["score"], default=None)  # fmt: skip
+        if have and (n >= FAVOURITE_ARC or best is None or best in have):
+            continue
+        add(kind)
+    if not any(m["kind"] == "exposed_on_turnover" and m.get("facts", {}).get("counter_goal")
+               for m in mine):  # fmt: skip
+        add("exposed_on_turnover", goal=True)
     return [m["id"] for m in sorted(chosen, key=lambda m: m["video_s"])]
 
 
@@ -346,12 +362,13 @@ def template(b: dict, mode: str) -> list[tuple[str, str]]:
             _v(b, "last_2min_hsr_per_min", digits=1),
             _v(b, "match_average_per_min", digits=1),
         )
+        above = (_v(b, "vs_match_average") or 0) >= 5  # "back to" 21.4 vs 17.8 is false (F1)
         out.append(
             (
                 "fact",
                 f"Second wind for {name}: {mins} minutes after his hardest minutes, "
-                f"his high-speed running is back to his match average ({rate} m per "
-                f"minute vs {avg}).",
+                f"his high-speed running is back {'above' if above else 'to'} his match average "
+                f"({rate} m per minute vs {avg}).",
             )
         )
         if mode == "analyst" and any(c["id"] == "1" for c in b["claims"]):
@@ -369,7 +386,7 @@ def template(b: dict, mode: str) -> list[tuple[str, str]]:
         out.append(
             (
                 "fact",
-                f"Fresh legs: since coming on, {name} has done {rate} m of "
+                f"Since coming on, {name} has done {rate} m of "
                 f"high-speed running per minute, {more} than his team-mates over the "
                 "same minutes.",
             )
@@ -722,24 +739,45 @@ async def entries_for(b: dict, mode: str, lines: list[tuple[str, str]], agent) -
 def needs(b: dict, favourite: str | None = None) -> str | None:
     """What a moment's lines must say, as a pattern: a team moment's comparison (MUST_SAY), a
     substitute's against his team-mates, the favourite's typical-pro line when caught on the
-    break (decision 31)."""
+    break (decision 31), a second wind's running against his match average and a quiet spell's
+    reason that it may not be fatigue (decision 39)."""
     if b["kind"] in TEAM_KINDS:
         return MUST_SAY.get(b["facts"].get("pattern"))
     if b["kind"] == "fresh_legs" and b["facts"].get("vs_teammates") is not None:
         return FRESH_LEGS_SAYS
+    if b["kind"] == "second_wind":
+        return SECOND_WIND_SAYS
+    if b["kind"] == "not_tired_tactical":
+        return QUIET_SAYS
     if (b["kind"] == "exposed_on_turnover" and favourite and b.get("player")
             and b["player"]["id"] == favourite and _pro(b)):  # fmt: skip
         return FAVOURITE_EXPOSED_SAYS
     return None
 
 
+def goal_line(b: dict) -> tuple[str, str] | None:
+    """Decision 39: a caught-on-the-break counter that ended in a goal says so (the site's fan
+    lines at 30:11 left the goal out; its clip shows it)."""
+    if b["kind"] != "exposed_on_turnover" or not b["facts"].get("counter_goal"):
+        return None
+    team = b["player"]["team_name"]
+    return "fact", f"The counter-attack after {team} lost the ball ended in a goal."
+
+
 async def must_say(
     b: dict, mode: str, chunk: list[dict], agent, favourite: str | None = None
 ) -> list[dict]:
     """What the moment must say (``needs``): if no shown line says it, the verified template
-    line that does, first."""
+    line that does, first; and a counter's goal (``goal_line``)."""
+    said = lambda pattern: any(e["shown"] and re.search(pattern, e["sentence"], re.I)  # noqa: E731
+                               for e in chunk)  # fmt: skip
+    goal = goal_line(b)
+    if goal and not said(COUNTER_GOAL_SAYS):
+        v, _ = await check(b, mode, *goal, agent)
+        if v.ok:
+            chunk = chunk + [_entry(b, mode, *goal, v, "template")]
     need = needs(b, favourite)
-    if not need or any(e["shown"] and re.search(need, e["sentence"], re.I) for e in chunk):
+    if not need or said(need):
         return chunk
     for claim, sentence in [x for x in template(b, mode) + [_pro(b)] if x]:
         if re.search(need, sentence, re.I):
@@ -788,17 +826,24 @@ def cap_repeated_numbers(entries: list[dict]) -> None:
             seen[key] = prev + nums
 
 
+def _own(e: dict) -> bool:
+    """A line about the moment's own player or team: a measured fact or a specific claim."""
+    return e["claim"] == "fact" or e["claim"] in SPECIFIC
+
+
 async def refill(briefs: list[dict], entries: list[dict], agent) -> list[dict]:
-    """A moment left with no line in a mode gets its first verified template line that is not
-    a general sentence."""
+    """A moment left with no line about its own player or team in a mode (none at all, or only
+    general sentences) gets its first verified template line that is not a general sentence
+    (decision 39: both fact lines of a second wind were blocked, leaving its clip with only
+    "Short bursts are shaken off…")."""
     added = []
     for b in briefs:
         for mode in MODES:
             if any(e["shown"] and e["moment_id"] == b["moment_id"] and e["mode"] == mode
-                   for e in entries):  # fmt: skip
+                   and _own(e) for e in entries):  # fmt: skip
                 continue
             for claim, sentence in template(b, mode):
-                if claim == "fact" or claim in SPECIFIC:
+                if _own({"claim": claim}):
                     v, _ = await check(b, mode, claim, sentence, agent)
                     if v.ok:
                         added.append(_entry(b, mode, claim, sentence, v, "template"))
@@ -872,9 +917,12 @@ async def build(
     for b in briefs:  # after the cap, so a comparison is never held back as a repeat
         for mode in MODES:
             mine = [e for e in entries if e["moment_id"] == b["moment_id"] and e["mode"] == mode]
-            entries += [e for e in await must_say(b, mode, mine, agent, fav) if e not in mine]
+            said = await must_say(b, mode, mine, agent, fav)
+            if said != mine:  # in must_say's order: what it must say first (a stable sort below)
+                ids = {id(e) for e in mine}
+                entries = [e for e in entries if id(e) not in ids] + said
     cap_repeated_numbers(entries)
-    entries += await refill(briefs, entries, agent)
+    entries = await refill(briefs, entries, agent) + entries  # first in its moment (stable sort)
     entries.sort(key=lambda e: (e["video_s"], e["mode"]))
     return {
         "match_id": tools.m.metadata.match_id,

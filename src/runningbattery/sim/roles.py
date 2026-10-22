@@ -453,7 +453,9 @@ class Roles:
         dist = float(np.hypot(*gap))
         if dist > P.GK_CLAIM_REACH:
             return None
-        return self.e.to_uv(team, goal + gap / max(dist, 1e-6) * max(dist - 1.0, 0.5))
+        spot = goal + gap / max(dist, 1e-6) * max(dist - 1.0, 0.5)
+        spot[0] = min(spot[0], -GOAL_U + P.GK_MAX_OFF)
+        return self.e.to_uv(team, spot)
 
     def keep_distance(self, tgt: np.ndarray) -> None:
         """Opponents keep the legal distance from a restart (``RESTART_DISTANCE``, ``CORNER_ARC``,
@@ -660,6 +662,15 @@ class Roles:
             for i in order[:n_press]:
                 role(int(i), press, P.CHASE_SPEED, RunPurpose.CLOSE_DOWN)
             role(int(order[n_press]), cover, P.SHAPE_RUN_SPEED, RunPurpose.COVERING)
+            pressers = [int(i) for i in idx if purpose[int(i)] == CODE[RunPurpose.CLOSE_DOWN]]
+            if len(pressers) > 1:
+                to_goal = e.to_uv(opp_team, np.array([-GOAL_U, 0.0])) - e.pos[c]
+                unit = to_goal / max(float(np.hypot(*to_goal)), 1e-6)
+                across = np.array([-unit[1], unit[0]])
+                pressers.sort(key=lambda j: float((e.pos[j] - e.pos[c]) @ across))
+                for k_p, j in enumerate(pressers):
+                    side = (k_p - (len(pressers) - 1) / 2.0) * 1.6
+                    tgt[j] = movement.clip_to_pitch(press + side * across)
         elif mode == "flight":
             f = e.flight
             if f.result in ("intercepted", "clear"):
@@ -691,7 +702,8 @@ class Roles:
                     role(keeper, claim, P.CHASE_SPEED, None)
         elif mode == "loose":
             for k in (0, 1):
-                idx = e.members(k)
+                can_gk = float(e.to_uv(k, e.loose_point)[0]) <= -GOAL_U + P.GK_MAX_OFF
+                idx = e.members(k) if can_gk else e.members(k)[1:]
                 d = np.hypot(*(e.pos[idx] - e.loose_point).T)
                 for i in idx[np.argsort(d)[: P.LOOSE_CHASERS]]:
                     role(int(i), e.loose_point, P.CHASE_SPEED, None)
@@ -716,12 +728,20 @@ class Roles:
                     self.keep_off_wall(tgt, [spot for _, spot in wall])
             if r.huddle is not None and t < r.huddle.t_end:
                 self.huddle(r.huddle, t, role, anchored)
-            role(r.taker, r.spot + self.behind_ball() * P.TAKER_BEHIND, 0.7 * P.CHASE_SPEED, None)
+            behind = 0.3 if r.kind == "throw_in" else P.TAKER_BEHIND
+            role(r.taker, r.spot + self.behind_ball() * behind, P.WALL_SPEED, None)
             anchored[r.taker] = True
+        for k in (0, 1):
+            gk = int(e.members(k)[0])
+            if mode != "dead" or e.restart.taker != gk:
+                gk_uv = e.to_uv(k, tgt[gk])
+                gk_uv[0] = min(gk_uv[0], -GOAL_U + P.GK_MAX_OFF)
+                tgt[gk] = e.to_uv(k, gk_uv)
         keep = P.SEPARATION_DEAD if mode == "dead" else P.SEPARATION_TEAM
         tgt = movement.spread_targets(tgt, e.team_of, anchored, keep)
         if mode == "dead":
             self.keep_distance(tgt)  # last, so that spreading cannot undo it
+            anchored = anchored & (np.hypot(*(tgt - e.pos).T) < 1.2)
         effort = self.effort
         if self.tempo is not None and mode != "dead":
             effort = effort * self.tempo  # in play only: the set-piece jog stays below HI_SPEED

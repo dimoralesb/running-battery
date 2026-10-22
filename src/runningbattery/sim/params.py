@@ -93,18 +93,23 @@ CALM_ARRIVE_TAU = 2.5
 # 1.5–2 m apart. Opponents may come closer, about 0.8–1 m: markers
 # stand 1 m goal-side of attackers at set pieces, and defenders close down to PRESS_GAP. The
 # player on the ball, the receiver and a restart taker are not pushed. Our assumption.
-SEPARATION_TEAM = 1.8
+SEPARATION_TEAM = 2.0
 SEPARATION_OPP = 0.9
-SEPARATION_TAU = 0.4  # s
-SEPARATION_MAX = 4.0  # m/s (14.4 km/h)
+SEPARATION_TAU = 0.25  # s
+SEPARATION_MAX = 6.0  # m/s (21.6 km/h)
 # Team-mates are judged at their closest approach within SEPARATION_LOOKAHEAD seconds, at their
 # current velocities, and pushed apart along the line between them at that moment (sideways for
 # paths that cross), so that crossing paths move apart before they meet. Our assumption, with
 # SEPARATION_TAU and SEPARATION_MAX tuned towards IDSSE [Bassek2025], where team-mates come
 # within 1 m in 0.20% of in-play player-frames (our measure, sim.spacing, 2026-10-15). Ours,
 # 120 seeds: 0.83% with no look-ahead, 0.45% judged at their positions 1 s on (which misses
-# paths that cross within the second), 0.17% at closest approach.
-SEPARATION_LOOKAHEAD = 1.0  # s
+# paths that cross within the second), 0.17% at closest approach. Decision 39 (team-mates within
+# 0.7 m in 5 clips of the site): SEPARATION_TEAM 1.8 → 2.0 m, SEPARATION_TAU 0.4 → 0.25 s,
+# SEPARATION_MAX 4 → 6 m/s and the look-ahead 1.0 → 1.2 s, with the push blended between the
+# line between them now and at closest approach and their speed along their path kept: 0.01%
+# within 1 m in play (240 seeds), fewer than IDSSE, so that no clip shows two team-mates on top
+# of each other.
+SEPARATION_LOOKAHEAD = 1.2  # s
 # While the ball is dead, team-mates may stand closer: SEPARATION_DEAD for targets and the push
 # (never two on one spot). This lets corner packs, walls and goal huddles form. IDSSE has a
 # team-mate within 1 m in 3.85% of dead-ball player-frames [Bassek2025; our measure, 2026-10-15],
@@ -155,14 +160,18 @@ SPRINT_RUN_S = (3.0, 6.0)  # how long a sprint run may last, s. Our assumption.
 # values before, which brings HID within ±5% except FB (the one-knob trade-off) and the team's
 # sprint back to about +7% (120 and 240 seeds). Decision 38 (shots on clear chances, the ball
 # rolling to its player): fewer turnovers cut midfield high-speed running 1-3 points, so DM, CM
-# and AM rose 0.3, 0.9 and 0.5% (60 seeds).
+# and AM rose 0.3, 0.9 and 0.5% (60 seeds). Decision 39 (the stronger push-apart, keepers held
+# within GK_MAX_OFF): midfielders' high-speed running fell 3-4 points (DM −7.2%, CM −6.8%, 60
+# seeds), so MID_SUPPORT_CHANCE and MID_PRESS_CHANCE rose and CB, FB, DM, CM and AM 0.4, 0.4,
+# 0.6, 0.7 and 1.6% (120 and 240 seeds): high-speed running per position within ±5%, sprint
+# distance FB +13%, DM and CM +10%, team +7% (240 seeds).
 POSITION_EFFORT = {
     Position.GK: 0.990,
-    Position.CB: 0.962,
-    Position.FB: 1.030,
-    Position.DM: 1.058,
-    Position.CM: 1.064,
-    Position.AM: 1.052,
+    Position.CB: 0.966,
+    Position.FB: 1.034,
+    Position.DM: 1.064,
+    Position.CM: 1.071,
+    Position.AM: 1.068,
     Position.WM: 1.063,
     Position.CF: 0.978,
 }
@@ -230,8 +239,8 @@ EXPLOIT_LENGTH = (12.0, 22.0)
 # up to about MID_SUPPORT_BEHIND metres behind the ball at RUN_SPEED (Support Play [Ju2022,
 # Table 1]). Our assumption, tuned to midfielders' distance (synthesis §4.2); 0.55 with fatigue
 # off, raised with fatigue on like OVERLAP_CHANCE (2026-10-16); 0.65 before decision 37, which
-# cut midfielders' close-down runs.
-MID_SUPPORT_CHANCE = 0.85
+# cut midfielders' close-down runs; 0.85 before decision 39 (see POSITION_EFFORT).
+MID_SUPPORT_CHANCE = 0.95
 MID_SUPPORT_GAP = 15.0
 MID_SUPPORT_BEHIND = 10.0
 # Pressing high: when an opponent gets the ball in their own half, the nearest free forward
@@ -246,8 +255,9 @@ PRESS_REACH = 20.0
 PRESS_COVERED = 5.0
 # Central midfielders (DM, CM) close down a carrier in the middle third on their side of
 # halfway with this chance (Close Down/Press is one of the CMP actions [Ju2022, p.978–980]).
-# Our assumption, tuned to their HID (synthesis §4.2).
-MID_PRESS_CHANCE = 0.7
+# Our assumption, tuned to their HID (synthesis §4.2); 0.7 before decision 39 (see
+# POSITION_EFFORT).
+MID_PRESS_CHANCE = 0.8
 # Recovery runs reach full effort only when there is danger: the ball in the team's own half
 # (u < DANGER_U in the team's frame) or the opponent on a counter-attack. Our assumption, tuned
 # to the purpose mix [Ju2022, p.975] and the HID by phase [Allen2026b, Table 5].
@@ -517,7 +527,7 @@ SHAPE_LAG_S = 1.5
 # Central midfielders adjust the most, centre-backs and forwards the least: the size is per
 # position, tuned to the distance per position (synthesis §4.2).
 WANDER_SD = {
-    Position.GK: 0.8,
+    Position.GK: 0.95,
     Position.CB: 1.6,
     Position.FB: 2.3,
     Position.DM: 3.2,
@@ -534,12 +544,15 @@ WANDER_S = (4.0, 10.0)
 # GK_DEPTH_FROM metres of goal, plus GK_DEPTH_SLOPE per metre further out, at most GK_DEPTH[1].
 # With the ball the keeper stays GK_BEHIND_LINE metres behind the back line, at most
 # GK_MAX_OFF metres from the goal line. A pass or cross landing within GK_CLAIM_REACH metres of
-# the goal centre makes the keeper come for it.
+# the goal centre makes the keeper come for it. Since decision 39 no target of his, a claim or a
+# loose ball he chases is further than GK_MAX_OFF from his goal line (24 m before; his clips showed
+# him 25-26 m out while his team defended), and WANDER_SD[GK] rose from 0.8 to 0.95 m, which
+# keeps his distance: high-speed running 28 m a match (240 seeds; 37 m before).
 GK_DEPTH = (2.0, 16.0)
 GK_DEPTH_FROM = 10.0
 GK_DEPTH_SLOPE = 0.2
 GK_BEHIND_LINE = 20.0
-GK_MAX_OFF = 24.0
+GK_MAX_OFF = 22.5
 GK_CLAIM_REACH = 26.0
 
 # --- Match flow ---------------------------------------------------------------------------------
@@ -694,15 +707,16 @@ RESTART_MARGIN = 0.5
 # this far round (rad) each frame. Our assumption.
 RESTART_ARC_STEP = 0.3
 # The taker stands this far behind the ball: outside the line at a throw-in or corner, away from
-# the goal they attack otherwise. Our assumption.
-TAKER_BEHIND = 1.0
+# the goal they attack otherwise, 0.3 m at a throw-in (roles.py). Our assumption; 1.0 m before
+# decision 39, which put takers more than 1 m over the line.
+TAKER_BEHIND = 0.5
 # Wall: at a free kick within WALL_RANGE metres of the goal centre, the defending team lines up
 # WALL_SIZE[0] players (WALL_SIZE[1] within WALL_NEAR metres) side by side, WALL_GAP metres apart,
 # at RESTART_DISTANCE on the line from the ball to the goal centre. Our assumption.
 WALL_RANGE = 30.0
 WALL_NEAR = 22.0
 WALL_SIZE = (3, 4)
-WALL_GAP = 0.6
+WALL_GAP = 0.75  # 0.6 before decision 39 (wall players within 0.7 m of each other)
 # Wall players, and the attackers and markers of a set piece, jog into place at this share of
 # S0, below HI_SPEED for every player (at most
 # 0.5 × 1.063 × 10.3 = 5.47 m/s [19.7 km/h], derived from POSITION_EFFORT and S0_RANGE; the

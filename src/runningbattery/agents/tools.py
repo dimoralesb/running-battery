@@ -71,8 +71,9 @@ MOMENT_KINDS = {
                             "hardest minutes so far [Ju2022; Bortnik2022]", ["4", "3", "11"]),
     "second_wind": ("His high-speed running is back to his own match average 2–10 min after his "
                     "hardest minutes [Leifsson2024]", ["1", "2"]),
-    "fresh_legs": ("A substitute's high-speed running per minute vs the player he replaced and "
-                   "his team-mates [Bradley2013; Hills2018]", ["6"]),
+    "fresh_legs": ("A substitute who out-ran his team-mates: his high-speed running per minute vs "
+                   "theirs over the same minutes and vs the player he replaced [Bradley2013; "
+                   "Hills2018]", ["6"]),
     "not_tired_tactical": ("His running dropped while a non-fatigue reason fits (lead, stoppage, "
                            "possession, start of a half, just on) [Bradley2013; Morgans2025]",
                            ["13", "14", "9b"]),
@@ -93,7 +94,16 @@ BLOCK_S = 900.0  # 15-min blocks, as the published end-of-match comparisons [Bra
 TEAM_GAP = 15.0  # % between the teams for a team-running moment (our assumption)
 GAP_CLOSED = 7.5  # % below which a gap counts as closed (our assumption)
 MIN_IN_PLAY_S = 300.0  # a block needs 5 min of ball in play to compare
+# Spells of hardest minutes less than EPISODE_GAP_S apart in a half are one time when we count
+# them ("for the second time"): the red-zone flag flickers as his 1-min running hovers near his
+# best so far (decision 39: H04 had 8 spells by 19:50, some 6 s apart, mostly one stretch, and the
+# feed said "for the eighth time"). Our assumption.
+EPISODE_GAP_S = 60.0
 FLAT_OUT_SHARE = 0.9  # a flat-out run: ≥ 90% of his top speed so far (our assumption)
+# Before the 75th minute a run that is neither his nor anyone's fastest so far needs 95%: the site's
+# 11:56 "92% of his top speed so far" showed nothing worth a clip (decision 39). After it, claim 36
+# (top speed hardly drops) gives a 90% run its point.
+FLAT_OUT_EARLY_SHARE = 0.95
 FLAT_OUT_MIN_SPEED = 7.0  # m/s (25.2 km/h): about the sprint threshold [Bradley2009, p.162]
 FLAT_OUT_FROM_S = 600.0  # from the 10th minute, so that "his top speed so far" means something
 # A new best (his own, or anyone's so far) must beat the old one by this much, so that it shows at
@@ -568,7 +578,9 @@ class MatchTools:
                 "just_after_hardest_minutes_now": bool(post[-1]),
                 "hardest_minutes_s": q(int(red.sum()), "s", sig + "red_zone"),
                 "hardest_minutes_count": q(
-                    len(runs(red)), "times at his hardest minutes so far", sig + "red_zone"
+                    (episodes([(a + w.start, b + w.start) for a, b in runs(red)], s) or [0])[-1],
+                    "times at his hardest minutes so far",
+                    sig + "red_zone",
                 ),
                 "just_after_hardest_minutes_s": q(int(post.sum()), "s", sig + "post_peak"),
                 "post_peak_wording": "neutral only: just after his hardest minutes so far",
@@ -930,6 +942,9 @@ class MatchTools:
                                                        "mean match peak for his position",
                                                        "SilvaH2025, Table 1 (Brazil, GNSS)", 2),
             }  # fmt: skip
+            if (peak < top + NEW_BEST_MARGIN and not fastest and vid < 75 * 60
+                    and peak < FLAT_OUT_EARLY_SHARE * top):  # fmt: skip
+                continue
             if peak < top + NEW_BEST_MARGIN:  # a new best is his fastest so far, not "108%"
                 facts["share_of_top_speed"] = q(100.0 * peak / top, "% of his top speed so far",
                                                 sig, 0)  # fmt: skip
@@ -998,13 +1013,15 @@ class MatchTools:
         for pid, s in m.series.items():
             if m.players[pid]["position"] == "GK":
                 continue
-            for n, (a, b) in enumerate(self._spells(pid), start=1):
+            spells = self._spells(pid)
+            times = episodes(spells, s)
+            for n, (a, b) in enumerate(spells, start=1):
                 peak = float(s.cols["hsr_1min"][a : b + 1].max())
                 i = a + int(np.argmax(s.cols["hsr_1min"][a : b + 1]))
                 low = float(s.cols["battery"][a : b + 1].min())
                 facts = {
                     "hardest_minutes_count": q(
-                        n,
+                        times[n - 1],
                         "times at his hardest minutes so far, this one included",
                         sig + "red_zone",
                     ),
@@ -1032,7 +1049,7 @@ class MatchTools:
                     if s.period[x[1]] == s.period[a] and s.t[a] - s.t[x[1]] <= 300
                 ]
                 facts["hardest_minutes_in_last_5min"] = q(
-                    len(recent) + 1,
+                    len({times[spells.index(x)] for x in recent} | {times[n - 1]}),
                     "times at his hardest minutes in the last 5 min",
                     sig + "red_zone",
                 )
@@ -1081,6 +1098,7 @@ class MatchTools:
                     continue
                 if not (s.cols["post_peak"][i] or s.cols["red_zone"][i]):
                     continue
+                spells = self._spells(pid)
                 k = m.second(e.period, e.t)
                 k8 = min(k + 8, len(m.alive[e.period]) - 1)
                 j = m.col[pid]
@@ -1103,7 +1121,14 @@ class MatchTools:
                         float(spd.mean()) if len(spd) else 0.0, "m/s", sig + "speed", 1
                     ),
                     "hardest_minutes_so_far": q(
-                        sum(1 for x in self._spells(pid) if x[0] <= i),
+                        max(
+                            (
+                                n
+                                for x, n in zip(spells, episodes(spells, s), strict=True)
+                                if x[0] <= i
+                            ),
+                            default=0,
+                        ),  # fmt: skip
                         "times at his hardest minutes so far",
                         sig + "red_zone",
                     ),
@@ -1236,6 +1261,8 @@ class MatchTools:
                 if w.stop - w.start >= 0.9 * n:
                     mates.append(float(m.hsr_per_s(pid)[w].sum()) / (w.stop - w.start) * 60.0)
             team_rate = float(np.mean(mates)) if mates else float("nan")
+            if team_rate > 0 and rate_on <= team_rate:
+                continue  # no fresh legs: he did not out-run his team-mates (decision 39)
             facts = {
                 "minutes_on": q(n / 60.0, "min", "signals.players[].series.t", 0),
                 "sub_hsr_per_min": q(rate_on, "m/min", HSR_SRC, 1),
@@ -1375,6 +1402,18 @@ class MatchTools:
 
 
 # --- helpers ---------------------------------------------------------------------------------
+
+
+def episodes(spells: list[tuple[int, int]], s) -> list[int]:
+    """Which time each spell (first and last index into series ``s``) is, counting spells less
+    than EPISODE_GAP_S apart in a half as one."""
+    out, n, prev = [], 0, None
+    for a, b in spells:
+        if prev is None or s.period[a] != s.period[prev] or s.t[a] - s.t[prev] > EPISODE_GAP_S:
+            n += 1
+        out.append(n)
+        prev = b
+    return out
 
 
 def runs(flag: np.ndarray) -> list[tuple[int, int]]:
