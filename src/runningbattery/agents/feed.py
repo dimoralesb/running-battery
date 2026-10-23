@@ -45,7 +45,7 @@ from pydantic import BaseModel
 
 from runningbattery.agents import verifier
 from runningbattery.agents.llm_verifier import FullVerdict, verify_full
-from runningbattery.agents.tools import MOMENT_KINDS, TEAM_KINDS, MatchTools
+from runningbattery.agents.tools import MOMENT_KINDS, SO_FAR_MIN_S, TEAM_KINDS, MatchTools
 
 FEED = "feed.json"
 MODES = ("fan", "analyst")
@@ -115,26 +115,32 @@ def ensure_favourite(picked: list[str], found: dict[str, dict], ids: set[str]) -
     FAVOURITE_ARC kinds his best-ranked moment is added even when another of that kind was
     picked: the Tactical agent once picked his second turnover and left out the third, the
     story's (decision 30). A turnover of his that ended in a goal is added too: the agent once
-    picked two others and left out the one that cost a goal (decision 39)."""
+    picked two others and left out the one that cost a goal (decision 39). Another player's
+    moment of the same kind within the minute makes way for his (decision 41)."""
     chosen = [found[i] for i in picked]
     mine = [m for m in chosen if who(m) in ids]
 
     def add(kind: str, goal: bool = False) -> None:
         for mo in sorted(found.values(), key=lambda m: -m["score"]):
-            if (
-                mo["kind"] == kind
-                and who(mo) in ids
-                and (not goal or mo.get("facts", {}).get("counter_goal"))
-                # A minute from the other player moments; a team moment at a block's end may be
-                # nearer (its clip is a different picture; decision 37: all of the favourite's
-                # best turnovers fell within 60 s of one and his story dropped out).
-                and all(
-                    abs(mo["video_s"] - c["video_s"]) >= 60.0 for c in chosen if c.get("player")
-                )
-            ):
-                chosen.append(mo)
-                mine.append(mo)
-                return
+            if mo["kind"] != kind or who(mo) not in ids:
+                continue
+            if goal and not mo.get("facts", {}).get("counter_goal"):
+                continue
+            # A minute from the other player moments; a team moment at a block's end may be
+            # nearer (its clip is a different picture; decision 37: all of the favourite's best
+            # turnovers fell within 60 s of one and his story dropped out). Another player's
+            # moment of the same kind that near is the same action seen from him, and makes way
+            # (decision 41: the agent picked a team-mate's view of the favourite's turnover).
+            near = [
+                c for c in chosen if c.get("player") and abs(mo["video_s"] - c["video_s"]) < 60.0
+            ]
+            if any(c["kind"] != kind or who(c) in ids for c in near):
+                continue
+            for c in near:
+                chosen.remove(c)
+            chosen.append(mo)
+            mine.append(mo)
+            return
 
     for n, kind in enumerate(FAVOURITE_KINDS):
         if n >= FAVOURITE_ARC and len(mine) >= FAVOURITE_MIN:
@@ -242,12 +248,17 @@ def brief(tools: MatchTools, mo: dict) -> dict[str, Any]:
         facts |= {
             "typical_pro_battery_now": b["typical_pro_at_end"],
             "typical_pro_battery_band": b["band_10_90_at_end"],
-            "lowest_typical_pro_battery_so_far": b["lowest_in_match_so_far"],
             "low_chance_now": sig["low_chance"]["at_end"] if sig["low_chance"] else None,
             "energy_since_kickoff": sig["energy"]["since_kickoff"],
             "hsr_last_5min_vs_match_average": h["window_vs_match_average"],
             "hsr_threshold": h["threshold"],
         }
+        on_for = tools.m.series[pid].index(per, t) or 0  # seconds on the pitch
+        if on_for >= SO_FAR_MIN_S:  # "the lowest point of his match so far" (SO_FAR_MIN_S)
+            facts["lowest_typical_pro_battery_so_far"] = b["lowest_in_match_so_far"]
+            battery = tools.m.series[pid].cols["battery"][: on_for + 1]
+            # Unrounded (decision 41: 0.620 against an earlier 0.618 read as "0.62 and 0.62").
+            facts["at_lowest_point_so_far"] = bool(battery[-1] <= battery.min())
     claims = []
     for cid in mo["claims"]:
         row = tools.claim(cid)
@@ -283,6 +294,12 @@ def _name(b: dict) -> str:
     return b["player"]["name"] if b.get("player") else b["team"]["name"]
 
 
+def possessive(name: str) -> str:
+    """The possessive of a name: Westerlyn Albion's, Ravensholt Harriers' (decision 41: the feed
+    showed "Harriers's")."""
+    return f"{name}'" if name.endswith("s") else f"{name}'s"
+
+
 # --- Narrator (templates) --------------------------------------------------------------------
 
 
@@ -315,7 +332,7 @@ def template(b: dict, mode: str) -> list[tuple[str, str]]:
         nth = ORDINAL.get(n, f"number {n}")
         if mode == "fan":
             lead = (
-                f"{name}'s hardest minutes so far"
+                f"{possessive(name)} hardest minutes so far"
                 if n == 1
                 else f"For the {nth} time, {name} runs as hard as in his hardest minutes so far"
             )
@@ -342,8 +359,8 @@ def template(b: dict, mode: str) -> list[tuple[str, str]]:
         out.append(
             (
                 "fact",
-                f"{team} lose the ball just after {name}'s hardest minutes so far: {d0} m "
-                f"from the ball, then {d8} m eight seconds "
+                f"{team} lose the ball just after {possessive(name)} hardest minutes so far: "
+                f"{d0} m from the ball, then {d8} m eight seconds "
                 "later.",
             )
         )
@@ -438,7 +455,7 @@ def template(b: dict, mode: str) -> list[tuple[str, str]]:
                 out.append(
                     (
                         "fact",
-                        f"{name}'s high-speed running per ball-in-play minute in "
+                        f"{possessive(name)} high-speed running per ball-in-play minute in "
                         f"{block} is {-own}% below their first 15 minutes.",
                     )
                 )
@@ -459,8 +476,8 @@ def template(b: dict, mode: str) -> list[tuple[str, str]]:
         out.append(
             (
                 "fact",
-                f"In {block}, {share}% of {name}'s high-speed running came in the first 10 "
-                f"seconds after the ball changed hands, in {time}% of the time the ball was in "
+                f"In {block}, {share}% of {possessive(name)} high-speed running came in the first "
+                f"10 seconds after the ball changed hands, in {time}% of the time the ball was in "
                 "play.",
             )
             if mode == "fan"
@@ -498,7 +515,11 @@ def template(b: dict, mode: str) -> list[tuple[str, str]]:
             )
         elif f.get("his_fastest_so_far"):
             out.append(
-                ("fact", f"{name}'s fastest run of the match so far: {v} m/s ({kmh} km/h){run}.")
+                (
+                    "fact",
+                    f"{possessive(name)} fastest run of the match so far: {v} m/s ({kmh} km/h)"
+                    f"{run}.",
+                )
             )
         else:
             out.append(
@@ -559,6 +580,7 @@ Rules (a Verifier blocks anything else):
   Every percentage says what it is compared with (his match average, his peak, his team-mates).
 - If the moment lists non_fatigue_reasons, a sentence that mentions fatigue must name the reason
   and hedge ("likely", "may be").
+- "The lowest point of his match so far" only when at_lowest_point_so_far is true.
 - A red_zone moment is "his hardest minutes so far" (the few minutes when he has run hardest so
   far); the post-peak window is neutral: "just after his hardest minutes so far" (it says when,
   nothing about his body). Find a natural sentence for them; never call them a "spell".
@@ -594,6 +616,8 @@ Rules (a Verifier blocks anything else):
   minute than Ravensholt Albion in 0:00–15:00" (vs_opponent). For pattern "gap closed" say "the
   gap has closed", that the two sides were level in that block, and how big the gap was earlier
   (earlier_gap_vs_opponent). In fan mode that comparison is the one number.
+- A name ending in s takes only an apostrophe for the possessive: "Ravensholt Harriers'
+  high-speed running", never "Harriers's".
 - Name every team in full ("team_names"), every time: when the two names share a word (Westerlyn
   Albion, Ravensholt Albion), that word alone does not say which team.
 - Claim 14 ("fewer touches") only if the moment's claims include it; then give the touch

@@ -31,8 +31,8 @@
   "A09",
   "A10",
   "A11",
-  "A12",
   "A13",
+  "A12",
   "A14",
   "A15",
   "A16"
@@ -309,21 +309,21 @@
    "starter": true
   },
   {
-   "id": "A12",
-   "name": "Marco Jorrsall",
-   "shirt": 12,
-   "team": "away",
-   "team_name": "Ravensholt Albion",
-   "position": "DM",
-   "starter": false
-  },
-  {
    "id": "A13",
    "name": "Marco Orvrigg",
    "shirt": 13,
    "team": "away",
    "team_name": "Ravensholt Albion",
    "position": "WM",
+   "starter": false
+  },
+  {
+   "id": "A12",
+   "name": "Marco Jorrsall",
+   "shirt": 12,
+   "team": "away",
+   "team_name": "Ravensholt Albion",
+   "position": "DM",
    "starter": false
   },
   {
@@ -360,14 +360,14 @@
    "video_end": 300.0,
    "clock": "0:00",
    "home": {
-    "hsr": 179,
-    "possession": 0.26,
-    "in_play_s": 266.0
+    "hsr": 258,
+    "possession": 0.5,
+    "in_play_s": 218.0
    },
    "away": {
-    "hsr": 101,
-    "possession": 0.64,
-    "in_play_s": 266.0
+    "hsr": 138,
+    "possession": 0.43,
+    "in_play_s": 218.0
    }
   },
   {
@@ -375,14 +375,14 @@
    "video_end": 600.0,
    "clock": "5:00",
    "home": {
-    "hsr": 265,
-    "possession": 0.41,
-    "in_play_s": 165.0
+    "hsr": 236,
+    "possession": 0.54,
+    "in_play_s": 226.0
    },
    "away": {
-    "hsr": 284,
-    "possession": 0.51,
-    "in_play_s": 165.0
+    "hsr": 184,
+    "possession": 0.38,
+    "in_play_s": 226.0
    }
   },
   {
@@ -390,14 +390,14 @@
    "video_end": 900.0,
    "clock": "10:00",
    "home": {
-    "hsr": 121,
-    "possession": 0.54,
-    "in_play_s": 228.0
+    "hsr": 127,
+    "possession": 0.46,
+    "in_play_s": 142.0
    },
    "away": {
-    "hsr": 112,
-    "possession": 0.32,
-    "in_play_s": 228.0
+    "hsr": 107,
+    "possession": 0.45,
+    "in_play_s": 142.0
    }
   },
   {
@@ -405,14 +405,14 @@
    "video_end": 1200.0,
    "clock": "15:00",
    "home": {
-    "hsr": 282,
-    "possession": 0.45,
-    "in_play_s": 115.0
+    "hsr": 198,
+    "possession": 0.4,
+    "in_play_s": 172.0
    },
    "away": {
-    "hsr": 207,
-    "possession": 0.46,
-    "in_play_s": 115.0
+    "hsr": 168,
+    "possession": 0.47,
+    "in_play_s": 172.0
    }
   },
   {
@@ -420,14 +420,14 @@
    "video_end": 1500.0,
    "clock": "20:00",
    "home": {
-    "hsr": 153,
-    "possession": 0.48,
-    "in_play_s": 149.0
+    "hsr": 214,
+    "possession": 0.53,
+    "in_play_s": 130.0
    },
    "away": {
-    "hsr": 127,
-    "possession": 0.42,
-    "in_play_s": 149.0
+    "hsr": 168,
+    "possession": 0.35,
+    "in_play_s": 130.0
    }
   },
   {
@@ -435,14 +435,14 @@
    "video_end": 1800.0,
    "clock": "25:00",
    "home": {
-    "hsr": 200,
-    "possession": 0.48,
-    "in_play_s": 130.0
+    "hsr": 164,
+    "possession": 0.31,
+    "in_play_s": 173.0
    },
    "away": {
-    "hsr": 128,
-    "possession": 0.47,
-    "in_play_s": 130.0
+    "hsr": 119,
+    "possession": 0.61,
+    "in_play_s": 173.0
    }
   },
   {
@@ -450,14 +450,14 @@
    "video_end": 2100.0,
    "clock": "30:00",
    "home": {
-    "hsr": 234,
-    "possession": 0.56,
-    "in_play_s": 194.0
+    "hsr": 185,
+    "possession": 0.44,
+    "in_play_s": 170.0
    },
    "away": {
-    "hsr": 136,
-    "possession": 0.35,
-    "in_play_s": 194.0
+    "hsr": 170,
+    "possession": 0.46,
+    "in_play_s": 170.0
    }
   },
   {
@@ -465,14 +465,14 @@
    "video_end": 2400.0,
    "clock": "35:00",
    "home": {
-    "hsr": 139,
-    "possession": 0.48,
-    "in_play_s": 85.0
+    "hsr": 159,
+    "possession": 0.53,
+    "in_play_s": 239.0
    },
    "away": {
-    "hsr": 113,
-    "possession": 0.4,
-    "in_play_s": 85.0
+    "hsr": 138,
+    "possession": 0.39,
+    "in_play_s": 239.0
    }
   },
   {
@@ -480,14 +480,14 @@
    "video_end": 2700.0,
    "clock": "40:00",
    "home": {
-    "hsr": 208,
-    "possession": 0.43,
-    "in_play_s": 94.0
+    "hsr": 179,
+    "possession": 0.25,
+    "in_play_s": 153.0
    },
    "away": {
-    "hsr": 116,
-    "possession": 0.47,
-    "in_play_s": 94.0
+    "hsr": 172,
+    "possession": 0.61,
+    "in_play_s": 153.0
    }
   },
   {
@@ -495,14 +495,14 @@
    "video_end": 2765.7,
    "clock": "45+0:00",
    "home": {
-    "hsr": 159,
+    "hsr": null,
     "possession": 0.0,
-    "in_play_s": 13.0
+    "in_play_s": 0.0
    },
    "away": {
-    "hsr": 150,
-    "possession": 1.0,
-    "in_play_s": 13.0
+    "hsr": null,
+    "possession": 0.0,
+    "in_play_s": 0.0
    }
   },
   {
@@ -510,14 +510,14 @@
    "video_end": 3065.7,
    "clock": "45:00",
    "home": {
-    "hsr": 162,
+    "hsr": 146,
     "possession": 0.23,
-    "in_play_s": 184.0
+    "in_play_s": 226.0
    },
    "away": {
-    "hsr": 90,
-    "possession": 0.67,
-    "in_play_s": 184.0
+    "hsr": 110,
+    "possession": 0.68,
+    "in_play_s": 226.0
    }
   },
   {
@@ -525,14 +525,14 @@
    "video_end": 3365.7,
    "clock": "50:00",
    "home": {
-    "hsr": 252,
-    "possession": 0.62,
-    "in_play_s": 114.0
+    "hsr": 102,
+    "possession": 0.3,
+    "in_play_s": 143.0
    },
    "away": {
-    "hsr": 139,
-    "possession": 0.35,
-    "in_play_s": 114.0
+    "hsr": 81,
+    "possession": 0.52,
+    "in_play_s": 143.0
    }
   },
   {
@@ -540,14 +540,14 @@
    "video_end": 3665.7,
    "clock": "55:00",
    "home": {
-    "hsr": 178,
-    "possession": 0.45,
-    "in_play_s": 191.0
+    "hsr": 149,
+    "possession": 0.48,
+    "in_play_s": 207.0
    },
    "away": {
-    "hsr": 130,
-    "possession": 0.47,
-    "in_play_s": 191.0
+    "hsr": 135,
+    "possession": 0.42,
+    "in_play_s": 207.0
    }
   },
   {
@@ -555,14 +555,14 @@
    "video_end": 3965.7,
    "clock": "60:00",
    "home": {
-    "hsr": 155,
-    "possession": 0.4,
-    "in_play_s": 164.0
+    "hsr": 98,
+    "possession": 0.47,
+    "in_play_s": 109.0
    },
    "away": {
-    "hsr": 131,
-    "possession": 0.49,
-    "in_play_s": 164.0
+    "hsr": 53,
+    "possession": 0.35,
+    "in_play_s": 109.0
    }
   },
   {
@@ -570,14 +570,14 @@
    "video_end": 4265.7,
    "clock": "65:00",
    "home": {
-    "hsr": 179,
-    "possession": 0.43,
-    "in_play_s": 158.0
+    "hsr": 103,
+    "possession": 0.37,
+    "in_play_s": 224.0
    },
    "away": {
-    "hsr": 200,
-    "possession": 0.42,
-    "in_play_s": 158.0
+    "hsr": 140,
+    "possession": 0.56,
+    "in_play_s": 224.0
    }
   },
   {
@@ -585,14 +585,14 @@
    "video_end": 4565.7,
    "clock": "70:00",
    "home": {
-    "hsr": 137,
-    "possession": 0.71,
-    "in_play_s": 136.0
+    "hsr": 210,
+    "possession": 0.33,
+    "in_play_s": 142.0
    },
    "away": {
-    "hsr": 157,
-    "possession": 0.21,
-    "in_play_s": 136.0
+    "hsr": 225,
+    "possession": 0.52,
+    "in_play_s": 142.0
    }
   },
   {
@@ -600,14 +600,14 @@
    "video_end": 4865.7,
    "clock": "75:00",
    "home": {
-    "hsr": 156,
-    "possession": 0.45,
-    "in_play_s": 227.0
+    "hsr": 102,
+    "possession": 0.27,
+    "in_play_s": 226.0
    },
    "away": {
-    "hsr": 131,
-    "possession": 0.44,
-    "in_play_s": 227.0
+    "hsr": 145,
+    "possession": 0.66,
+    "in_play_s": 226.0
    }
   },
   {
@@ -615,14 +615,14 @@
    "video_end": 5165.7,
    "clock": "80:00",
    "home": {
-    "hsr": 141,
-    "possession": 0.55,
-    "in_play_s": 190.0
+    "hsr": 99,
+    "possession": 0.29,
+    "in_play_s": 192.0
    },
    "away": {
-    "hsr": 120,
-    "possession": 0.37,
-    "in_play_s": 190.0
+    "hsr": 78,
+    "possession": 0.6,
+    "in_play_s": 192.0
    }
   },
   {
@@ -630,14 +630,14 @@
    "video_end": 5465.7,
    "clock": "85:00",
    "home": {
-    "hsr": 148,
-    "possession": 0.52,
-    "in_play_s": 116.0
+    "hsr": 147,
+    "possession": 0.42,
+    "in_play_s": 270.0
    },
    "away": {
-    "hsr": 115,
-    "possession": 0.43,
-    "in_play_s": 116.0
+    "hsr": 123,
+    "possession": 0.49,
+    "in_play_s": 270.0
    }
   },
   {
@@ -645,14 +645,14 @@
    "video_end": 5564.9,
    "clock": "90+0:00",
    "home": {
-    "hsr": 199,
-    "possession": 0.64,
-    "in_play_s": 99.0
+    "hsr": 23,
+    "possession": 0.26,
+    "in_play_s": 34.0
    },
    "away": {
-    "hsr": 170,
-    "possession": 0.28,
-    "in_play_s": 99.0
+    "hsr": 112,
+    "possession": 0.68,
+    "in_play_s": 34.0
    }
   }
  ],
@@ -671,46 +671,46 @@
    "to": "15:00",
    "home": {
     "after_losing": [
-     612,
-     119
+     1129,
+     130
     ],
     "after_winning": [
-     330,
-     114
+     275,
+     101
     ],
     "on_ball": [
-     330,
-     182
+     471,
+     225
     ],
     "off_ball_high": [
-     20,
-     8
+     0,
+     0
     ],
     "off_ball_deep": [
-     692,
-     236
+     251,
+     130
     ]
    },
    "away": {
     "after_losing": [
-     348,
-     114
+     402,
+     101
     ],
     "after_winning": [
-     474,
-     119
+     488,
+     130
     ],
     "on_ball": [
-     358,
-     244
+     285,
+     130
     ],
     "off_ball_high": [
-     13,
-     6
+     0,
+     3
     ],
     "off_ball_deep": [
-     460,
-     176
+     272,
+     222
     ]
    }
   },
@@ -721,46 +721,46 @@
    "to": "30:00",
    "home": {
     "after_losing": [
-     461,
-     70
+     559,
+     76
     ],
     "after_winning": [
-     49,
-     25
+     221,
+     87
     ],
     "on_ball": [
-     280,
-     185
+     187,
+     129
     ],
     "off_ball_high": [
-     0,
-     2
+     18,
+     14
     ],
     "off_ball_deep": [
-     565,
-     112
+     515,
+     169
     ]
    },
    "away": {
     "after_losing": [
-     50,
-     25
+     277,
+     87
     ],
     "after_winning": [
-     227,
-     70
+     372,
+     76
     ],
     "on_ball": [
-     235,
-     114
+     239,
+     183
     ],
     "off_ball_high": [
-     7,
-     11
+     0,
+     0
     ],
     "off_ball_deep": [
-     470,
-     174
+     302,
+     129
     ]
    }
   },
@@ -771,46 +771,46 @@
    "to": "45+1:05",
    "home": {
     "after_losing": [
-     298,
-     76
+     425,
+     114
     ],
     "after_winning": [
-     175,
-     41
+     647,
+     127
     ],
     "on_ball": [
-     361,
-     172
+     237,
+     137
     ],
     "off_ball_high": [
      0,
-     5
+     1
     ],
     "off_ball_deep": [
-     479,
-     92
+     302,
+     183
     ]
    },
    "away": {
     "after_losing": [
-     80,
-     41
+     654,
+     127
     ],
     "after_winning": [
-     250,
-     76
+     334,
+     114
     ],
     "on_ball": [
-     99,
-     97
+     334,
+     184
     ],
     "off_ball_high": [
-     24,
-     11
+     0,
+     2
     ],
     "off_ball_deep": [
-     361,
-     161
+     147,
+     135
     ]
    }
   },
@@ -821,46 +821,46 @@
    "to": "60:00",
    "home": {
     "after_losing": [
-     322,
-     52
+     356,
+     90
     ],
     "after_winning": [
-     383,
-     62
+     212,
+     61
     ],
     "on_ball": [
-     230,
-     146
+     280,
+     159
     ],
     "off_ball_high": [
      0,
-     4
+     3
     ],
     "off_ball_deep": [
-     607,
-     225
+     459,
+     263
     ]
    },
    "away": {
     "after_losing": [
-     394,
-     62
+     159,
+     61
     ],
     "after_winning": [
-     57,
-     52
+     257,
+     90
     ],
     "on_ball": [
-     321,
-     229
+     362,
+     266
     ],
     "off_ball_high": [
      0,
-     0
+     11
     ],
     "off_ball_deep": [
-     182,
-     146
+     293,
+     148
     ]
    }
   },
@@ -871,46 +871,46 @@
    "to": "75:00",
    "home": {
     "after_losing": [
-     248,
-     86
+     329,
+     83
     ],
     "after_winning": [
-     351,
-     68
+     489,
+     92
     ],
     "on_ball": [
-     266,
-     185
+     141,
+     96
     ],
     "off_ball_high": [
-     0,
-     3
+     11,
+     16
     ],
     "off_ball_deep": [
-     341,
-     116
+     87,
+     188
     ]
    },
    "away": {
     "after_losing": [
-     533,
-     68
+     562,
+     92
     ],
     "after_winning": [
-     183,
-     86
+     262,
+     83
     ],
     "on_ball": [
-     193,
-     119
+     224,
+     204
     ],
     "off_ball_high": [
      0,
-     14
+     0
     ],
     "off_ball_deep": [
-     332,
-     171
+     104,
+     96
     ]
    }
   },
@@ -921,46 +921,46 @@
    "to": "90+1:39",
    "home": {
     "after_losing": [
-     496,
-     103
+     532,
+     148
     ],
     "after_winning": [
-     262,
-     119
+     335,
+     117
     ],
     "on_ball": [
-     484,
-     240
+     238,
+     144
     ],
     "off_ball_high": [
-     12,
-     9
+     0,
+     5
     ],
     "off_ball_deep": [
-     397,
-     161
+     268,
+     308
     ]
    },
    "away": {
     "after_losing": [
-     274,
-     119
+     350,
+     117
     ],
     "after_winning": [
-     251,
-     103
+     478,
+     148
     ],
     "on_ball": [
-     158,
-     170
+     376,
+     313
     ],
     "off_ball_high": [
-     14,
-     7
+     6,
+     11
     ],
     "off_ball_deep": [
-     683,
-     233
+     205,
+     133
     ]
    }
   }
@@ -968,177 +968,161 @@
  "goals": [
   {
    "period": 1,
-   "t": 416.6,
-   "clock": "6:56",
-   "video_s": 416.6,
+   "t": 127.0,
+   "clock": "2:07",
+   "video_s": 127.0,
    "team": "away",
    "scorer": "A08"
   },
   {
    "period": 1,
-   "t": 1108.7,
-   "clock": "18:28",
-   "video_s": 1108.7,
-   "team": "away",
-   "scorer": "A06"
-  },
-  {
-   "period": 1,
-   "t": 1580.6,
-   "clock": "26:20",
-   "video_s": 1580.6,
-   "team": "away",
-   "scorer": "A07"
-  },
-  {
-   "period": 1,
-   "t": 2110.3,
-   "clock": "35:10",
-   "video_s": 2110.3,
+   "t": 663.0,
+   "clock": "11:03",
+   "video_s": 663.0,
    "team": "home",
-   "scorer": "H11"
+   "scorer": "H08"
   },
   {
    "period": 1,
-   "t": 2725.6,
-   "clock": "45+0:25",
-   "video_s": 2725.6,
+   "t": 1003.5,
+   "clock": "16:43",
+   "video_s": 1003.5,
    "team": "away",
    "scorer": "A11"
   },
   {
-   "period": 2,
-   "t": 543.8,
-   "clock": "54:03",
-   "video_s": 3309.5,
+   "period": 1,
+   "t": 2682.6,
+   "clock": "44:42",
+   "video_s": 2682.6,
    "team": "away",
-   "scorer": "A09"
+   "scorer": "A02"
   },
   {
    "period": 2,
-   "t": 2502.9,
-   "clock": "86:42",
-   "video_s": 5268.6,
+   "t": 1034.2,
+   "clock": "62:14",
+   "video_s": 3799.9,
    "team": "home",
    "scorer": "H11"
-  },
-  {
-   "period": 2,
-   "t": 2632.4,
-   "clock": "88:52",
-   "video_s": 5398.1,
-   "team": "away",
-   "scorer": "A11"
   }
  ],
  "substitutions": [
   {
    "period": 2,
-   "t": 690.6,
-   "clock": "56:30",
-   "video_s": 3456.3,
-   "team": "away",
-   "off": "A06",
-   "on": "A12"
-  },
-  {
-   "period": 2,
-   "t": 690.6,
-   "clock": "56:30",
-   "video_s": 3456.3,
+   "t": 696.3,
+   "clock": "56:36",
+   "video_s": 3462.0,
    "team": "away",
    "off": "A09",
    "on": "A13"
   },
   {
    "period": 2,
-   "t": 862.3,
-   "clock": "59:22",
-   "video_s": 3628.0,
+   "t": 698.6,
+   "clock": "56:38",
+   "video_s": 3464.3,
+   "team": "away",
+   "off": "A06",
+   "on": "A12"
+  },
+  {
+   "period": 2,
+   "t": 857.0,
+   "clock": "59:17",
+   "video_s": 3622.7,
    "team": "home",
    "off": "H07",
    "on": "H12"
   },
   {
    "period": 2,
-   "t": 862.3,
+   "t": 862.4,
    "clock": "59:22",
-   "video_s": 3628.0,
+   "video_s": 3628.1,
    "team": "home",
    "off": "H09",
    "on": "H13"
   },
   {
    "period": 2,
-   "t": 1084.2,
-   "clock": "63:04",
-   "video_s": 3849.9,
+   "t": 978.6,
+   "clock": "61:18",
+   "video_s": 3744.3,
    "team": "home",
    "off": "H05",
    "on": "H15"
   },
   {
    "period": 2,
-   "t": 1084.2,
-   "clock": "63:04",
-   "video_s": 3849.9,
+   "t": 987.9,
+   "clock": "61:27",
+   "video_s": 3753.6,
    "team": "home",
    "off": "H06",
    "on": "H14"
   },
   {
    "period": 2,
-   "t": 1260.0,
-   "clock": "66:00",
-   "video_s": 4025.7,
+   "t": 1302.6,
+   "clock": "66:42",
+   "video_s": 4068.3,
    "team": "home",
    "off": "H04",
    "on": "H16"
   },
   {
    "period": 2,
-   "t": 1394.9,
-   "clock": "68:14",
-   "video_s": 4160.6,
+   "t": 1486.8,
+   "clock": "69:46",
+   "video_s": 4252.5,
    "team": "away",
    "off": "A02",
    "on": "A14"
   },
   {
    "period": 2,
-   "t": 1394.9,
-   "clock": "68:14",
-   "video_s": 4160.6,
+   "t": 1492.1,
+   "clock": "69:52",
+   "video_s": 4257.8,
    "team": "away",
    "off": "A08",
    "on": "A15"
   },
   {
    "period": 2,
-   "t": 2368.6,
-   "clock": "84:28",
-   "video_s": 5134.3,
+   "t": 2384.1,
+   "clock": "84:44",
+   "video_s": 5149.8,
    "team": "away",
    "off": "A03",
    "on": "A16"
   }
  ],
  "clips": {
-  "exposed_on_turnover:H04:1:401": [
-   401.2,
-   416.2
+  "exposed_on_turnover:H04:1:554": [
+   554.0,
+   562.6
   ],
-  "exposed_on_turnover:H02:1:514": [
-   514.3,
-   529.3
+  "second_wind:A07:1:1140": [
+   1136.0,
+   1139.0
   ],
-  "fresh_legs:A13:2:1290": [
-   3607.7,
-   3613.7
+  "second_wind:H08:1:2304": [
+   2303.0,
+   2306.0
   ],
-  "fresh_legs:H16:2:1859": [
-   4030.7,
-   4040.7
+  "second_wind:H04:1:2521": [
+   2519.0,
+   2521.0
+  ],
+  "red_zone:H04:2:1260": [
+   3998.7,
+   4025.7
+  ],
+  "fresh_legs:H15:2:1578": [
+   4310.7,
+   4315.7
   ]
  }
 }

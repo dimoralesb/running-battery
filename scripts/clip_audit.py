@@ -14,8 +14,15 @@ frames while in play; team-mates within 0.7 m in play (noted while the ball is d
 corner packs may stand closer); players off the pitch; a keeper more than 25 m off his line while
 his team defends; a player above 5.5 m/s (over 1 s of tracking) more than 1.5 s after the ball
 went dead; a clearance that goes out behind the clearer's own goal line from further out than
-``CLEAR_CORNER_DEPTH`` (decision 40); and two clips sharing more than 2 s. Then the match totals.
-Synthetic data only.
+``CLEAR_CORNER_DEPTH`` (decision 40); and two clips sharing more than 2 s. Decision 41 adds: a
+sprint-turn (over 1 s of tracking above 6 m/s, then within 4 s above 6 m/s the opposite way,
+cos < −0.7, ball in play; real matches 0–1.04 per player-hour, IDSSE); a duel, tackle or foul
+whose winner (or fouler) is more than 1.5 m from the ball (aerial duel, tackle) or the other
+player (ground duel, foul); a completed pass passing within 0.35 m of an outfield opponent while
+low (ball under 1 m, away from its first and last 0.3 s); a substitute who comes on away from the
+halfway line, or a replaced player who leaves away from a line; and a red-zone clip that shows
+under half of the metres above 5.5 m/s of his last minute. Then the match totals. Synthetic data
+only.
 """
 
 from __future__ import annotations
@@ -36,6 +43,12 @@ GAP_FILL_S = 2.4  # data.ts gapFill
 PRIORITY = ["longest_run", "recovery_run", "top_speed", "back_to_back", "busiest_minute"]
 RESTARTS = {"corner", "free_kick", "throw_in", "goal_kick", "kick_off", "penalty"}
 DEAD_GRACE_S = 1.5  # time to stop after the ball goes dead (decision 40)
+SHARE_MAX = 2.0  # s two clips of different players may share (data.ts; decision 41)
+TURN_SPEED, TURN_WITHIN_S, TURN_COS = 6.0, 4.0, -0.7  # sprint-turns (decision 41)
+DUEL_FLAG_M = 1.5  # a duel's winner, or a fouler, within reach (decision 41)
+PASS_NEAR_M, PASS_NEAR_FLAG_M = 0.6, 0.35  # completed low passes this close to an opponent
+SUB_LINE_M = 3.0  # a substitute comes on within this of halfway; the replaced player leaves
+# within this of a line
 
 
 def top_so_far(all_: list[dict], kind: str, now: float, n: int) -> list[dict]:
@@ -85,7 +98,11 @@ def queue(match: dict, feed: dict, clips: dict, hls: list[dict], mode: str) -> l
         for h in hls
     ]  # fmt: skip
     moments = []
-    for m in feed["moments"]:
+    fav = feed.get("favourite")  # his moments first (data.ts, decision 41)
+    ordered = sorted(
+        feed["moments"], key=lambda m: not (fav and m["moment_id"].split(":")[1] == fav)
+    )
+    for m in ordered:
         mid = m["moment_id"]
         lines = [e for e in feed["entries"] if e["moment_id"] == mid and e["mode"] == mode
                  and e["shown"]]  # fmt: skip
@@ -107,17 +124,22 @@ def queue(match: dict, feed: dict, clips: dict, hls: list[dict], mode: str) -> l
 
     def shared(a: dict, b: dict) -> bool:
         ov = min(a["end"], b["end"]) - max(a["start"], b["start"])
-        return not a["lapse"] and ov > 0.5 * min(a["end"] - a["start"], b["end"] - b["start"])
+        half = ov > 0.5 * min(a["end"] - a["start"], b["end"] - b["start"])
+        other = a["player"] != b["player"] and ov > SHARE_MAX - CLIP_BEFORE - CLIP_AFTER
+        return not a["lapse"] and (half or other)  # decision 41: more than SHARE_MAX played
+
+    ln = lambda x: x["end"] - x["start"]  # noqa: E731
+    ov = lambda a, b: min(a["end"], b["end"]) - max(a["start"], b["start"])  # noqa: E731
+    pad = CLIP_BEFORE + CLIP_AFTER
 
     out: list[dict] = []
     for m in moments:
-        ln = lambda x: x["end"] - x["start"]  # noqa: E731
-        ov = lambda a, b: min(a["end"], b["end"]) - max(a["start"], b["start"])  # noqa: E731
-        if any(ov(o, m) > 0.5 * min(ln(o), ln(m)) for o in out):  # the same action (decision 39)
+        if any(ov(o, m) > 0.5 * min(ln(o), ln(m))  # the same action (decision 39)
+               or (o["player"] != m["player"] and ov(o, m) > SHARE_MAX - pad)  # decision 41
+               for o in out):  # fmt: skip
             continue
         k = next((i for i, h in enumerate(items) if shared(h, m)), None)
         if k is None and m["player"]:  # touching the same player's highlight (decision 40)
-            pad = CLIP_BEFORE + CLIP_AFTER
             k = next((i for i, h in enumerate(items) if not h["lapse"] and h["moment"] is None
                       and h["player"] == m["player"] and ov(h, m) > -pad), None)  # fmt: skip
         if k is None:
@@ -162,12 +184,14 @@ def main() -> None:
     n = len(frames)
     pos = np.full((n, len(ids), 2), np.nan)
     ball = np.zeros((n, 2))
+    ball_z = np.zeros(n)
     vt, alive = np.zeros(n), np.zeros(n, bool)
     period, poss = np.zeros(n, int), np.empty(n, object)
     for f, fr in enumerate(frames):
         vt[f], period[f] = vstart[fr["period"]] + fr["t"], fr["period"]
         alive[f], poss[f] = fr["ball_status"] == "alive", fr.get("possession_team")
         ball[f] = fr["ball"]["x"], fr["ball"]["y"]
+        ball_z[f] = fr["ball"]["z"]
         for p in fr["players"]:
             pos[f, col[p["id"]]] = p["x"], p["y"]
 
@@ -277,7 +301,110 @@ def main() -> None:
     shots = [(vstart[e["period"]] + e["t"], e["player_id"], e.get("subtype"), e.get("xg"))
              for e in events if e["type"] == "shot"]  # fmt: skip
 
+    # Sprint-turns (decision 41): speed over 1 s of tracking (centred) above TURN_SPEED, then
+    # within TURN_WITHIN_S above it the opposite way, ball in play; counted where they start.
+    turns = []  # (video s, player)
+    play_s = {1: 0.0, 2: 0.0}
+    for per in (1, 2):
+        rows = np.flatnonzero(period == per)
+        if not len(rows):
+            continue
+        p = pos[rows]
+        m = len(rows)
+        k = np.arange(m)
+        vel = p[np.clip(k + half_w, 0, m - 1)] - p[np.clip(k - half_w, 0, m - 1)]
+        vel /= (2 * half_w) / 10.0
+        sp = np.hypot(*vel.transpose(2, 0, 1))
+        found = np.zeros(sp.shape, bool)
+        lags = int(TURN_WITHIN_S * 10)
+        for lag in range(2 * half_w, lags + 1, half_w):
+            b, sb = vel[lag:], sp[lag:]
+            cos = (vel[:-lag] * b).sum(-1) / np.maximum(sp[:-lag] * sb, 1e-6)
+            found[:-lag] |= (sp[:-lag] > TURN_SPEED) & (sb > TURN_SPEED) & (cos < TURN_COS)
+        found[m - lags - half_w :] = False
+        found &= alive[rows][:, None]
+        start = found & ~np.vstack([np.zeros((1, found.shape[1]), bool), found[:-1]])
+        turns += [(float(vt[rows[f]]), ids[j]) for f, j in zip(*np.nonzero(start), strict=True)]
+        play_s[per] = float((alive[rows][:, None] & ~np.isnan(p[..., 0])).sum()) / 10.0
+    turns.sort()
+
+    # Duels from too far (decision 41): the winner of an aerial duel or a tackle to the ball, the
+    # two players of a ground duel or a foul to each other.
+    far_duels = []  # (video s, kind, player, metres)
+    duel_gaps = {"aerial": [], "ground": [], "tackle": [], "foul": []}
+    for e in events:
+        if e["type"] not in ("duel", "tackle", "foul"):
+            continue
+        f = frame_at(vstart[e["period"]] + e["t"])
+        me, other = col.get(e["player_id"]), col.get(e.get("related_player_id"))
+        if e["type"] == "duel" and e.get("subtype") == "aerial":
+            kind, w = "aerial", me if e["outcome"] == "success" else other
+            d = float(np.hypot(*(pos[f, w] - ball[f]))) if w is not None else np.nan
+        elif e["type"] == "tackle":
+            kind, d = "tackle", float(np.hypot(*(pos[f, me] - ball[f])))
+        else:
+            kind = "ground" if e["type"] == "duel" else "foul"
+            d = float(np.hypot(*(pos[f, me] - pos[f, other]))) if other is not None else np.nan
+        if np.isnan(d):
+            continue
+        duel_gaps[kind].append(d)
+        if d > DUEL_FLAG_M:
+            far_duels.append((vstart[e["period"]] + e["t"], kind, e["player_id"], round(d, 1)))
+
+    # Completed passes through opponents (decision 41): the ball low (under 1 m), away from its
+    # first and last 0.3 s, near an outfield opponent before the receiver takes it.
+    recs: dict[tuple[int, str], list[float]] = {}
+    for e in events:
+        if e["type"] == "reception":
+            recs.setdefault((e["period"], e["player_id"]), []).append(e["t"])
+    completed, near_passes = 0, []  # (video s, passer, opponent, metres)
+    for e in events:
+        if e["type"] != "pass" or e.get("outcome") != "success" or not e.get("related_player_id"):
+            continue
+        rt = [t for t in recs.get((e["period"], e["related_player_id"]), [])
+              if e["t"] < t < e["t"] + 6]  # fmt: skip
+        if not rt:
+            continue
+        completed += 1
+        f0 = frame_at(vstart[e["period"]] + e["t"])
+        f1 = frame_at(vstart[e["period"]] + rt[0])
+        seg = np.arange(f0 + 3, f1 - 2)
+        if not len(seg):
+            continue
+        opp = [col[p] for p in ids if team_of[p] != e["team_id"] and pos_of[p] != "GK"]
+        dd = np.hypot(*(pos[seg][:, opp] - ball[seg, None]).transpose(2, 0, 1))
+        dd = np.where((ball_z[seg] < 1.0)[:, None] & ~np.isnan(dd), dd, np.inf)
+        k = np.unravel_index(np.argmin(dd), dd.shape)
+        if dd[k] < PASS_NEAR_M:
+            near_passes.append(
+                (float(vt[seg[k[0]]]), e["player_id"], ids[opp[k[1]]], round(float(dd[k]), 2))
+            )
+
+    # Substitutions (decision 41): on at the halfway line, off at a line.
+    sub_bad = []  # (video s, text)
+    for e in events:
+        if e["type"] != "substitution":
+            continue
+        v = vstart[e["period"]] + e["t"]
+        f = frame_at(v)
+        on, off = col.get(e.get("related_player_id")), col.get(e["player_id"])
+        if on is not None and e["t"] > 0:  # half-time substitutes line up for the kick-off
+            seen = pos[f : f + 50, on]  # his first 5 s (a dropout may hide the first frames)
+            seen = seen[~np.isnan(seen[:, 0])]
+            if len(seen) and np.abs(seen[:, 0]).min() > SUB_LINE_M:
+                x, y = seen[0]
+                sub_bad.append((v, f"{name[ids[on]]} comes on at ({x:.0f}, {y:.0f})"))
+        if off is not None and e["t"] > 0:
+            seen = pos[max(f - 50, 0) : f, off]  # his last 5 s
+            seen = seen[~np.isnan(seen[:, 0])]
+            if len(seen):
+                to_line = np.minimum(HALF_L - np.abs(seen[:, 0]), HALF_W - np.abs(seen[:, 1]))
+                if to_line.min() > SUB_LINE_M:
+                    x, y = seen[-1]
+                    sub_bad.append((v, f"{name[ids[off]]} leaves at ({x:.0f}, {y:.0f})"))
+
     end = match["periods"][-1]["video_start"] + match["periods"][-1]["duration_s"]
+    moment_at = {mo["moment_id"]: mo for mo in feed["moments"]}
     items = queue(match, feed, match.get("clips", {}), reel(hl, end), mode)
     report = []
     for it in items:
@@ -305,6 +432,17 @@ def main() -> None:
                      nearest_ball=near)  # fmt: skip
             if top < HI:
                 r["flags"].append(f"player top {top:.1f} m/s (below 5.5)")
+            mo = moment_at.get(it["moment"]) if it["moment"] else None
+            if mo is not None and mo["kind"] == "red_zone":
+                k = int(float(mo["video_s"]) - float(s["start"]))
+                minute = sp[max(k - 59, 0) : k + 1]
+                minute = float(minute[(minute > HI) & (minute <= 11)].sum())
+                r["red_zone_minute"] = round(minute)
+                if float(seg[seg > HI].sum()) < 0.5 * minute:
+                    r["flags"].append(
+                        f"red zone: clip shows {seg[seg > HI].sum():.0f} of his last minute's "
+                        f"{minute:.0f} m above 5.5"
+                    )
         lost = [(p, x, y) for p, x, y in gaps if x < b and y > a and y - x >= 0.3]
         long_ = [g for g in lost if g[2] - g[1] > GAP_FILL_S]
         if long_:
@@ -353,6 +491,15 @@ def main() -> None:
             r["flags"].append("above 5.5 m/s with the ball dead: " + ", ".join(
                 f"{name[p]} {x:.1f}+{y - x:.1f}s ({s:.1f} s after dead), top {m:.1f} m/s"
                 for p, x, y, m, s in dr))  # fmt: skip
+        tr = [(v, p) for v, p in turns if a <= v <= b]
+        if tr:
+            r["flags"].append("sprint-turn: " + ", ".join(f"{name[p]} {v:.1f}s" for v, p in tr))
+        for v, kind, p, d in (x for x in far_duels if a <= x[0] <= b):
+            r["flags"].append(f"{kind} at {v:.1f}s by {name[p]} from {d} m")
+        for v, p, o, d in (x for x in near_passes if a <= x[0] <= b and x[3] < PASS_NEAR_FLAG_M):
+            r["flags"].append(f"pass by {name[p]} through {name[o]} ({d} m) at {v:.1f}s")
+        for v, text in (x for x in sub_bad if a <= x[0] <= b):
+            r["flags"].append(f"substitution at {v:.1f}s: {text}")
         for v, p, depth in (c for c in behind_far if a <= c[0] <= b):
             r["flags"].append(
                 f"clearance behind own goal line at {v:.1f}s by {name[p]}, {depth} m out"
@@ -386,6 +533,38 @@ def main() -> None:
         clips_clearance_behind_far=sum(
             1 for r in report if any(f.startswith("clearance behind") for f in r["flags"])
         ),
+        sprint_turns=len(turns),
+        sprint_turns_per_player_hour={
+            per: round(
+                sum(1 for v, _ in turns if (v >= vstart.get(2, 1e9)) == (per == 2))
+                / max(play_s[per] / 3600.0, 1e-9),
+                2,
+            )
+            for per in (1, 2)
+        },  # fmt: skip
+        clips_sprint_turn=sum(
+            1 for r in report if any(f.startswith("sprint-turn") for f in r["flags"])
+        ),
+        duels_far=len(far_duels),
+        duel_metres_median={
+            k: round(float(np.median(v)), 2) if v else None for k, v in duel_gaps.items()
+        },  # fmt: skip
+        duels_far_by_kind={k: sum(1 for x in far_duels if x[1] == k) for k in duel_gaps},
+        clips_duel_far=sum(
+            1
+            for r in report
+            if any(" from " in f and f.split()[0] in duel_gaps for f in r["flags"])
+        ),
+        completed_low_passes=completed,
+        passes_near_opponent=len(near_passes),
+        passes_through_opponent=sum(1 for x in near_passes if x[3] < PASS_NEAR_FLAG_M),
+        clips_pass_through=sum(
+            1 for r in report if any(f.startswith("pass by") for f in r["flags"])
+        ),
+        substitutions_off_line=len(sub_bad),
+        clips_red_zone_short=sum(
+            1 for r in report if any(f.startswith("red zone") for f in r["flags"])
+        ),
         tracking_gaps=sum(1 for _, x, y in gaps if y - x >= 0.3),
         tracking_gaps_over_fill=sum(1 for _, x, y in gaps if y - x > GAP_FILL_S),
     )
@@ -405,7 +584,8 @@ def main() -> None:
     print(json.dumps(totals, indent=1))
     if "--json" in sys.argv:
         out = dict(totals=totals, clips=report, chances=chances, keeper_far=keeper_far, jumps=jumps,
-                   dead_runs=dead_runs, behind_far=behind_far)  # fmt: skip
+                   dead_runs=dead_runs, behind_far=behind_far, turns=turns, far_duels=far_duels,
+                   near_passes=near_passes, sub_bad=sub_bad)  # fmt: skip
         json.dump(out, open(sys.argv[sys.argv.index("--json") + 1], "w"), indent=1)
 
 

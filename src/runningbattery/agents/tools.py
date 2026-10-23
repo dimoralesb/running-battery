@@ -105,7 +105,11 @@ FLAT_OUT_SHARE = 0.9  # a flat-out run: ≥ 90% of his top speed so far (our ass
 # (top speed hardly drops) gives a 90% run its point.
 FLAT_OUT_EARLY_SHARE = 0.95
 FLAT_OUT_MIN_SPEED = 7.0  # m/s (25.2 km/h): about the sprint threshold [Bradley2009, p.162]
-FLAT_OUT_FROM_S = 600.0  # from the 10th minute, so that "his top speed so far" means something
+# A "so far" claim (his hardest minutes so far, his top speed so far, the lowest point of his
+# match so far) needs SO_FAR_MIN_S on the pitch, as MIN_ON_S: before it, it is true of almost any
+# running (decision 41: "his hardest minutes so far" at 1:47 and 5:38, "his fastest of the match
+# so far" from a substitute 4 min after he came on). Our assumption.
+SO_FAR_MIN_S = 600
 # A new best (his own, or anyone's so far) must beat the old one by this much, so that it shows at
 # the 0.1 m/s we print: 7.92 against 7.88 m/s read as "7.9 and 7.9" and the LLM pass rewrote a
 # true "new personal best" into "not his fastest" (decision 37). Our assumption.
@@ -243,6 +247,7 @@ class MatchData:
             }
             self.series[ps.player_id] = Series(np.asarray(s.period), np.asarray(s.t), cols)
         self._read_tracking()
+        self._full: dict[int, tuple[np.ndarray, np.ndarray, np.ndarray]] | None = None
 
     def _read_tracking(self) -> None:
         """Ball status, possession and positions once per second (the frames on whole seconds
@@ -296,6 +301,34 @@ class MatchData:
         a = xy[k, j] + f * (xy[k1, j] - xy[k, j])
         b = ball[k] + f * (ball[k1] - ball[k])
         return float(np.hypot(*(a - b)))
+
+    def nearest_ball(self, period: int, t0: float, t1: float, j: int) -> float:
+        """Player column ``j``'s smallest distance to the ball from ``t0`` to ``t1``, at the full
+        frame rate (decision 41: the 1-Hz samples said "as close as 2 m" for 1.2 m). NaN if he
+        is not seen."""
+        if self._full is None:
+            self._read_full_tracking()
+        times, xy, ball = self._full[period]
+        k = (times >= t0 - 1e-6) & (times <= t1 + 1e-6)
+        d = np.hypot(*(xy[k, j] - ball[k]).T)
+        return float(np.nanmin(d)) if np.isfinite(d).any() else float("nan")
+
+    def _read_full_tracking(self) -> None:
+        """Every frame's positions and ball, per period (read once, when first needed)."""
+        ids = list(self.players)
+        rows: dict[int, list] = {1: [], 2: []}
+        with (self.folder / TRACKING).open() as f:
+            for line in f:
+                fr = json.loads(line)
+                xy = np.full((len(ids), 2), np.nan)
+                for p in fr["players"]:
+                    xy[self.col[p["id"]]] = (p["x"], p["y"])
+                rows[fr["period"]].append((fr["t"], xy, (fr["ball"]["x"], fr["ball"]["y"])))
+        self._full = {
+            p: (np.array([r[0] for r in rs]), np.stack([r[1] for r in rs]),
+                np.array([r[2] for r in rs]))
+            for p, rs in rows.items() if rs
+        }  # fmt: skip
 
     # --- Lookups ---------------------------------------------------------------------------
 
@@ -929,7 +962,7 @@ class MatchTools:
             hot = (
                 (v >= FLAT_OUT_SHARE * top_before)
                 & (top_before >= FLAT_OUT_MIN_SPEED)
-                & (video >= FLAT_OUT_FROM_S)
+                & (np.arange(len(v)) >= SO_FAR_MIN_S)  # seconds on the pitch
             )
             late_top = v[video < 75 * 60].max() if (video < 75 * 60).any() else 0.0
             for a, b in runs(hot):
@@ -1030,6 +1063,8 @@ class MatchTools:
             for n, (a, b) in enumerate(spells, start=1):
                 peak = float(s.cols["hsr_1min"][a : b + 1].max())
                 i = a + int(np.argmax(s.cols["hsr_1min"][a : b + 1]))
+                if i < SO_FAR_MIN_S:  # seconds on the pitch
+                    continue
                 low = float(s.cols["battery"][a : b + 1].min())
                 facts = {
                     "hardest_minutes_count": q(
@@ -1111,14 +1146,12 @@ class MatchTools:
                 if not (s.cols["post_peak"][i] or s.cols["red_zone"][i]):
                     continue
                 spells = self._spells(pid)
-                k = m.second(e.period, e.t)
                 j = m.col[pid]
                 d0 = m.gap_at(e.period, e.t, j)
                 d8 = m.gap_at(e.period, min(e.t + 8.0, len(m.alive[e.period]) - 1.0), j)
                 spd = s.cols["speed"][i + 1 : i + 9]
-                k_end = min(max(m.second(e.period, counter_end), k + 1), len(m.alive[e.period]))
-                gap = np.hypot(*(m.xy[e.period][k:k_end, j] - m.ball[e.period][k:k_end]).T)
-                nearest = float(np.nanmin(gap)) if np.isfinite(gap).any() else d0
+                nearest = m.nearest_ball(e.period, e.t, max(counter_end, e.t + 1.0), j)
+                nearest = d0 if nearest != nearest else nearest
                 # A turnover the clip can show: the counter came his way or ended in a shot
                 # (decision 38: one clip showed him 34 m from a counter that went elsewhere).
                 if nearest > COUNTER_NEAR_M and shot == 0.0 and not goal:
@@ -1156,7 +1189,7 @@ class MatchTools:
                         counter_end - e.t, "s", "events.jsonl this possession, at most 15 s", 0
                     ),
                     "ball_nearest_him_in_counter": q(
-                        nearest, "m", "tracking players[].x,y and ball, each second", 0
+                        nearest, "m", "tracking players[].x,y and ball, every frame", 0
                     ),
                     "window_after_turnover": q(8, "s", "tracking, 8 s after the turnover"),
                     "losing_team": lost,

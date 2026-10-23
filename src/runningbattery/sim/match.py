@@ -5,7 +5,8 @@ The ball is always in one of four modes:
 - ``dead``: out of play, waiting for a restart (kick-off, throw-in, goal kick, corner, free kick).
 - ``touch``: a player has it. The touch ends in a pass, a shot, or a ground duel that loses it.
 - ``flight``: a pass, shot or clearance in the air or along the ground. Its result (received,
-  intercepted, aerial duel, out of play, loose, goal, saved, wide, blocked) is drawn at the kick.
+  intercepted, aerial duel, out of play, loose, goal, saved, wide, blocked) is drawn at the kick;
+  a low pass that passes an opponent on the way is cut out there (``cut_out``).
 - ``loose``: nobody controls it; the first player to reach it logs a ball recovery.
 
 Each frame the flow is updated first (and may log events), then the frame is recorded, then
@@ -17,10 +18,12 @@ their capacity (S0, A0), and ``roles.py`` reads it to skip, shorten and slow run
 slower too. A shared match tempo, if given, scales both teams' work rate in play.
 
 Substitutions (``rosters.plan_substitutions``) are made at the first stoppage from their planned
-time, half-time ones at the second-half kick-off [IFAB2025, Law 3]: the substitute takes over the
-engine slot (its index 0–21 stays the same, its player id changes), fresh, with their own hidden
-values (``Physiology.substitute``). ``ids`` is the player in each slot now; events keep the ids
-of the moment, and ``sub_log`` says who was where when.
+time, half-time ones at the second-half kick-off [IFAB2025, Law 3]: the replaced player walks off
+at the halfway line, the restart waits for him, and the substitute comes on there and jogs to his
+place (``params.SUB_*``). He takes over the engine slot (its index 0–21 stays the
+same, its player id changes), fresh, with their own hidden values (``Physiology.substitute``).
+``ids`` is the player in each slot now; events keep the ids of the moment, and ``sub_log`` says
+who was where when.
 
 Conventions (our choices, needed by the estimator and the agents later):
 
@@ -36,8 +39,8 @@ Conventions (our choices, needed by the estimator and the agents later):
   assumption).
 
 Tuned values live in ``params.py`` with their sources. The few small numbers written inline here
-(shot, clearance and loose-ball speeds, pass-success nudges, carry and touch limits) are our
-assumption.
+(shot, clearance, loose-ball and deflection speeds and angles, pass-success nudges, carry and
+touch limits) are our assumption.
 """
 
 from __future__ import annotations
@@ -92,6 +95,7 @@ class Touch:
     duel_at: float | None
     header: bool
     carry_ons: int = 0  # times he carried on at goal instead of releasing (``SHOT_CARRY_ON_*``)
+    challenger: int = -1  # the opponent going in for the ball (``update_touch``)
 
 
 @dataclass
@@ -164,6 +168,8 @@ class MatchEngine:
         self.transition_spans: list[float] = []  # realised length of each transition, s
         self.pending = sorted(subs or [], key=lambda s: (s.clock_s, s.slot))
         self.sub_log: list[tuple[int, float, int, str, str]] = []  # period, t, slot, off, on
+        self.leaving: dict[int, tuple[SubPlan, np.ndarray, float]] = {}  # slot: plan, exit, due
+        self.entering: dict[int, float] = {}  # slot: when his substitution was due
         self.roles = Roles(self)
 
     # --- Geometry ----------------------------------------------------------------------------
@@ -353,14 +359,28 @@ class MatchEngine:
             self.log(EventType.CARRY, tc.t0, tc.player, start=tc.start, end=end, end_t=t)
 
     def update_touch(self, t: float) -> None:
+        """From the duel's moment, the nearest opponent within ``DUEL_ENGAGE`` goes in for the
+        ball (``roles.targets``) and holds the carrier up for up to ``DUEL_HOLD_S``; the duel
+        happens once he is within ``DUEL_REACH`` of the carrier and the ball, if the carrier has
+        not released it first (decision 41)."""
         tc = self.touch
         if tc.duel_at is not None and t >= tc.duel_at:
-            opp, dist = self.nearest(1 - int(self.team_of[tc.player]), self.pos[tc.player])
-            if dist <= P.DUEL_REACH:
-                self.ground_duel(t, opp)
+            if tc.challenger < 0:
+                opp, dist = self.nearest(1 - int(self.team_of[tc.player]), self.pos[tc.player])
+                if dist <= P.DUEL_ENGAGE:
+                    tc.challenger = opp
+                    tc.t_release = max(tc.t_release, snap(t + P.DUEL_HOLD_S))  # held up
+            if tc.challenger >= 0 and self.in_reach(tc.challenger, tc.player, t):
+                self.ground_duel(t, tc.challenger)
                 return
         if t >= tc.t_release:
             self.release(t)
+
+    def in_reach(self, opp: int, c: int, t: float) -> bool:
+        """``opp`` is within ``DUEL_REACH`` of carrier ``c`` and of the ball at his feet."""
+        ball = self.ball_at(t)[:2]
+        near_ball = np.hypot(*(self.pos[opp] - ball)) <= P.DUEL_REACH
+        return bool(near_ball and np.hypot(*(self.pos[opp] - self.pos[c])) <= P.DUEL_REACH)
 
     def release(self, t: float) -> None:
         tc = self.touch
@@ -448,6 +468,7 @@ class MatchEngine:
         else:
             self.log(EventType.DUEL, t, opp, outcome=Outcome.FAIL, **duel)
             self.touch.duel_at = None
+            self.touch.challenger = -1
             self.touch.t_release = snap(max(self.touch.t_release, t) + 0.5)
 
     # --- Passes ------------------------------------------------------------------------------
@@ -619,6 +640,64 @@ class MatchEngine:
         f.end = self.inside(f.end + offset)
         f.result, f.to = "loose", -1
 
+    def cut_out(self, t: float) -> None:
+        """A pass in flight that passes within ``CUT_OUT_REACH`` of an outfield opponent while
+        low (``CUT_OUT_*``; near its end only if it will roll on past its receiver) is cut out
+        there: intercepted (or cleared in his own penalty area)
+        when it comes within ``CUT_OUT_CONTROL`` of him, otherwise deflected loose. The path is
+        the ball's since the last frame, so a fast ball does not jump past him (decision 41)."""
+        f = self.flight
+        if f.event < 0 or f.result not in ("complete", "aerial", "offside"):
+            return
+        ev = self.events[f.event]
+        if ev["type"] != EventType.PASS:
+            return
+        kicked = f.rolls == 0  # rolling on to its player (``roll_on``) is no new kick
+        taken = f.to >= 0 and np.hypot(*(self.pos[f.to] - f.end)) <= P.BALL_REACH  # he is there
+        edge = P.CUT_OUT_EDGE_S - 1e-6  # on the 10 Hz grid, 0.3 s is 0.29999…
+        if (kicked and t - f.t0 < edge) or (taken and f.t1 - t < edge):
+            return
+        now = self.ball_at(t)
+        if now[2] >= P.CUT_OUT_Z:
+            return
+        a = self.ball_at(max(t - P.DT, f.t0))[:2]
+        b = now[:2]
+        team = 1 - int(self.team_of[f.by])
+        idx = self.members(team)[1:]
+        ab = b - a
+        s = np.clip(((self.pos[idx] - a) @ ab) / max(float(ab @ ab), 1e-9), 0.0, 1.0)
+        at = a + s[:, None] * ab
+        d = np.hypot(*(self.pos[idx] - at).T)
+        j = int(np.argmin(d))
+        if d[j] > P.CUT_OUT_REACH:
+            return
+        opp, where = int(idx[j]), at[j].copy()
+        ev["outcome"] = Outcome.FAIL
+        ev["end"], ev["end_t"] = self.event_point(where), round(t, 1)
+        if d[j] <= P.CUT_OUT_CONTROL:
+            if self.to_uv(team, where)[0] < -(GOAL_U - P.BOX_DEPTH):
+                self.clearance(t, opp, where)
+                return
+            self.gain_possession(team, t, True, where)
+            self.log(EventType.INTERCEPTION, t, opp, start=where, outcome=Outcome.SUCCESS)
+            self.flight = None
+            self.start_touch(opp, t)
+            return
+        # Off his outstretched leg: on at an angle, away from his side of the path, slower.
+        unit = ab / max(float(np.hypot(*ab)), 1e-6)
+        side = 1.0 if (self.pos[opp] - where) @ np.array([-unit[1], unit[0]]) < 0 else -1.0
+        turn = math.radians(40.0) * side
+        heading = np.array([unit[0] * math.cos(turn) - unit[1] * math.sin(turn),
+                            unit[0] * math.sin(turn) + unit[1] * math.cos(turn)])  # fmt: skip
+        speed = float(np.hypot(*ab)) / P.DT
+        end = where + heading * float(np.clip(0.25 * speed, 2.0, 5.0))
+        result = "loose"
+        if np.any(np.abs(end) > (P.HALF_LENGTH, P.HALF_WIDTH)):
+            result, end = "out", self.over_nearest_line(end, 0.0)
+        self.lose_control()
+        dist = float(np.hypot(*(end - where)))
+        self.flight = Flight(where, end, t, snap(t + dist / 8.0), 0.3, result, by=opp)
+
     def intercept_point(self, opp: int, f: Flight, flight_s: float, s: float) -> float:
         """Where along the pass (0–1) ``opp`` cuts it out: the first point from 0.3 on that he
         can reach before the ball at ``INTERCEPT_SPEED`` after ``INTERCEPT_REACT_S``; if none,
@@ -734,6 +813,11 @@ class MatchEngine:
     def arrive(self, t: float) -> None:
         rng = self.rng
         f = self.flight
+        if f.result == "aerial" and np.hypot(*(self.pos[f.challenger] - f.end)) > P.DUEL_REACH:
+            # Not under the ball: no duel; it is the receiver's (decision 41).
+            f.result, f.receiver_wins = "complete", True
+            if f.event >= 0:
+                self.events[f.event]["outcome"] = Outcome.SUCCESS
         if self.roll_on(t, f):
             return
         result = f.result
@@ -1031,13 +1115,15 @@ class MatchEngine:
         if mode == "dead":
             r = self.restart
             close = np.hypot(*(self.pos[r.taker] - r.spot)) < 1.5
-            if t >= r.t and (close or t >= r.t + 10.0):
+            if t >= r.t and (close or t >= r.t + 10.0) and not self.subs_waiting(t):
                 self.take_restart(t)
         elif mode == "touch":
             self.update_touch(t)
         elif mode == "flight":
             if t >= self.flight.t1 - 1e-9:
                 self.arrive(t)
+            else:
+                self.cut_out(t)
         elif mode == "loose":
             self.update_loose(t)
 
@@ -1107,13 +1193,16 @@ class MatchEngine:
         purpose = np.empty((n_frames, 22), dtype=np.int8)
         self.log(EventType.PERIOD_START, 0.0)
         subs: list[tuple[int, int, str]] = []
-        if self.pending:  # half-time substitutions, before the kick-off
+        self.entering.clear()
+        if self.pending or self.leaving:  # half-time substitutions, before the kick-off
             subs += self.substitute_due(0.0, 0)
         for k in range(n_frames):
             t = round(k / P.FRAME_RATE_HZ, 1)
             self.update(t)
             if self.pending and self.mode == "dead":
                 subs += self.substitute_due(t, k)
+            if self.leaving:
+                subs += self.walk_off(t, k)
             self.follow_ball(t)
             pos[k] = self.pos
             ball[k] = self.ball_xy
@@ -1130,20 +1219,58 @@ class MatchEngine:
         return PeriodFrames(period, pos, ball, alive, possession, purpose, subs)
 
     def substitute_due(self, t: float, k: int) -> list[tuple[int, int, str]]:
-        """Make the substitutions due by now (the ball is dead); returns (frame, slot, id)."""
+        """Start the substitutions due by now (the ball is dead): the replaced player walks off
+        (``walk_off``). At a period's kick-off (half-time) they are made at once, with any
+        replaced player still walking off. Returns the ones made, as (frame, slot, id)."""
         clock = self.clock(t)
         due = [s for s in self.pending if s.clock_s <= clock]
         made = []
         for sub in due:
             self.pending.remove(sub)
-            i, new = sub.slot, sub.player
-            self.log(EventType.SUBSTITUTION, t, i, related_player_id=new.id)
-            self.sub_log.append((self.period, t, i, self.ids[i], new.id))
-            self.ids[i] = new.id
-            self.a0[i], self.s0[i] = new.params.a0, new.params.s0
-            self.roles.runs.pop(i, None)
-            self.roles.declined.pop(i, None)
-            if self.physiology is not None:
-                self.physiology.substitute(i, new.params)
-            made.append((k, i, new.id))
+            if t > 0.0:
+                self.leaving[sub.slot] = (sub, self.sub_point(sub.slot), t)
+            else:
+                made.append(self.swap(sub, t, k))
+        if t == 0.0:
+            made += [self.swap(sub, t, k) for sub, _, _ in self.leaving.values()]
+            self.leaving.clear()
+        r = self.restart
+        if r.taker in self.leaving:
+            free = [int(j) for j in self.members(r.team)[1:] if int(j) not in self.leaving]
+            r.taker = min(free, key=lambda j: float(np.hypot(*(self.pos[j] - r.spot))))
         return made
+
+    def walk_off(self, t: float, k: int) -> list[tuple[int, int, str]]:
+        """A replaced player who has reached the halfway line leaves, and his substitute comes
+        on there (at the latest ``SUB_MAX_S`` after it was due, where he stands), so that the
+        slot they share moves on smoothly."""
+        made = []
+        for i, (sub, exit_xy, due) in list(self.leaving.items()):
+            if np.hypot(*(self.pos[i] - exit_xy)) < 0.5 or t >= due + P.SUB_MAX_S:
+                del self.leaving[i]
+                made.append(self.swap(sub, t, k))
+                self.entering[i] = due
+        return made
+
+    def subs_waiting(self, t: float) -> bool:
+        """The restart waits while a replaced player walks off (``walk_off`` ends it by
+        ``SUB_MAX_S``); his substitute may still be jogging to his place (``Roles.targets``)."""
+        return bool(self.leaving)
+
+    def sub_point(self, slot: int) -> np.ndarray:
+        """Where a substitution is made: the halfway line by the benches' touchline, on the
+        side of the half the slot's team defends (``SUB_ENTRY_*``)."""
+        return np.array([-self.dir[int(self.team_of[slot])] * P.SUB_ENTRY_X, P.SUB_ENTRY_Y])
+
+    def swap(self, sub: SubPlan, t: float, k: int) -> tuple[int, int, str]:
+        """The substitute takes over the slot, where it stands."""
+        i, new = sub.slot, sub.player
+        self.log(EventType.SUBSTITUTION, t, i, related_player_id=new.id)
+        self.sub_log.append((self.period, t, i, self.ids[i], new.id))
+        self.ids[i] = new.id
+        self.a0[i], self.s0[i] = new.params.a0, new.params.s0
+        self.roles.runs.pop(i, None)
+        self.roles.declined.pop(i, None)
+        if self.physiology is not None:
+            self.physiology.substitute(i, new.params)
+        return (k, i, new.id)

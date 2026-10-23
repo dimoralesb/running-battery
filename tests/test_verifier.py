@@ -28,7 +28,8 @@ RULES_MISS = {"He likely faded after the break.",
               "In the Premier League, players make about a third fewer high-speed recovery runs "
               "right after their hardest minutes than they normally do; here his mean speed in "
               "the next 8 s was 3.7 m/s and he was 44 m from the ball 8 s later.",
-              "This is the lowest point of his match so far, by our estimate.",
+              # (the "lowest point" the facts contradict is now blocked by the rules: claim 19c
+              # needs at_lowest_point_so_far, decision 41)
               "Westerlyn cover 196 m of high-speed running per ball-in-play minute while their "
               "opponents cover 160 m, roughly 22% less.",
               # (the "less opportunity to run" line of decision 29 is now blocked by the rules
@@ -165,3 +166,18 @@ def test_overlay_copy_passes_the_verifier():
         for mode in ("fan", "analyst"):
             v = verify(text.format(**sample), mode)
             assert v.ok, (key, [f.claim for f in v.findings])
+
+
+def test_claim_11_takes_no_reason_after_it():
+    """Decision 41: two lines on the site's feed gave a reason after claim 11's wording."""
+    lines = (
+        "Relative to a typical professional, this sequence would leave them at about 76% of their "
+        "short-term reserve, though that may reflect the ball being in play only 48% of the last "
+        "5 min.",
+        "By our typical-pro calibration this running would leave a typical professional at about "
+        "71% of their short-term reserve, partly because the ball was out of play.",
+    )
+    for s in lines:
+        assert {f.claim for f in verify(s, "analyst").findings} == {"11"}
+    wording = next(c["wording"] for c in register()["claims"] if c["id"] == "11")
+    assert verify(wording, "fan").ok

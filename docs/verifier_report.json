@@ -46,9 +46,9 @@
    },
    "context": {
     "rules": {
-     "caught": "44/50",
+     "caught": "45/50",
      "false_blocks": "0/32",
-     "caught_rate": 0.88,
+     "caught_rate": 0.9,
      "false_block_rate": 0.0
     },
     "llm": {
@@ -74,9 +74,9 @@
    }
   },
   "rules": {
-   "caught": "86/119",
+   "caught": "87/119",
    "false_blocks": "0/73",
-   "caught_rate": 0.723,
+   "caught_rate": 0.731,
    "false_block_rate": 0.0
   },
   "llm": {
@@ -2772,8 +2772,10 @@
    },
    "claim": "19c",
    "should_pass": false,
-   "rules_ok": true,
-   "rules_findings": [],
+   "rules_ok": false,
+   "rules_findings": [
+    "19c"
+   ],
    "llm_ok": false,
    "llm_stage": "llm",
    "llm_findings": [
@@ -4210,7 +4212,8 @@
    "should_pass": false,
    "rules_ok": false,
    "rules_findings": [
-    "G9"
+    "G9",
+    "19c"
    ],
    "llm_ok": false,
    "llm_stage": "rules",

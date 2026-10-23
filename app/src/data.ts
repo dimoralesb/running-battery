@@ -291,6 +291,7 @@ export function itemOfHighlight(h: Highlight): Item {
 /** Seconds two clips share. */
 /** Seconds a clip plays around its window: 3 before, 2 after (App.tsx `clipFrom`, `clipTo`). */
 const PLAYED_PAD = 5;
+const SHARE_MAX = 2; // s two clips of different players may share (clip_audit's "shares")
 
 function overlap(a: Item, b: Item): number {
   return Math.min(a.end, b.end) - Math.max(a.start, b.start);
@@ -304,11 +305,19 @@ function overlap(a: Item, b: Item): number {
  * takes its place; one that shares more than half of the shorter clip with a moment already in
  * the list (the same action, from either side) gets no clip. A moment whose played clip touches
  * the same player's highlight (3 s before and 2 s after each, `clipFrom`/`clipTo` in App.tsx)
- * also becomes that clip's line, so his two clips do not replay the same seconds (decision 40). */
+ * also becomes that clip's line, so his two clips do not replay the same seconds (decision 40).
+ * One whose played clip shares more than SHARE_MAX seconds with another player's highlight takes
+ * its place too, and one that shares that much with another player's moment already in the list
+ * gets no clip (decision 41: a clip of his hardest minutes replayed the last 8 s of a
+ * team-mate's back-to-back runs). */
 export function queue(d: MatchData, mode: Mode, best: Highlight[]): Item[] {
   const items = best.map(itemOfHighlight);
   const moments: Item[] = [];
-  for (const m of d.feed.moments) {
+  // The favourite's moments first, so that his keep their clips when two overlap (decision 41).
+  const fav = d.feed.favourite;
+  const mine = (m: { moment_id: string }) => Number(!!fav && m.moment_id.split(":")[1] === fav);
+  const ordered = [...d.feed.moments].sort((a, b) => mine(b) - mine(a));
+  for (const m of ordered) {
     const lines = d.feed.entries.filter((e) => e.moment_id === m.moment_id && e.mode === mode
                                                && e.shown);
     if (!lines.length) continue;
@@ -326,14 +335,18 @@ export function queue(d: MatchData, mode: Mode, best: Highlight[]): Item[] {
     });
   }
   const shared = (a: Item, b: Item) =>
-    !a.lapse && overlap(a, b) > 0.5 * Math.min(a.end - a.start, b.end - b.start);
+    !a.lapse && (overlap(a, b) > 0.5 * Math.min(a.end - a.start, b.end - b.start)
+                 || (a.player !== b.player && overlap(a, b) > SHARE_MAX - PLAYED_PAD));
   const out: Item[] = [];
   for (const m of moments) {
     // The same run again, or the same action seen from another player (decision 39: a defender
     // caught on the break and the attacker's flat-out run on that counter); its lines stay in
     // the full match.
     const len = (x: Item) => x.end - x.start;
-    if (out.some((o) => overlap(o, m) > 0.5 * Math.min(len(o), len(m)))) continue;
+    if (out.some((o) => overlap(o, m) > 0.5 * Math.min(len(o), len(m))
+                        || (o.player !== m.player && overlap(o, m) > SHARE_MAX - PLAYED_PAD))) {
+      continue;
+    }
     let k = items.findIndex((h) => shared(h, m));
     if (k < 0 && m.player) {
       k = items.findIndex((h) => !h.lapse && !h.momentId && h.player === m.player

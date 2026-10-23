@@ -18,6 +18,7 @@ from runningbattery.sim.batch import parse_seeds
 from runningbattery.sim.match import MatchEngine, PeriodFrames
 from runningbattery.sim.output import CLEAN_COPY, observe, read_clean_copy, simulate
 from runningbattery.sim.replay import load_window, write_html
+from runningbattery.sim.roles import CODE as PURPOSES_CODE
 from runningbattery.sim.rosters import make_teams
 from runningbattery.sim.runs import speeds
 from runningbattery.sim.summary import (
@@ -590,8 +591,10 @@ def test_restart_distance_and_taker(kind, spot_uv, keep):
 
 
 def test_free_kick_in_range_gets_a_wall():
-    """WALL_SIZE[0] defenders side by side, WALL_GAP apart, at the edge of the 9.15 m circle."""
-    engine, spot = _held_restart("free_kick", (P.HALF_LENGTH - 24.0, 4.0))
+    """WALL_SIZE[0] defenders side by side, WALL_GAP apart, at the edge of the 9.15 m circle.
+    Held 45 s: at a set piece the wall comes from the front players, who may start 40 m away
+    and walk round the circle."""
+    engine, spot = _held_restart("free_kick", (P.HALF_LENGTH - 24.0, 4.0), 45.0)
     edge = P.RESTART_DISTANCE + P.RESTART_MARGIN
     wall = engine.pos[engine.roles.wall_members]
     d = np.hypot(*(wall - spot).T)
@@ -965,3 +968,175 @@ def test_story_controls_press_until_the_hour_and_sub_the_exposed_full_back():
     assert mine[0].player.position == off.position == "FB" and mine[0].player.slot == off.slot
     assert len({p.slot for p in new}) == len(new)  # a slot is substituted once
     assert story.settings()["name"] == "press-fade"
+
+
+def _play(engine, t0: float, seconds: float) -> tuple[np.ndarray, list]:
+    """Step ``engine`` as ``run_period`` does from ``t0``; positions of every frame, and the
+    substitutions made."""
+    frames, subs = [], []
+    for k in range(round(seconds * P.FRAME_RATE_HZ)):
+        t = round(t0 + k / P.FRAME_RATE_HZ, 1)
+        engine.update(t)
+        if engine.pending and engine.mode == "dead":
+            subs += engine.substitute_due(t, k)
+        if engine.leaving:
+            subs += engine.walk_off(t, k)
+        engine.follow_ball(t)
+        frames.append(engine.pos.copy())
+        engine.move(t)
+    return np.array(frames), subs
+
+
+def test_trackers_follow_the_runner_and_stop_with_the_pass():
+    """Decision 41: a defender tracking a runner in behind aims goal-side of where the runner is
+    now, not of where he was heading, and stops once the pass reaches someone else."""
+    from runningbattery.sim.match import Flight
+    from runningbattery.sim.roles import Run
+
+    engine = _engine()
+    roles = engine.roles
+    roles.clear()
+    runner, receiver = 10, 9  # team 0's centre-forward and a winger
+    engine.pos[runner] = engine.to_uv(0, np.array([20.0, 5.0]))
+    goal = engine.to_uv(0, np.array([45.0, 4.0]))
+    roles.runs[runner] = Run(RunPurpose.RUN_IN_BEHIND, 20.0, P.BEHIND_EFFORT, target=goal)
+    roles.track(5.0, runner)
+    tracker = next(i for i, r in roles.runs.items() if r.follow == runner)
+    assert engine.positions[tracker] in (Position.CB, Position.FB)
+    far = engine.to_uv(0, np.array([-45.0, -30.0]))  # the pass goes to the winger, far away
+    engine.flight = Flight(far, far.copy(), 5.0, 8.0, 0.0, "complete", by=7, to=receiver,
+                           event=roles.runs[tracker].follow_pass)  # fmt: skip
+    engine.mode = "flight"
+    for spot in ([20.0, 5.0], [28.0, 2.0]):
+        engine.pos[runner] = engine.to_uv(0, np.array(spot))
+        tgt, _, purpose, _, _ = roles.targets(5.5)
+        want = roles.goal_side(1, engine.pos[runner], P.TRACK_GOAL_SIDE)
+        assert np.hypot(*(tgt[tracker] - want)) < 0.5
+        assert purpose[tracker] == PURPOSES_CODE[RunPurpose.RECOVERY_RUN]
+    engine.start_touch(receiver, 6.0)  # it reached someone else
+    roles.targets(6.1)
+    assert tracker not in roles.runs
+
+
+def test_no_sprint_straight_back():
+    """Decision 41: within TURN_S of being above HI_SPEED one way, a run the other way goes no
+    faster than SHAPE_RUN_MIN; after it, at its planned speed."""
+    from runningbattery.sim.roles import Run
+
+    engine = _engine()
+    roles = engine.roles
+    roles.clear()
+    engine.mode, engine.loose_point, engine.loose_since = "loose", np.array([40.0, 30.0]), 5.0
+    i = 3
+    engine.pos[i] = (-20.0, -20.0)  # far from the loose ball: not a chaser
+    back = engine.pos[i] - [20.0, 0.0]
+    for t, capped in ((6.0, True), (5.0 + P.TURN_S + 0.5, False)):
+        roles.runs[i] = Run(RunPurpose.RECOVERY_RUN, t + 5.0, 1.0, target=back)
+        roles.fast_t[i], roles.fast_dir[i] = 5.0, (1.0, 0.0)
+        engine.vel[i] = 0.0
+        _, cap, _, _, _ = roles.targets(t)
+        share = P.SHAPE_RUN_MIN if capped else 1.0
+        assert cap[i] == pytest.approx(min(share * roles.effort[i], 1.0) * engine.s0[i])
+
+
+def test_duels_need_the_players_within_reach():
+    """Decision 41: a ground duel (or foul) needs the challenger within DUEL_REACH of the carrier
+    and the ball; from DUEL_ENGAGE he goes in for it and holds the carrier up. An aerial
+    challenger not under the ball at arrival does not contest it."""
+    from runningbattery.sim.match import Flight
+
+    engine = _engine()
+    c, opp = 8, 13
+    engine.pos[c], engine.vel[c] = engine.to_uv(0, np.array([0.0, 0.0])), 0.0
+    engine.start_touch(c, 5.0)
+    engine.touch.duel_at, engine.touch.t_release = 5.0, 5.5
+    others = [j for j in engine.members(1) if j != opp]
+    engine.pos[others] = engine.pos[c] + [0.0, 30.0]
+    engine.pos[opp] = engine.pos[c] + engine.to_uv(0, np.array([3.0, 0.0]))
+    n = len(engine.events)
+    engine.update_touch(5.0)
+    assert engine.touch.challenger == opp and engine.touch.t_release >= 5.0 + P.DUEL_HOLD_S
+    assert not any(e["type"] == EventType.DUEL for e in engine.events[n:])
+    engine.pos[opp] = engine.pos[c] + engine.to_uv(0, np.array([1.0, 0.0]))
+    engine.update_touch(5.1)
+    duel = [e for e in engine.events[n:] if e["type"] == EventType.DUEL]
+    assert len(duel) == 1 and duel[0]["player"] == opp
+
+    for gap, contested in ((3.0, False), (0.6, True)):
+        engine = _engine()
+        r, ch = 9, 14
+        end = engine.to_uv(0, np.array([10.0, 10.0]))
+        engine.pos[r], engine.pos[ch] = end, end + [gap, 0.0]
+        engine.flight = Flight(end - [20.0, 0.0], end, 4.0, 5.0, 8.0, "aerial", by=7, to=r,
+                               challenger=ch, receiver_wins=False)  # fmt: skip
+        engine.mode = "flight"
+        n = len(engine.events)
+        engine.arrive(5.0)
+        aerial = [e for e in engine.events[n:] if e["type"] == EventType.DUEL]
+        assert bool(aerial) == contested
+        if not contested:
+            got = engine.events[n]
+            assert got["type"] == EventType.RECEPTION and got["player"] == r
+
+
+def test_low_passes_are_cut_out_on_the_way():
+    """Decision 41: a low pass that rolls within CUT_OUT_CONTROL of an outfield opponent is
+    intercepted there; within CUT_OUT_REACH, deflected loose; further off, it arrives."""
+    from runningbattery.sim.match import Flight
+
+    for off, result in ((0.1, "intercepted"), (0.5, "loose"), (2.0, "complete")):
+        engine = _engine()
+        engine.roles.clear()
+        passer, to, opp = 6, 9, 15
+        a = engine.to_uv(0, np.array([-10.0, 0.0]))
+        b = engine.to_uv(0, np.array([10.0, 0.0]))
+        engine.pos[passer], engine.pos[to] = a, b
+        others = [j for j in engine.members(1)[1:] if j != opp]
+        engine.pos[others] = [0.0, 30.0]
+        engine.pos[opp] = engine.to_uv(0, np.array([0.0, off]))
+        engine.log(EventType.PASS, 5.0, passer, start=a, end=b, outcome="success")
+        engine.flight = Flight(a, b, 5.0, 7.0, 0.0, "complete", by=passer, to=to,
+                               event=len(engine.events) - 1)  # fmt: skip
+        engine.mode = "flight"
+        n = len(engine.events)
+        for k in range(1, 25):
+            engine.update(round(5.0 + k / P.FRAME_RATE_HZ, 1))
+        new = [e["type"] for e in engine.events[n:]]
+        if result == "intercepted":
+            assert EventType.INTERCEPTION in new and engine.events[n - 1]["outcome"] == "fail"
+        elif result == "loose":
+            assert EventType.INTERCEPTION not in new and engine.events[n - 1]["outcome"] == "fail"
+            assert engine.flight.by == opp and engine.flight.result in ("loose", "out")
+        else:
+            assert engine.events[n - 1]["outcome"] == "success"
+            assert EventType.RECEPTION in new
+
+
+def test_substitutes_come_on_at_the_halfway_line():
+    """Decision 41: at a stoppage the replaced player walks to the halfway line by the benches'
+    touchline and leaves there, and the restart waits for him; the substitute comes on at that
+    spot and jogs to his place. The slot they share never jumps."""
+    from dataclasses import replace
+
+    from runningbattery.sim.rosters import plan_substitutions
+
+    rng = np.random.default_rng(0)
+    teams = make_teams(rng)
+    plan = plan_substitutions(np.random.default_rng(1), teams)[0]
+    engine = MatchEngine(rng, teams, subs=[replace(plan, clock_s=1.0)])
+    engine.run_period(1, 50, 0)
+    i = plan.slot
+    engine.pos[i] = engine.to_uv(int(engine.team_of[i]), np.array([-30.0, 20.0]))
+    engine.schedule_restart("throw_in", 0, np.array([10.0, P.HALF_WIDTH]), 5.0, np.zeros(2))
+    engine.restart.t = 8.0  # due long before he is off
+    n = len(engine.events)
+    frames, subs = _play(engine, 5.0, 70.0)
+    assert len(subs) == 1 and subs[0][1] == i
+    k = subs[0][0]
+    assert np.hypot(*(frames[k, i] - engine.sub_point(i))) < 0.6
+    assert abs(frames[k, i, 0]) <= P.SUB_ENTRY_X + 0.6 and frames[k, i, 1] < -P.HALF_WIDTH + 1.6
+    step = np.hypot(*np.diff(frames[: k + 50, i], axis=0).T) * P.FRAME_RATE_HZ
+    assert step.max() < P.HI_SPEED, step.max()  # no jump; walks off, jogs on
+    sub = next(e for e in engine.events[n:] if e["type"] == EventType.SUBSTITUTION)
+    taken = [e for e in engine.events[n:] if e["type"] == EventType.PASS and e["t"] > 5.0]
+    assert taken and taken[0]["t"] > sub["t"]  # the throw-in waited

@@ -142,6 +142,12 @@ COUNTER_SUPPORT_EFFORT = 0.95
 OVERLAP_EFFORT = 0.86
 RECOVERY_EFFORT = 0.92
 SPRINT_RUN_S = (3.0, 6.0)  # how long a sprint run may last, s. Our assumption.
+# A run that heads back within TURN_S seconds of being above HI_SPEED the other way (more than
+# 90° round) goes no faster than SHAPE_RUN_MIN until then: he turns first. Our assumption
+# (decision 41: a run in behind or an overlap, the ball lost, and a sprint straight back;
+# sprint-turns, above 6 m/s one way then the other within 4 s, were 0.75–2.60 per player-hour
+# against 0–1.04 in IDSSE).
+TURN_S = 3.5
 # Work rate per position: the wanted speed of every run and ball role (not calm movement) is
 # multiplied by this, then capped at S0. Position differences come from role behaviour, not
 # from different physical settings (PLAN §7, decision 3). Our assumption, fitted to HID and
@@ -170,19 +176,29 @@ SPRINT_RUN_S = (3.0, 6.0)  # how long a sprint run may last, s. Our assumption.
 # not move), FB −6.1% and CM −5.7% (120 seeds), so FB and CM rose 0.9 and 0.6%. With box
 # carries aimed at goal too (same decision): high-speed running per position within ±5% (FB
 # −4.2, DM −4.4, CM −4.6, AM −4.2%), sprint distance FB +17%, DM +8%, CM +11%, team +7% (240
-# seeds).
+# seeds). Decision 41 (trackers follow the runner and stop with the pass; no sprint straight back,
+# TURN_S): the decoy runs tracked to an empty spot had been a third of centre-backs' high-speed
+# running (CB −33%, FB −14%, DM, CM and AM −8 to −10%), so CB, FB, DM, CM, AM and CF rose 13.9,
+# 4.5, 0.8, 0.3, 1.6 and 2.2% (CB and FB at 1.10, the most WALL_SPEED allows below), with
+# COUNTER_DROP_* and defenders following runs into space: high-speed running per position within
+# ±5.3% (CB −1.5, FB −4.0, DM −5.3, CM −3.3, AM −0.5%), sprint distance FB +16%, DM +9%, CM +12%,
+# team +7% (120 seeds; decision 40 on the same seeds +16, +8, +13 and +6%).
 POSITION_EFFORT = {
     Position.GK: 0.990,
-    Position.CB: 0.966,
-    Position.FB: 1.043,
-    Position.DM: 1.064,
-    Position.CM: 1.077,
-    Position.AM: 1.068,
+    Position.CB: 1.100,
+    Position.FB: 1.090,
+    Position.DM: 1.072,
+    Position.CM: 1.080,
+    Position.AM: 1.080,
     Position.WM: 1.063,
-    Position.CF: 0.978,
+    Position.CF: 1.000,
 }
-# Defenders (CB, FB) who track an opponent running in behind: the nearest TRACKERS, aiming
-# TRACK_GOAL_SIDE metres goal-side of where the runner is going. Our assumption.
+# Defenders (CB, FB) who track an opponent running in behind: the nearest TRACKERS follow him,
+# TRACK_GOAL_SIDE metres goal-side of where he is now, while the pass is in flight or he has the
+# ball; they stop when his run ends, the pass reaches someone else, or the ball runs loose or is
+# won. Our assumption (decision 41): before, the tracker sprinted for 3–6 s to a fixed point
+# goal-side of where the runner was heading, whatever happened to the pass, then sprinted
+# straight back out (sprint-turns 0.75–2.60 per player-hour against 0–1.04 in IDSSE).
 TRACKERS = 1
 TRACK_GOAL_SIDE = 2.0
 # A player who receives on the run keeps up to this much of their speed while carrying the
@@ -192,8 +208,17 @@ CARRY_MOMENTUM = 0.85
 # (recovery run, covering, pushing up, support) until the gap is back under SHAPE_RUN_END. Its
 # speed grows with the gap at the start, from SHAPE_RUN_MIN to SHAPE_RUN_SPEED at SHAPE_RUN_FULL
 # metres; a recovery run (not goal-side of the ball) in danger (DANGER_U) grows from
-# SHAPE_RUN_SPEED to RECOVERY_EFFORT. Our assumption.
+# SHAPE_RUN_SPEED to RECOVERY_EFFORT. Out of possession, a run mostly up the pitch, back up to the
+# line, goes no faster than SHAPE_RUN_MIN unless the team is pressing (decision 41: a defender
+# who had dropped deep sprinted back out at 7 m/s). Our assumption.
 SHAPE_RUN_GAP = 9.0
+# On the opponents' counter-attack (a transition), or caught upfield of the ball out of
+# possession, a defender (CB, FB) starts his shape run from COUNTER_DROP_GAP metres, at
+# COUNTER_DROP_SPEED of S0 or more. Our assumption (decision 41): with decoy runs no longer
+# tracked to an empty spot, centre-backs' high-speed running was 30% short; this, and following
+# runs into space (roles.TRACKED), is where real centre-backs do theirs.
+COUNTER_DROP_GAP = 3.0
+COUNTER_DROP_SPEED = 0.80
 SHAPE_RUN_FULL = 25.0
 SHAPE_RUN_END = 3.0
 SHAPE_RUN_MIN = 0.50
@@ -327,11 +352,23 @@ SUB_WEIGHT = {
     Position.WM: 2.5,
     Position.CF: 2.5,
 }
-# A substitution waits for the next stoppage [IFAB2025, Law 3]; the substitute takes over the slot
-# where the player stood (our simplification: no walk off and on), fresh, with their own hidden
-# values. Substitutes do more high-intensity running per minute than whole-match players (+15 to
-# +27% [Bradley2013, Table IV; Bradley 2014 via Hills2018]); here that comes only from their
-# fresh state, no extra work rate (our assumption, checked in sim.fatigue_checks).
+# A substitution waits for the next stoppage [IFAB2025, Law 3]. The replaced player walks briskly
+# (SUB_OFF_SPEED of S0) to the halfway line by the benches' touchline (SUB_ENTRY_Y, 1 m in from
+# it), SUB_ENTRY_X metres into the half his team defends, and leaves there; his substitute comes
+# on at that spot and jogs to his place in the shape at WALL_SPEED, until within SHAPE_RUN_GAP of
+# it (at most SUB_MAX_S after the substitution was due); the restart waits for the replaced
+# player to leave, not for the substitute to arrive. Law 3 has the
+# replaced player leave at the nearest point unless the referee says otherwise; at the halfway
+# line, the engine slot the two share moves on without a jump (our simplification). Half-time
+# substitutes line up for the kick-off. The substitute is fresh, with their own hidden values.
+# Our assumption (decision 41: the substitute appeared on the replaced player's spot,
+# mid-pitch). Substitutes do more high-intensity running per minute than whole-match players
+# (+15 to +27% [Bradley2013, Table IV; Bradley 2014 via Hills2018]); here that comes only from
+# their fresh state, no extra work rate (our assumption, checked in sim.fatigue_checks).
+SUB_ENTRY_Y = -(HALF_WIDTH - 1.0)
+SUB_ENTRY_X = 1.0
+SUB_OFF_SPEED = 0.4
+SUB_MAX_S = 60.0
 
 # --- Hidden physiology and fatigue (physiology.py; PLAN §2.3, layer 3) ---------------------------
 
@@ -559,6 +596,10 @@ GK_DEPTH_FROM = 10.0
 GK_DEPTH_SLOPE = 0.2
 GK_BEHIND_LINE = 20.0
 GK_MAX_OFF = 22.5
+# Within GK_BRAKE_M of that limit a keeper moves as on a run (``movement.step``), not with the
+# calm drift's slow braking, so that he stops at it (decision 41: 25 m off his line while
+# defending, in a clip). Our assumption.
+GK_BRAKE_M = 3.0
 GK_CLAIM_REACH = 26.0
 
 # --- Match flow ---------------------------------------------------------------------------------
@@ -615,10 +656,32 @@ OUT_DEFLECTED = 0.10  # share of those over the opponent's goal line a defender 
 AERIAL_DUEL_RADIUS = 8.0  # m; an opponent this close to a high pass's landing spot contests it
 AERIAL_RECEIVER_WINS = 0.5
 MISCONTROL = 0.03  # chance a reception bounces loose
+# A pass in flight that comes within CUT_OUT_REACH metres of an outfield opponent while low (under
+# CUT_OUT_Z metres, from CUT_OUT_EDGE_S after the kick to CUT_OUT_EDGE_S before it arrives) is
+# cut out: intercepted if he is within CUT_OUT_CONTROL of its path (in his own penalty area,
+# cleared), otherwise deflected loose, a few metres on. Our assumption (decision 41: a pass's
+# outcome was fixed at the kick, and 6.7% of completed passes rolled past an opponent within
+# 0.6 m).
+CUT_OUT_REACH = 0.6  # m
+CUT_OUT_CONTROL = 0.4  # m
+CUT_OUT_Z = 1.0  # m
+CUT_OUT_EDGE_S = 0.3
 
-# Ground duels against the ball carrier.
-DUEL_PER_TOUCH = 0.18
-DUEL_REACH = 4.0  # m; the challenger must be this close
+# Ground duels against the ball carrier: from a random moment of the touch, the nearest opponent
+# within DUEL_ENGAGE goes in for the ball, holding the carrier up for up to DUEL_HOLD_S seconds,
+# and the duel (or the foul) happens once he is within DUEL_REACH of both the carrier and the
+# ball; if the carrier releases it first, there is none.
+# An aerial duel's challenger, picked at the kick (AERIAL_DUEL_RADIUS), contests the ball only if
+# he is within DUEL_REACH of it when it arrives. About 1.5 m, a stride and a leg's reach: 1.3 m,
+# so that tracking noise on two players keeps it under 1.5. The challenger runs at the pace that
+# gets him there (``roles.targets``). Our assumption (decision 41: duels were decided from up to
+# 4 m, aerial ones up to 7 m, with no contact). DUEL_PER_TOUCH was 0.18 before it: fewer
+# challengers reach the ball, so more go in (duels per match, summary.TARGETS).
+DUEL_PER_TOUCH = 0.36
+DUEL_ENGAGE = 4.0  # m
+DUEL_HOLD_S = 1.5
+DUEL_APPROACH = 0.65  # share of S0: going in for the ball is not a sprint
+DUEL_REACH = 1.3  # m
 DUEL_CHALLENGER_WINS = 0.5
 DUEL_TACKLER_KEEPS = 0.4  # otherwise the ball runs loose
 FOUL_PER_DUEL = 0.15
@@ -739,8 +802,8 @@ WALL_GAP = 0.75  # 0.6 before decision 39 (wall players within 0.7 m of each oth
 # time has gone, leaving the rest to settle (``Roles.dead_pace``; at a corner, about 13 of
 # 32 s): from a walk, SET_PIECE_WALK of S0 (about 2 m/s),
 # up to a jog, WALL_SPEED of S0, clearly below HI_SPEED for every player: at most
-# 0.45 × 1.077 × 10.3 = 4.99 m/s [18.0 km/h] (the largest POSITION_EFFORT, CM, and the top of
-# S0_RANGE; the match tempo and the story's press apply in play only, and fatigue only slows).
+# 0.45 × 1.10 × 10.3 = 5.10 m/s [18.4 km/h] (the largest POSITION_EFFORT, CB and FB, and the top
+# of S0_RANGE; the match tempo and the story's press apply in play only, and fatigue only slows).
 # The goal huddle runs at WALL_SPEED. Our assumption (decision 40): before it every job jogged
 # at 0.5 of S0 whatever the time to the restart (a corner waits about 32 s, DEAD_TIME), up to
 # 5.52 m/s once decision 39 raised POSITION_EFFORT.

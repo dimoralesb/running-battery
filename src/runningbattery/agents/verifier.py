@@ -137,6 +137,15 @@ class Rule:
 
 
 RULES: tuple[Rule, ...] = (
+    # 11 (decision 41, 15:55 and 66:00 of the site's feed): "would leave a typical professional
+    # at about 76% of their short-term reserve, though that may reflect the ball being in play
+    # only 48%": claim 11 takes no reason after it (running already done is not explained by
+    # the ball being out; the Narrator's prompt says so).
+    Rule("11", "Claim 11 takes no reason after it: say what the running would leave a typical "
+         "professional, and give a reason for the running in its own sentence",
+         r"short-term reserve\b[^.]*\b((may|might|could) (reflect|be (down to|due to)))\b"
+         r"|short-term reserve\b[^.]*\b(because|due to|partly|given)\b[^.]*\b(ball|possession|"
+         r"lead|score|stoppage|came on|substitut)"),
     # 33: the player's own state.
     Rule("33", "About the player's own state; say what the running would cost a typical "
          "professional (claim 11)",
@@ -468,6 +477,16 @@ def context_findings(text: str, context: dict, claim_id: str | None) -> list[Fin
         elif not facts.get("fewer_touches_than_usual"):
             out.append(Finding("14", "The touch counts do not show fewer touches than his match "
                                "so far (claim 14)"))  # fmt: skip
+    # 19c (decision 41, 38:26 of the site's feed): "the lowest point of his match so far" with
+    # the battery at 0.620 and an earlier low of 0.618, both shown as 0.62.
+    if (
+        "facts" in context
+        and re.search(r"\blowest point\b", text, FLAGS)
+        and not facts.get("at_lowest_point_so_far")
+    ):
+        out.append(Finding("19c", "\"The lowest point of his match so far\" needs the running to "
+                           "leave a typical professional lower now than at any earlier second "
+                           "(at_lowest_point_so_far)"))  # fmt: skip
     if "facts" in context:
         known = numbers_in(context)
         if claim_id and str(claim_id) not in EXAMPLE_WORDING:

@@ -85,8 +85,11 @@ percentage of plain "running" ("96% less running" that was his high-speed runnin
 
 | | Unsupported sentences caught | Valid sentences blocked |
 |---|---|---|
-| Rules alone | 86 / 119 (paraphrases 2 / 23, fact checks 0 / 6) | 0 / 73 |
+| Rules alone | 87 / 119 (paraphrases 2 / 23, fact checks 0 / 6) | 0 / 73 |
 | Rules + LLM | 116 / 119 (paraphrases 23 / 23, fact checks 4 / 6) | 1 / 73 |
+
+Since decision 41 the rules also block "the lowest point of his match so far" unless the
+unrounded battery is at its lowest (86 / 119 before; the LLM row is the run of 2026-10-21).
 
 The LLM still misses sentences that mislead without a wrong number: claim 3 ("about a third fewer
 recovery runs right after their hardest minutes") used as the lead-in to a defender's own speed
@@ -285,7 +288,10 @@ at the whistle, and a carry in the box heads for goal (the rows before are in th
 and is back within ±5% after a small retune of full-backs and central midfielders; full-backs'
 sprint distance rose (+12.7% → +16.8%), team sprint distance a little (+6.9% → +7.3%), keepers'
 high-speed running fell (28 → 27 m a match), and players walk a little more (time walking 0.4
-points above decision 39, 1.4 above IDSSE).
+points above decision 39, 1.4 above IDSSE). Decision 41 changed the generator again (defenders
+follow the runner they track and no longer sprint straight back, duels need the players within
+1.5 m, a low pass that reaches an opponent is cut out, substitutes come on at the halfway line); the
+numbers below are still decision 40's and are re-run once, at the freeze before submission.
 
 | Check | Published (source) | Synthetic (no fatigue) | |
 |---|---|---|---|

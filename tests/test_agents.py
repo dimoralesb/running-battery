@@ -659,3 +659,79 @@ def test_caught_on_the_break_needs_the_counter_near_him_or_a_shot(tools):
         near = f["ball_nearest_him_in_counter"]["value"]
         assert near <= COUNTER_NEAR_M or f["counter_xg"]["value"] > 0 or f["counter_goal"]
         assert COUNTER_MIN_S <= f["counter_seconds"]["value"] <= COUNTER_MAX_S
+
+
+def test_possessives_of_names_ending_in_s():
+    """Decision 41: the feed showed "Ravensholt Harriers's"."""
+    assert feed_mod.possessive("Ravensholt Harriers") == "Ravensholt Harriers'"
+    assert feed_mod.possessive("Westerlyn Albion") == "Westerlyn Albion's"
+    b = {"kind": "red_zone", "player": {"name": "Sam Jones"},
+         "facts": {"hardest_minutes_count": 1, "peak_1min_hsr": 70}}  # fmt: skip
+    lines = [x for x in feed_mod.template(b, "fan") if x]
+    assert lines[0][1].startswith("Sam Jones' hardest minutes so far")
+    assert 'never "Harriers\'s"' in feed_mod.NARRATOR
+
+
+def test_so_far_claims_need_ten_minutes_on_the_pitch(folder, monkeypatch):
+    """Decision 41: "his hardest minutes so far" at 1:47 is true of almost any running. H04's
+    first hard minute (60–120 s) is no moment; his second (700–760 s) is, and only its brief
+    offers "the lowest point of his match so far"."""
+    import runningbattery.agents.tools as T
+
+    tools = MatchTools(folder)
+    red = tools.find_moments("red_zone", 10, player="H04")["moments"]
+    assert red and all(m["period"] == 2 or m["t"] >= T.SO_FAR_MIN_S for m in red)
+    monkeypatch.setattr(T, "SO_FAR_MIN_S", 0)
+    early = MatchTools(folder).find_moments("red_zone", 10, player="H04")["moments"]
+    first = min(early, key=lambda m: (m["period"], m["t"]))
+    assert first["period"] == 1 and first["t"] < 130.0
+    assert "lowest_typical_pro_battery_so_far" not in feed_mod.brief(tools, first)["facts"]
+    later = next(m for m in red if m["period"] == 1)
+    facts = feed_mod.brief(tools, later)["facts"]
+    assert "lowest_typical_pro_battery_so_far" in facts
+    # Unrounded (decision 41: 0.620 against an earlier 0.618 both read as 0.62).
+    s = tools.m.series["H04"]
+    battery = s.cols["battery"][: s.index(later["period"], later["t"]) + 1]
+    assert facts["at_lowest_point_so_far"] == bool(battery[-1] <= battery.min())
+    line = "This is the lowest point of his match so far, by our estimate."
+    v = verify(line, "fan", {"facts": facts | {"at_lowest_point_so_far": False}})
+    assert not v.ok and "19c" in {f.claim for f in v.findings}
+
+
+def test_nearest_to_the_ball_reads_every_frame(folder):
+    """Decision 41: "as close as 2 m" from the 1-Hz samples was 1.2 m in the full tracking."""
+    m = MatchTools(folder).m
+    times = np.round(np.arange(0.0, 3.01, 0.1), 1)
+    xy = np.full((len(times), len(m.col), 2), np.nan)
+    xy[:, 0] = np.stack([times * 4.0 - 6.0, np.full(len(times), 1.2)], axis=1)  # passes at 1.5 s
+    m._full = {1: (times, xy, np.zeros((len(times), 2)))}
+    assert m.nearest_ball(1, 0.0, 3.0, 0) == pytest.approx(1.2)
+    assert min(np.hypot(*(xy[times == s, 0][0])) for s in (1.0, 2.0)) > 2.0  # each second
+
+
+def test_red_zone_clip_shows_the_running_of_the_minute():
+    """Decision 41: the clip of his hardest minutes shows the runs that made them, the cluster
+    within RED_ZONE_CLIP_MAX_S holding most of the minute's metres, not the 8 s before it."""
+    from runningbattery.export import red_zone_window
+
+    runs = [(1953.0, 1956.0, 23.0), (1991.0, 1994.0, 20.0), (2006.0, 2007.0, 6.0),
+            (2011.0, 2013.0, 13.0), (2100.0, 2104.0, 40.0)]  # fmt: skip
+    assert red_zone_window(runs, 2012.0) == [1991.0, 2013.0]  # 39 of the minute's 62 m
+    assert red_zone_window(runs, 1960.0) == [1953.0, 1960.0]  # on to the moment, 4 s on
+    assert red_zone_window(runs, 2090.0) is None  # nothing above 5.5 m/s in that minute
+
+
+def test_favourites_view_of_an_action_replaces_a_team_mates():
+    """Decision 41: the agent picked a team-mate's view of the favourite's turnover (both caught
+    on the same counter), and the favourite's could not join within a minute of it."""
+
+    def mo(i, kind, pid, v, score):
+        return {"id": i, "kind": kind, "player": {"id": pid}, "video_s": v, "score": score}
+
+    found = {m["id"]: m for m in [mo("h03", "exposed_on_turnover", "H03", 535.0, 2.0),
+                                  mo("h04", "exposed_on_turnover", "H04", 554.0, 1.0),
+                                  mo("red", "red_zone", "H05", 600.0, 2.0),
+                                  mo("sub", "fresh_legs", "H16", 2000.0, 1.0)]}  # fmt: skip
+    assert feed_mod.ensure_favourite(["h03", "sub"], found, {"H04", "H16"}) == ["h04", "sub"]
+    # Another kind that near stays, and so his moment waits for another chance.
+    assert feed_mod.ensure_favourite(["red", "sub"], found, {"H04", "H16"}) == ["red", "sub"]

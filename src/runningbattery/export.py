@@ -49,6 +49,13 @@ MISSING = -32768
 CLIP_BEFORE, CLIP_AFTER = 3.0, 2.0
 DEFAULT_BEFORE, DEFAULT_AFTER = 8.0, 4.0
 SECOND_WIND_LOOKBACK_S = 120.0  # second wind: his runs in the 2 min that brought him back
+# His hardest minutes: the clip shows the running of the minute up to the moment, the runs above
+# 5.5 m/s within RED_ZONE_CLIP_MAX_S of each other that hold most of its metres (decision 41: the
+# default window, 8 s before the moment, showed 12 of the 63 m that made it).
+RED_ZONE_MINUTE_S = 60.0
+RED_ZONE_CLIP_MAX_S = 25.0
+RED_ZONE_TO_MOMENT_S = 10.0  # ...and runs on to the moment's second if it is this near, so that
+# the battery at the clip's end is the one its line gives (80% on screen against a line's 71%)
 # Kept even when the moment's player has no high-speed second: quiet by design, or a counter.
 QUIET_KINDS = {"not_tired_tactical", "exposed_on_turnover"}
 
@@ -105,13 +112,39 @@ def player_runs(m: MatchData, pid: str) -> list[tuple[float, float, float]]:
     return runs
 
 
+def red_zone_window(runs: list[tuple[float, float, float]], at: float) -> list[float] | None:
+    """[start, end] of the runs above 5.5 m/s in the minute up to ``at`` that hold most of its
+    metres within RED_ZONE_CLIP_MAX_S, on to ``at`` if it is within RED_ZONE_TO_MOMENT_S
+    (``RED_ZONE_*``); None if he had no such run."""
+    lo = at - RED_ZONE_MINUTE_S
+
+    def inside(r: tuple[float, float, float]) -> float:  # his metres of the run in the minute
+        a, b, metres = r
+        return metres * max(min(b, at + 1.0) - max(a, lo), 0.0) / max(b - a, 1e-6)
+
+    mine = sorted((r for r in runs if inside(r) > 0.0), key=lambda r: r[0])
+    best, window = 0.0, None
+    for k, first in enumerate(mine):
+        metres = 0.0
+        for r in mine[k:]:
+            if r[1] - first[0] > RED_ZONE_CLIP_MAX_S:
+                break
+            metres += inside(r)
+            if metres >= best:  # the later of two equal: nearer the moment
+                best, window = metres, [first[0], r[1]]
+    if window and 0.0 < at - window[1] <= RED_ZONE_TO_MOMENT_S:
+        window[1] = at
+    return window
+
+
 def moment_clips(m: MatchData, feed: dict) -> dict[str, list[float] | None]:
     """What each feed moment's clip shows (decision 38), as [start, end] in video_s, or None for
     a moment with no clip (its player does nothing above 5.5 m/s in it; the line stays in the
     full match's commentary). Moments measured over minutes get the part that shows them:
     caught on the break, the turnover to the end of the counter (``tools.counter_end_t``);
     second wind, his longest run in the 2 min before it; fresh legs, the substitute's longest run
-    in his minutes on. Moments missing here keep the overlay's default."""
+    in his minutes on; his hardest minutes, the running of the minute that made them
+    (``RED_ZONE_*``). Moments missing here keep the overlay's default."""
     out: dict[str, list[float] | None] = {}
     runs = {pid: player_runs(m, pid) for pid in m.series}
     for mo in feed.get("moments", []):
@@ -130,6 +163,8 @@ def moment_clips(m: MatchData, feed: dict) -> dict[str, list[float] | None]:
             chain = [e.t for e in m.events if start is not None and e.period == per
                      and e.possession_id == start.possession_id]  # fmt: skip
             window = [at, at + counter_end_t(t, chain) - t]
+        elif kind == "red_zone":
+            window = red_zone_window(runs[pid], at)
         elif kind in ("second_wind", "fresh_legs"):
             lo = at - SECOND_WIND_LOOKBACK_S if kind == "second_wind" else -1.0
             mine = [r for r in runs[pid] if lo <= r[0] <= at]
