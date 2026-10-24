@@ -6,6 +6,7 @@ import {
   MATCHES,
   type MatchData,
   type Mode,
+  type TeamBlock,
   clockLabel,
   fastSegments,
   itemOfHighlight,
@@ -103,7 +104,6 @@ export default function App() {
   const [clipSpeed, setClipSpeed] = useState(1);
   const [mode, setMode] = useState<Mode>(QUERY.get("mode") === "analyst" ? "analyst" : "fan");
   const [selected, setSelected] = useState<string | null>(null);
-  const [favourite, setFavourite] = useState<string | null>(null);
   const [showBlocked, setShowBlocked] = useState(false);
   const [allBatteries, setAllBatteries] = useState(QUERY.get("batteries") === "all");
   const [cur, setCur] = useState<Item | null>(null);
@@ -172,13 +172,9 @@ export default function App() {
         const t = Number(QUERY.get("t"));
         const hasT = Number.isFinite(t) && t > 0;
         setNow(hasT ? t : d.feed.moments[0]?.video_s ?? 0);
-        setSelected(QUERY.get("player") ?? d.feed.favourite
-                    ?? d.feed.entries.find((e) => e.player)?.player?.id ?? null);
-        const fav = QUERY.get("favourite") ?? d.feed.favourite ?? null;
-        setFavourite(fav);
+        setSelected(QUERY.get("player") ?? d.feed.entries.find((e) => e.player)?.player?.id ?? null);
         const list = queue(d, mode, reel(d.highlights, d.duration));
-        const defaultItem = list.find((i) => i.momentId && (!fav || i.player === fav))
-          ?? list.find((i) => i.momentId) ?? list[0];
+        const defaultItem = list.find((i) => i.momentId) ?? list[0];
         const it = view === "highlights" ? itemFromUrl(d, list) ?? defaultItem : undefined;
         if (it) {
           const st = QUERY.get("step");
@@ -193,10 +189,11 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matchId]);
 
-  // A highlight clip fast-forwards between the player's high-speed runs (quietGaps).
+  // A highlight clip, and a hardest-minutes clip (the running of his minute, decision 42),
+  // fast-forwards between the player's high-speed runs (quietGaps).
   const gaps = useMemo(() => {
-    if (view !== "highlights" || !data || !cur || cur.source !== "highlight" || cur.lapse
-        || !cur.player) return [];
+    if (view !== "highlights" || !data || !cur || cur.lapse || !cur.player
+        || (cur.source !== "highlight" && cur.momentKind !== "red_zone")) return [];
     const [a, b] = [clipFrom(cur, data), clipTo(cur, data)];
     return quietGaps(fastSegments(data.signals[cur.player], a, b), a, b);
   }, [view, data, cur]);
@@ -303,8 +300,11 @@ export default function App() {
   const who = (it: Item) =>
     it.player ? players[it.player]?.name : data.meta.teams.find((t) => t.id === it.team)?.name;
 
-  // The latest finished 5-minute block of both teams' running (for a team moment's lower third).
-  const block = [...data.meta.team_running].reverse().find((b) => b.video_end <= now + 0.5) ?? null;
+  // Both teams' running in the 15-minute block so far (a team moment's lower third): the finished
+  // 5-minute blocks of it, weighted by ball-in-play time, so that it gives the numbers of the
+  // block the line compares (decision 42: it showed the last 5 minutes, 195 against 202, under
+  // a line that had the first team 29% ahead over the 15).
+  const block = teamBlock(data, now);
   const blockLabel = block
     ? `${clockLabel(data.meta, block.video_start)}–${clockLabel(data.meta, block.video_end)}` : "";
   const lowerThird = (tag: string, clock: string, team: string, whoName: string, pid?: string) => {
@@ -375,11 +375,11 @@ export default function App() {
         <div className="pitch-wrap">
           {view === "highlights" && cur ? (
             <Pitch data={data} now={now} mode={mode} view={step === "watch" ? "watch" : "replay"}
-                   selected={selected} favourite={favourite} allBatteries={false} item={cur} focus={null}
+                   selected={selected} allBatteries={false} item={cur} focus={null}
                    flatLabel={copy.flatLabel} onSelect={setSelected} />
           ) : (
             <Pitch data={data} now={now} mode={mode} view="full" selected={selected}
-                   favourite={favourite} allBatteries={allBatteries} item={null} focus={focus}
+                   allBatteries={allBatteries} item={null} focus={focus}
                    flatLabel={copy.flatLabel} onSelect={setSelected} />
           )}
           {view === "highlights" && step === "details" && <span className="pitch-flag">{copy.clipEnded}</span>}
@@ -518,7 +518,7 @@ export default function App() {
               </div>
             )}
             <TeamSheet data={data} now={now} mode={mode}
-                       on={view === "highlights" ? cur?.player ?? null : selected} favourite={favourite}
+                       on={view === "highlights" ? cur?.player ?? null : selected}
                        text={TEXT} onSelect={(id) => {
                          setSelected(id);
                          if (view === "highlights") toFull();
@@ -553,7 +553,7 @@ export default function App() {
               </>
             )
           ) : (
-            <Feed feed={data.feed} now={now} mode={mode} favourite={favourite} text={TEXT}
+            <Feed feed={data.feed} now={now} mode={mode} text={TEXT}
                   showBlocked={showBlocked} onShowBlocked={setShowBlocked} onSeek={(v, p) => {
                     setNow(v);
                     if (p) setSelected(p);
@@ -573,19 +573,6 @@ export default function App() {
               <select value={matchId} onChange={(e) => setMatchId(e.target.value)}>
                 {MATCHES.map((m) => (
                   <option key={m.id} value={m.id}>{TEXT[`match_${m.id}`] ?? m.id}</option>
-                ))}
-              </select>
-            </label>
-            <label className="field">
-              <span className="field-label">{copy.settingsFavourite}</span>
-              <select value={favourite ?? ""} onChange={(e) => setFavourite(e.target.value || null)}>
-                <option value="">{copy.favouriteNone}</option>
-                {data.meta.teams.map((t) => (
-                  <optgroup key={t.id} label={t.name}>
-                    {data.meta.players.filter((p) => p.team === t.id).map((p) => (
-                      <option key={p.id} value={p.id}>{p.shirt} {p.name}</option>
-                    ))}
-                  </optgroup>
                 ))}
               </select>
             </label>
@@ -622,6 +609,29 @@ function clipTo(it: Item, d: MatchData) {
   const p = half(it, d);
   return Math.min(it.end + 2, p.video_start + p.duration_s - 0.1, d.duration - 1);
 }
+/** Both teams' running in the 15-minute block (of its half; the last runs to the half's end)
+ * that holds the time 10 s before ``now``: its 5-minute blocks finished by then, weighted by
+ * ball-in-play time. */
+function teamBlock(d: MatchData, now: number): TeamBlock | null {
+  const p = d.meta.periods.filter((x) => x.video_start <= now).at(-1) ?? d.meta.periods[0];
+  // 10 s back: a team moment's clip ends a few seconds after the block it is about
+  const k = Math.min(Math.floor(Math.max(now - p.video_start - 10, 0) / 900), 2);
+  const from = p.video_start + 900 * k;
+  const to = k === 2 ? p.video_start + p.duration_s : from + 900;
+  const parts = d.meta.team_running.filter((b) => b.video_start >= from - 0.01
+    && b.video_end <= to + 0.01 && b.video_end <= now + 1.5);
+  if (!parts.length) return null;
+  const side = (key: "home" | "away") => {
+    const s = parts.reduce((a, b) => a + b[key].in_play_s, 0);
+    const known = parts.every((b) => b[key].hsr !== null);
+    const hsr = known && s > 0
+      ? parts.reduce((a, b) => a + (b[key].hsr ?? 0) * b[key].in_play_s, 0) / s : null;
+    return { hsr, possession: parts[0][key].possession, in_play_s: s };
+  };
+  return { video_start: parts[0].video_start, video_end: parts.at(-1)!.video_end,
+           clock: parts[0].clock, home: side("home"), away: side("away") };
+}
+
 /** The half a clip starts in. */
 function half(it: Item, d: MatchData) {
   return d.meta.periods.filter((p) => p.video_start <= it.start).at(-1) ?? d.meta.periods[0];

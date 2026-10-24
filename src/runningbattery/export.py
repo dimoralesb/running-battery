@@ -53,7 +53,9 @@ SECOND_WIND_LOOKBACK_S = 120.0  # second wind: his runs in the 2 min that brough
 # 5.5 m/s within RED_ZONE_CLIP_MAX_S of each other that hold most of its metres (decision 41: the
 # default window, 8 s before the moment, showed 12 of the 63 m that made it).
 RED_ZONE_MINUTE_S = 60.0
-RED_ZONE_CLIP_MAX_S = 25.0
+# The whole minute since decision 42 (25 s before: A13's minute at 67:20 had its 91 m in five runs
+# over 58 s, and the clip showed 45); the overlay fast-forwards between his runs (App.tsx).
+RED_ZONE_CLIP_MAX_S = 60.0
 RED_ZONE_TO_MOMENT_S = 10.0  # ...and runs on to the moment's second if it is this near, so that
 # the battery at the clip's end is the one its line gives (80% on screen against a line's 71%)
 # Kept even when the moment's player has no high-speed second: quiet by design, or a counter.
@@ -68,6 +70,8 @@ def team_running(m: MatchData) -> list[dict]:
         a = 0.0
         while a < dur - 30.0:
             b = min(a + TEAM_BLOCK_S, dur)
+            if dur - b < 30.0:  # a short tail joins the last block (decision 42: the last 25 s
+                b = dur  # of a half were in none, and a team clip's numbers missed them)
             r = m.team_rates(per, a, b)
             out.append({"video_start": m.video_s(per, a), "video_end": m.video_s(per, b),
                         "clock": m.when(per, a)["clock"], **{
@@ -132,8 +136,10 @@ def red_zone_window(runs: list[tuple[float, float, float]], at: float) -> list[f
             metres += inside(r)
             if metres >= best:  # the later of two equal: nearer the moment
                 best, window = metres, [first[0], r[1]]
-    if window and 0.0 < at - window[1] <= RED_ZONE_TO_MOMENT_S:
-        window[1] = at
+    if window and at - window[1] <= RED_ZONE_TO_MOMENT_S:
+        # played (CLIP_AFTER on) to the moment's second, whose battery its line gives (decision
+        # 42: the clip had played 2 s past it, 62% on screen under a line's 61%)
+        window[1] = max(at - CLIP_AFTER, window[0])
     return window
 
 
@@ -212,7 +218,9 @@ def export(folder: Path, out: Path, feed_path: Path | None = None) -> dict:
     signals = {}
     for pid, s in m.series.items():
         c = s.cols
-        pct = lambda a: np.round(100 * a).astype(int).tolist()  # noqa: E731
+        # as the facts round (tools.q, 2 digits), so the screen says the line's number (decision
+        # 42: 0.885 was "about 89%" in the line and 88% on screen, NumPy's half to even)
+        pct = lambda a: [round(round(float(x), 2) * 100) for x in a]  # noqa: E731
         signals[pid] = {
             "start": m.video_s(int(s.period[0]), float(s.t[0])),
             "battery": pct(c["battery"]),

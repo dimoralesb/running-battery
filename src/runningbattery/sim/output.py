@@ -48,7 +48,13 @@ from runningbattery.schema import (
 from runningbattery.sim import params as P
 from runningbattery.sim.match import MatchEngine, PeriodFrames
 from runningbattery.sim.physiology import Physiology
-from runningbattery.sim.rosters import SimPlayer, SimTeam, make_teams, plan_substitutions
+from runningbattery.sim.rosters import (
+    SimPlayer,
+    SimTeam,
+    distinct_names,
+    make_teams,
+    plan_substitutions,
+)
 from runningbattery.sim.runs import hi_runs
 from runningbattery.sim.story import Story, story_subs
 
@@ -183,6 +189,7 @@ def simulate(
     plans = plan_substitutions(subs_rng, teams, prior) if subs and not legacy else []
     if story is not None:
         plans = story_subs(plans, teams, story)
+    teams, plans = distinct_names(teams, plans)
     engine = MatchEngine(rng, teams, body, match_tempo, legacy, plans, story)
     periods = [
         engine.run_period(1, lengths[0], first_kick),

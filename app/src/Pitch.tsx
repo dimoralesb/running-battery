@@ -30,7 +30,6 @@ interface Props {
   mode: Mode;
   view: View;
   selected: string | null;
-  favourite: string | null;
   allBatteries: boolean;
   item: Item | null; // the clip (watch and replay)
   focus: string | null; // full match: the player of the feed moment on screen
@@ -104,8 +103,6 @@ export function Legend({ mode, text }: { mode: Mode; text: Record<string, string
           <span><svg viewBox="-3 -0.4 6 1.8" className="key wide"><BatteryIcon pct={60} x={0} y={0} /></svg>
             {text.legendBattery}</span>
         )}
-        <span><svg viewBox="-1.2 -1.2 2.4 2.4" className="key"><circle r={0.8} className="fav-key" /></svg>
-          {text.legendFavourite}</span>
       </div>
     </details>
   );
@@ -165,8 +162,8 @@ function Trail({ data, item, now, j }: { data: MatchData; item: Item; now: numbe
   );
 }
 
-export function Pitch({ data, now, mode, view, selected, favourite, allBatteries, item, focus,
-                        flatLabel, onSelect }: Props) {
+export function Pitch({ data, now, mode, view, selected, allBatteries, item, focus, flatLabel,
+                        onSelect }: Props) {
   const { meta } = data;
   const ball = position(data, meta.ids.length, now);
   const peaks = useMemo(
@@ -176,16 +173,16 @@ export function Pitch({ data, now, mode, view, selected, favourite, allBatteries
   const col = useMemo(() => Object.fromEntries(meta.players.map((p, j) => [p.id, j])), [meta]);
   const clip = view !== "full" && item ? item : null;
 
-  // Where everyone is. In the full match only the players in focus (selected, favourite, the
-  // feed moment's player) get rings and pulses, so there is one obvious place to look.
+  // Where everyone is. In the full match only the players in focus (selected, the feed
+  // moment's player) get rings and pulses, so there is one obvious place to look.
   const here = meta.players.map((p, j) => {
     const seen = position(data, j, now);
     const xy = seen ?? gapFill(data, j, now); // lost by the tracking for a moment: faded
     const s = data.signals[p.id];
     return { p, xy, est: !seen && !!xy, s, i: xy ? signalIndex(s, now) : null };
   });
-  const inFocus = (id: string) => id === selected || id === favourite || id === focus;
-  const showBattery = (id: string) => allBatteries || id === selected || id === favourite;
+  const inFocus = (id: string) => id === selected || id === focus;
+  const showBattery = (id: string) => allBatteries || id === selected;
 
   return (
     <svg className={`pitch view-${view}`} viewBox={`${-L / 2 - 2} ${-W / 2 - 2} ${L + 4} ${W + 4}`}
@@ -224,7 +221,6 @@ export function Pitch({ data, now, mode, view, selected, favourite, allBatteries
             {red && <circle cx={x} cy={y} r={2.3} className="redzone" />}
             {!clip && p.id === focus && <circle cx={x} cy={y} r={2.9} className="focus" />}
             {clip && star && <circle cx={x} cy={y} r={2.3} className="focus" />}
-            {!clip && p.id === favourite && <circle cx={x} cy={y} r={2.0} className="fav" />}
             <circle cx={x} cy={y} r={1.45} className="dot" />
             <text x={x} y={y + 0.55} className="shirt">{p.shirt}</text>
             {i !== null && p.position !== "GK"

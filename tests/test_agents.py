@@ -197,8 +197,9 @@ def test_find_moments(tools):
             _numbers_have_units(m["facts"])
     red = tools.find_moments("red_zone")["moments"]
     assert red and red[0]["player"]["id"] == "H04" and red[0]["period"] == 1
-    exposed = tools.find_moments("exposed_on_turnover", player="H04")["moments"]
-    assert exposed and exposed[0]["t"] == 200.5 and exposed[0]["facts"]["counter_xg"]["value"]
+    # The turnover at 200.5 s comes 200 s into his match, under SO_FAR_MIN_S: "just after his
+    # hardest minutes so far" would be true of almost any running (decision 42).
+    assert not tools.find_moments("exposed_on_turnover", player="H04")["moments"]
     back = tools.find_moments("second_wind", player="H04")["moments"]
     assert back and 700.0 <= back[0]["t"] <= 760.0  # back to his normal on the second run
     fresh = tools.find_moments("fresh_legs")["moments"]
@@ -368,12 +369,17 @@ def test_offline_feed_is_verified_and_timestamped(folder):
         team = [e["sentence"] for e in feed["entries"]
                 if e["kind"] == "tug_of_war" and e["mode"] == mode and e["shown"]]  # fmt: skip
         assert any(re.search(feed_mod.MUST_SAY["ran harder"], x) for x in team), team
-    fav = asyncio.run(feed_mod.build(folder, offline=True, favourite="Sub H"))
-    assert fav["favourite"] == "H12"
-    # The favourite's replacement counts as his: H11 went off for H12, whose fresh legs show.
-    assert feed_mod.related(MatchTools(folder), "H11") == {"H11", "H12"}
-    off = asyncio.run(feed_mod.build(folder, offline=True, favourite="H11"))
-    assert any(m["moment_id"].startswith("fresh_legs:H12") for m in off["moments"])
+    assert "favourite" not in feed  # no favourite player (decision 42)
+    # The substitute who out-ran his team-mates is a key moment (ensure_key).
+    assert any(m["moment_id"].startswith("fresh_legs:H12") for m in feed["moments"])
+
+
+def test_exposed_on_turnover_after_the_so_far_bar(folder, monkeypatch):
+    import runningbattery.agents.tools as tools_mod
+
+    monkeypatch.setattr(tools_mod, "SO_FAR_MIN_S", 0)
+    exposed = MatchTools(folder).find_moments("exposed_on_turnover", player="H04")["moments"]
+    assert exposed and exposed[0]["t"] == 200.5 and exposed[0]["facts"]["counter_xg"]["value"]
 
 
 def test_general_sentences_at_most_twice_per_mode():
@@ -411,13 +417,13 @@ def test_general_sentences_at_most_twice_per_mode():
 
 
 def test_moments_say_what_they_are_for():
-    """Decision 31: a substitute against his team-mates, the favourite caught on the break with
-    the typical-pro line, and a team moment's comparison; decision 39: a second wind against his
-    match average; the others need nothing."""
+    """Decision 31: a substitute against his team-mates, a player caught on the break with the
+    typical-pro line (any player since decision 42), and a team moment's comparison; decision
+    39: a second wind against his match average; the others need nothing."""
     bat = {"typical_pro_battery_now": {"value": 0.83, "unit": "share"}}
     exposed = {"kind": "exposed_on_turnover", "player": {"id": "H04"}, "facts": bat}
-    assert feed_mod.needs(exposed, "H04") == feed_mod.FAVOURITE_EXPOSED_SAYS
-    assert feed_mod.needs(exposed, "H11") is None and feed_mod.needs(exposed) is None
+    assert feed_mod.needs(exposed) == feed_mod.EXPOSED_SAYS
+    assert feed_mod.needs(exposed | {"facts": {}}) is None
     sub = {"kind": "fresh_legs", "player": {"id": "H16"},
            "facts": {"vs_teammates": {"value": 49, "unit": "%"}}}  # fmt: skip
     assert feed_mod.needs(sub) == feed_mod.FRESH_LEGS_SAYS
@@ -587,24 +593,29 @@ def test_purpose_rules_against_the_truth(folder, monkeypatch):
     assert rep["press_ju"]["recall"] == 0.0  # A08's run is not in our speed: missed
 
 
-def test_favourite_gets_his_best_moment_and_wordings_keep_their_claim():
-    """Decision 30: the favourite's best-ranked turnover joins the feed even when another of his
-    was picked, and (decision 39) his turnover that ended in a goal; a register wording tagged
-    "fact" is that claim."""
+def test_key_moments_join_the_pick_and_wordings_keep_their_claim():
+    """Decision 42 (no favourite player): the best-ranked moment of each key kind joins the pick
+    (the next best when it clashes and the agent left that kind out), and (decision 39) the best
+    turnover that ended in a goal;
+    a register wording tagged "fact" is that claim."""
 
     def mo(i, kind, pid, v, score):
         return {"id": i, "kind": kind, "player": {"id": pid}, "video_s": v, "score": score}
 
     found = {m["id"]: m for m in [mo("a", "exposed_on_turnover", "H04", 100.0, 1.0),
-                                  mo("b", "exposed_on_turnover", "H04", 900.0, 3.0),
+                                  mo("b", "exposed_on_turnover", "A05", 900.0, 3.0),
                                   mo("c", "fresh_legs", "H16", 2000.0, 1.0)]}  # fmt: skip
-    assert feed_mod.ensure_favourite(["a"], found, {"H04", "H16"}) == ["a", "b", "c"]
-    assert feed_mod.ensure_favourite(["b", "c"], found, {"H04", "H16"}) == ["b", "c"]
-    # Decision 39: and his turnover that ended in a goal, though it ranks lower.
+    assert feed_mod.ensure_key(["a"], found) == ["a", "b", "c"]  # the best-ranked one too
+    assert feed_mod.ensure_key(["c"], found) == ["b", "c"]
+    found["b"]["video_s"] = 1990.0  # the best clashes with the fresh legs: the next best, only
+    assert feed_mod.ensure_key(["c"], found) == ["a", "c"]  # when there is none of its kind
+    assert feed_mod.ensure_key(["a", "c"], found) == ["a", "c"]
+    found["b"]["video_s"] = 900.0
+    # Decision 39: and the turnover that ended in a goal, though it ranks lower.
     found["g"] = mo("g", "exposed_on_turnover", "H04", 1500.0, 0.5) | {
         "facts": {"counter_goal": True}
     }
-    assert feed_mod.ensure_favourite(["b", "c"], found, {"H04", "H16"}) == ["b", "g", "c"]
+    assert feed_mod.ensure_key(["b", "c"], found) == ["b", "g", "c"]
     w9b = (
         "Without the ball, Premier League players typically cover about 10% more ground per "
         "minute than when they have it."
@@ -711,27 +722,31 @@ def test_nearest_to_the_ball_reads_every_frame(folder):
 
 def test_red_zone_clip_shows_the_running_of_the_minute():
     """Decision 41: the clip of his hardest minutes shows the runs that made them, the cluster
-    within RED_ZONE_CLIP_MAX_S holding most of the minute's metres, not the 8 s before it."""
+    within RED_ZONE_CLIP_MAX_S holding most of the minute's metres, not the 8 s before it; since
+    decision 42 that is the whole minute (the overlay fast-forwards between his runs)."""
     from runningbattery.export import red_zone_window
 
     runs = [(1953.0, 1956.0, 23.0), (1991.0, 1994.0, 20.0), (2006.0, 2007.0, 6.0),
             (2011.0, 2013.0, 13.0), (2100.0, 2104.0, 40.0)]  # fmt: skip
-    assert red_zone_window(runs, 2012.0) == [1991.0, 2013.0]  # 39 of the minute's 62 m
-    assert red_zone_window(runs, 1960.0) == [1953.0, 1960.0]  # on to the moment, 4 s on
+    assert red_zone_window(runs, 2012.0) == [1953.0, 2010.0]  # all of the minute's 62 m
+    assert red_zone_window(runs, 1960.0) == [1953.0, 1958.0]  # played on to the moment
     assert red_zone_window(runs, 2090.0) is None  # nothing above 5.5 m/s in that minute
 
 
-def test_favourites_view_of_an_action_replaces_a_team_mates():
-    """Decision 41: the agent picked a team-mate's view of the favourite's turnover (both caught
-    on the same counter), and the favourite's could not join within a minute of it."""
+def test_a_key_moment_replaces_another_view_of_the_same_action():
+    """Decision 41: the agent picked a team-mate's view of a turnover (both caught on the same
+    counter), and the key one could not join within a minute of it; since decision 42 the
+    best-ranked turnover that ended in a goal is the key one."""
 
-    def mo(i, kind, pid, v, score):
-        return {"id": i, "kind": kind, "player": {"id": pid}, "video_s": v, "score": score}
+    def mo(i, kind, pid, v, score, goal=False):
+        return {"id": i, "kind": kind, "player": {"id": pid}, "video_s": v, "score": score,
+                "facts": {"counter_goal": goal}}  # fmt: skip
 
     found = {m["id"]: m for m in [mo("h03", "exposed_on_turnover", "H03", 535.0, 2.0),
-                                  mo("h04", "exposed_on_turnover", "H04", 554.0, 1.0),
+                                  mo("h04", "exposed_on_turnover", "H04", 554.0, 1.0, True),
                                   mo("red", "red_zone", "H05", 600.0, 2.0),
                                   mo("sub", "fresh_legs", "H16", 2000.0, 1.0)]}  # fmt: skip
-    assert feed_mod.ensure_favourite(["h03", "sub"], found, {"H04", "H16"}) == ["h04", "sub"]
-    # Another kind that near stays, and so his moment waits for another chance.
-    assert feed_mod.ensure_favourite(["red", "sub"], found, {"H04", "H16"}) == ["red", "sub"]
+    # Another kind that near stays, and so the goal's turnover waits for another chance.
+    assert feed_mod.ensure_key(["h03", "red", "sub"], found) == ["h03", "red", "sub"]
+    found["red"]["video_s"] = 700.0
+    assert feed_mod.ensure_key(["h03", "red", "sub"], found) == ["h04", "red", "sub"]

@@ -140,12 +140,16 @@ RULES: tuple[Rule, ...] = (
     # 11 (decision 41, 15:55 and 66:00 of the site's feed): "would leave a typical professional
     # at about 76% of their short-term reserve, though that may reflect the ball being in play
     # only 48%": claim 11 takes no reason after it (running already done is not explained by
-    # the ball being out; the Narrator's prompt says so).
+    # the ball being out; the Narrator's prompt says so). Decision 42 (the site's 27:59 and
+    # 42:00): "…, which may be related to his team having just won the ball", "…, which may
+    # relate to his team leading".
     Rule("11", "Claim 11 takes no reason after it: say what the running would leave a typical "
          "professional, and give a reason for the running in its own sentence",
          r"short-term reserve\b[^.]*\b((may|might|could) (reflect|be (down to|due to)))\b"
          r"|short-term reserve\b[^.]*\b(because|due to|partly|given)\b[^.]*\b(ball|possession|"
-         r"lead|score|stoppage|came on|substitut)"),
+         r"lead|score|stoppage|came on|substitut)"
+         r"|short-term reserve\b[^.]*\b(relat(e|es|ed)|linked|explain(s|ed)?) to\b"
+         r"|short-term reserve\b[^.]*\b(may|might|could) (relate|reflect|explain|be linked)"),
     # 33: the player's own state.
     Rule("33", "About the player's own state; say what the running would cost a typical "
          "professional (claim 11)",

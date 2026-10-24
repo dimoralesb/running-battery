@@ -169,13 +169,19 @@ def test_overlay_copy_passes_the_verifier():
 
 
 def test_claim_11_takes_no_reason_after_it():
-    """Decision 41: two lines on the site's feed gave a reason after claim 11's wording."""
+    """Decision 41: two lines on the site's feed gave a reason after claim 11's wording; two
+    more in decision 42."""
     lines = (
         "Relative to a typical professional, this sequence would leave them at about 76% of their "
         "short-term reserve, though that may reflect the ball being in play only 48% of the last "
         "5 min.",
         "By our typical-pro calibration this running would leave a typical professional at about "
         "71% of their short-term reserve, partly because the ball was out of play.",
+        # decision 42, the site's 27:59 and 42:00
+        "He has done running that would leave a typical professional at about 55% of their "
+        "short-term reserve, which may be related to his team having just won the ball.",
+        "He has done running that would leave a typical professional at about 89% of their "
+        "short-term reserve, which may relate to his team leading.",
     )
     for s in lines:
         assert {f.claim for f in verify(s, "analyst").findings} == {"11"}

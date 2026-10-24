@@ -47,7 +47,7 @@ Overlay (one page, the URL's parameters set where it opens)
     ├── Clips        the clip list (Highlights) · highlights so far and moments (Full match)
     ├── Team sheet   followed player · both line-ups with batteries · team charts
     ├── Details      this clip's details (Highlights) · the agents' lines as they come (Full match)
-    └── Settings     View · Fan/Analyst · Match · Favourite player · Theme · pitch options · Key
+    └── Settings     View · Fan/Analyst · Match · Theme · pitch options · Key
 ```
 
 **Global navigation labels:** Clips, Team sheet, Details, Settings (user sign-off 2026-10-20: the tab that holds a clip's details is named "Details", not "Feed", for scent). **Validation:** NOT VALIDATED (no card sort, no tree test; four labels, one page). The mock review (PASS, 2026-10-20) is the only check.
@@ -62,7 +62,7 @@ Overlay (one page, the URL's parameters set where it opens)
 
 **4. Follow a player (user flow).** Team sheet tab → click a name → the Full match opens at the current time following him (today's behaviour); in Full match a click only changes who is followed.
 
-**5. Change what I see (user flow).** Settings → Fan/Analyst, Match, Favourite player, Theme, View. Each change shows at once; no Save.
+**5. Change what I see (user flow).** Settings → Fan/Analyst, Match, Theme, View. Each change shows at once; no Save.
 
 ---
 
@@ -133,7 +133,7 @@ The clip plays again at the clip speed (1× unless the viewer picked ½× or 2×
 
 #### Step: Full match
 
-The whole match, paused at load (at `t`, else at the first moment). Same frame. Pitch: all players; **focus rings** only on the followed player, the favourite (dashed ring), and the feed moment's player; hardest-minutes ring (warning colour, always with its Key label), "flat out" pulse and label, battery icons: Fan shows them for the followed and favourite players, or for every outfield player with "Batteries: every outfield player" (Settings). Analyst shows no icons (the Trace is in Team sheet). Lower third: the feed moment on screen (moment name · its clock, its player, his battery; a team moment shows the team slot) or, with none, "Following" · match clock, the followed player and his battery. Play bar: Play/Pause, the match-time slider ("Match time"), speed 1× 5× 20×. The Details tab holds the agents' lines as they come (below). **Exit:** Settings › View → Highlights (restarts the last clip in Watch); Clips tab "Highlights so far" → a clip in Watch; Team sheet name → follow him.
+The whole match, paused at load (at `t`, else at the first moment). Same frame. Pitch: all players; **focus rings** only on the followed player and the feed moment's player; hardest-minutes ring (warning colour, always with its Key label), "flat out" pulse and label, battery icons: Fan shows them for the followed player, or for every outfield player with "Batteries: every outfield player" (Settings). Analyst shows no icons (the Trace is in Team sheet). Lower third: the feed moment on screen (moment name · its clock, its player, his battery; a team moment shows the team slot) or, with none, "Following" · match clock, the followed player and his battery. Play bar: Play/Pause, the match-time slider ("Match time"), speed 1× 5× 20×. The Details tab holds the agents' lines as they come (below). **Exit:** Settings › View → Highlights (restarts the last clip in Watch); Clips tab "Highlights so far" → a clip in Watch; Team sheet name → follow him.
 
 ---
 
@@ -145,7 +145,7 @@ The whole match, paused at load (at `t`, else at the first moment). Same frame. 
 #### Tab: Team sheet
 
 - **Full match only, at the top:** the followed player's card: "{shirt} {name}, position, team", the battery sentence (`battery`), in Analyst the band (`band`) and `lowChance`, his fastest second so far (`topSpeed`), the hardest-minutes or just-after sentence (`redZone`, `postPeak`), or `offPitch`; "Click a player on the pitch." when none. In Analyst the **Trace** under it: his battery with its band, and his high-speed running in the last minute, on one time axis each.
-- **Both steps:** the Batteries sheet (`sheetTitle`, `sheetSub`): two columns by team, each player a row (shirt, name, gauge with percentage; Analyst adds the band mark; a goalkeeper shows "GK" and no gauge; the favourite carries a star; the clip's player is highlighted). Click a name = follow him (in Highlights this opens Full match at the current time, as today).
+- **Both steps:** the Batteries sheet (`sheetTitle`, `sheetSub`): two columns by team, each player a row (shirt, name, gauge with percentage; Analyst adds the band mark; a goalkeeper shows "GK" and no gauge; the clip's player is highlighted). Click a name = follow him (in Highlights this opens Full match at the current time, as today).
 - **Both steps, below:** "High-speed running per minute" (`teamChart`) and "High-speed running by situation" (`splitChart`, finished 15-minute blocks so far).
 
 #### Tab: Details
@@ -155,7 +155,7 @@ The whole match, paused at load (at `t`, else at the first moment). Same frame. 
 
 #### Tab: Settings
 
-In this order, applied at once, no Save: **View** (Highlights | Full match), **Audience** (Fan | Analyst), **Match** (the two matches' names), **Favourite player** (grouped by team, with shirt numbers, and a "none" option), **Theme** (Dark | Light; dark by default, not stored), then **On the pitch**: "Batteries: selected and favourite (tick for all)" (Fan, Full match) and **Key** (a fold-out: the focus ring, hardest minutes, flat out, the faded player (`legendGap`, decision 38), battery, favourite).
+In this order, applied at once, no Save: **View** (Highlights | Full match), **Audience** (Fan | Analyst), **Match** (the two matches' names), **Theme** (Dark | Light; dark by default, not stored), then **On the pitch**: "Batteries: the selected player (tick for all)" (Fan, Full match) and **Key** (a fold-out: the focus ring, hardest minutes, flat out, the faded player (`legendGap`, decision 38), battery).
 
 ---
 
@@ -225,7 +225,6 @@ Frame = always visible. Tabs: C Clips, T Team sheet, D Details, S Settings. "Kep
 | View toggle Highlights / Full match | S › View; also a quiet link in C | |
 | Match select (`match_story`, `match_natural`) | S › Match | |
 | Fan / Analyst toggle | S › Audience | |
-| Favourite player select | S › Favourite player | |
 | Theme (URL only today) | S › Theme | the plan's Settings item; dark default |
 | Score bug (names, score, clock, phone codes) | Frame | chips added (fix 5) |
 | "Fastest so far" ×2 (`fastest`, `.fastest-strip`) | C, top | |
@@ -236,8 +235,8 @@ Frame = always visible. Tabs: C Clips, T Team sheet, D Details, S Settings. "Kep
 | Pitch: selected-marker outline, marker click | Frame, pitch | kept; in a clip it only outlines |
 | Pitch: clip trail, thick high-speed runs, value label at the end | Frame, pitch | direction added (fix 8) |
 | Pitch: reach circles | **Removed** (decision 37) | at 1 s their size is fixed, so they told a first-time viewer little |
-| Pitch: battery icon above a player | Frame, pitch | Fan only; clip's player / followed / favourite / all |
-| Pitch: focus ring, hardest-minutes ring, flat-out pulse + label, favourite ring (Full match) | Frame, pitch | explained in S › Key |
+| Pitch: battery icon above a player | Frame, pitch | Fan only; clip's player / followed / all |
+| Pitch: focus ring, hardest-minutes ring, flat-out pulse + label (Full match) | Frame, pitch | explained in S › Key |
 | Pitch: dimming of non-star markers | Frame, pitch | kept for player clips; **dropped** for team clips (it dims everything) |
 | (new) "Clip ended · last frame" flag | Frame, pitch, Details | fix of the mock review (change blindness) |
 | Lower third: moment tag (`LowerThird` `.lt-tag`) | Frame, lower third row 1 | team-colour block **dropped** (Phase 2: no boxed labels) |
@@ -263,7 +262,7 @@ Frame = always visible. Tabs: C Clips, T Team sheet, D Details, S Settings. "Kep
 | Team clip: `TeamChart` + block `SplitChart` in the Replay column | D (team clip Details) | |
 | Full match: transport (play, slider, 1× 5× 20×) | Frame, play bar | |
 | Full match: Key (`Legend`, `key`, `legend*`) | S › Key | |
-| Full match: "Batteries: selected and favourite / every outfield player" checkbox | S › On the pitch | Fan, Full match |
+| Full match: "Batteries: the selected player / every outfield player" checkbox | S › On the pitch | Fan, Full match |
 | Full match: moment chips | C (Full match) | headless row kept |
 | Full match: Highlights panel (`Highlights.tsx`: `hlTitle`, `hlSub`, `hlPlay`, six kinds, `hlNone`, `hlAtEnd`) | C (Full match) | |
 | Full match: player card (`.player-card`: `battery`, `band`, `lowChance`, `topSpeed`, `redZone`, `postPeak`, `offPitch`) | T, top | |
@@ -291,7 +290,6 @@ The app reads the URL once at load and never writes it. Precedence for the clip:
 | `t` | seconds from kick-off, > 0 | Full match: the time it opens at (without `t`: the first moment's time, not 0). Highlights: the start time inside the clip (for capture; a time outside the clip is not supported) | Full match · Details; Highlights unchanged |
 | `mode` | `analyst`, else Fan | S › Audience; the clip list (a clip needs a line shown in that mode), band, lines, citations | the screen the other parameters give |
 | `player` | a player id, e.g. `H04` | Full match: the followed player (T card, "Following"). Highlights: with `moment`, narrows to his clip; the clip's own player then wins | Full match · Details (card in T); Highlights per its step |
-| `favourite` | a player id (the feed's favourite) | S › Favourite player; ring, star, highlighted lines | no tab change |
 | `theme` | `light`, `dark` (dark) | S › Theme | no tab change |
 | `batteries` | `all` | Full match, Fan: icons on every outfield player (S › On the pitch); ignored in Highlights | Full match · Details |
 | `hl` | `top_speed`, `longest_run`, `recovery_run`, `back_to_back`, `busiest_minute`, `most_ground` | the match's best highlight of that kind (whole match, not "so far"); ignored with `view=full` | Highlights · Watch · Clips (per `step`) |
@@ -311,7 +309,7 @@ Not in the URL: the open tab, speed, the blocked-lines checkbox, marker clicks.
 | `brand` | Running Battery | brand line (hard-coded today) |
 | `brandSynthetic` | synthetic match | brand line, next to the name (signed off 2026-10-20) |
 | `tabClips` `tabTeam` `tabDetails` `tabSettings` | Clips · Team sheet · Details · Settings | tab bar |
-| `settingsView` `settingsAudience` `settingsMatch` `settingsFavourite` `settingsTheme` `settingsPitch` | View · Audience · Match · Favourite player · Theme · On the pitch | Settings |
+| `settingsView` `settingsAudience` `settingsMatch` `settingsTheme` `settingsPitch` | View · Audience · Match · Theme · On the pitch | Settings |
 | `themeDark` `themeLight` | Dark · Light | Settings |
 | `nowPlaying` | Now playing | Clips row |
 | `clipEnded` | Clip ended · last frame | pitch flag, Details |
@@ -323,7 +321,7 @@ Not in the URL: the open tab, speed, the blocked-lines checkbox, marker clicks.
 | `papers` | Papers | opened source |
 | `traceTip` | Battery expected for a typical pro: {pct}% ({lo}–{hi}%) | Trace tooltip, replaces "battery {pct}%" |
 
-**Existing text to move into `copy.json` so the Verifier sees it** (today hard-coded): "Fan", "Analyst", "Favourite player…", "Play", "Pause", "Match time", "Loading the match…", "Could not load the match", "Click a player on the pitch.", the pitch's aria-label, "Live explanations", "What the Verifier blocked", "Nothing blocked so far.", the empty-feed sentence, "{n} more later in the match.", "(team)", "Measured fact", "Claim {n}", "Checked by", "Before the Verifier", "Rewritten by the Verifier", the Trace and chart hints and tooltips ("typical-pro chance" becomes `lowChance`'s wording).
+**Existing text to move into `copy.json` so the Verifier sees it** (today hard-coded): "Fan", "Analyst", "Play", "Pause", "Match time", "Loading the match…", "Could not load the match", "Click a player on the pitch.", the pitch's aria-label, "Live explanations", "What the Verifier blocked", "Nothing blocked so far.", the empty-feed sentence, "{n} more later in the match.", "(team)", "Measured fact", "Claim {n}", "Checked by", "Before the Verifier", "Rewritten by the Verifier", the Trace and chart hints and tooltips ("typical-pro chance" becomes `lowChance`'s wording).
 
 ---
 

@@ -46,7 +46,7 @@ blocks all four.
 
 **The Microsoft stack.** Four agents on Microsoft Foundry (gpt-5-mini) with Microsoft Agent
 Framework: Tactical picks the moments, Narrator writes them from the claims register,
-Personalization sets the fan or analyst style and puts a favourite player first, and the
+Personalization sets the fan or analyst style, and the
 Verifier runs fixed rules and then an LLM pass that can only block. The agents see the match only
 through an MCP server with seven read-only tools, and every number comes back with its unit and
 source. The overlay (React) is hosted on Azure Static Web Apps; auth is keyless (Entra ID); CI

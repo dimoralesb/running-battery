@@ -689,8 +689,14 @@ def test_dead_ball_jobs_pace_to_the_restart_and_brake():
     there is none; with a corner 30 s away they go up slower than with it 8 s away, and still
     reach their spots in time. The jog cap stays clearly below HI_SPEED for every player
     (decision 40)."""
-    cap = P.WALL_SPEED * max(P.POSITION_EFFORT.values()) * P.S0_RANGE[1]
+    cap = P.WALL_SPEED * P.S0_RANGE[1]  # after the work rate (decision 42)
     assert cap < P.HI_SPEED - 0.4, cap
+    engine = _engine()
+    engine.roles.effort[:] = 1.3  # whatever the work rate
+    engine.schedule_restart("throw_in", 0, np.array([0.0, P.HALF_WIDTH]), 5.0, np.zeros(2))
+    engine.restart.t = 6.0  # past due: everyone with a job jogs
+    _, want, _, calm, _ = engine.roles.targets(5.0)
+    assert np.all(want[~calm] <= P.WALL_SPEED * engine.s0[~calm] + 1e-9)
     engine = _engine()
     engine.schedule_restart("throw_in", 0, np.array([0.0, P.HALF_WIDTH]), 5.0, np.zeros(2))
     engine.restart.t = 65.0
@@ -1140,3 +1146,23 @@ def test_substitutes_come_on_at_the_halfway_line():
     sub = next(e for e in engine.events[n:] if e["type"] == EventType.SUBSTITUTION)
     taken = [e for e in engine.events[n:] if e["type"] == EventType.PASS and e["t"] > 5.0]
     assert taken and taken[0]["t"] > sub["t"]  # the throw-in waited
+
+
+def test_team_mates_have_distinct_names():
+    """Decision 42: no two players of a team (substitutes included) share a first name or a
+    surname's start ("Sami Yarrigg" and "Sami Yarrick" were one team's centre-backs); names are
+    labels only, drawn as before, so the match does not change."""
+    from runningbattery.sim.rosters import FIRST_NAMES, SURNAME_START
+
+    for seed in (2028, 2031, 7):
+        m = simulate(seed, f"names{seed}", subs=True)
+        for team in m.metadata.teams:
+            names = [p.name for p in team.players]
+            firsts = [n.split(" ")[0] for n in names]
+            starts = [
+                max((s for s in SURNAME_START if n.split(" ", 1)[1].startswith(s)), key=len)
+                for n in names
+            ]
+            assert len(set(firsts)) == len(firsts), names
+            assert len(set(starts)) == len(starts), names
+            assert all(f in FIRST_NAMES for f in firsts)

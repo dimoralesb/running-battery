@@ -190,7 +190,6 @@ select { background: var(--surface); border: 1px solid var(--border); border-rad
 .player.dim.est { opacity: 0.2; }
 .player .focus { fill: none; stroke: var(--on-pitch); stroke-width: 0.5; }
 .player .redzone { fill: none; stroke: var(--warning); stroke-width: 0.6; }
-.player .fav { fill: none; stroke: var(--on-pitch); stroke-width: 0.25; stroke-dasharray: 0.6 0.4; }
 .player .pulse { fill: none; stroke: var(--on-pitch); stroke-width: 0.35; }
 .ball { fill: #ffffff; stroke: #121312; stroke-width: 0.2; }
 .pitch .battery .shell { fill: var(--plate); stroke: var(--charge); stroke-width: 0.14; }
@@ -357,7 +356,6 @@ select { background: var(--surface); border: 1px solid var(--border); border-rad
 .sheet-row:hover:not(:disabled) { text-decoration: none; }
 .sheet-row:hover .sheet-name { text-decoration: underline; text-underline-offset: 3px; }
 .sheet-row.on { font-weight: 600; border-left-color: var(--text); }
-.sheet-row.fav .sheet-name::after { content: " \2605"; }
 .sheet-shirt { color: var(--text-secondary); text-align: right; }
 .sheet-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sheet-battery { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--accent-solid); }
@@ -380,7 +378,6 @@ select { background: var(--surface); border: 1px solid var(--border); border-rad
 }
 .line { padding: var(--space-2) 0; border-bottom: 1px solid var(--border-subtle); max-width: 70ch; }
 .line > p { line-height: var(--leading-body); }
-.line.fav { border-left: 3px solid var(--text); padding-left: var(--space-3); }
 .line.blocked p { color: var(--text-secondary); }
 .line .reason { font-size: var(--text-xs); margin-top: 2px; }
 .line-meta { display: flex; gap: var(--space-2); align-items: center; padding: 0; min-height: 0;
@@ -411,7 +408,6 @@ select { background: var(--surface); border: 1px solid var(--border); border-rad
 .redzone-key { fill: none; stroke: var(--warning); stroke-width: 0.6; }
 .flat-key { fill: none; stroke: var(--text); stroke-width: 0.35; }
 .est-key { fill: var(--text); opacity: 0.5; }
-.fav-key { fill: none; stroke: var(--text); stroke-width: 0.25; stroke-dasharray: 0.6 0.4; }
 .legend .battery .shell { fill: var(--background); stroke: var(--accent-solid); stroke-width: 0.12; }
 .legend .battery .cell { fill: none; }
 .legend .battery .cell.full, .legend .battery .nub { fill: var(--accent-solid); }

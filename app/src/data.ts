@@ -92,7 +92,6 @@ export interface Entry {
 export interface Feed {
   match_id: string;
   agents: Record<string, unknown>;
-  favourite?: string | null; // the feed was made for this player (--favourite)
   moments: { moment_id: string; kind: string; clock: string; video_s: number }[];
   entries: Entry[];
 }
@@ -292,6 +291,10 @@ export function itemOfHighlight(h: Highlight): Item {
 /** Seconds a clip plays around its window: 3 before, 2 after (App.tsx `clipFrom`, `clipTo`). */
 const PLAYED_PAD = 5;
 const SHARE_MAX = 2; // s two clips of different players may share (clip_audit's "shares")
+// A highlight of the moment's player that runs on past the moment's clip gives way to it, so that
+// the clip ends on the second its line is about (decision 42: a back-to-back clip 37 s past a
+// hardest-minutes moment ended on 48% under the line's 57%).
+const RUNS_ON_S = 1;
 
 function overlap(a: Item, b: Item): number {
   return Math.min(a.end, b.end) - Math.max(a.start, b.start);
@@ -313,11 +316,7 @@ function overlap(a: Item, b: Item): number {
 export function queue(d: MatchData, mode: Mode, best: Highlight[]): Item[] {
   const items = best.map(itemOfHighlight);
   const moments: Item[] = [];
-  // The favourite's moments first, so that his keep their clips when two overlap (decision 41).
-  const fav = d.feed.favourite;
-  const mine = (m: { moment_id: string }) => Number(!!fav && m.moment_id.split(":")[1] === fav);
-  const ordered = [...d.feed.moments].sort((a, b) => mine(b) - mine(a));
-  for (const m of ordered) {
+  for (const m of d.feed.moments) {
     const lines = d.feed.entries.filter((e) => e.moment_id === m.moment_id && e.mode === mode
                                                && e.shown);
     if (!lines.length) continue;
@@ -354,7 +353,8 @@ export function queue(d: MatchData, mode: Mode, best: Highlight[]): Item[] {
     }
     if (k < 0) {
       out.push(m);
-    } else if (items[k].player === m.player && !items[k].momentId) {
+    } else if (items[k].player === m.player && !items[k].momentId
+               && items[k].end <= m.end + RUNS_ON_S) {
       const h = items[k];
       items[k] = { ...h, momentId: m.momentId, momentKind: m.kind,
                    start: Math.min(h.start, m.start), end: Math.max(h.end, m.end) };

@@ -7,7 +7,7 @@ sound plausible, not to match any real club or player (none were checked against
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 import numpy as np
 
@@ -139,10 +139,57 @@ def club_test_values(rng: np.random.Generator, truth: TrueParams) -> ClubTestVal
 def _player_name(rng: np.random.Generator, used: set[str]) -> str:
     while True:
         name = f"{rng.choice(FIRST_NAMES)} {rng.choice(SURNAME_START)}{rng.choice(SURNAME_END)}"
-        name = re.sub(r"(.)\1\1+", r"\1\1", name)  # "Yarr" + "rigg" is Yarrigg, not Yarrrigg
+        name = _collapse(name)
         if name not in used:
             used.add(name)
             return name
+
+
+def _collapse(name: str) -> str:
+    return re.sub(r"(.)\1\1+", r"\1\1", name)  # "Yarr" + "rigg" is Yarrigg, not Yarrrigg
+
+
+def distinct_names(
+    teams: list[SimTeam], plans: list[SubPlan]
+) -> tuple[list[SimTeam], list[SubPlan]]:
+    """No two players of a team share a first name or a surname's start (decision 42: "Sami
+    Yarrigg" and "Sami Yarrick" were the away team's two centre-backs). The later one (starters
+    first, then substitutes, by id) takes the next unused first name or start in the lists. No
+    random draws: names are labels only, so the match is the same frame for frame."""
+    names = {p.name for t in teams for p in t.players} | {s.player.name for s in plans}
+    renamed: dict[str, str] = {}
+    for k, team in enumerate(teams):
+        firsts: set[str] = set()
+        starts: set[str] = set()
+        mine = [p for p in team.players] + sorted(
+            (s.player for s in plans if s.team == k), key=lambda p: p.id
+        )
+        for p in mine:
+            first, surname = p.name.split(" ", 1)
+            start = max((s for s in SURNAME_START if surname.startswith(s)), key=len)
+            end = surname[len(start) :]
+            if first in firsts or start in starts:
+                names.discard(p.name)
+                i, j = FIRST_NAMES.index(first), SURNAME_START.index(start)
+                while first in firsts:
+                    i = (i + 1) % len(FIRST_NAMES)
+                    first = FIRST_NAMES[i]
+                name = _collapse(f"{first} {start}{end}")
+                while start in starts or name in names:
+                    j = (j + 1) % len(SURNAME_START)
+                    start = SURNAME_START[j]
+                    name = _collapse(f"{first} {start}{end}")
+                renamed[p.id] = name
+                names.add(name)
+            firsts.add(first)
+            starts.add(start)
+
+    def new(p: SimPlayer) -> SimPlayer:
+        return replace(p, name=renamed[p.id]) if p.id in renamed else p
+
+    teams = [replace(t, players=[new(p) for p in t.players]) for t in teams]
+    plans = [replace(s, player=new(s.player)) for s in plans]
+    return teams, plans
 
 
 def make_teams(rng: np.random.Generator, prior: dict | None = None) -> list[SimTeam]:

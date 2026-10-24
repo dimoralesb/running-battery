@@ -163,3 +163,46 @@ def test_idsse_bands_close_to_synthetic(stats, idsse):
         assert np.all(np.abs(diff) <= BAND_TOLERANCE), (group, diff)
     for pos, d in rep["idsse_positions"].items():
         assert d["n"] >= 1 and 3000.0 < d["distance"] < 14000.0, pos
+
+
+def test_calibrate_fits_the_surface_and_steps_inside_its_bounds():
+    """Decision 42 (``sim.calibrate``): the least-squares surface recovers a known linear model
+    from noisy rows, the Levenberg–Marquardt step stays in the trust region and the knobs'
+    bounds, and with room to move it is the least-squares step, give or take the damping."""
+    from runningbattery.sim import calibrate as C
+
+    rng = np.random.default_rng(0)
+    jac = np.array([[2.0, 0.0], [0.5, -1.0], [0.0, 1.5]])
+    g0 = np.array([1.0, -2.0, 0.5])
+    x = rng.uniform(-1.0, 1.0, (400, 2))
+    gaps = g0 + x @ jac.T + rng.normal(0.0, 0.1, (400, 3))
+    g0_fit, jac_fit, se0 = C.fit(x, gaps)
+    assert np.allclose(g0_fit, g0, atol=0.03) and np.allclose(jac_fit, jac, atol=0.05)
+    assert np.all(se0 < 0.02)
+    knobs = [C.Knob("A", 0.0, 2.0, 0.1), C.Knob("B", 0.0, 2.0, 0.1)]
+    centre, radius = np.array([1.0, 1.0]), np.array([0.1, 0.1])
+    d = C.step(g0, jac, centre, radius, knobs, trust=10.0)
+    best = np.linalg.lstsq(jac, -g0, rcond=None)[0]  # the undamped least-squares step
+    assert np.sum((g0 + jac @ d) ** 2) < np.sum((g0 + jac @ best) ** 2) + 0.05
+    d = C.step(g0, jac, centre, radius, knobs, trust=0.5)
+    assert np.all(np.abs(d) <= 0.5 + 1e-9)
+    tight = [C.Knob("A", 0.98, 1.02, 0.1), C.Knob("B", 0.0, 2.0, 0.1)]
+    d = C.step(g0, jac, centre, radius, tight, trust=10.0)
+    assert 0.98 - 1e-9 <= centre[0] + d[0] * radius[0] <= 1.02 + 1e-9
+
+
+def test_dithering_counts_back_and_forth_in_play():
+    """``calibrate.dither``: a player going 3 m out and back for 4 s is one episode; walking
+    straight on, or the same back-and-forth with the ball dead, is none."""
+    from runningbattery.sim import calibrate as C
+
+    t = np.arange(200) / P.FRAME_RATE_HZ
+    xy = np.zeros((200, 3, 2))
+    xy[:, 0, 0] = 1.5 * np.sin(2 * np.pi * t / 1.0)  # 6 m a second, back and forth
+    xy[:, 1, 0] = 1.5 * t  # straight on
+    xy[:, 2, 0] = xy[:, 0, 0]
+    xy[:, 2, 1] = 20.0
+    alive = np.ones(200, dtype=bool)
+    n, hours = C.dither(xy[:, :2], alive)
+    assert n == 1 and hours == pytest.approx(2 * 20.0 / 3600.0)
+    assert C.dither(xy[:, :1], np.zeros(200, dtype=bool))[0] == 0

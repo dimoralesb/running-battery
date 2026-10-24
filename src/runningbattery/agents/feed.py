@@ -1,7 +1,7 @@
 """The explanation feed (BUILD_PLAN "Thu 22"): a match folder in, a verified, timestamped
 ``feed.json`` out, so the overlay and a video can sync to it (PLAN §4).
 
-``python -m runningbattery.agents.feed <match folder> [--offline] [--favourite H04]``
+``python -m runningbattery.agents.feed <match folder> [--offline]``
 
 Four agents, each with a plain-code fallback so the feed never has a gap:
 1. **Tactical** picks the moments: an Agent Framework agent on Foundry with the MCP server
@@ -9,16 +9,17 @@ Four agents, each with a plain-code fallback so the feed never has a gap:
    spread over the match.
 2. **Narrator** writes one sentence per moment from the claims register's wordings and the
    moment's facts; offline (or as the fallback for a blocked sentence), fixed templates.
-3. **Personalization** (a thin step, decision 6): fan or analyst wording, and a favourite
-   player's moments first (his and those of the player who replaced him, in code).
+3. **Personalization** (a thin step, decision 6): fan or analyst wording. There is no
+   favourite player (decision 42): the feed describes the match's most relevant moments.
 4. **Verifier** checks every sentence: the rules, then the LLM pass (``agents.llm_verifier``).
    A blocked sentence is replaced by the Verifier's rewrite if that passes both checks, else by
    the template, else left out. Blocked sentences stay in the feed with ``shown: false``.
 
-Then plain code makes sure of two things the prompts ask for (decision 25): a team moment says
-how the two teams compare (``MUST_SAY``; else the verified template line is added; decision 31
-adds a substitute against his team-mates and, for the favourite caught on the break, what his
-running would leave a typical professional), and each
+Then plain code makes sure of three things the prompts ask for (decision 25): the match's key
+moments are in the pick (``ensure_key``: the agent's picks vary between runs); a team moment
+says how the two teams compare (``MUST_SAY``; else the verified template line is added;
+decision 31 adds a substitute against his team-mates and, for a player caught on the break,
+what his running would leave a typical professional), and each
 general register sentence is shown at most ``MAX_GENERAL`` times per mode (later ones stay in
 the feed with ``verdict: "repeat"``, ``shown: false``); a moment left with no line gets its
 verified template line.
@@ -56,29 +57,29 @@ MAX_PER_PLAYER = 3
 MAX_GENERAL = 2  # each general register sentence at most twice per mode (decision 25)
 # Register claims about this player or moment; every other claim is a general finding.
 SPECIFIC = {"5", "8", "10", "11", "12", "13", "14", "17", "19", "19c"}
-# A favourite's moments the feed should hold, by kind, in this order (decision 25): the first
-# FAVOURITE_ARC kinds always (exposed on the turnover, the substitute who came on for him), the
-# rest until he has FAVOURITE_MIN.
-FAVOURITE_KINDS = ("exposed_on_turnover", "fresh_legs", "red_zone", "second_wind", "flat_out",
-                   "not_tired_tactical")  # fmt: skip
-FAVOURITE_ARC = 2
-FAVOURITE_MIN = 4
+# Player moment kinds the feed always holds when the match has one (``ensure_key``): its best-
+# ranked moment of each (decision 42, after the favourite player went: the agent's picks vary
+# between runs, and a regenerated feed had lost the turnover that cost a goal and the fresh legs).
+KEY_KINDS = ("exposed_on_turnover", "red_zone", "fresh_legs", "second_wind", "flat_out",
+             "not_tired_tactical")  # fmt: skip
 # What a team moment's lines must say (decision 25): the comparison between the two teams.
 MUST_SAY = {
     "ran harder": r"\d+\s*%\s*more\b[^.]*\bthan\b",
     "gap closed": r"\bgap\b[^.]*\b(closed|gone)\b|\blevel\b|\bthe same\b",
 }
-# Decision 31: the point of a fresh-legs moment is the comparison with his team-mates, and the
-# favourite's caught-on-the-break moment says what his running would cost (claim 11); the
-# Narrator left both out of a regenerated feed.
+# Decision 31: the point of a fresh-legs moment is the comparison with his team-mates, and a
+# caught-on-the-break moment says what his running would cost (claim 11; the favourite's only
+# before decision 42); the Narrator left both out of a regenerated feed.
 FRESH_LEGS_SAYS = r"\bteam-?mates\b"
 # Decision 39: a second wind says his running against his match average (the site's 42:55 showed
 # only "He's about 5.2 minutes after his hardest minutes.").
-SECOND_WIND_SAYS = r"\bmatch average\b"
+# Decision 42: "his" match average, so that claim 1's general "below their match average" does
+# not stand in for it (the site's 83:15 said only "5.0 minutes after his hardest minutes").
+SECOND_WIND_SAYS = r"\bhis match average\b"
 # Decision 39: a quiet spell says why it may not be fatigue (the site's fan lines at 52:00 gave
 # only "96% less running" and "0 touches").
 QUIET_SAYS = verifier.NOT_FATIGUE
-FAVOURITE_EXPOSED_SAYS = r"\btypical professional\b"
+EXPOSED_SAYS = r"\btypical professional\b"
 COUNTER_GOAL_SAYS = r"(?<!own )\bgoal\b(?![ -]side)|\bscor(e|ed|ing)\b"
 ORDINAL = {1: "first", 2: "second", 3: "third", 4: "fourth", 5: "fifth", 6: "sixth",
            7: "seventh", 8: "eighth", 9: "ninth", 10: "tenth"}  # fmt: skip
@@ -87,73 +88,46 @@ ORDINAL = {1: "first", 2: "second", 3: "third", 4: "fourth", 5: "fifth", 6: "six
 # --- Tactical --------------------------------------------------------------------------------
 
 
-def candidates(tools: MatchTools, limit: int = 8, players: set[str] = frozenset()) -> dict:
-    """Every ranked moment the Tactical agent may pick, by id; a favourite's own moments too."""
+def candidates(tools: MatchTools, limit: int = 8) -> dict:
+    """Every ranked moment the Tactical agent may pick, by id."""
     out = {}
     for kind in MOMENT_KINDS:
         for mo in tools.find_moments(kind, limit)["moments"]:
             out[mo["id"]] = mo
-        for pid in sorted(players):
-            if kind not in TEAM_KINDS:
-                for mo in tools.find_moments(kind, 3, player=pid)["moments"]:
-                    out.setdefault(mo["id"], mo)
     return out
 
 
-def related(tools: MatchTools, favourite: str | None) -> set[str]:
-    """The favourite and the player who came on for him, if any."""
-    if not favourite:
-        return set()
-    off = tools.m.sub_off.get(favourite)
-    return {favourite} | ({off[2]} if off else set())
-
-
-def ensure_favourite(picked: list[str], found: dict[str, dict], ids: set[str]) -> list[str]:
-    """Add the favourite's (and his replacement's) best moment of each kind in FAVOURITE_KINDS
-    that the pick left out (the first FAVOURITE_ARC kinds always, the rest until they have
-    FAVOURITE_MIN), at least a minute from the other player moments. For the first
-    FAVOURITE_ARC kinds his best-ranked moment is added even when another of that kind was
-    picked: the Tactical agent once picked his second turnover and left out the third, the
-    story's (decision 30). A turnover of his that ended in a goal is added too: the agent once
-    picked two others and left out the one that cost a goal (decision 39). Another player's
-    moment of the same kind within the minute makes way for his (decision 41)."""
+def ensure_key(picked: list[str], found: dict[str, dict]) -> list[str]:
+    """Add the best-ranked moment of each kind in KEY_KINDS (the next best if it clashes, when
+    the pick has none of that kind), and the best-ranked turnover that ended in a goal (decision
+    39: the agent once picked two others and left out the one that cost a goal), each at least a
+    minute from the other player moments (decision 42: the agent picked a full-back's first and
+    second turnovers and left out the best-ranked, his third).
+    Another player's moment of the same kind within that minute is the same action seen from
+    him, and makes way (decision 41: the agent picked a team-mate's view of a turnover)."""
     chosen = [found[i] for i in picked]
-    mine = [m for m in chosen if who(m) in ids]
 
-    def add(kind: str, goal: bool = False) -> None:
-        for mo in sorted(found.values(), key=lambda m: -m["score"]):
-            if mo["kind"] != kind or who(mo) not in ids:
-                continue
+    def add(kind: str, goal: bool = False, best_only: bool = False) -> None:
+        for n, mo in enumerate(m for m in sorted(found.values(), key=lambda m: -m["score"])
+                               if m["kind"] == kind and m.get("player")):  # fmt: skip
             if goal and not mo.get("facts", {}).get("counter_goal"):
                 continue
-            # A minute from the other player moments; a team moment at a block's end may be
-            # nearer (its clip is a different picture; decision 37: all of the favourite's best
-            # turnovers fell within 60 s of one and his story dropped out). Another player's
-            # moment of the same kind that near is the same action seen from him, and makes way
-            # (decision 41: the agent picked a team-mate's view of the favourite's turnover).
+            if mo in chosen or (best_only and n > 0):
+                return
+            # A team moment at a block's end may be nearer (its clip is a different picture).
             near = [
                 c for c in chosen if c.get("player") and abs(mo["video_s"] - c["video_s"]) < 60.0
             ]
-            if any(c["kind"] != kind or who(c) in ids for c in near):
+            if any(c["kind"] != kind for c in near):
                 continue
             for c in near:
                 chosen.remove(c)
             chosen.append(mo)
-            mine.append(mo)
             return
 
-    for n, kind in enumerate(FAVOURITE_KINDS):
-        if n >= FAVOURITE_ARC and len(mine) >= FAVOURITE_MIN:
-            break
-        have = [m for m in mine if m["kind"] == kind]
-        best = max((m for m in found.values() if m["kind"] == kind and who(m) in ids),
-                   key=lambda m: m["score"], default=None)  # fmt: skip
-        if have and (n >= FAVOURITE_ARC or best is None or best in have):
-            continue
-        add(kind)
-    if not any(m["kind"] == "exposed_on_turnover" and m.get("facts", {}).get("counter_goal")
-               for m in mine):  # fmt: skip
-        add("exposed_on_turnover", goal=True)
+    for kind in KEY_KINDS:
+        add(kind, best_only=any(m["kind"] == kind for m in chosen))
+    add("exposed_on_turnover", goal=True)
     return [m["id"] for m in sorted(chosen, key=lambda m: m["video_s"])]
 
 
@@ -162,9 +136,9 @@ def who(mo: dict) -> str:
     return mo["player"]["id"] if mo.get("player") else f"team:{mo['team']['id']}"
 
 
-def pick_offline(found: dict[str, dict], favourite: set[str] = frozenset()) -> list[str]:
+def pick_offline(found: dict[str, dict]) -> list[str]:
     """The best-ranked moments of each kind, at least MIN_GAP_S apart and at most
-    MAX_PER_PLAYER per player; a favourite player's moments (and his replacement's) first."""
+    MAX_PER_PLAYER per player."""
     chosen: list[dict] = []
     per_player: dict[str, int] = {}
 
@@ -173,7 +147,7 @@ def pick_offline(found: dict[str, dict], favourite: set[str] = frozenset()) -> l
             return False
         return all(abs(mo["video_s"] - c["video_s"]) >= MIN_GAP_S for c in chosen)
 
-    order = sorted(found.values(), key=lambda m: (who(m) not in favourite, m["rank"]))
+    order = sorted(found.values(), key=lambda m: m["rank"])
     for kind, n in PER_KIND.items():
         taken = 0
         for mo in order:
@@ -204,27 +178,21 @@ it exists, several players and both teams), moments at least 3 minutes apart, an
 - a defender exposed on turnovers again and again: prefer his second or third exposure
   (times_exposed_so_far), and the substitute who came on for him (fresh_legs) if there is one;
 - a drop that is tactical rather than fatigue, a second wind, the fastest runs.
-{favourite}Return the moment ids exactly as the tools gave them, in match order, each with a
+Return the moment ids exactly as the tools gave them, in match order, each with a
 one-line reason."""
 
 
-async def pick_llm(folder: Path, found: dict[str, dict], favourite: str | None) -> list[str]:
+async def pick_llm(folder: Path, found: dict[str, dict]) -> list[str]:
     from agent_framework import MCPStdioTool
 
     from runningbattery.agents import foundry
 
-    fav = (
-        f"The viewer's favourite player is {favourite}: include his moments, and those of the "
-        "player who came on for him (find_moments with player). "
-        if favourite
-        else ""
-    )
     server = MCPStdioTool(
         name="running-battery", command=sys.executable,
         args=["-m", "runningbattery.agents.mcp_server", str(folder)],
     )  # fmt: skip
     async with server:
-        agent = foundry.agent("Tactical", TACTICAL.format(favourite=fav), "main", tools=server)
+        agent = foundry.agent("Tactical", TACTICAL, "main", tools=server)
         r = await agent.run("Pick the moments.", options={"response_format": Picks})
     ids = [p.moment_id for p in (r.value.picks if r.value else []) if p.moment_id in found]
     return sorted(dict.fromkeys(ids), key=lambda i: found[i]["video_s"])
@@ -241,7 +209,10 @@ def brief(tools: MatchTools, mo: dict) -> dict[str, Any]:
     ctx = tools.context_at(per, t, pid, None if pid else mo["team"]["id"])
     end = ctx["clock"]
     start = max(t - 300.0, 0.0)
-    sig = tools.player_signals(pid, _clock(tools, per, start), _clock(tools, per, t)) if pid else {}
+    read = mo.get("read_t", t)  # caught on the break: at the end of its clip (tools.CLIP_AFTER_S)
+    sig = {}
+    if pid:
+        sig = tools.player_signals(pid, _clock(tools, per, start), _clock(tools, per, read))
     facts = dict(mo["facts"])
     if sig.get("on_pitch"):
         b, h = sig["battery"], sig["hsr"]
@@ -624,9 +595,10 @@ Rules (a Verifier blocks anything else):
   counts from the facts (touches_last_5min against touches_per_5min_so_far).
 - An exposed_on_turnover moment with times_exposed_so_far above 1: say it is the second (third…)
   time his team lost the ball just after his hardest minutes so far, in those words ("This is
-  the third time his team have lost the ball just after his hardest minutes so far"; for the
-  favourite: "This is the third time <his name>'s team have lost the ball…"), not "exposed"
-  and not "he is facing".
+  the third time <his name>'s team have lost the ball just after his hardest minutes so far"),
+  not "exposed" and not "he is facing".
+- In a player's moment, name him in the first sentence (as its subject, or as in "<his name>'s
+  team"; never as a label before a colon).
 - A flat_out run with his_fastest_so_far: say it is his fastest of the match so far, never a
   share of his top speed above 100%.
 - A gap that closed: say the two sides were level, never "0% more".
@@ -643,15 +615,10 @@ STYLE = {
 }
 
 
-def personalize(mode: str, favourite: str | None) -> str:
-    """The Personalization step: the audience, the style, and the favourite player."""
-    style = STYLE[mode]
-    if favourite:
-        style += (
-            f" The viewer follows {favourite}: in his moments, name him in the first sentence "
-            '(as its subject, or as in "<his name>\'s team"; never as a label before a colon).'
-        )
-    return NARRATOR.format(audience="casual fans" if mode == "fan" else "analysts", style=style)
+def personalize(mode: str) -> str:
+    """The Personalization step: the audience and the style."""
+    audience = "casual fans" if mode == "fan" else "analysts"
+    return NARRATOR.format(audience=audience, style=STYLE[mode])
 
 
 def unlabel(sentence: str) -> str:
@@ -670,10 +637,10 @@ def narrator_view(b: dict) -> dict:
     return {k: v for k, v in b.items() if k != "what"} | {"facts": facts}
 
 
-async def narrate_llm(briefs: list[dict], mode: str, favourite: str | None) -> list[Line]:
+async def narrate_llm(briefs: list[dict], mode: str) -> list[Line]:
     from runningbattery.agents import foundry
 
-    agent = foundry.agent("Narrator", personalize(mode, favourite), "main")
+    agent = foundry.agent("Narrator", personalize(mode), "main")
     payload = json.dumps([narrator_view(b) for b in briefs], ensure_ascii=False)
     r = await agent.run(f"Moments (JSON):\n{payload}", options={"response_format": Lines})
     return r.value.lines if r.value else []
@@ -760,10 +727,10 @@ async def entries_for(b: dict, mode: str, lines: list[tuple[str, str]], agent) -
     return out
 
 
-def needs(b: dict, favourite: str | None = None) -> str | None:
+def needs(b: dict) -> str | None:
     """What a moment's lines must say, as a pattern: a team moment's comparison (MUST_SAY), a
-    substitute's against his team-mates, the favourite's typical-pro line when caught on the
-    break (decision 31), a second wind's running against his match average and a quiet spell's
+    substitute's against his team-mates, the typical-pro line when caught on the break
+    (decision 31), a second wind's running against his match average and a quiet spell's
     reason that it may not be fatigue (decision 39)."""
     if b["kind"] in TEAM_KINDS:
         return MUST_SAY.get(b["facts"].get("pattern"))
@@ -773,9 +740,8 @@ def needs(b: dict, favourite: str | None = None) -> str | None:
         return SECOND_WIND_SAYS
     if b["kind"] == "not_tired_tactical":
         return QUIET_SAYS
-    if (b["kind"] == "exposed_on_turnover" and favourite and b.get("player")
-            and b["player"]["id"] == favourite and _pro(b)):  # fmt: skip
-        return FAVOURITE_EXPOSED_SAYS
+    if b["kind"] == "exposed_on_turnover" and b.get("player") and _pro(b):
+        return EXPOSED_SAYS
     return None
 
 
@@ -788,9 +754,7 @@ def goal_line(b: dict) -> tuple[str, str] | None:
     return "fact", f"The counter-attack after {team} lost the ball ended in a goal."
 
 
-async def must_say(
-    b: dict, mode: str, chunk: list[dict], agent, favourite: str | None = None
-) -> list[dict]:
+async def must_say(b: dict, mode: str, chunk: list[dict], agent) -> list[dict]:
     """What the moment must say (``needs``): if no shown line says it, the verified template
     line that does, first; and a counter's goal (``goal_line``)."""
     said = lambda pattern: any(e["shown"] and re.search(pattern, e["sentence"], re.I)  # noqa: E731
@@ -800,7 +764,7 @@ async def must_say(
         v, _ = await check(b, mode, *goal, agent)
         if v.ok:
             chunk = chunk + [_entry(b, mode, *goal, v, "template")]
-    need = needs(b, favourite)
+    need = needs(b)
     if not need or said(need):
         return chunk
     for claim, sentence in [x for x in template(b, mode) + [_pro(b)] if x]:
@@ -892,24 +856,19 @@ def _entry(b, mode, claim, sentence, v: FullVerdict, verdict=None, original=None
     return e
 
 
-async def build(
-    folder: Path, offline: bool = False, favourite: str | None = None
-) -> dict[str, Any]:
+async def build(folder: Path, offline: bool = False) -> dict[str, Any]:
     tools = MatchTools(folder)
-    fav = tools.m.player(favourite)["id"] if favourite else None
-    ids = related(tools, fav)
-    found = candidates(tools, players=ids)
+    found = candidates(tools)
     picked, how = None, "offline"
     if not offline:
         try:
-            picked = await pick_llm(folder, found, fav)
+            picked = await pick_llm(folder, found)
             how = "llm"
         except Exception as e:  # the plain-code pick stands in
             how = f"offline (tactical agent failed: {type(e).__name__})"
     if not picked:
-        picked = pick_offline(found, ids)
-    if ids:
-        picked = ensure_favourite(picked, found, ids)
+        picked = pick_offline(found)
+    picked = ensure_key(picked, found)
     briefs = []
     for mid in picked:
         b = brief(tools, found[mid])
@@ -927,8 +886,7 @@ async def build(
         narration[mode] = "offline"
         if not offline:
             try:
-                for ln in await narrate_llm([_public(b) for b in briefs], mode, fav and
-                                            tools.m.players[fav]["name"]):  # fmt: skip
+                for ln in await narrate_llm([_public(b) for b in briefs], mode):
                     lines.setdefault(ln.moment_id, []).append((ln.claim_id, unlabel(ln.sentence)))
                 narration[mode] = "llm"
             except Exception as e:
@@ -941,7 +899,7 @@ async def build(
     for b in briefs:  # after the cap, so a comparison is never held back as a repeat
         for mode in MODES:
             mine = [e for e in entries if e["moment_id"] == b["moment_id"] and e["mode"] == mode]
-            said = await must_say(b, mode, mine, agent, fav)
+            said = await must_say(b, mode, mine, agent)
             if said != mine:  # in must_say's order: what it must say first (a stable sort below)
                 ids = {id(e) for e in mine}
                 entries = [e for e in entries if id(e) not in ids] + said
@@ -955,7 +913,6 @@ async def build(
         "agents": {"tactical": how, "narrator": narration, "personalization": "plain code",
                    "verifier": "rules + llm" if agent else "rules",
                    "models": _models(offline)},
-        "favourite": fav,
         "moments": [{k: b[k] for k in ("moment_id", "kind", "clock")} | b["_when"]
                     for b in briefs],
         "entries": entries,
@@ -980,10 +937,9 @@ def main(argv: list[str] | None = None) -> None:
     )
     parser.add_argument("folder", type=Path)
     parser.add_argument("--offline", action="store_true", help="no LLM: templates and rules")
-    parser.add_argument("--favourite", help="player id, name or 'home 3'")
     parser.add_argument("--out", type=Path, help=f"default <folder>/{FEED}")
     args = parser.parse_args(argv)
-    feed = asyncio.run(build(args.folder, args.offline, args.favourite))
+    feed = asyncio.run(build(args.folder, args.offline))
     out = args.out or args.folder / FEED
     out.write_text(json.dumps(feed, indent=1, ensure_ascii=False))
     shown = [e for e in feed["entries"] if e["shown"]]

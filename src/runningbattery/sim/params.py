@@ -137,10 +137,12 @@ ONSIDE_SPEED = 0.60  # hurrying back from an offside position
 # far out of position (RECOVERY_EFFORT). Our assumption, tuned to sprint distance and top speed
 # per position (synthesis §4.2; [SilvaH2025, Table 1]).
 BEHIND_EFFORT = 1.0
-TRACK_EFFORT = 0.95
-COUNTER_SUPPORT_EFFORT = 0.95
-OVERLAP_EFFORT = 0.86
-RECOVERY_EFFORT = 0.92
+# Since decision 42 these four are fitted with POSITION_EFFORT by sim.calibrate (the values by hand
+# before it: 0.95, 0.95, 0.86 and 0.92); RECOVERY_EFFORT stays at least SHAPE_RUN_SPEED.
+TRACK_EFFORT = 0.947
+COUNTER_SUPPORT_EFFORT = 0.920
+OVERLAP_EFFORT = 0.770
+RECOVERY_EFFORT = 0.840
 SPRINT_RUN_S = (3.0, 6.0)  # how long a sprint run may last, s. Our assumption.
 # A run that heads back within TURN_S seconds of being above HI_SPEED the other way (more than
 # 90° round) goes no faster than SHAPE_RUN_MIN until then: he turns first. Our assumption
@@ -182,16 +184,24 @@ TURN_S = 3.5
 # 4.5, 0.8, 0.3, 1.6 and 2.2% (CB and FB at 1.10, the most WALL_SPEED allows below), with
 # COUNTER_DROP_* and defenders following runs into space: high-speed running per position within
 # ±5.3% (CB −1.5, FB −4.0, DM −5.3, CM −3.3, AM −0.5%), sprint distance FB +16%, DM +9%, CM +12%,
-# team +7% (120 seeds; decision 40 on the same seeds +16, +8, +13 and +6%).
+# team +7% (120 seeds; decision 40 on the same seeds +16, +8, +13 and +6%). Decision 42: no more
+# tuning by hand. sim.calibrate fits these with the efforts of the hardest runs (TRACK_EFFORT and
+# the three after it), DUEL_PER_TOUCH, TRANSITION_CHANCE, SHAPE_RUN_GAP and SHAPE_LAG_S to the
+# per-position targets, running by phase, event counts and the IDSSE speed bands and dithering
+# (least squares on a fitted response surface, trust-region steps; 3,700 matches on seeds from
+# 10001, never the 1–120 check seeds). The keepers' work rate rose most (0.99 → 1.156): low
+# passes cut out since decision 41 took a sixth of the balls they came for, and the rest were
+# shorter (their high-speed running 27 → 18 m a match); with the dead-ball jog capped after the
+# work rate, CB and FB are no longer held at 1.10.
 POSITION_EFFORT = {
-    Position.GK: 0.990,
-    Position.CB: 1.100,
-    Position.FB: 1.090,
-    Position.DM: 1.072,
-    Position.CM: 1.080,
-    Position.AM: 1.080,
-    Position.WM: 1.063,
-    Position.CF: 1.000,
+    Position.GK: 1.156,
+    Position.CB: 1.132,
+    Position.FB: 1.126,
+    Position.DM: 1.060,
+    Position.CM: 1.100,
+    Position.AM: 1.108,
+    Position.WM: 1.089,
+    Position.CF: 0.995,
 }
 # Defenders (CB, FB) who track an opponent running in behind: the nearest TRACKERS follow him,
 # TRACK_GOAL_SIDE metres goal-side of where he is now, while the pass is in flight or he has the
@@ -211,7 +221,7 @@ CARRY_MOMENTUM = 0.85
 # SHAPE_RUN_SPEED to RECOVERY_EFFORT. Out of possession, a run mostly up the pitch, back up to the
 # line, goes no faster than SHAPE_RUN_MIN unless the team is pressing (decision 41: a defender
 # who had dropped deep sprinted back out at 7 m/s). Our assumption.
-SHAPE_RUN_GAP = 9.0
+SHAPE_RUN_GAP = 10.05  # 9.0 before decision 42 (sim.calibrate: dithering)
 # On the opponents' counter-attack (a transition), or caught upfield of the ball out of
 # possession, a defender (CB, FB) starts his shape run from COUNTER_DROP_GAP metres, at
 # COUNTER_DROP_SPEED of S0 or more. Our assumption (decision 41): with decoy runs no longer
@@ -561,8 +571,10 @@ OUT_OF_POSSESSION_HOLD = {Position.CF: 8.0, Position.AM: 6.0, Position.WM: 3.0}
 SHAPE_SWITCH_S = (4.0, 1.5)
 # The shape follows a lagged copy of the ball: its reference point closes the gap to the ball
 # with time constant SHAPE_LAG_S, so a long pass moves the block over a few seconds, not in one
-# jump. Our assumption, tuned to the IDSSE jogging share (PLAN §2.5).
-SHAPE_LAG_S = 1.5
+# jump. Our assumption, tuned to the IDSSE jogging share (PLAN §2.5); 1.5 before decision 42
+# fitted it (sim.calibrate) with SHAPE_RUN_GAP to the IDSSE dithering, shape runs that chase a
+# target swinging back with the ball.
+SHAPE_LAG_S = 1.292
 # Small repositioning: every WANDER_S seconds each player picks a new spot about WANDER_SD
 # metres (SD per axis) from their shape or set-piece position, in play and while the ball is
 # dead. Our assumption, tuned to dead-ball running, 63 m/min [Allen2026b, Table 5, derived],
@@ -677,7 +689,7 @@ CUT_OUT_EDGE_S = 0.3
 # gets him there (``roles.targets``). Our assumption (decision 41: duels were decided from up to
 # 4 m, aerial ones up to 7 m, with no contact). DUEL_PER_TOUCH was 0.18 before it: fewer
 # challengers reach the ball, so more go in (duels per match, summary.TARGETS).
-DUEL_PER_TOUCH = 0.36
+DUEL_PER_TOUCH = 0.416  # 0.36 before decision 42 (sim.calibrate)
 DUEL_ENGAGE = 4.0  # m
 DUEL_HOLD_S = 1.5
 DUEL_APPROACH = 0.65  # share of S0: going in for the ball is not a sprint
@@ -701,7 +713,9 @@ SHOT_RATE_SCALE = 16.0  # m
 # inside SHOT_CLOSE metres it is at least SHOT_CLOSE_MIN even when blocked. A player with a clear
 # lane who does not shoot carries on at goal for SHOT_CARRY_ON_S seconds and decides again, at
 # most SHOT_CARRY_ON_MAX times, instead of passing back (decision 38: a player through on goal
-# passed backwards). Our assumption, tuned with SHOT_RATE to the shots per match above.
+# passed backwards); still clear after the last of them, he shoots (decision 42: 3 of 18 clear
+# chances in the demo matches ended in a pass back after two carry-ons). Our assumption, tuned
+# with SHOT_RATE to the shots per match above.
 SHOT_LANE_HALF = 8.0  # m
 SHOT_RATE_CLEAR = 0.95
 SHOT_CLEAR_SCALE = 33.0  # m: about 0.7 at 18 m and 0.55 at 25 m
@@ -801,12 +815,14 @@ WALL_GAP = 0.75  # 0.6 before decision 39 (wall players within 0.7 m of each oth
 # the taker) go to their spots at the pace that gets them there once SET_PIECE_DUE of the dead
 # time has gone, leaving the rest to settle (``Roles.dead_pace``; at a corner, about 13 of
 # 32 s): from a walk, SET_PIECE_WALK of S0 (about 2 m/s),
-# up to a jog, WALL_SPEED of S0, clearly below HI_SPEED for every player: at most
-# 0.45 × 1.10 × 10.3 = 5.10 m/s [18.4 km/h] (the largest POSITION_EFFORT, CB and FB, and the top
-# of S0_RANGE; the match tempo and the story's press apply in play only, and fatigue only slows).
+# up to a jog, WALL_SPEED of S0, clearly below HI_SPEED for every player (the top of S0_RANGE;
+# the match tempo and the story's press apply in play only, and fatigue only slows).
 # The goal huddle runs at WALL_SPEED. Our assumption (decision 40): before it every job jogged
 # at 0.5 of S0 whatever the time to the restart (a corner waits about 32 s, DEAD_TIME), up to
-# 5.52 m/s once decision 39 raised POSITION_EFFORT.
+# 5.52 m/s once decision 39 raised POSITION_EFFORT. Since decision 42 WALL_SPEED caps every job
+# while the ball is dead, and a substitute's jog on, after the work rate: at most
+# 0.45 × 10.3 = 4.64 m/s, whatever POSITION_EFFORT is (it had capped the work rate of CB and FB
+# at 1.10, a bound the calibration, sim.calibrate, should not have).
 WALL_SPEED = 0.45
 SET_PIECE_WALK = 0.2
 SET_PIECE_DUE = 0.4
@@ -835,7 +851,7 @@ LONG_STOPPAGE_S = (30.0, 90.0)
 # 9.3 ± 3.4 s [Bortnik2022, Tables 1–2]. The chance that an open-play turnover starts one is
 # our assumption, tuned to the count. The drawn length is longer than 10 s because many end
 # early (turnover, ball out); tuned so the realised length is about 10 s (our assumption).
-TRANSITION_CHANCE = 0.32
+TRANSITION_CHANCE = 0.26  # 0.32 before decision 42 (sim.calibrate)
 TRANSITION_S = (15.0, 4.5, 5.0, 27.0)  # drawn length: mean, SD, min, max
 # High press: chance the defending team presses when the opponent has the ball in its own
 # third; lasts at most about 10 s (high-press spells 9.8 ± 3.7 s [Bortnik2022, Table 2]).

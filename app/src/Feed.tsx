@@ -4,7 +4,6 @@ interface Props {
   feed: FeedData;
   now: number;
   mode: Mode;
-  favourite: string | null;
   showBlocked: boolean;
   text: Record<string, string>;
   onShowBlocked: (b: boolean) => void;
@@ -68,7 +67,7 @@ export function Blocked({ e, text }: { e: Entry; text: Record<string, string> })
 }
 
 /** Full match: the agents' lines as they come, newest first. */
-export function Feed({ feed, now, mode, favourite, showBlocked, text, onShowBlocked, onSeek }: Props) {
+export function Feed({ feed, now, mode, showBlocked, text, onShowBlocked, onSeek }: Props) {
   const mine = feed.entries.filter((e) => e.mode === mode && e.video_s <= now + 0.5);
   const shown = mine.filter((e) => e.shown).reverse();
   const blocked = mine.filter((e) => e.verdict === "blocked").reverse();
@@ -97,7 +96,7 @@ export function Feed({ feed, now, mode, favourite, showBlocked, text, onShowBloc
       {shown.length === 0 && <p className="sub">{text.feedEmpty}</p>}
       {shown.map((e, k) => (
         <article key={`${e.moment_id}-${k}`}
-                 className={`line${e.player && e.player.id === favourite ? " fav" : ""}`}>
+                 className="line">
           <button className="line-meta" onClick={() => onSeek(e.video_s - 3, e.player?.id ?? null)}>
             <span className="num">{e.clock}</span>
             <span className={`dot ${e.team}`} aria-hidden="true" />

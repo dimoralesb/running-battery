@@ -138,12 +138,11 @@ export function LowerThird({ tag, clock, team, who, player, r, offPitch, mode, t
 }
 
 /** Both line-ups with each player's battery, live; a click follows that player. */
-export function TeamSheet({ data, now, mode, on, favourite, text, onSelect }: {
+export function TeamSheet({ data, now, mode, on, text, onSelect }: {
   data: MatchData;
   now: number;
   mode: Mode;
   on: string | null;
-  favourite: string | null;
   text: Record<string, string>;
   onSelect: (id: string) => void;
 }) {
@@ -164,7 +163,7 @@ export function TeamSheet({ data, now, mode, on, favourite, text, onSelect }: {
                   const r = reading(data, p, now);
                   return (
                     <li key={p.id}>
-                      <button className={`sheet-row${p.id === on ? " on" : ""}${p.id === favourite ? " fav" : ""}`}
+                      <button className={`sheet-row${p.id === on ? " on" : ""}`}
                               onClick={() => onSelect(p.id)}>
                         <span className="sheet-shirt num">{p.shirt}</span>
                         <span className="sheet-name">{p.name}</span>

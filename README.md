@@ -6,7 +6,7 @@ Running Battery measures from tracking data how much hard running each football 
 
 All match data is **synthetic**: we built a generator whose players get tired according to published sports science, with a hidden "true" fatigue we use to test our estimator.
 
-**Try it:** https://happy-bay-06ca1e90f.3.azurestaticapps.net/?match=story (the story match, fan mode; the favourite is the left-back the story is about).
+**Try it:** https://happy-bay-06ca1e90f.3.azurestaticapps.net/?match=story (the story match, fan mode).
 It opens on the **Highlights**: each clip plays once as it happened, then shows its details (numbers, sources and the Verifier's verdicts); "Replay" plays it again (a progress bar, Play/Pause and ½× 1× 2× work like a video player's), and "Full match" is the whole replay.
 Add `?match=natural`, `&mode=analyst`, `&view=full&t=<seconds>`, `&hl=<kind>&step=details` (or `&step=replay` for the replay) or `&theme=dark` to the address.
 
@@ -24,7 +24,7 @@ flowchart TD
     SIM["1. Synthetic Match Generator (sim/)<br/>10 Hz tracking + events · 74 papers · hidden short-term pools & 90-min tank"]
     ENG["2. Short-Term D' Battery & Signal Engine (engine/)<br/>Per-second speed, HSR, hardest minutes · 200-draw typical-pro battery & calibrated chance"]
     MCP["3. Read-Only MCP Server (agents/mcp_server.py)<br/>7 tools: match_summary, player_signals, find_moments, team_running, moment_context, claim, verify<br/>Every number returned with {value, unit, source} · never reads truth.json"]
-    AG["4. Multi-Agent Pipeline on Microsoft Foundry (Agent Framework · gpt-5-mini)<br/>Tactical (selects moments) → Narrator (drafts from 46 claims) → Personalization (fan/analyst, favourite)"]
+    AG["4. Multi-Agent Pipeline on Microsoft Foundry (Agent Framework · gpt-5-mini)<br/>Tactical (selects moments) → Narrator (drafts from 46 claims) → Personalization (fan/analyst)"]
     VER["5. Two-Stage Verifier (agents/verifier.py + llm_verifier.py)<br/>Stage 1: deterministic rules (0 / 73 false blocks) · Stage 2: structured-output LLM check (can only block)"]
     APP["6. Broadcast Overlay on Azure Static Web Apps (app/)<br/>React + TypeScript · 5 Hz pitch & run trails · live lower third · verified & blocked commentary"]
 
@@ -50,16 +50,17 @@ and the field it came from; nothing in `agents/` can read the hidden truth. **Ta
 the moments (a player's hardest minutes, a defender caught on the break, second wind, fresh legs, a quiet spell
 that is likely tactical rather than fatigue, flat-out runs near a player's top speed, and who's doing
 the running between the two teams, with where it happened); **Narrator** writes from the claims register's wordings;
-**Personalization** sets the fan or analyst style and puts a favourite player (and whoever came
-on for him) first; **Verifier** checks every sentence before it reaches the screen.
+**Personalization** sets the fan or analyst style (there is no favourite player: the feed
+describes the match's most relevant moments, decision 42); **Verifier** checks every sentence before it reaches the screen.
 
 Plain code holds the agents to what the prompts ask: each moment offers only the claims that fit
 it (the "after a player's hardest 5 minutes" figure only after a stretch that long, "top speed hardly drops"
 only after the 75th minute), a team moment always says how the two teams compare, each general
 finding is shown at most twice per feed, and "fewer touches" needs measured touch counts
-(PLAN decision 25). A substitute's moment always compares him with his team-mates, and the
-favourite's caught-on-the-break moment says what his running would leave a typical professional
-(decision 31). A line tagged with a general finding whose numbers all come from the moment's
+(PLAN decision 25). The best moment of each kind is always in the feed, whatever the Tactical
+agent picked, and so is a turnover that cost a goal (decision 42). A substitute's moment always
+compares him with his team-mates, and a caught-on-the-break moment says what his running would
+leave a typical professional (decision 31). A line tagged with a general finding whose numbers all come from the moment's
 facts counts as a measured fact (decision 29). A team moment also says where the team's
 high-speed running happened, as measured facts per minute of each situation (decision 30, below);
 claim 4 ("losing the ball forces the hardest running of the game") may go with it, but not its
@@ -142,7 +143,7 @@ caught 0 of 2 before it and 2 of 2 after, with both valid ones passing.
 the look in [DESIGN.md](DESIGN.md)). One column as wide as the pitch: the brand line ("Running
 Battery · synthetic match" and what it shows), the score bug with each team's colour, the pitch,
 one lower third docked under it, a quiet play bar, then four tabs: **Clips**, **Team sheet**,
-**Details** and **Settings** (view, fan or analyst, match, favourite player, dark or light, the
+**Details** and **Settings** (view, fan or analyst, match, dark or light, the
 key). While a clip plays, only the score, the pitch and the lower third ask for attention.
 
 It opens on the **Highlights** (decision 29): one clip at a time, in match order, from the
@@ -176,12 +177,12 @@ each team's high-speed running per minute in play instead. The Team sheet tab li
 with each player's battery, live; a click follows that player in the full match. Goalkeepers get
 none. The empty shell is the logo.
 
-**Full match** is the whole replay. In fan mode it shows a battery icon for the selected and
-favourite players (a tick shows all of them); in analyst mode the selected player's battery trace
+**Full match** is the whole replay. In fan mode it shows a battery icon for the selected
+player (a tick shows all of them); in analyst mode the selected player's battery trace
 with its band and his high-speed running. To keep one obvious place to look, the player the
 current feed line is about gets a ring and the lower third; the flat-out pulse
-(90% or more of his top speed so far) and the hardest-minutes ring show only for him, the selected
-and the favourite player, and the key is in Settings. Both teams' high-speed running per
+(90% or more of his top speed so far) and the hardest-minutes ring show only for him and the selected
+player, and the key is in Settings. Both teams' high-speed running per
 ball-in-play minute is one chart, "High-speed running per minute". Under it, **high-speed running
 by situation** (decision 30) splits each team's high-speed running by situation of play, from who
 had the ball and where it was, as metres per minute of that situation (G5): the first 10 s after
@@ -219,8 +220,8 @@ never how hard he tried (claim 38). Hardest accelerations and stops are left out
 systems count them about 10-fold apart (claim 32).
 
 The demo feeds are in [docs/feeds/](docs/feeds/): the story match (seed 2028, a high press that
-fades, a full-back caught on the break again and again, a fresh substitute), the same match with that full-back
-as the favourite (the one the site and the video use), and a natural match (seed 2031). Story
+fades, a full-back caught on the break again and again, a fresh substitute; the one the site
+and the video use), and a natural match (seed 2031). Story
 matches are never used for validation numbers.
 
 ## What we tested and don't claim
@@ -290,7 +291,15 @@ sprint distance rose (+12.7% → +16.8%), team sprint distance a little (+6.9% �
 high-speed running fell (28 → 27 m a match), and players walk a little more (time walking 0.4
 points above decision 39, 1.4 above IDSSE). Decision 41 changed the generator again (defenders
 follow the runner they track and no longer sprint straight back, duels need the players within
-1.5 m, a low pass that reaches an opponent is cut out, substitutes come on at the halfway line); the
+1.5 m, a low pass that reaches an opponent is cut out, substitutes come on at the halfway line), and
+decision 42 replaced tuning by hand with an algorithm: `sim.calibrate` fits 16 generator knobs
+(work rate per position, the efforts of the hardest runs, two event rates, two shape settings) to
+42 targets, the per-position numbers below, running by phase, event counts and IDSSE's speed bands
+and dithering, by the method of simulated moments (Sobol designs, a least-squares response
+surface, trust-region Levenberg–Marquardt steps, a line search; about 4,000 matches on seeds never
+used for these tables). On 120 seeds it took team sprint distance from +7.7% to +0.4% and keepers'
+high-speed running from 18 to 31 m (target 33); central midfielders' sprint distance stays high
+(+15–20%), and full-backs' and holding midfielders' high-speed running fell to about −6%. The
 numbers below are still decision 40's and are re-run once, at the freeze before submission.
 
 | Check | Published (source) | Synthetic (no fatigue) | |
@@ -395,7 +404,7 @@ uv run ruff check . && uv run ruff format --check .
 D=data/synthetic/demo/story
 uv run python -m runningbattery.sim --seed 2028 --story press-fade --out $D   # the story match
 uv run python -m runningbattery.engine $D                                     # signals.json
-uv run --extra agents python -m runningbattery.agents.feed $D --favourite H04 --offline --out $D/feed.json
+uv run --extra agents python -m runningbattery.agents.feed $D --offline --out $D/feed.json
 uv run python -m runningbattery.export $D --out app/public/data/story --feed $D/feed.json
 cd app && npm run dev                              # http://localhost:5173/?match=story
 ```
@@ -420,7 +429,9 @@ Calibration against IDSSE [Bassek2025] (offline only; the data never goes into t
 demo): `uv sync --extra calib`, `uv run python scripts/fetch_idsse.py` (~2.4 GB), then
 `uv run python -m runningbattery.sim.idsse` once (writes small derived files next to the raw data in
 the git-ignored `data/raw/idsse/`), and add `--idsse` to `sim.batch` to compare speed and
-acceleration bands. Replay as a GIF or still frames needs matplotlib (`--extra replay`), then add
+acceleration bands. `uv run python -m runningbattery.sim.calibrate --rounds 3 --json out.json`
+refits the generator's knobs to the targets (about 10 min a round on 16 cores; it prints the
+values to write into `params.py`). Replay as a GIF or still frames needs matplotlib (`--extra replay`), then add
 `--gif` or `--stills 6`.
 
 Estimator and validation:
@@ -438,7 +449,7 @@ Agents (`uv sync --extra agents`; Foundry settings in `.env`, keyless auth via `
 ```bash
 uv run python scripts/foundry_smoke.py                                  # model access, quota, latency
 uv run python -m runningbattery.agents.mcp_server data/synthetic/demo/story # MCP server (stdio)
-uv run python -m runningbattery.agents.feed data/synthetic/demo/story --favourite H04  # feed.json (add --offline)
+uv run python -m runningbattery.agents.feed data/synthetic/demo/story  # feed.json (add --offline)
 uv run python -m runningbattery.agents.highlights data/synthetic/demo/story # physical highlights
 uv run python -m runningbattery.agents.verifier_suite --llm --json docs/verifier_report.json
 scripts/demo.sh                                                         # both demo matches + feeds

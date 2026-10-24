@@ -646,7 +646,8 @@ class Roles:
     def dead_pace(self, i: int, spot: np.ndarray, t: float) -> float:
         """Wanted speed (share of S0, before the work rate) of a set-piece job while the ball is
         dead: the pace that reaches ``spot`` once ``SET_PIECE_DUE`` of the dead time has gone,
-        from a walk (``SET_PIECE_WALK``) up to the jog (``WALL_SPEED``)."""
+        from a walk (``SET_PIECE_WALK``) up to the jog (``WALL_SPEED``, which ``targets`` also
+        applies after the work rate)."""
         e = self.e
         r = e.restart
         left = max(r.t_dead + P.SET_PIECE_DUE * (r.t - r.t_dead) - t, 1.0)
@@ -691,6 +692,7 @@ class Roles:
         purpose = np.full(22, NO_PURPOSE, dtype=np.int8)
         calm = np.ones(22, dtype=bool)
         anchored = np.zeros(22, dtype=bool)
+        jog = np.zeros(22, dtype=bool)  # at most WALL_SPEED after the work rate (decision 42)
 
         if mode != "dead" and holder is not None:
             self.start_shape_runs(t, shape, holder)
@@ -844,6 +846,7 @@ class Roles:
                 del e.entering[i]
             elif not anchored[i]:
                 role(i, shape[i], P.WALL_SPEED, None)
+                jog[i] = True
         for k in (0, 1):
             gk = int(e.members(k)[0])
             if mode != "dead" or e.restart.taker != gk:
@@ -867,6 +870,9 @@ class Roles:
             if e.story_press(press, t):
                 effort = np.where(e.team_of == press, effort * e.story.press_effort, effort)
         frac = np.where(calm, frac, np.minimum(frac * effort, 1.0))
+        if mode == "dead":  # every job while the ball is dead is a walk or a jog
+            jog |= ~calm
+        frac = np.where(jog, np.minimum(frac, P.WALL_SPEED), frac)
         if e.physiology is not None:
             frac = np.where(calm, frac, frac * e.physiology.speed_factor())
         return tgt, frac * e.s0, purpose, calm, anchored

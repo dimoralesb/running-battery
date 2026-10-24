@@ -90,6 +90,10 @@ TEAM_KINDS = {"tug_of_war"}
 COUNTER_NEAR_M = 15.0
 COUNTER_MAX_S = 15.0
 COUNTER_MIN_S = 6.0
+# The overlay plays a clip on this long past its end (export.CLIP_AFTER). A caught-on-the-break
+# moment's battery is read there, at the end of the clip of his counter (decision 42: the line
+# gave his 72% at the turnover, the clip ended on 61% after he had run 45 m above 5.5 m/s).
+CLIP_AFTER_S = 2.0
 BLOCK_S = 900.0  # 15-min blocks, as the published end-of-match comparisons [Bradley2009]
 TEAM_GAP = 15.0  # % between the teams for a team-running moment (our assumption)
 GAP_CLOSED = 7.5  # % below which a gap counts as closed (our assumption)
@@ -1145,9 +1149,14 @@ class MatchTools:
                     continue
                 if not (s.cols["post_peak"][i] or s.cols["red_zone"][i]):
                     continue
+                # "just after his hardest minutes so far" is a "so far" claim (decision 42: the
+                # favourite's 9:14 turnover came 554 s into his match; no exception without one)
+                if i < SO_FAR_MIN_S:  # seconds on the pitch
+                    continue
                 spells = self._spells(pid)
                 j = m.col[pid]
                 d0 = m.gap_at(e.period, e.t, j)
+                read_t = min(counter_end + CLIP_AFTER_S, m.durations[e.period] - 0.1)
                 d8 = m.gap_at(e.period, min(e.t + 8.0, len(m.alive[e.period]) - 1.0), j)
                 spd = s.cols["speed"][i + 1 : i + 9]
                 nearest = m.nearest_ball(e.period, e.t, max(counter_end, e.t + 1.0), j)
@@ -1178,8 +1187,9 @@ class MatchTools:
                     ),
                     "last_5min_hsr": q(s.cols["hsr_5min"][i], "m", sig + "hsr_5min", 0),
                     "typical_pro_battery": q(
-                        s.cols["battery"][i],
-                        "share of a typical professional's short-term reserve",
+                        s.cols["battery"][s.index(e.period, read_t) or i],
+                        "share of a typical professional's short-term reserve, at the end of "
+                        "the counter",
                         sig + "battery",
                     ),
                     "low_chance": q(s.cols["low_chance"][i], "chance", sig + "low_chance"),
@@ -1215,18 +1225,17 @@ class MatchTools:
                     + max(d8 - d0, 0.0) / 10.0
                     + (1.0 if nearest <= COUNTER_NEAR_M else 0.0)
                 )
-                out.append(
-                    self._moment(
-                        "exposed_on_turnover",
-                        pid,
-                        e.period,
-                        e.t,
-                        score,
-                        facts,
-                        "his team lost the ball just after his hardest minutes so far",
-                        claims,
-                    )
+                mo = self._moment(
+                    "exposed_on_turnover",
+                    pid,
+                    e.period,
+                    e.t,
+                    score,
+                    facts,
+                    "his team lost the ball just after his hardest minutes so far",
+                    claims,
                 )
+                out.append(mo | {"read_t": read_t})  # where brief reads his battery
         return out
 
     def _moments_second_wind(self) -> list[dict]:

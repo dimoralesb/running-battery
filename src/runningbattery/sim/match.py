@@ -405,6 +405,9 @@ class MatchEngine:
             if clear and d_goal >= P.SHOT_CLOSE and tc.carry_ons < P.SHOT_CARRY_ON_MAX:
                 self.carry_on(t, tc)
                 return
+            if clear:  # still clear after his last carry-on: he shoots (decision 42)
+                self.shoot(t, c, tc.header)
+                return
         self.play_pass(t, c, self.pos[c].copy())
 
     def lane_blocked(self, team: int, xy: np.ndarray) -> bool:

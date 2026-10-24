@@ -44,6 +44,7 @@ PRIORITY = ["longest_run", "recovery_run", "top_speed", "back_to_back", "busiest
 RESTARTS = {"corner", "free_kick", "throw_in", "goal_kick", "kick_off", "penalty"}
 DEAD_GRACE_S = 1.5  # time to stop after the ball goes dead (decision 40)
 SHARE_MAX = 2.0  # s two clips of different players may share (data.ts; decision 41)
+RUNS_ON_S = 1.0  # a highlight running on past its player's moment gives way to it (decision 42)
 TURN_SPEED, TURN_WITHIN_S, TURN_COS = 6.0, 4.0, -0.7  # sprint-turns (decision 41)
 DUEL_FLAG_M = 1.5  # a duel's winner, or a fouler, within reach (decision 41)
 PASS_NEAR_M, PASS_NEAR_FLAG_M = 0.6, 0.35  # completed low passes this close to an opponent
@@ -98,11 +99,7 @@ def queue(match: dict, feed: dict, clips: dict, hls: list[dict], mode: str) -> l
         for h in hls
     ]  # fmt: skip
     moments = []
-    fav = feed.get("favourite")  # his moments first (data.ts, decision 41)
-    ordered = sorted(
-        feed["moments"], key=lambda m: not (fav and m["moment_id"].split(":")[1] == fav)
-    )
-    for m in ordered:
+    for m in feed["moments"]:
         mid = m["moment_id"]
         lines = [e for e in feed["entries"] if e["moment_id"] == mid and e["mode"] == mode
                  and e["shown"]]  # fmt: skip
@@ -144,7 +141,8 @@ def queue(match: dict, feed: dict, clips: dict, hls: list[dict], mode: str) -> l
                       and h["player"] == m["player"] and ov(h, m) > -pad), None)  # fmt: skip
         if k is None:
             out.append(m)
-        elif items[k]["player"] == m["player"] and items[k]["moment"] is None:
+        elif (items[k]["player"] == m["player"] and items[k]["moment"] is None
+              and items[k]["end"] <= m["end"] + RUNS_ON_S):  # fmt: skip
             h = items[k]
             items[k] = h | dict(
                 moment=m["id"],
