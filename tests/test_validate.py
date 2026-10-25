@@ -119,3 +119,22 @@ def test_team_agreement_and_auc():
     assert a["same_team"] == 0.75 and a["same_team_clear_half"] == 0.5 and a["matches"] == 4
     assert auc(np.array([3.0, 4.0]), np.array([1.0, 2.0])) == 1.0
     assert auc(np.array([1.0]), np.array([1.0])) == 0.5
+
+
+def test_real_events_possession_needs_the_hold():
+    """validate.real_events: a team has the ball once it keeps the flag HOLD_S (2 s at 10 Hz);
+    a shorter touch, or a frame with no flag, stays with the team before."""
+    from runningbattery.validate.real_events import _possession_runs
+
+    code = ["home"] * 30 + ["away"] * 5 + [None] * 3 + ["home"] * 10 + ["away"] * 25
+    assert _possession_runs(code) == [["home", 0, 48], ["away", 48, 73]]
+
+
+def test_real_events_shirts_by_position():
+    """Starters get the generator's numbers by position; extra players at a position and
+    substitutes take the next free number from 12."""
+    from runningbattery.validate.real_events import _shirts
+
+    shirts = _shirts([("H01", "GK", True), ("H02", "CB", True), ("H03", "CB", True),
+                      ("H04", "CB", True), ("H12", "CF", False)])  # fmt: skip
+    assert shirts == {"H01": 1, "H02": 5, "H03": 4, "H04": 12, "H12": 13}
