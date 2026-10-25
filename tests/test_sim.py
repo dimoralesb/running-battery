@@ -611,7 +611,10 @@ def test_corner_crowds_the_box():
     engine, _ = _held_restart("corner", (P.HALF_LENGTH, -P.HALF_WIDTH))
     attack, defend = _team_mate_gaps(engine.pos)
     plan = engine.roles.plan
-    pack = [i for i, _, holds in plan if holds and i % 11 in P.CORNER_PACK]
+    # The pack: the attackers holding a spot that is not a CORNER_SPOTS one (a pack player who
+    # takes the corner hands his spot to the nearest free attacker, ``set_piece_plan``).
+    spots = {slot for slot, _, _ in P.CORNER_SPOTS}
+    pack = [i for i, _, holds in plan if holds and i % 11 not in spots]
     assert len(pack) == len(P.CORNER_PACK)
     assert np.all(attack[pack] < 1.0), attack.round(2)
     assert min(attack.min(), defend.min()) > P.SEPARATION_DEAD - 0.15

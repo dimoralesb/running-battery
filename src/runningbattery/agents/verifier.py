@@ -450,6 +450,13 @@ def context_findings(text: str, context: dict, claim_id: str | None) -> list[Fin
     if isinstance(gap, int | float) and abs(gap) >= 0.5 and re.search(r"\blevel\b", text):
         out.append(Finding("G10", f"\"Level\" means no difference; the teams were {abs(gap):.0f}% "
                            "apart in this block"))  # fmt: skip
+    # G10 (decision 43 feed, 74:59, the LLM pass's own rewrite): a closed gap "reached 33% earlier
+    # in the block"; the earlier gap is the widest of the blocks before this one.
+    if "earlier_gap_vs_opponent" in (context.get("facts") or {}) and re.search(
+        r"\bearlier\s+in\s+(the|this)\s+(block|period|spell|15)", text, FLAGS
+    ):
+        out.append(Finding("G10", "The earlier gap was in an earlier 15-min block, not in this "
+                           "one"))  # fmt: skip
     # G13 (decision 38, found on the site's feed, 86:33): "while his team sat on a 3–0 lead" at
     # 5–2, claim 13's example scoreline copied; each number was in the facts (lead 3, 0 touches).
     score = context.get("score") or (context.get("context") or {}).get("score")

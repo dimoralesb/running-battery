@@ -187,3 +187,14 @@ def test_claim_11_takes_no_reason_after_it():
         assert {f.claim for f in verify(s, "analyst").findings} == {"11"}
     wording = next(c["wording"] for c in register()["claims"] if c["id"] == "11")
     assert verify(wording, "fan").ok
+
+
+def test_an_earlier_gap_is_not_earlier_in_this_block():
+    """Decision 43 (the story feed's 74:59, the LLM pass's rewrite): a closed gap's earlier
+    width comes from the blocks before; "it reached 33% earlier in the block" is blocked, the
+    plain "earlier" is not."""
+    ctx = {"facts": {"earlier_gap_vs_opponent": {"value": 33}, "vs_opponent": {"value": 6}}}
+    bad = "Albion have closed the gap — it reached 33% earlier in the block and is now 6%."
+    assert not verify(bad, "fan", ctx).ok
+    v = verify("That closes a gap of 33% earlier in the match.", "fan", ctx)
+    assert not any("earlier 15-min block" in f.message for f in v.findings)

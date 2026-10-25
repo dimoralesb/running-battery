@@ -299,7 +299,17 @@ and dithering, by the method of simulated moments (Sobol designs, a least-square
 surface, trust-region Levenberg–Marquardt steps, a line search; about 4,000 matches on seeds never
 used for these tables). On 120 seeds it took team sprint distance from +7.7% to +0.4% and keepers'
 high-speed running from 18 to 31 m (target 33); central midfielders' sprint distance stays high
-(+15–20%), and full-backs' and holding midfielders' high-speed running fell to about −6%. The
+(+15–20%), and full-backs' and holding midfielders' high-speed running fell to about −6%.
+Decision 43 compared the moments and the movement with the 7 IDSSE matches run through the same
+code (`validate.real_events`, `validate.moments`; the converted matches stay local): synthetic
+players made more, shorter high-speed runs, eased off well before their spot and sprinted
+straight back after a turnover (6.3 turn-backs per 90 player-minutes against 2.0). Players now
+brake late, a recovery run's speed grows with how far out of place he is, forwards drop back at
+running pace, and `sim.calibrate` also fits the shape of the running to IDSSE (short runs, runs
+close together, turn-backs): turn-backs 2.7, IDSSE's speed bands within 1.3 points on 120 seeds;
+wide and attacking midfielders' and strikers' high-speed running fell to −6 to −10% and
+centre-backs' and full-backs' sprint distance to −20%, and synthetic runs are still shorter than
+real ones (PLAN decision 43). The
 numbers below are still decision 40's and are re-run once, at the freeze before submission.
 
 | Check | Published (source) | Synthetic (no fatigue) | |

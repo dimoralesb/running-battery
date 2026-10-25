@@ -306,7 +306,7 @@ def push_apart(
 @njit(cache=True)
 def _step_kernel(
     pos, vel, target, speed_cap, a0, s0, calm, push, has_push, calm_tau, tau, calm_alpha,
-    brake, turn, dt, brake_above,
+    brake, turn, dt, brake_above, arrive_decel, settle,
 ):  # fmt: skip
     """``step`` in a loop over players: the same arithmetic in the same order as the numpy
     version (``einsum`` of two components = x·x + y·y)."""
@@ -315,8 +315,12 @@ def _step_kernel(
     for i in range(n):
         gx, gy = target[i, 0] - pos[i, 0], target[i, 1] - pos[i, 1]
         dist = math.hypot(gx, gy)
-        arrive = calm_tau if calm[i] else tau
-        want_speed = min(min(speed_cap[i], s0[i]), dist / arrive)
+        if calm[i] or arrive_decel <= 0.0 or dist <= settle:
+            arrive = calm_tau if calm[i] else tau
+            want_speed = min(min(speed_cap[i], s0[i]), dist / arrive)
+        else:  # the braking curve, joined to gap / τ at the settle radius
+            arrival = settle / tau + math.sqrt(2.0 * arrive_decel * (dist - settle))
+            want_speed = min(min(speed_cap[i], s0[i]), arrival)
         hx, hy = (gx / dist, gy / dist) if dist > 1e-6 else (0.0, 0.0)
         wx, wy = hx * want_speed, hy * want_speed
         psize = 0.0
@@ -374,9 +378,14 @@ def step(
 ) -> tuple[np.ndarray, np.ndarray]:
     """Advance every player one frame towards its target. All arrays are per player.
 
-    ``speed_cap`` is the wanted speed V (at most S0). Near the target V falls to gap / τ, so
-    players arrive without overshooting (``ARRIVE_TAU``). ``calm`` (bool) marks players not on
-    a run or a ball role: they use the gentler ``CALM_ALPHA`` and ``CALM_ARRIVE_TAU``. ``push``
+    ``speed_cap`` is the wanted speed V (at most S0). Near the target V falls, so players arrive
+    without overshooting: on a run or a ball role along a constant deceleration b
+    (``ARRIVE_DECEL``, decision 43: he keeps his speed until near the spot, then brakes) down to
+    ``ARRIVE_SETTLE_M`` from it, then as gap / τ (``ARRIVE_TAU``: the motion's lag overshot a
+    spot a metre away on the braking curve alone), calm
+    movement to gap / τ (``CALM_ARRIVE_TAU``; ``ARRIVE_TAU`` for all before decision 43).
+    ``calm`` (bool) marks players not on a run or a ball role: they use the gentler
+    ``CALM_ALPHA`` and ``CALM_ARRIVE_TAU``. ``push``
     (from ``push_apart``) is added to the wanted velocity, before the caps; it never raises the
     wanted speed above the larger of the two.
 
@@ -409,4 +418,6 @@ def step(
         float(P.TURN_MAX),
         float(P.DT),
         float(brake_above),
+        float(P.ARRIVE_DECEL),
+        float(P.ARRIVE_SETTLE_M),
     )

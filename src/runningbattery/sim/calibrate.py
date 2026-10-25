@@ -64,6 +64,7 @@ from runningbattery.sim.batch import (
     POSITION_TARGETS,
 )
 from runningbattery.sim.summary import (
+    SPEED_CAP,
     SPEED_EDGES,
     SPEED_LABELS,
     TARGETS,
@@ -81,6 +82,17 @@ SHRINK = 0.6  # radius factor after a round whose step stayed within half the tr
 # (decision 41's sweep against IDSSE: 16.1 and 18.5 in the demo matches, 10.4–15.1 in IDSSE).
 DITHER_S, DITHER_PATH_M, DITHER_NET_M = 4.0, 10.0, 2.0
 DITHER_TOLERANCE = 2.0  # per player-hour: about half the IDSSE range (our choice)
+# The shape of high-speed running (decision 43), from runs (1-s mean speed above HI_SPEED, as the
+# estimator's signals and the highlights count them) of outfield players, smoothed positions:
+# the share that last at most SHORT_RUN_S, the share that start within CLOSE_RUN_S of the last
+# one's end (the stuff of back-to-back runs), and the share that turn back (within TURN_BACK_S,
+# heading more than 120° from the last run). Shares, not counts: the volume of running is set by
+# the Premier League targets above, and IDSSE is a lower-volume league (a first fit with IDSSE's
+# 33 runs per player-hour as a target could not have both). Before decision 43 (16 seeds): 72%,
+# 30% and 11.5%, against IDSSE's 61%, 18% and 4.3%: short runs close together, the player
+# sprinting straight back after a turnover. Tolerances are our choice.
+SHORT_RUN_S, CLOSE_RUN_S, TURN_BACK_S = 2, 20, 10
+RUN_SHAPE_TOLERANCE = {"short_pct": 3.0, "close_pct": 2.0, "back_pct": 0.8}
 
 
 @dataclass(frozen=True)
@@ -112,6 +124,15 @@ KNOBS += [
     Knob("TRANSITION_CHANCE", 0.10, 0.60, 0.05),
     Knob("SHAPE_RUN_GAP", 5.0, 15.0, 1.0),
     Knob("SHAPE_LAG_S", 0.5, 3.5, 0.3),
+    # Decision 43, the shape of the running: how hard a player brakes as he arrives (constant
+    # deceleration, movement.step), how long he does not run back the way he sprinted, and the
+    # speeds a shape run and a recovery run in danger start from at the smallest gap, and the
+    # cover defender's speed (it had been a shape run's, and the role changes hands every touch).
+    Knob("ARRIVE_DECEL", 1.5, 4.0, 0.3),
+    Knob("TURN_S", 3.5, 10.0, 1.0),
+    Knob("SHAPE_RUN_MIN", 0.30, 0.55, 0.04),
+    Knob("RECOVERY_START", 0.40, P.SHAPE_RUN_SPEED, 0.05),
+    Knob("COVER_SPEED", 0.35, P.SHAPE_RUN_SPEED, 0.05),
 ]
 
 
@@ -154,6 +175,66 @@ def dither(xy: np.ndarray, alive: np.ndarray) -> tuple[int, float]:
     return int(starts.sum()), float(on.sum() / P.FRAME_RATE_HZ / 3600.0)
 
 
+def run_shape(xy: np.ndarray, cols) -> np.ndarray:
+    """Hours on the pitch, runs, short runs, close runs and turn-backs (``SHORT_RUN_S`` …) of
+    columns ``cols`` in one period of smoothed positions (frames, players, 2; NaN off the
+    pitch), from 1-s mean speeds."""
+    hz = round(P.FRAME_RATE_HZ)
+    n = len(xy) // hz
+    out = np.zeros(5)
+    for j in cols:
+        p = xy[: n * hz, j]
+        sec = (np.hypot(*np.gradient(p, axis=0).T) * hz).reshape(n, hz).mean(axis=1)
+        on = np.isfinite(sec)
+        if not on.any():
+            continue
+        out[0] += on.sum() / 3600.0
+        fast = np.r_[False, on & (sec > P.HI_SPEED) & (sec <= SPEED_CAP), False].astype(int)
+        edges = np.flatnonzero(np.diff(fast))
+        prev = None
+        for a, b in zip(edges[::2], edges[1::2] - 1, strict=True):
+            out[1] += 1
+            out[2] += b - a + 1 <= SHORT_RUN_S
+            d = p[min(b + 1, n - 1) * hz] - p[max(a - 1, 0) * hz]
+            way = d / max(float(np.hypot(*d)), 1e-6)
+            if prev is not None:
+                gap = a - prev[0] - 1
+                out[3] += gap <= CLOSE_RUN_S
+                out[4] += gap <= TURN_BACK_S and float(way @ prev[1]) < -0.5
+            prev = (b, way)
+    return out
+
+
+def run_shape_moments(total: np.ndarray) -> dict[str, float]:
+    _, runs, short, close, back = total
+    runs = max(runs, 1)
+    return {"short_pct": 100.0 * short / runs, "close_pct": 100.0 * close / runs,
+            "back_pct": 100.0 * back / runs}  # fmt: skip
+
+
+def idsse_run_shape() -> dict[str, float] | None:
+    """``run_shape`` of the IDSSE matches (``sim.spacing`` cache), pooled: each player's spells
+    on the pitch smoothed apart; each team's goalkeeper (the player most often within 17.5 m of
+    a goal line) left out."""
+    from runningbattery.sim.idsse import RAW, on_pitch_spells
+    from runningbattery.sim.spacing import CACHE, idsse_periods
+
+    if not RAW.exists():
+        return None
+    total = np.zeros(5)
+    for folder in sorted(p for p in RAW.iterdir() if (p / CACHE).exists()):
+        periods, team, _ = idsse_periods(folder)
+        deep = np.nanmean(np.vstack([np.abs(pos[..., 0]) > 35.0 for pos, _ in periods]), axis=0)
+        keepers = {int(np.flatnonzero(team == k)[np.argmax(deep[team == k])]) for k in (0, 1)}
+        for pos, _ in periods:
+            xy = np.full_like(pos, np.nan)
+            for j in range(pos.shape[1]):
+                for a, b in on_pitch_spells(pos[:, j]):
+                    xy[a:b, j] = smooth(pos[a:b, j][:, None, :])[:, 0]
+            total += run_shape(xy, [j for j in range(pos.shape[1]) if j not in keepers])
+    return run_shape_moments(total) if total[0] else None
+
+
 def idsse_dither() -> float | None:
     """Dithering episodes per in-play player-hour in the IDSSE matches cached at 10 Hz
     (``sim.spacing``), pooled."""
@@ -171,7 +252,9 @@ def idsse_dither() -> float | None:
 
 
 def moment_targets(
-    bands: np.ndarray | None, dithering: float | None = None
+    bands: np.ndarray | None,
+    dithering: float | None = None,
+    shape: dict[str, float] | None = None,
 ) -> list[tuple[str, float, float]]:
     """(name, target, tolerance) of every moment; a gap of one tolerance scores 1."""
     out = []
@@ -194,6 +277,8 @@ def moment_targets(
             out.append((f"band.{label}", float(pct), 3.0))  # batch.BAND_TOLERANCE, points
     if dithering is not None:
         out.append(("dither", dithering, DITHER_TOLERANCE))
+    for name, value in (shape or {}).items():
+        out.append((f"runs.{name}", value, RUN_SHAPE_TOLERANCE[name]))
     return out
 
 
@@ -245,12 +330,15 @@ def match_moments(job: tuple[dict[str, float], int]) -> dict[str, float]:
     is_gk = np.array([p.position == Position.GK for p in starters])
     band = np.zeros(len(SPEED_EDGES) - 1)
     episodes = hours = 0.0
+    shape = np.zeros(5)
     for obs, pf in zip(m.observed, m.periods, strict=True):  # as batch.observed_kinematics
         xy = smooth(np.where(obs.seen[..., None], obs.pos, np.nan))
         band += band_seconds(kinematics(xy)[0][:, ~is_gk], SPEED_EDGES)
         a, b = dither(xy, pf.alive)
         episodes, hours = episodes + a, hours + b
+        shape += run_shape(xy, np.flatnonzero(~is_gk))
     out["dither"] = episodes / hours
+    out |= {f"runs.{k}": v for k, v in run_shape_moments(shape).items()}
     for label, pct in zip(SPEED_LABELS, 100.0 * band / band.sum(), strict=True):
         out[f"band.{label}"] = float(pct)
     return out
@@ -361,7 +449,7 @@ def calibrate(
     for name, value in (start or {}).items():
         if any(k.name == name for k in knobs):  # a knob since left out keeps params.py's value
             put(name, value)
-    targets = moment_targets(idsse_bands(), idsse_dither())
+    targets = moment_targets(idsse_bands(), idsse_dither(), idsse_run_shape())
     names = [t[0] for t in targets]
     target = np.array([t[1] for t in targets])
     tol = np.array([t[2] for t in targets])

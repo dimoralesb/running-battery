@@ -206,3 +206,18 @@ def test_dithering_counts_back_and_forth_in_play():
     n, hours = C.dither(xy[:, :2], alive)
     assert n == 1 and hours == pytest.approx(2 * 20.0 / 3600.0)
     assert C.dither(xy[:, :1], np.zeros(200, dtype=bool))[0] == 0
+
+
+def test_run_shape_counts_short_close_and_turn_back_runs():
+    """``calibrate.run_shape`` (decision 43): from 1-s mean speeds, a 2-s run then a 4-s run back
+    the other way 5 s later is two runs, one short, one close to the last and one turn-back; a
+    player off the pitch (NaN) adds nothing."""
+    from runningbattery.sim import calibrate as C
+
+    speed = np.r_[np.full(10, 2.0), np.full(2, 7.0), np.full(5, 1.0), np.full(4, -7.0),
+                  np.full(9, 1.0)]  # fmt: skip
+    x = np.cumsum(np.repeat(speed, 10)) / 10.0
+    xy = np.stack([np.c_[x, np.zeros_like(x)], np.full((len(x), 2), np.nan)], axis=1)
+    hours, runs, short, close, back = C.run_shape(xy, [0, 1])
+    assert (runs, short, close, back) == (2, 1, 1, 1)
+    assert hours == pytest.approx(30 / 3600)

@@ -11,7 +11,8 @@ Every frame each player gets a target point, a wanted speed and a run purpose (o
      Out of possession they are recovery runs when the player is not goal-side of the ball,
      otherwise covering. In possession, back players push up the pitch and the others run up in
      support. Going back into shape in possession is not a labelled run.
-     A recovery run goes up to full effort only when there is danger (``DANGER_U``). On the
+     A recovery run goes up to full effort only when there is danger (``DANGER_U``), and not
+     for forwards, who drop at the shape-run speeds (``FORWARD_RECOVERY``, decision 43). On the
      opponents' counter-attack, or caught upfield of the ball, defenders drop from a smaller gap
      (``COUNTER_DROP_*``); back up to a line that is not moving, they jog.
    - *Triggered runs* start when a team-mate gets the ball or plays a pass: coming short to
@@ -494,8 +495,9 @@ class Roles:
                 not_goal_side = e.to_uv(team, e.pos[i])[0] > ball_u and gap_u < 0
                 purpose = RunPurpose.RECOVERY_RUN if not_goal_side else RunPurpose.COVERING
                 counter = e.transition is not None and e.transition[0] != team
-                if not_goal_side and (ball_u < P.DANGER_U or counter):
-                    speed = P.SHAPE_RUN_SPEED + (P.RECOVERY_EFFORT - P.SHAPE_RUN_SPEED) * urgency
+                danger = not_goal_side and (ball_u < P.DANGER_U or counter)
+                if danger and (P.FORWARD_RECOVERY or not self.is_forward[i]):
+                    speed = P.RECOVERY_START + (P.RECOVERY_EFFORT - P.RECOVERY_START) * urgency
                 elif gap_u > 0.5 * gap[i] and gap_u - line_u[team] > P.SHAPE_RUN_GAP:
                     speed = min(speed, P.SHAPE_RUN_MIN)  # back up to a line that is not moving
             run = Run(purpose, t + P.SHAPE_RUN_MAX_S, speed, shape=True)
@@ -754,7 +756,7 @@ class Roles:
             cover = self.goal_side(opp_team, e.pos[c], P.COVER_DEPTH)
             for i in order[:n_press]:
                 role(int(i), press, P.CHASE_SPEED, RunPurpose.CLOSE_DOWN)
-            role(int(order[n_press]), cover, P.SHAPE_RUN_SPEED, RunPurpose.COVERING)
+            role(int(order[n_press]), cover, P.COVER_SPEED, RunPurpose.COVERING)
             pressers = [int(i) for i in idx if purpose[int(i)] == CODE[RunPurpose.CLOSE_DOWN]]
             if len(pressers) > 1:
                 to_goal = e.to_uv(opp_team, np.array([-GOAL_U, 0.0])) - e.pos[c]
