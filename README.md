@@ -231,20 +231,19 @@ synthetic matches, it does not hold up from positions, and the Verifier blocks i
 
 - **"He is tired."** With each player's true fitness, the generator's own physiology finds the
   tired moments almost perfectly (precision 0.997); without it, the best any positions-only
-  detector reaches is precision 0.10 at recall 0.1, and our battery reaches 0.10 (dev seeds 1–60,
+  detector reaches is precision 0.11 at recall 0.1, and our battery reaches 0.11 (dev seeds 1–60,
   [validate/ceiling.py](src/runningbattery/validate/ceiling.py)). The same running drains players of
   different fitness very differently. So we say what the running would cost a *typical*
   professional (claims 11 and 33).
 - **"Which team is more tired."** Home-minus-away differences pick the team with more
-  short-term tiredness 48–58% of the time (chance 58%). They pick the team with more late-match
-  wear 63–68% of the time and plain high-speed running 55% (58% in the run before; with 60
-  matches one match is 1.7 points, so the two do not differ clearly), and one match in three is
-  still wrong (60 matches,
+  short-term tiredness 52–55% of the time (chance 55%). They pick the team with more late-match
+  wear 57–67% of the time, and plain high-speed running does as well (68%; with 60 matches one
+  match is 1.7 points), and one match in three is still wrong (60 matches,
   [validate/teams.py](src/runningbattery/validate/teams.py)). We show the measured running
   instead: team totals per ball-in-play minute, and how a gap changed (claim 35).
 - **"He ran slower than he could when it mattered."** After his team lost the ball, a slow defender had no
-  run asked by his role in 95% of cases and skipped one in 3.5%; speed tells a skipped run from no
-  run asked no better than chance (AUC 0.40). We give the speed, its share of his top speed and
+  run asked by his role in 93% of cases and skipped one in 5.2%; speed tells a skipped run from no
+  run asked no better than chance (AUC 0.42). We give the speed, its share of his top speed and
   what happened (claim 38).
 - **"He misplaced that pass because he was tired."** Pass completion is the same before and
   after a peak spell (80.3 vs 80.5% [Fang2024, Fig. 1]) and across the match [Carling2011,
@@ -252,12 +251,12 @@ synthetic matches, it does not hold up from positions, and the Verifier blocks i
 - **"Albion pressed high."** Pressing is what a run meant to do. A positions-only rule built on
   Ju2022's definition of closing down ("runs directly towards opposition player on or receiving
   the ball" [Ju2022, Table 1]: his team without the ball, the gap to the ball shrinking by 3 m or
-  more and ending within 5 m) matches the generator's hidden close-down runs with precision 0.31
-  (base rate 0.06) and recall 0.22; in the opponents' third, 0.36 and 0.03 (75,077 runs, dev seeds
+  more and ending within 5 m) matches the generator's hidden close-down runs with precision 0.30
+  (base rate 0.06) and recall 0.23; in the opponents' third, 0.38 and 0.03 (75,820 runs, dev seeds
   1–60, thresholds fixed before the first run, [validate/purposes.py](src/runningbattery/validate/purposes.py)).
   The split above shows where the running happened instead, and the Verifier blocks "pressing" and
-  "closing down" (claim 39). A recovery-run rule does better (precision 0.50 against a base rate
-  of 0.19, recall 0.35 with Ju2022's "to be goal side when out of position"), but a recovery-run
+  "closing down" (claim 39). A recovery-run rule does better (precision 0.53 against a base rate
+  of 0.20, recall 0.38 with Ju2022's "to be goal side when out of position"), but a recovery-run
   share would still come out about 70% of the true one, with half of it other runs, so the split
   leaves it out.
 - **"They won because they ran more."** Winners outrun losers only slightly (total distance
@@ -267,7 +266,7 @@ synthetic matches, it does not hold up from positions, and the Verifier blocks i
 
 **Estimator vs hidden truth.** The battery (blue, with its band) against the generator's hidden
 pools (orange) for one player of a validation match; the calibration of the typical-pro chance
-before and after its map (held-out matches: expected calibration error 0.007 → 0.0003); and how
+before and after its map (held-out matches: expected calibration error 0.008 → 0.001); and how
 well anything could tell *who* is tired from positions alone (above).
 
 ![Estimator vs truth](docs/figures/estimator_vs_truth.png)
@@ -281,8 +280,8 @@ end-of-match decline is all fatigue.
 
 **Realism.** 240 default synthetic matches (seeds 1–240) with fatigue on, and the same matches
 with fatigue off in brackets, against published numbers. Our pass bands are proposals (synthesis
-§6.1). Every row was re-run on the same 240 seeds on 2026-10-25, the freeze before submission
-(PLAN decision 44; decision 40's rows are in the README at commit 9120300), after three changes
+§6.1). Every row was re-run on the same 240 seeds on 2026-10-26, the freeze before submission
+(PLAN decision 45; decision 40's rows are in the README at commit 9120300), after four changes
 to the generator. Decision 41: defenders follow the runner they track and no longer sprint
 straight back, duels need the players within 1.5 m, a low pass that reaches an opponent is cut
 out, and substitutes come on at the halfway line. Decision 42: the generator's knobs are fitted
@@ -291,64 +290,69 @@ designs, a least-squares response surface and trust-region Levenberg–Marquardt
 never used for these tables). Decision 43: players brake late, a recovery run's speed grows with
 how far out of place he is, forwards drop back at running pace, and the fit also targets the
 shape of IDSSE's running (short runs, runs close together, turn-backs; "Checked on real matches"
-below). Against decision 40: high-speed running per position is within ±5% except attacking and
-wide midfielders (−7.7 and −9.1%), sprint distance went from above the targets to below them
-(full-backs +16.8 → −16.8%, team +7.3 → −4.7%; centre-backs −18.2%), the 1-min peak fell from 70
-to 63 m/min (published 62), keepers' high-speed running from 27 to 25 m, and shots from 27.1 to
-22.8. **Accepted gaps** (as decision 11; one more fitting leg was not run, two of its knobs sit at
-their bounds): attacking and wide midfielders' high-speed running, centre-backs' and full-backs'
-sprint distance, keepers' high-speed running, the first minute after a peak, substitutes, xG per
-shot and the home–away correlation of total distance.
+below). Decision 45: an overlap goes outside the winger with a lane along the touchline and
+inside him without one (it had aimed at his own spot), a run about the ball carrier ends when he
+passes, a run's target keeps 4 m from team-mates', and the knobs were fitted again. Against
+decision 40: high-speed running per position is within ±7.1% (it was ±5%), sprint distance
+moved from above the targets to around them (team +7.3 → −1.2%; full-backs +16.8 → +2.6%;
+centre-backs −13.5%, holding midfielders +12.7%), the 1-min peak fell from 70 to 62.5 m/min
+(published 62), keepers' high-speed running from 27 to 26 m, and shots from 27.1 to 22.7.
+**Accepted gaps** (as decision 11): high-speed running of full-backs and of central, attacking and
+wide midfielders and strikers (−5.5 to −7.1%), sprint distance of centre-backs, holding, central
+and attacking midfielders (±10–14%), keepers' high-speed running, the first minute after a peak,
+substitutes, xG per shot and the home–away correlation of total distance.
 
 | Check | Published (source) | Synthetic (no fatigue) | |
 |---|---|---|---|
-| Running > 4 m/s (14.4 km/h), last 15 min vs first 15 | −21% [Bradley2009, Fig. 2]; pass −10 to −30% | −19.3% (+1.8%) | pass |
-| High-speed and sprint running, 2nd half vs 1st | about level [Bradley2009, p.162]; pass ±10% | −8.6 / −9.3% (−0.4 / −0.6%) | pass, near the edge |
-| Recovery time between hard efforts, last 15 min vs first 15 | +28% [Bradley2009, p.162–163]; pass +15 to +40% | +16.3% (−1.8%) | pass |
-| 2nd half vs 1st, by first-half load (high / moderate / low) | −12 / 0 / 0% [Bradley2013, p.4] | −15 / −8 / −1% (−7 / +2 / +10%) | close |
-| Substitutes vs whole-match players, same minutes | +15% [Bradley2013, Table IV] | +26% (+9%) | above (accepted gap) |
-| High-speed running after a 5-min peak, min 1–5, vs match average | −45 −29 −13 −8 −4% [Leifsson2024, Table 1] | −66 −32 −13 −5 +1% (−65 −29 −5 −9 0%) | minute 1 too deep, even without fatigue (accepted gap) |
-| 1-min high-speed peak | 62 m/min [Leifsson2024, Table 1] | 63 m/min (67) | about 2% above |
-| Covering and recovery runs in the 5 min after a peak, vs match average | −22 to −44% and −34 to −43% [Ju2022, p.975] | −29 / −31% (−27 / −29%) | covering in range; recovery runs just short of it, with and without fatigue |
+| Running > 4 m/s (14.4 km/h), last 15 min vs first 15 | −21% [Bradley2009, Fig. 2]; pass −10 to −30% | −20.7% (+1.5%) | pass |
+| High-speed and sprint running, 2nd half vs 1st | about level [Bradley2009, p.162]; pass ±10% | −7.6 / −8.3% (−1.6 / −2.7%) | pass |
+| Recovery time between hard efforts, last 15 min vs first 15 | +28% [Bradley2009, p.162–163]; pass +15 to +40% | +15.0% (−2.3%) | pass, at the edge |
+| 2nd half vs 1st, by first-half load (high / moderate / low) | −12 / 0 / 0% [Bradley2013, p.4] | −15 / −8 / 0% (−7 / +2 / +8%) | close |
+| Substitutes vs whole-match players, same minutes | +15% [Bradley2013, Table IV] | +27% (+11%) | above (accepted gap) |
+| High-speed running after a 5-min peak, min 1–5, vs match average | −45 −29 −13 −8 −4% [Leifsson2024, Table 1] | −68 −33 −14 0 0% (−62 −26 −13 0 +8%) | minute 1 too deep, even without fatigue (accepted gap) |
+| 1-min high-speed peak | 62 m/min [Leifsson2024, Table 1] | 62.5 m/min (65.8) | pass |
+| Covering and recovery runs in the 5 min after a peak, vs match average | −22 to −44% and −34 to −43% [Ju2022, p.975] | −29 / −32% (−25 / −27%) | covering in range; recovery runs just short of it, with and without fatigue |
 | Hard runs after a peak: length, duration, speed | −23%, −32%, −3% [Fang2024, Table 2] | −18%, −16%, −2% (−17%, −15%, −2%) | shorter but not enough |
-| Distance, high-speed and sprint per position | 2024/25 targets ±5% [Allen2024, Table 4; Allen2025] | distance all within ±5%; high-speed running within ±5% except AM −7.7, WM −9.1%; sprint distance CB −18.2, FB −16.8, AM −5.7, WM −5.7, CF +6.0% (DM +4.8, CM −2.4%); team sprint −4.7% (keepers' high-speed running 25 m, −25%) | accepted gap |
-| Shots per match; xG per shot | 24.4; 0.11 ± 0.15 [Bassek2025, p.6]; shots pass ±15% (PLAN §2.5) | 22.8; 0.15 (3.7 goals a match; xG on dev seeds 1–60) | shots pass; xG per shot above (accepted gap): the simulated defence leaves clear chances, shot rather than passed back since decision 38 |
-| Time in speed bands vs real tracking (IDSSE) | ±3 points [Bassek2025; Osgnach2010] | outfield within 1.2 points | pass |
+| Distance, high-speed and sprint per position | 2024/25 targets ±5% [Allen2024, Table 4; Allen2025] | distance all within ±5%; high-speed running CB −2.0, DM +0.9, WM −5.5, CM −6.1, CF −6.2, FB −6.7, AM −7.1%; sprint distance FB +2.6, CF +0.6, WM −8.2, AM −9.9, CM −10.6, DM +12.7, CB −13.5%; team sprint −1.2%, high-intensity −4.4% (keepers' high-speed running 26 m, −21%) | accepted gap |
+| Shots per match; xG per shot | 24.4; 0.11 ± 0.15 [Bassek2025, p.6]; shots pass ±15% (PLAN §2.5) | 22.7; 0.16 (3.6 goals a match; xG on dev seeds 1–60) | shots pass; xG per shot above (accepted gap): the simulated defence leaves clear chances, shot rather than passed back since decision 38 |
+| Time in speed bands vs real tracking (IDSSE) | ±3 points [Bassek2025; Osgnach2010] | outfield within 1.1 points | pass |
 | Ball in play | 50–63% [Kavanagh2024, p.80; Allen2026b, Table 2] | 59.5% | pass |
-| Running by phase, per player slot | 133 / 145 / 63 m/min with the ball / without / stopped [Allen2026b, Table 5] | 127 / 139 / 57 (−4.7 / −3.9 / −8.9%) | pass (±10%) |
-| Home and away teams move together | r = 0.68–0.75 [Allen2026a, Fig. 2]; pass 0.5–0.85 | high-speed 0.71, high-intensity 0.73, sprint 0.62; total distance 0.97 | total distance above (accepted gap, decision 11) |
-| Energy per player and match | 61.1 ± 6.6 kJ/kg [Osgnach2010, p.174] | 59.3 ± 4.6 kJ/kg (dev seeds 1–60); real IDSSE 57.6 ± 4.5 | close |
+| Running by phase, per player slot | 133 / 145 / 63 m/min with the ball / without / stopped [Allen2026b, Table 5] | 128 / 140 / 58 (−4.0 / −3.2 / −8.3%) | pass (±10%) |
+| Home and away teams move together | r = 0.68–0.75 [Allen2026a, Fig. 2]; pass 0.5–0.85 | high-speed 0.69, high-intensity 0.74, sprint 0.65; total distance 0.97 | total distance above (accepted gap, decision 11) |
+| Energy per player and match | 61.1 ± 6.6 kJ/kg [Osgnach2010, p.174] | 59.8 ± 4.7 kJ/kg (dev seeds 1–60); real IDSSE 57.6 ± 4.5 | close |
 
 **Same conclusions on real data.** We ran the estimator offline on the 7 real IDSSE matches
 [Bassek2025] (calibration only; the data never enters the repo or the demo) and compared
 conclusions, not accuracy (there is no fatigue truth there; PLAN §2.6). They agree on load,
 distance per player, the battery's dips, the deep first minute after a 5-min peak and, since
-decision 43, the peaks themselves (1-min peak 64 vs 65 m/min, 5-min 24 vs 23; it was 71 vs 65
+decision 43, the peaks themselves (1-min peak 62 vs 65 m/min, 5-min 24 vs 23; it was 71 vs 65
 before). They disagree in one place: real players faded more in the second half (high-speed
-running −21% vs our −10%).
+running −21% vs our −4%).
 
-**Checked on real matches.** Decision 43 ran every moment kind, every highlight and the shape of
-the high-speed running on the 7 IDSSE matches [Bassek2025] (CC BY 4.0) and on 30 natural
-synthetic matches, through the same code (`validate.real_events` writes each real match as one of
-our match folders; `validate.moments` compares them). The converted real matches stay on our
-machine: no IDSSE data, raw or derived, is in this repository or on the site. Per 90 player-minutes
-of outfield players, unless marked; synthetic before decision 43 in the last column where measured:
+**Checked on real matches.** Decisions 43 and 45 ran every moment kind, every highlight and the
+shape of the high-speed running on the 7 IDSSE matches [Bassek2025] (CC BY 4.0) and on 30 natural
+synthetic matches (seeds 1–30), through the same code (`validate.real_events` writes each real match
+as one of our match folders; `validate.moments` compares them). The converted real matches stay on
+our machine: no IDSSE data, raw or derived, is in this repository or on the site. Per 90 player-minutes
+of outfield players, unless marked:
 
 | | Real (IDSSE, 7 matches) | Synthetic (30 seeds) | Synthetic before decision 43 |
 |---|---|---|---|
-| Hardest-minutes moments | 2.78 | 2.79 | |
-| Second winds | 2.07 | 2.00 | |
+| Hardest-minutes moments | 2.78 | 2.86 | |
+| Second winds | 2.07 | 2.17 | |
 | Quiet spells (a drop that may not be fatigue) | 1.20 | 1.15 | |
-| Caught on the break; highest count in a match | 0.95; 7 | 0.81; 8 | —; 12 |
-| Fresh legs | 0.34 | 0.22 | |
-| Flat-out moments | 3.95 | 5.67 | 5.9 |
-| Team-gap moments per match; largest 15-min gap | 1.86; 46% | 3.43; 55% | 3.6; 103% |
-| High-speed runs (above 5.5 m/s) | 48.4 | 56.9 | 60.9 |
-| Runs lasting 1–2 s | 60% | 72% | 73% |
-| Runs starting within 20 s of the last | 8.8 | 13.3 | 16.7 |
-| Back-to-back bouts | 1.18 | 2.36 | 3.30 |
-| Turn-backs (a run within 10 s heading the other way) | 2.0 | 2.7 | 6.3 |
-| Recovery-run highlights | 4.07 | 5.44 | 6.4 |
+| Caught on the break; highest count in a match | 0.95; 7 | 0.77; 8 | —; 12 |
+| Fresh legs | 0.34 | 0.23 | |
+| Flat-out moments | 3.95 | 5.46 | 5.9 |
+| Team-gap moments per match | 1.86 | 3.17 | 3.6 |
+| Gap between the teams per 15-min block: median; 90th percentile | 8.9%; 23% | 12.0%; 35% | |
+| High-speed runs (above 5.5 m/s) | 49.7 | 57.5 | 61.5 |
+| Runs lasting 1–2 s | 61% | 72% | 74% |
+| Runs starting within 20 s of the last | 9.2 | 13.5 | 16.9 |
+| Turn-backs (a run within 10 s heading the other way) | 2.1 | 3.0 | 6.4 |
+| Back-to-back bouts | 1.18 | 2.37 | 3.30 |
+| Recovery-run highlights | 4.07 | 5.95 | 6.4 |
+| Runs of 15 m or more that end within 2.5 m of a team-mate, per in-play player-hour | 1.15 | 1.53 | 1.84 (decision 43) |
 
 Every real moment we watched as a clip read as its line. The volume of running is set by the
 Premier League targets above, and IDSSE is a lower-volume league, so the run counts are higher by
@@ -388,9 +392,9 @@ physiology; in real matches part of it is the player's choice [Snyder2023].
 
 **Utility and fidelity.** The realism table above: the end-of-match decline, the halves,
 running by phase and real speed distributions are within their bands; substitutes out-run
-whole-match players more than published (+26% against +15%), the drop after a peak spell is too
-deep (even without fatigue), and attacking and wide midfielders' high-speed running and
-centre-backs' and full-backs' sprint distance are below their targets (accepted gaps). A no-fatigue control (the same seeds with fatigue off)
+whole-match players more than published (+27% against +15%), the drop after a peak spell is too
+deep (even without fatigue), and several positions' high-speed running and sprint distance are
+5–14% from their targets (accepted gaps). A no-fatigue control (the same seeds with fatigue off)
 separates what is fatigue from what is selection. On real IDSSE matches the estimator reaches
 the same conclusions except for the size of the second-half fade.
 
@@ -407,17 +411,23 @@ used offline for calibration only.
   physiology; in real matches part of it is the player's choice [Snyder2023; synthesis §8.1].
 - The typical-pro chance is calibrated for a typical professional (dev seeds, professional
   prior). On matches with a wider range of players it stays poorly calibrated (expected
-  calibration error 0.053 → 0.047), because a typical-pro signal cannot see who is less fit.
+  calibration error 0.063 → 0.057), because a typical-pro signal cannot see who is less fit.
 - On the 7 real IDSSE matches [Bassek2025] real players faded more in the second half than ours
-  (high-speed running −21% vs −10%); the peaks now agree within 3% (PLAN §2.6).
+  (high-speed running −21% vs −4%); the peaks now agree within 5% (PLAN §2.6).
 - What is still off in the movement against the 7 IDSSE matches ("Checked on real matches"):
-  synthetic high-speed runs are about a fifth shorter than real ones at the same peak speed;
+  synthetic high-speed runs are about a fifth shorter than real ones at the same peak speed, and
   defenders' and holding midfielders' backward sprints without the ball come about twice as
-  often as real (18–22 against 10–11 per 90 player-minutes); back-to-back runs about twice as
-  often (2.36 against 1.18); team-gap moments 3.4 a match against 1.9.
+  often as real (18–22 against 10–11 per 90 player-minutes; both measured at decision 43);
+  back-to-back runs twice as often
+  (2.37 against 1.18); long runs that end next to a team-mate a third more often (1.53 against
+  1.15 per player-hour; decision 45 fixed overlaps aimed at the winger's own spot); and the gap
+  between the teams per 15-min block is wider (median 12% against 9%; one block in seven above
+  30%, real one in twenty), so team-gap moments come 3.2 a match against 1.9. Players also don't
+  re-decide every run as play changes: since decision 45 a run about the ball carrier ends when
+  he passes, but runs into space keep going for their planned time.
 - The story match's press is our setting (`sim.story`): at first it gave one 15-min block a 79%
   gap between the teams, beyond the real 46%; a scripted search over the press settings now
-  gives 27% at most (PLAN decision 44). The natural match has no settings of ours.
+  gives 24% at most (PLAN decisions 44–45). The natural match has no settings of ours.
 - The Verifier's LLM pass varies from run to run, and the feed's wording with it; the rules give
   the same verdict every time. The committed demo feeds are one run each.
 - Player fitness (critical speed, D′) can't be measured from tracking; the professional prior is

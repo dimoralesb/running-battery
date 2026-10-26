@@ -28,7 +28,10 @@ ball-in-play minute, beyond the 7 IDSSE matches' largest (46%), and 4 of the 6 s
 46%. The rule, fixed before the results: the demo match below 46% with every story moment (the
 press team ahead in 2 of the first hour's blocks, a player caught on the break 3 times, a
 substitute with fresh legs, all 7 moment kinds), at most 1 of the 6 seeds above 46%, and of
-those the point nearest the old values. Now 27% at most, 1 seed of 6 above 46%.
+those the point nearest the old values. Now 27% at most, 1 seed of 6 above 46%. Decision 45
+(the generator's runs changed and were refitted): the same search and rule; 1.02 left the pressing
+team ahead in none of the first hour's blocks, so ``press_chance`` 0.9 → 0.8 and ``press_effort``
+1.02 → 1.04 (24% at most on the demo seed, ahead in 3 of the 4 blocks, 1 seed of 6 above 46%).
 """
 
 from __future__ import annotations
@@ -42,10 +45,10 @@ from runningbattery.sim.rosters import SimTeam, SubPlan
 class Story:
     name: str
     press_team: int = 0  # 0 home, 1 away
-    press_chance: float = 0.9
+    press_chance: float = 0.8  # decision 45: scripted search (module docstring)
     press_until_min: float = 60.0
     press_run_boost: float = 1.75
-    press_effort: float = 1.02  # decision 44: scripted search (module docstring)
+    press_effort: float = 1.04  # decisions 44-45: scripted search (module docstring)
     exposed_slot: int = 3  # engine index: home slot 4 (H04), the left-back (FORMATION_4231)
     counter_bias: float = 4.0
     counter_reach: float = 20.0

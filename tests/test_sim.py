@@ -1169,3 +1169,55 @@ def test_team_mates_have_distinct_names():
             assert len(set(firsts)) == len(firsts), names
             assert len(set(starts)) == len(starts), names
             assert all(f in FIRST_NAMES for f in firsts)
+
+
+def test_overlaps_need_room_and_end_with_the_carriers_pass():
+    """Decision 45: with the winger on the touchline the overlap aimed 1 m inside him, his own
+    spot, and the full-back kept running after the winger passed. Now it goes outside the carrier
+    with a lane along the touchline and UNDERLAP_IN inside him without one (also with the defence
+    level with him), and a run about the carrier ends when he plays the ball."""
+    from runningbattery.sim.roles import Run
+
+    engine = _engine()
+    roles = engine.roles
+    roles.overlap_chance = 1.0
+    carrier, back, other = 9, 4, 3  # team 0: a winger, the full-back on his side, the other one
+    cases = ((6.0, 20.0, 1.0), (1.0, 20.0, -P.UNDERLAP_IN), (1.0, 0.0, -P.UNDERLAP_IN))
+    for lane, room, out in cases:
+        roles.clear()
+        c_uv = np.array([10.0, P.HALF_WIDTH - lane])
+        engine.pos[carrier] = engine.to_uv(0, c_uv)
+        engine.pos[back] = engine.to_uv(0, np.array([-5.0, 25.0]))
+        engine.pos[other] = engine.to_uv(0, np.array([-5.0, -25.0]))
+        roles.onside_u = lambda team, u=c_uv[0] + room: u
+        roles.on_touch(carrier, 5.0)
+        run = roles.runs.get(back)
+        assert run is not None and run.purpose == RunPurpose.OVER_UNDERLAP
+        assert run.carrier == carrier
+        assert run.offset_uv[1] == pytest.approx(min(lane - 1.0, 5.0) if out > 0 else out)
+    stays = Run(RunPurpose.RUN_IN_BEHIND, 20.0, P.BEHIND_EFFORT, target=np.zeros(2))
+    roles.runs[10] = stays
+    roles.on_pass(5.5, carrier, 7, False, False, True, engine.pos[7])
+    assert back not in roles.runs and roles.runs.get(10) is stays
+
+
+def test_a_run_does_not_aim_at_a_team_mates_spot():
+    """Decision 45: a runner's target stays RUN_SPACE from his team-mates' targets (6.5% of our
+    high-speed runs ended within 2.5 m of a team-mate, IDSSE's 3.8%); a presser keeps his."""
+    from runningbattery.sim.roles import Run
+
+    engine = _engine()
+    roles = engine.roles
+    roles.clear()
+    runner, mate = 8, 7
+    tgt = engine.pos.copy()
+    spot = np.array([5.0, 5.0])
+    tgt[mate], tgt[runner] = spot, spot + [1.0, 0.0]
+    roles.runs[runner] = Run(RunPurpose.MOVE_TO_RECEIVE, 20.0, P.RUN_SPEED, target=tgt[runner])
+    out = roles.space_runs(tgt, np.zeros(22, dtype=bool))
+    assert np.hypot(*(out[runner] - spot)) == pytest.approx(P.RUN_SPACE)
+    assert out[runner][0] > spot[0]  # straight away from the team-mate's spot
+    others = [i for i in range(22) if i != runner]
+    assert np.array_equal(out[others], tgt[others])
+    roles.runs[runner].purpose = RunPurpose.CLOSE_DOWN
+    assert np.array_equal(roles.space_runs(tgt, np.zeros(22, dtype=bool)), tgt)

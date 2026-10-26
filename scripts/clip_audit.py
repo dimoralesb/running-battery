@@ -21,8 +21,12 @@ whose winner (or fouler) is more than 1.5 m from the ball (aerial duel, tackle) 
 player (ground duel, foul); a completed pass passing within 0.35 m of an outfield opponent while
 low (ball under 1 m, away from its first and last 0.3 s); a substitute who comes on away from the
 halfway line, or a replaced player who leaves away from a line; and a red-zone clip that shows
-under half of the metres above 5.5 m/s of his last minute. Then the match totals. Synthetic data
-only.
+under half of the metres above 5.5 m/s of his last minute. Decision 45 adds a run into a
+team-mate: above 5.5 m/s (over 1 s of tracking) for at least ``MATE_RUN_M``, then (ball in play,
+within 2 s) within ``MATE_END_M`` of a team-mate who is not on the ball (a full-back's 38 m
+overlap ended at his winger's shoulder, the story match's 9:58; IDSSE has 1.15 per in-play
+player-hour, 20 a match, so the total matters more than one clip). Then the match totals.
+Synthetic data only.
 """
 
 from __future__ import annotations
@@ -50,6 +54,8 @@ DUEL_FLAG_M = 1.5  # a duel's winner, or a fouler, within reach (decision 41)
 PASS_NEAR_M, PASS_NEAR_FLAG_M = 0.6, 0.35  # completed low passes this close to an opponent
 SUB_LINE_M = 3.0  # a substitute comes on within this of halfway; the replaced player leaves
 # within this of a line
+MATE_RUN_M, MATE_END_M, MATE_BALL_M = 15.0, 2.5, 3.0  # a run into a team-mate (decision 45)
+MATE_SETTLE = 20  # frames after the run in which he comes to rest
 
 
 def top_so_far(all_: list[dict], kind: str, now: float, n: int) -> list[dict]:
@@ -326,6 +332,33 @@ def main() -> None:
         play_s[per] = float((alive[rows][:, None] & ~np.isnan(p[..., 0])).sum()) / 10.0
     turns.sort()
 
+    # Runs into a team-mate (decision 45): above HI over 1 s of tracking (centred) for at least
+    # MATE_RUN_M, ending with the ball in play within MATE_END_M of a team-mate not on the ball.
+    into_mate = []  # (video s at the end, player, team-mate, metres run)
+    running = alive[:, None] & (v1 > HI)
+    for k, pid in enumerate(ids):
+        mates = [col[q] for q in ids if team_of[q] == team_of[pid] and q != pid]
+        f = 0
+        while f < n:
+            if not running[f, k]:
+                f += 1
+                continue
+            g = f
+            while g + 1 < n and running[g + 1, k] and period[g + 1] == period[f]:
+                g += 1
+            metres = float(np.nansum(np.hypot(*np.diff(pos[f : g + 1, k], axis=0).T)))
+            # where he comes to rest: the 2 s after he drops below HI, same half, in play
+            h = g + 1
+            while h < min(g + MATE_SETTLE, n) and period[h] == period[g] and alive[h]:
+                h += 1
+            d = np.hypot(*(pos[g:h, mates] - pos[g:h, k][:, None]).transpose(2, 0, 1))
+            if metres >= MATE_RUN_M and np.isfinite(d).any():
+                e_, m_ = np.unravel_index(int(np.nanargmin(d)), d.shape)
+                j, at = mates[m_], g + e_
+                if d[e_, m_] < MATE_END_M and np.hypot(*(pos[at, j] - ball[at])) > MATE_BALL_M:
+                    into_mate.append((float(vt[at]), pid, ids[j], round(metres)))
+            f = g + 1
+
     # Duels from too far (decision 41): the winner of an aerial duel or a tackle to the ball, the
     # two players of a ground duel or a foul to each other.
     far_duels = []  # (video s, kind, player, metres)
@@ -498,6 +531,9 @@ def main() -> None:
             r["flags"].append(f"pass by {name[p]} through {name[o]} ({d} m) at {v:.1f}s")
         for v, text in (x for x in sub_bad if a <= x[0] <= b):
             r["flags"].append(f"substitution at {v:.1f}s: {text}")
+        for v, p, q, m in (x for x in into_mate if a <= x[0] <= b):
+            r["flags"].append(f"run into a team-mate: {name[p]} ran {m} m, ended by {name[q]} "
+                              f"at {v:.1f}s")  # fmt: skip
         for v, p, depth in (c for c in behind_far if a <= c[0] <= b):
             r["flags"].append(
                 f"clearance behind own goal line at {v:.1f}s by {name[p]}, {depth} m out"
@@ -560,6 +596,10 @@ def main() -> None:
             1 for r in report if any(f.startswith("pass by") for f in r["flags"])
         ),
         substitutions_off_line=len(sub_bad),
+        runs_into_mate=len(into_mate),
+        clips_run_into_mate=sum(
+            1 for r in report if any(f.startswith("run into a team-mate") for f in r["flags"])
+        ),
         clips_red_zone_short=sum(
             1 for r in report if any(f.startswith("red zone") for f in r["flags"])
         ),
@@ -583,7 +623,7 @@ def main() -> None:
     if "--json" in sys.argv:
         out = dict(totals=totals, clips=report, chances=chances, keeper_far=keeper_far, jumps=jumps,
                    dead_runs=dead_runs, behind_far=behind_far, turns=turns, far_duels=far_duels,
-                   near_passes=near_passes, sub_bad=sub_bad)  # fmt: skip
+                   near_passes=near_passes, sub_bad=sub_bad, into_mate=into_mate)  # fmt: skip
         json.dump(out, open(sys.argv[sys.argv.index("--json") + 1], "w"), indent=1)
 
 

@@ -76,6 +76,7 @@ class Run:
     onside: bool = False  # keep the target level with the offside line
     follow: int = -1  # or: goal-side of this runner, while ``Roles.tracking`` holds
     follow_pass: int = -1  # the pass (event index) he is running for; -1: a run with the ball
+    carrier: int = -1  # the team-mate on the ball this run is about; it ends when he passes
 
 
 class Roles:
@@ -179,6 +180,30 @@ class Roles:
             P.SHAPE_RUN_END if run.shape else 0.0,
         )
 
+    def space_runs(self, tgt: np.ndarray, anchored: np.ndarray) -> np.ndarray:
+        """A run never aims at a team-mate's spot: a runner's target closer than ``RUN_SPACE``
+        to a team-mate's target moves straight away from it to that distance (decision 45: 6.5%
+        of high-speed runs ended within 2.5 m of a team-mate, IDSSE's 3.8%; targets were kept
+        only ``SEPARATION_TEAM`` apart). Players closing down the ball keep their spots: a
+        pair pressing one carrier stands close by design."""
+        e = self.e
+        out = tgt
+        for i, run in self.runs.items():
+            if anchored[i] or run.purpose == RunPurpose.CLOSE_DOWN:
+                continue
+            mates = [int(j) for j in e.members(int(e.team_of[i])) if j != i]
+            gap = out[i] - out[mates]
+            d = np.hypot(*gap.T)
+            j = int(np.argmin(d))
+            if d[j] >= P.RUN_SPACE:
+                continue
+            way = gap[j] if d[j] > 1e-6 else out[i] - e.pos[i]
+            way = way / max(float(np.hypot(*way)), 1e-6)
+            if out is tgt:
+                out = tgt.copy()
+            out[i] = movement.clip_to_pitch(out[mates[j]] + way * P.RUN_SPACE)
+        return out
+
     def free(self, i: int) -> bool:
         return i not in self.runs and i not in self.declined and not self.is_gk[i]
 
@@ -269,21 +294,28 @@ class Roles:
                 perp = np.array([-away[1], away[0]]) / d
                 target = c_xy + away / d * rng.uniform(8.0, 12.0) + perp * rng.normal(0.0, 4.0)
                 run = Run(RunPurpose.MOVE_TO_RECEIVE, t + rng.uniform(*P.RUN_S), P.SHOW_SPEED)
-                run.target, run.onside = e.inside(target), True
+                run.target, run.onside, run.carrier = e.inside(target), True, carrier
                 self.start(i, run, t)
 
         wide = abs(c_v) > P.BOX_HALF_WIDTH - 6.0
         side = np.sign(c_v) or 1.0
-        # Overlap: the full-back on the ball's side, behind it, runs past the wide player.
+        # Overlap: the full-back on the ball's side, behind it, runs past the wide player, outside
+        # him when there is a lane along the touchline (OVERLAP_LANE), else UNDERLAP_IN inside
+        # him (an underlap); with the defence level with the carrier his onside target is level
+        # with him, in that lane. Decision 45: the target was min(HALF_WIDTH − 2 − |v|, 5) m out,
+        # so with the winger on the touchline 1 m inside him, his own spot (the story match's
+        # 9:58: a 38 m sprint that ended at the winger's shoulder).
         if wide and c_u > -P.THIRD and rng.random() < self.overlap_chance:
             for i in idx:
                 i_u, i_v = e.to_uv(team, e.pos[i])
                 if e.positions[i] == Position.FB and np.sign(i_v) == side and i_u < c_u:
                     if self.free(i):
-                        out = min(P.HALF_WIDTH - 2.0 - abs(c_v), 5.0)
+                        lane = P.HALF_WIDTH - abs(c_v)
+                        out = min(lane - 1.0, 5.0) if lane >= P.OVERLAP_LANE else -P.UNDERLAP_IN
                         t_end = t + rng.uniform(*P.SPRINT_RUN_S)
                         run = Run(RunPurpose.OVER_UNDERLAP, t_end, P.OVERLAP_EFFORT)
-                        run.offset_uv, run.onside = np.array([12.0, side * out]), True
+                        run.offset_uv = np.array([P.OVERLAP_AHEAD, side * out])
+                        run.onside, run.carrier = True, carrier
                         self.start(i, run, t)
                     break
 
@@ -355,6 +387,12 @@ class Roles:
         else:
             self.receiver_purpose = RunPurpose.MOVE_TO_RECEIVE
         self.runs.pop(receiver, None)
+        # A run about the passer (an overlap past him, coming short to him) has lost its point
+        # once he plays the ball: it ends, and the next touch decides again (decision 45: a third
+        # of overlaps went on for 2 s after the pass).
+        for i, run in list(self.runs.items()):
+            if run.carrier == passer:
+                del self.runs[i]
         if not open_play:
             return
         team = int(e.team_of[passer])
@@ -861,6 +899,8 @@ class Roles:
                     calm[gk] = False
         keep = P.SEPARATION_DEAD if mode == "dead" else P.SEPARATION_TEAM
         tgt = movement.spread_targets(tgt, e.team_of, anchored, keep)
+        if mode != "dead":
+            tgt = self.space_runs(tgt, anchored)
         if mode == "dead":
             self.keep_distance(tgt)  # last, so that spreading cannot undo it
             anchored = anchored & (np.hypot(*(tgt - e.pos).T) < 1.2)
