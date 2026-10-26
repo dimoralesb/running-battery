@@ -33,8 +33,8 @@
   "A11",
   "A13",
   "A12",
-  "A15",
   "A14",
+  "A15",
   "A16"
  ],
  "missing": -32768,
@@ -327,21 +327,21 @@
    "starter": false
   },
   {
-   "id": "A15",
-   "name": "Rafael Galdwick",
-   "shirt": 15,
-   "team": "away",
-   "team_name": "Ravensholt Albion",
-   "position": "AM",
-   "starter": false
-  },
-  {
    "id": "A14",
    "name": "Yusuf Fennell",
    "shirt": 14,
    "team": "away",
    "team_name": "Ravensholt Albion",
    "position": "CB",
+   "starter": false
+  },
+  {
+   "id": "A15",
+   "name": "Rafael Galdwick",
+   "shirt": 15,
+   "team": "away",
+   "team_name": "Ravensholt Albion",
+   "position": "AM",
    "starter": false
   },
   {
@@ -360,14 +360,14 @@
    "video_end": 300.0,
    "clock": "0:00",
    "home": {
-    "hsr": 221,
-    "possession": 0.53,
-    "in_play_s": 174.0
+    "hsr": 188,
+    "possession": 0.42,
+    "in_play_s": 209.0
    },
    "away": {
-    "hsr": 152,
-    "possession": 0.41,
-    "in_play_s": 174.0
+    "hsr": 154,
+    "possession": 0.49,
+    "in_play_s": 209.0
    }
   },
   {
@@ -375,14 +375,14 @@
    "video_end": 600.0,
    "clock": "5:00",
    "home": {
-    "hsr": 174,
-    "possession": 0.37,
-    "in_play_s": 239.0
+    "hsr": 198,
+    "possession": 0.42,
+    "in_play_s": 179.0
    },
    "away": {
-    "hsr": 162,
-    "possession": 0.49,
-    "in_play_s": 239.0
+    "hsr": 156,
+    "possession": 0.5,
+    "in_play_s": 179.0
    }
   },
   {
@@ -390,14 +390,14 @@
    "video_end": 900.0,
    "clock": "10:00",
    "home": {
-    "hsr": 223,
-    "possession": 0.44,
-    "in_play_s": 150.0
+    "hsr": 314,
+    "possession": 0.4,
+    "in_play_s": 238.0
    },
    "away": {
-    "hsr": 94,
-    "possession": 0.49,
-    "in_play_s": 150.0
+    "hsr": 240,
+    "possession": 0.48,
+    "in_play_s": 238.0
    }
   },
   {
@@ -405,14 +405,14 @@
    "video_end": 1200.0,
    "clock": "15:00",
    "home": {
-    "hsr": 236,
-    "possession": 0.64,
-    "in_play_s": 173.0
+    "hsr": 144,
+    "possession": 0.36,
+    "in_play_s": 271.0
    },
    "away": {
-    "hsr": 145,
-    "possession": 0.24,
-    "in_play_s": 173.0
+    "hsr": 153,
+    "possession": 0.54,
+    "in_play_s": 271.0
    }
   },
   {
@@ -420,14 +420,14 @@
    "video_end": 1500.0,
    "clock": "20:00",
    "home": {
-    "hsr": 163,
-    "possession": 0.27,
-    "in_play_s": 124.0
+    "hsr": 108,
+    "possession": 0.57,
+    "in_play_s": 137.0
    },
    "away": {
-    "hsr": 145,
-    "possession": 0.65,
-    "in_play_s": 124.0
+    "hsr": 115,
+    "possession": 0.37,
+    "in_play_s": 137.0
    }
   },
   {
@@ -435,13 +435,13 @@
    "video_end": 1800.0,
    "clock": "25:00",
    "home": {
-    "hsr": 172,
-    "possession": 0.69,
+    "hsr": 191,
+    "possession": 0.31,
     "in_play_s": 236.0
    },
    "away": {
-    "hsr": 151,
-    "possession": 0.17,
+    "hsr": 215,
+    "possession": 0.56,
     "in_play_s": 236.0
    }
   },
@@ -450,14 +450,14 @@
    "video_end": 2100.0,
    "clock": "30:00",
    "home": {
-    "hsr": 225,
-    "possession": 0.35,
-    "in_play_s": 136.0
+    "hsr": 95,
+    "possession": 0.41,
+    "in_play_s": 134.0
    },
    "away": {
-    "hsr": 147,
-    "possession": 0.61,
-    "in_play_s": 136.0
+    "hsr": 139,
+    "possession": 0.54,
+    "in_play_s": 134.0
    }
   },
   {
@@ -465,14 +465,14 @@
    "video_end": 2400.0,
    "clock": "35:00",
    "home": {
-    "hsr": 111,
-    "possession": 0.5,
-    "in_play_s": 189.0
+    "hsr": 158,
+    "possession": 0.39,
+    "in_play_s": 204.0
    },
    "away": {
-    "hsr": 133,
-    "possession": 0.39,
-    "in_play_s": 189.0
+    "hsr": 85,
+    "possession": 0.47,
+    "in_play_s": 204.0
    }
   },
   {
@@ -480,14 +480,14 @@
    "video_end": 2700.0,
    "clock": "40:00",
    "home": {
-    "hsr": 158,
-    "possession": 0.39,
-    "in_play_s": 192.0
+    "hsr": 105,
+    "possession": 0.51,
+    "in_play_s": 186.0
    },
    "away": {
-    "hsr": 131,
-    "possession": 0.47,
-    "in_play_s": 192.0
+    "hsr": 116,
+    "possession": 0.33,
+    "in_play_s": 186.0
    }
   },
   {
@@ -495,14 +495,14 @@
    "video_end": 2765.7,
    "clock": "45+0:00",
    "home": {
-    "hsr": 471,
-    "possession": 0.0,
-    "in_play_s": 7.0
+    "hsr": 91,
+    "possession": 0.34,
+    "in_play_s": 29.0
    },
    "away": {
-    "hsr": 1188,
-    "possession": 1.0,
-    "in_play_s": 7.0
+    "hsr": 103,
+    "possession": 0.34,
+    "in_play_s": 29.0
    }
   },
   {
@@ -510,14 +510,14 @@
    "video_end": 3065.7,
    "clock": "45:00",
    "home": {
-    "hsr": 269,
-    "possession": 0.4,
-    "in_play_s": 252.0
+    "hsr": 122,
+    "possession": 0.41,
+    "in_play_s": 140.0
    },
    "away": {
-    "hsr": 118,
-    "possession": 0.52,
-    "in_play_s": 252.0
+    "hsr": 133,
+    "possession": 0.51,
+    "in_play_s": 140.0
    }
   },
   {
@@ -525,14 +525,14 @@
    "video_end": 3365.7,
    "clock": "50:00",
    "home": {
-    "hsr": 155,
-    "possession": 0.33,
-    "in_play_s": 123.0
+    "hsr": 149,
+    "possession": 0.51,
+    "in_play_s": 206.0
    },
    "away": {
-    "hsr": 102,
-    "possession": 0.6,
-    "in_play_s": 123.0
+    "hsr": 145,
+    "possession": 0.41,
+    "in_play_s": 206.0
    }
   },
   {
@@ -540,14 +540,14 @@
    "video_end": 3665.7,
    "clock": "55:00",
    "home": {
-    "hsr": 207,
-    "possession": 0.45,
-    "in_play_s": 162.0
+    "hsr": 267,
+    "possession": 0.43,
+    "in_play_s": 224.0
    },
    "away": {
-    "hsr": 155,
-    "possession": 0.41,
-    "in_play_s": 162.0
+    "hsr": 164,
+    "possession": 0.45,
+    "in_play_s": 224.0
    }
   },
   {
@@ -555,14 +555,14 @@
    "video_end": 3965.7,
    "clock": "60:00",
    "home": {
-    "hsr": 135,
-    "possession": 0.53,
-    "in_play_s": 219.0
+    "hsr": 80,
+    "possession": 0.3,
+    "in_play_s": 161.0
    },
    "away": {
-    "hsr": 150,
-    "possession": 0.41,
-    "in_play_s": 219.0
+    "hsr": 102,
+    "possession": 0.53,
+    "in_play_s": 161.0
    }
   },
   {
@@ -570,14 +570,14 @@
    "video_end": 4265.7,
    "clock": "65:00",
    "home": {
-    "hsr": 138,
-    "possession": 0.46,
-    "in_play_s": 164.0
+    "hsr": 182,
+    "possession": 0.45,
+    "in_play_s": 183.0
    },
    "away": {
-    "hsr": 141,
-    "possession": 0.4,
-    "in_play_s": 164.0
+    "hsr": 217,
+    "possession": 0.47,
+    "in_play_s": 183.0
    }
   },
   {
@@ -585,14 +585,14 @@
    "video_end": 4565.7,
    "clock": "70:00",
    "home": {
-    "hsr": 164,
-    "possession": 0.36,
-    "in_play_s": 217.0
+    "hsr": 155,
+    "possession": 0.58,
+    "in_play_s": 234.0
    },
    "away": {
-    "hsr": 190,
-    "possession": 0.58,
-    "in_play_s": 217.0
+    "hsr": 125,
+    "possession": 0.36,
+    "in_play_s": 234.0
    }
   },
   {
@@ -600,14 +600,14 @@
    "video_end": 4865.7,
    "clock": "75:00",
    "home": {
-    "hsr": 140,
-    "possession": 0.38,
-    "in_play_s": 153.0
+    "hsr": 84,
+    "possession": 0.22,
+    "in_play_s": 225.0
    },
    "away": {
-    "hsr": 122,
-    "possession": 0.53,
-    "in_play_s": 153.0
+    "hsr": 104,
+    "possession": 0.69,
+    "in_play_s": 225.0
    }
   },
   {
@@ -615,14 +615,14 @@
    "video_end": 5165.7,
    "clock": "80:00",
    "home": {
-    "hsr": 200,
-    "possession": 0.54,
-    "in_play_s": 163.0
+    "hsr": 135,
+    "possession": 0.35,
+    "in_play_s": 167.0
    },
    "away": {
-    "hsr": 154,
-    "possession": 0.3,
-    "in_play_s": 163.0
+    "hsr": 109,
+    "possession": 0.54,
+    "in_play_s": 167.0
    }
   },
   {
@@ -630,14 +630,14 @@
    "video_end": 5465.7,
    "clock": "85:00",
    "home": {
-    "hsr": 133,
-    "possession": 0.38,
-    "in_play_s": 184.0
+    "hsr": 171,
+    "possession": 0.56,
+    "in_play_s": 141.0
    },
    "away": {
-    "hsr": 100,
-    "possession": 0.51,
-    "in_play_s": 184.0
+    "hsr": 152,
+    "possession": 0.34,
+    "in_play_s": 141.0
    }
   },
   {
@@ -645,14 +645,14 @@
    "video_end": 5564.9,
    "clock": "90+0:00",
    "home": {
-    "hsr": 72,
-    "possession": 0.4,
-    "in_play_s": 99.0
+    "hsr": null,
+    "possession": 0.0,
+    "in_play_s": 0.0
    },
    "away": {
-    "hsr": 115,
-    "possession": 0.54,
-    "in_play_s": 99.0
+    "hsr": null,
+    "possession": 0.0,
+    "in_play_s": 0.0
    }
   }
  ],
@@ -671,46 +671,46 @@
    "to": "15:00",
    "home": {
     "after_losing": [
-     855,
-     132
+     928,
+     152
     ],
     "after_winning": [
-     495,
-     133
+     597,
+     148
     ],
     "on_ball": [
-     243,
-     142
+     429,
+     136
     ],
     "off_ball_high": [
      0,
-     2
+     4
     ],
     "off_ball_deep": [
-     297,
-     154
+     537,
+     186
     ]
    },
    "away": {
     "after_losing": [
-     517,
-     133
+     691,
+     148
     ],
     "after_winning": [
-     295,
-     132
+     645,
+     152
     ],
     "on_ball": [
-     201,
-     156
+     363,
+     190
     ],
     "off_ball_high": [
-     13,
-     10
+     0,
+     8
     ],
     "off_ball_deep": [
-     294,
-     132
+     256,
+     128
     ]
    }
   },
@@ -721,46 +721,46 @@
    "to": "30:00",
    "home": {
     "after_losing": [
-     412,
-     77
+     636,
+     155
     ],
     "after_winning": [
-     294,
-     76
+     341,
+     128
     ],
     "on_ball": [
-     541,
-     271
+     213,
+     149
     ],
     "off_ball_high": [
      0,
-     8
+     1
     ],
     "off_ball_deep": [
-     445,
-     101
+     458,
+     211
     ]
    },
    "away": {
     "after_losing": [
-     304,
-     76
+     697,
+     128
     ],
     "after_winning": [
-     199,
-     77
+     512,
+     155
     ],
     "on_ball": [
-     223,
-     109
+     373,
+     212
     ],
     "off_ball_high": [
      0,
-     2
+     0
     ],
     "off_ball_deep": [
-     586,
-     269
+     218,
+     149
     ]
    }
   },
@@ -771,46 +771,46 @@
    "to": "45+1:05",
    "home": {
     "after_losing": [
-     554,
-     131
+     416,
+     144
     ],
     "after_winning": [
-     291,
-     112
+     308,
+     138
     ],
     "on_ball": [
-     178,
-     133
-    ],
-    "off_ball_high": [
-     0,
-     2
-    ],
-    "off_ball_deep": [
-     396,
-     146
-    ]
-   },
-   "away": {
-    "after_losing": [
-     392,
-     112
-    ],
-    "after_winning": [
-     384,
-     131
-    ],
-    "on_ball": [
-     299,
+     243,
      148
     ],
     "off_ball_high": [
      0,
-     12
+     4
     ],
     "off_ball_deep": [
-     236,
-     121
+     150,
+     119
+    ]
+   },
+   "away": {
+    "after_losing": [
+     330,
+     138
+    ],
+    "after_winning": [
+     278,
+     144
+    ],
+    "on_ball": [
+     112,
+     123
+    ],
+    "off_ball_high": [
+     0,
+     3
+    ],
+    "off_ball_deep": [
+     287,
+     145
     ]
    }
   },
@@ -821,46 +821,46 @@
    "to": "60:00",
    "home": {
     "after_losing": [
-     812,
-     134
+     801,
+     156
     ],
     "after_winning": [
-     333,
-     98
+     377,
+     146
     ],
     "on_ball": [
-     378,
-     136
+     290,
+     127
     ],
     "off_ball_high": [
-     0,
-     6
+     24,
+     11
     ],
     "off_ball_deep": [
-     482,
-     163
+     301,
+     130
     ]
    },
    "away": {
     "after_losing": [
-     364,
-     98
+     469,
+     146
     ],
     "after_winning": [
-     246,
-     134
+     353,
+     156
     ],
     "on_ball": [
-     245,
-     169
+     346,
+     141
     ],
     "off_ball_high": [
-     0,
-     2
+     6,
+     6
     ],
     "off_ball_deep": [
-     266,
-     134
+     249,
+     121
     ]
    }
   },
@@ -871,46 +871,46 @@
    "to": "75:00",
    "home": {
     "after_losing": [
-     569,
-     142
+     415,
+     94
     ],
     "after_winning": [
-     430,
-     157
+     296,
+     119
     ],
     "on_ball": [
-     175,
-     141
+     277,
+     173
     ],
     "off_ball_high": [
-     7,
-     15
+     0,
+     4
     ],
     "off_ball_deep": [
-     282,
-     145
+     388,
+     188
     ]
    },
    "away": {
     "after_losing": [
-     567,
-     157
+     280,
+     119
     ],
     "after_winning": [
-     443,
-     142
+     405,
+     94
     ],
     "on_ball": [
-     383,
-     160
+     521,
+     192
     ],
     "off_ball_high": [
-     7,
-     9
+     44,
+     21
     ],
     "off_ball_deep": [
-     222,
-     132
+     172,
+     152
     ]
    }
   },
@@ -921,192 +921,204 @@
    "to": "90+1:39",
    "home": {
     "after_losing": [
-     535,
-     115
+     359,
+     125
     ],
     "after_winning": [
-     281,
-     102
+     176,
+     111
     ],
     "on_ball": [
-     296,
-     192
+     196,
+     95
     ],
     "off_ball_high": [
      0,
-     5
+     9
     ],
     "off_ball_deep": [
-     315,
-     185
+     360,
+     193
     ]
    },
    "away": {
     "after_losing": [
-     268,
-     102
+     358,
+     111
     ],
     "after_winning": [
-     226,
-     115
+     224,
+     125
     ],
     "on_ball": [
-     305,
-     190
+     334,
+     202
     ],
     "off_ball_high": [
      0,
-     4
+     11
     ],
     "off_ball_deep": [
-     426,
-     188
+     133,
+     84
     ]
    }
   }
  ],
  "goals": [
   {
-   "period": 1,
-   "t": 2706.3,
-   "clock": "45+0:06",
-   "video_s": 2706.3,
+   "period": 2,
+   "t": 112.0,
+   "clock": "46:52",
+   "video_s": 2877.7,
    "team": "away",
    "scorer": "A11"
   },
   {
    "period": 2,
-   "t": 1180.9,
-   "clock": "64:40",
-   "video_s": 3946.6,
+   "t": 2367.0,
+   "clock": "84:27",
+   "video_s": 5132.7,
    "team": "away",
-   "scorer": "A11"
-  },
-  {
-   "period": 2,
-   "t": 1355.9,
-   "clock": "67:35",
-   "video_s": 4121.6,
-   "team": "home",
-   "scorer": "H08"
+   "scorer": "A14"
   }
  ],
  "substitutions": [
   {
    "period": 2,
-   "t": 792.1,
-   "clock": "58:12",
-   "video_s": 3557.8,
+   "t": 833.2,
+   "clock": "58:53",
+   "video_s": 3598.9,
    "team": "away",
    "off": "A09",
    "on": "A13"
   },
   {
    "period": 2,
-   "t": 800.6,
-   "clock": "58:20",
-   "video_s": 3566.3,
+   "t": 835.6,
+   "clock": "58:55",
+   "video_s": 3601.3,
    "team": "away",
    "off": "A06",
    "on": "A12"
   },
   {
    "period": 2,
-   "t": 861.0,
-   "clock": "59:21",
-   "video_s": 3626.7,
+   "t": 860.4,
+   "clock": "59:20",
+   "video_s": 3626.1,
    "team": "home",
    "off": "H07",
    "on": "H12"
   },
   {
    "period": 2,
-   "t": 861.7,
-   "clock": "59:21",
-   "video_s": 3627.4,
+   "t": 862.7,
+   "clock": "59:22",
+   "video_s": 3628.4,
    "team": "home",
    "off": "H09",
    "on": "H13"
   },
   {
    "period": 2,
-   "t": 980.1,
+   "t": 980.7,
    "clock": "61:20",
-   "video_s": 3745.8,
+   "video_s": 3746.4,
    "team": "home",
    "off": "H05",
    "on": "H15"
   },
   {
    "period": 2,
-   "t": 989.3,
-   "clock": "61:29",
-   "video_s": 3755.0,
+   "t": 986.5,
+   "clock": "61:26",
+   "video_s": 3752.2,
    "team": "home",
    "off": "H06",
    "on": "H14"
   },
   {
    "period": 2,
-   "t": 1315.4,
-   "clock": "66:55",
-   "video_s": 4081.1,
+   "t": 1302.1,
+   "clock": "66:42",
+   "video_s": 4067.8,
    "team": "home",
    "off": "H04",
    "on": "H16"
   },
   {
    "period": 2,
-   "t": 1366.1,
-   "clock": "67:46",
-   "video_s": 4131.8,
-   "team": "away",
-   "off": "A08",
-   "on": "A15"
-  },
-  {
-   "period": 2,
-   "t": 1370.3,
-   "clock": "67:50",
-   "video_s": 4136.0,
+   "t": 1365.2,
+   "clock": "67:45",
+   "video_s": 4130.9,
    "team": "away",
    "off": "A02",
    "on": "A14"
   },
   {
    "period": 2,
-   "t": 2410.5,
-   "clock": "85:10",
-   "video_s": 5176.2,
+   "t": 1370.6,
+   "clock": "67:50",
+   "video_s": 4136.3,
+   "team": "away",
+   "off": "A08",
+   "on": "A15"
+  },
+  {
+   "period": 2,
+   "t": 2382.1,
+   "clock": "84:42",
+   "video_s": 5147.8,
    "team": "away",
    "off": "A03",
    "on": "A16"
   }
  ],
  "clips": {
-  "exposed_on_turnover:H05:1:923": [
-   923.7,
-   929.9
+  "red_zone:H05:1:649": [
+   600.0,
+   647.0
   ],
-  "exposed_on_turnover:H05:1:1145": [
-   1145.7,
-   1157.7
+  "exposed_on_turnover:H05:1:814": [
+   814.0,
+   828.0
   ],
-  "second_wind:A04:1:2032": [
-   1987.0,
-   1993.0
+  "red_zone:H09:1:878": [
+   821.0,
+   876.0
   ],
-  "red_zone:H09:2:288": [
-   2996.7,
-   3051.7
+  "second_wind:A04:1:1637": [
+   1637.0,
+   1642.0
   ],
-  "second_wind:H09:2:683": [
-   3445.7,
-   3449.7
+  "exposed_on_turnover:H03:1:1974": [
+   1974.1,
+   1989.1
   ],
-  "fresh_legs:H13:2:1461": [
-   4220.7,
-   4224.7
+  "red_zone:H04:2:764": [
+   3471.7,
+   3527.7
+  ],
+  "exposed_on_turnover:H04:2:803": [
+   3568.7,
+   3583.7
+  ],
+  "second_wind:A11:2:1290": [
+   4008.7,
+   4010.7
+  ],
+  "fresh_legs:H15:2:1580": [
+   4266.7,
+   4270.7
+  ],
+  "fresh_legs:H16:2:1902": [
+   4150.7,
+   4156.7
+  ],
+  "red_zone:A15:2:2191": [
+   4900.7,
+   4954.7
   ]
  }
 }

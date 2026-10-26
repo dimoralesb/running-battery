@@ -198,3 +198,22 @@ def test_an_earlier_gap_is_not_earlier_in_this_block():
     assert not verify(bad, "fan", ctx).ok
     v = verify("That closes a gap of 33% earlier in the match.", "fan", ctx)
     assert not any("earlier 15-min block" in f.message for f in v.findings)
+
+
+def test_the_team_that_led_did_not_close_the_gap():
+    """Decision 43 (the natural feed's 59:59, the LLM pass's rewrite): "Westerlyn Town have closed
+    the gap" when Westerlyn Town had led; "the gap has closed" is the plain wording."""
+    ctx = {"subject": "Westerlyn Town", "team_moment": True,
+           "team_names": ["Westerlyn Town", "Ravensholt Harriers"],
+           "facts": {"pattern": "gap closed", "vs_opponent": {"value": 7},
+                     "earlier_gap_vs_opponent": {"value": 35}}}  # fmt: skip
+    bad = (
+        "Westerlyn Town have closed the gap in high-speed running per ball-in-play minute "
+        "against Ravensholt Harriers: it was 35% earlier and is now 7%."
+    )
+    assert any("did not close it" in f.message for f in verify(bad, "fan", ctx).findings)
+    good = (
+        "The gap has closed: in 45:00–60:00 Westerlyn Town did 7% more high-speed running per "
+        "ball-in-play minute than Ravensholt Harriers, after up to 35% more earlier."
+    )
+    assert not any("did not close it" in f.message for f in verify(good, "fan", ctx).findings)

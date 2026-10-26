@@ -63,10 +63,14 @@ SPECIFIC = {"5", "8", "10", "11", "12", "13", "14", "17", "19", "19c"}
 KEY_KINDS = ("exposed_on_turnover", "red_zone", "fresh_legs", "second_wind", "flat_out",
              "not_tired_tactical")  # fmt: skip
 # What a team moment's lines must say (decision 25): the comparison between the two teams.
+# Decision 43: a closed gap gives the block's own comparison ({now}, ``comparison``), not only
+# the earlier gap (the natural feed's one fan line gave the earlier 18% and not the block's 3%);
+# "level" only when it is 0% (G10), and a closed gap is anything below GAP_CLOSED.
 MUST_SAY = {
     "ran harder": r"\d+\s*%\s*more\b[^.]*\bthan\b",
-    "gap closed": r"\bgap\b[^.]*\b(closed|gone)\b|\blevel\b|\bthe same\b",
+    "gap closed": r"(?<![\d.]){now}\s*%\s*(more|less|higher|lower)\b",
 }
+LEVEL_SAYS = r"\blevel\b|\bthe same\b"
 # Decision 31: the point of a fresh-legs moment is the comparison with his team-mates, and a
 # caught-on-the-break moment says what his running would cost (claim 11; the favourite's only
 # before decision 42); the Narrator left both out of a regenerated feed.
@@ -104,7 +108,8 @@ def ensure_key(picked: list[str], found: dict[str, dict]) -> list[str]:
     minute from the other player moments (decision 42: the agent picked a full-back's first and
     second turnovers and left out the best-ranked, his third).
     Another player's moment of the same kind within that minute is the same action seen from
-    him, and makes way (decision 41: the agent picked a team-mate's view of a turnover)."""
+    him, and makes way (decision 41: the agent picked a team-mate's view of a turnover). Of two
+    hardest-minutes moments of one episode (``episode``), the best-ranked stays (decision 43)."""
     chosen = [found[i] for i in picked]
 
     def add(kind: str, goal: bool = False, best_only: bool = False) -> None:
@@ -128,6 +133,10 @@ def ensure_key(picked: list[str], found: dict[str, dict]) -> list[str]:
     for kind in KEY_KINDS:
         add(kind, best_only=any(m["kind"] == kind for m in chosen))
     add("exposed_on_turnover", goal=True)
+    best: dict[tuple[str, int] | None, dict] = {}
+    for mo in sorted(chosen, key=lambda m: -m["score"]):
+        best.setdefault(episode(mo), mo)
+    chosen = [mo for mo in chosen if episode(mo) is None or best[episode(mo)] is mo]
     return [m["id"] for m in sorted(chosen, key=lambda m: m["video_s"])]
 
 
@@ -136,14 +145,26 @@ def who(mo: dict) -> str:
     return mo["player"]["id"] if mo.get("player") else f"team:{mo['team']['id']}"
 
 
+def episode(mo: dict) -> tuple[str, int] | None:
+    """A hardest-minutes moment's player and which time it is. Spells less than EPISODE_GAP_S
+    apart are one time, so two of its clips both said "for the sixth time" (decision 43: 2 of the
+    7 real matches' feeds and 2 of 30 synthetic); the feed keeps the best-ranked one."""
+    n = mo.get("facts", {}).get("hardest_minutes_count")
+    if mo["kind"] != "red_zone" or n is None:
+        return None
+    return mo["player"]["id"], n["value"] if isinstance(n, dict) else n
+
+
 def pick_offline(found: dict[str, dict]) -> list[str]:
-    """The best-ranked moments of each kind, at least MIN_GAP_S apart and at most
-    MAX_PER_PLAYER per player."""
+    """The best-ranked moments of each kind, at least MIN_GAP_S apart, at most MAX_PER_PLAYER
+    per player and one per hardest-minutes episode."""
     chosen: list[dict] = []
     per_player: dict[str, int] = {}
 
     def fits(mo: dict) -> bool:
         if per_player.get(who(mo), 0) >= MAX_PER_PLAYER:
+            return False
+        if episode(mo) and any(episode(c) == episode(mo) for c in chosen):
             return False
         return all(abs(mo["video_s"] - c["video_s"]) >= MIN_GAP_S for c in chosen)
 
@@ -407,21 +428,14 @@ def template(b: dict, mode: str) -> list[tuple[str, str]]:
         mine, theirs = _v(b, "team_hsr_per_in_play_min"), _v(b, "opponent_hsr_per_in_play_min")
         if f.get("pattern") == "gap closed":
             earlier, own = _v(b, "earlier_gap_vs_opponent"), _v(b, "team_vs_own_first_15")
-            out.append(
-                (
-                    "fact",
-                    f"The gap has closed: in {block} {name} and {opp} were level on "
-                    "high-speed running per ball-in-play minute, after "
-                    f"{name} had done up to {earlier}% more than them earlier.",
-                )
-                if mode == "fan"
-                else (
-                    "fact",
-                    f"The gap has closed: {name} had done up to {earlier}% more "
-                    f"high-speed running per ball-in-play minute than {opp}, and in "
-                    f"{block} it was level ({mine} m vs {theirs} m).",
-                )
-            )
+            now = (
+                f"{name} and {opp} were level on high-speed running per ball-in-play minute"
+                if vs == 0
+                else f"{name} did {abs(vs)}% {'more' if vs > 0 else 'less'} high-speed running "
+                f"per ball-in-play minute than {opp}"
+            ) + ("" if mode == "fan" else f" ({mine} m vs {theirs} m)")
+            closed = f"The gap has closed: in {block} {now}, after up to {earlier}% more earlier."
+            out.append(("fact", closed))
             if own is not None and own < 0:
                 out.append(
                     (
@@ -585,8 +599,9 @@ Rules (a Verifier blocks anything else):
 - Team moments (tug_of_war): the first sentence compares the two teams by name, as the
   comparison is the point: "Westerlyn Albion did 30% more high-speed running per ball-in-play
   minute than Ravensholt Albion in 0:00–15:00" (vs_opponent). For pattern "gap closed" say "the
-  gap has closed", that the two sides were level in that block, and how big the gap was earlier
-  (earlier_gap_vs_opponent). In fan mode that comparison is the one number.
+  gap has closed", the two teams' difference in that block (vs_opponent: "3% more"; "level" only
+  when it is 0%) and how big the gap was earlier (earlier_gap_vs_opponent). In fan mode those
+  are the only numbers.
 - A name ending in s takes only an apostrophe for the possessive: "Ravensholt Harriers'
   high-speed running", never "Harriers's".
 - Name every team in full ("team_names"), every time: when the two names share a word (Westerlyn
@@ -669,13 +684,25 @@ async def check(
     return v, cid
 
 
+def comparison(b: dict) -> str | None:
+    """A team moment's comparison (MUST_SAY) as a pattern; a closed gap's with the block's own
+    difference (decision 43)."""
+    pattern = b["facts"].get("pattern") if b["kind"] in TEAM_KINDS else None
+    if pattern != "gap closed":
+        return MUST_SAY.get(pattern)
+    now = _v(b, "vs_opponent")
+    if now == 0:
+        return LEVEL_SAYS
+    return MUST_SAY[pattern].format(now=r"\d+" if now is None else abs(now))
+
+
 def as_fact(b: dict, claim: str, sentence: str) -> str:
     """A team moment's comparison (MUST_SAY) is a measured fact, whatever claim the Narrator
     tagged it with (it tagged them 9a and 9b, which then counted as general sentences). So is a
     line tagged with a general claim whose numbers all come from the moment's facts, not from
     the claim's wording ("Theo Galdcott has done 12.2 m/min since coming on", tagged 6;
     decision 29)."""
-    need = MUST_SAY.get(b["facts"].get("pattern")) if b["kind"] in TEAM_KINDS else None
+    need = comparison(b)
     if need and re.search(need, sentence, re.I):
         return "fact"
     if claim in ("fact", None):
@@ -733,7 +760,7 @@ def needs(b: dict) -> str | None:
     (decision 31), a second wind's running against his match average and a quiet spell's
     reason that it may not be fatigue (decision 39)."""
     if b["kind"] in TEAM_KINDS:
-        return MUST_SAY.get(b["facts"].get("pattern"))
+        return comparison(b)
     if b["kind"] == "fresh_legs" and b["facts"].get("vs_teammates") is not None:
         return FRESH_LEGS_SAYS
     if b["kind"] == "second_wind":

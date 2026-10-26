@@ -221,8 +221,13 @@ def export(folder: Path, out: Path, feed_path: Path | None = None) -> dict:
         # as the facts round (tools.q, 2 digits), so the screen says the line's number (decision
         # 42: 0.885 was "about 89%" in the line and 88% on screen, NumPy's half to even)
         pct = lambda a: [round(round(float(x), 2) * 100) for x in a]  # noqa: E731
+        # Each half's first second (video_s) and its index: the first half ends mid-second
+        # (2765.7 s in the story match), so one count from ``start`` read the second half a
+        # second late (decision 44: 55% on screen, "about 54%" in the line).
+        firsts = [int(np.flatnonzero(s.period == per)[0]) for per in np.unique(s.period)]
         signals[pid] = {
             "start": m.video_s(int(s.period[0]), float(s.t[0])),
+            "halves": [[m.video_s(int(s.period[k]), float(s.t[k])), k] for k in firsts],
             "battery": pct(c["battery"]),
             "lo": pct(c["battery_lo"]) if "battery_lo" in c else None,
             "hi": pct(c["battery_hi"]) if "battery_hi" in c else None,

@@ -457,6 +457,17 @@ def context_findings(text: str, context: dict, claim_id: str | None) -> list[Fin
     ):
         out.append(Finding("G10", "The earlier gap was in an earlier 15-min block, not in this "
                            "one"))  # fmt: skip
+    # G10 (decision 43 natural feed, 59:59, the LLM pass's own rewrite): "Westerlyn Town have
+    # closed the gap … against Ravensholt Harriers" when Westerlyn Town had been the ones ahead.
+    lead = re.escape(context.get("subject") or "")
+    if (
+        lead
+        and (context.get("facts") or {}).get("pattern") == "gap closed"
+        and re.search(rf"\b{lead}\s+(have|has|had)\s+(closed|narrowed|cut)\s+the\s+gap\b"
+                      rf"|\b{lead}\s+(have|has|had)\s+caught\s+up\b", text, FLAGS)
+    ):  # fmt: skip
+        out.append(Finding("G10", f"{context['subject']} had been ahead: the gap closed, they did "
+                           "not close it"))  # fmt: skip
     # G13 (decision 38, found on the site's feed, 86:33): "while his team sat on a 3–0 lead" at
     # 5–2, claim 13's example scoreline copied; each number was in the facts (lead 3, 0 touches).
     score = context.get("score") or (context.get("context") or {}).get("score")

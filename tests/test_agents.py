@@ -427,8 +427,8 @@ def test_moments_say_what_they_are_for():
     sub = {"kind": "fresh_legs", "player": {"id": "H16"},
            "facts": {"vs_teammates": {"value": 49, "unit": "%"}}}  # fmt: skip
     assert feed_mod.needs(sub) == feed_mod.FRESH_LEGS_SAYS
-    team = {"kind": "tug_of_war", "facts": {"pattern": "gap closed"}}
-    assert feed_mod.needs(team) == feed_mod.MUST_SAY["gap closed"]
+    team = {"kind": "tug_of_war", "facts": {"pattern": "ran harder"}}
+    assert feed_mod.needs(team) == feed_mod.MUST_SAY["ran harder"]
     assert feed_mod.needs({"kind": "second_wind", "facts": {}}) == feed_mod.SECOND_WIND_SAYS
     assert feed_mod._pro(exposed)[1].startswith("That running would leave a typical professional")
 
@@ -750,3 +750,68 @@ def test_a_key_moment_replaces_another_view_of_the_same_action():
     assert feed_mod.ensure_key(["h03", "red", "sub"], found) == ["h03", "red", "sub"]
     found["red"]["video_s"] = 700.0
     assert feed_mod.ensure_key(["h03", "red", "sub"], found) == ["h04", "red", "sub"]
+
+
+def test_one_hardest_minutes_moment_per_episode():
+    """Decision 43: two clips of one spell both said "for the sixth time" (2 of 7 real matches'
+    feeds, 2 of 30 synthetic); the agent's pick and the offline one keep the best-ranked."""
+
+    def mo(i, pid, v, score, n):
+        return {"id": i, "kind": "red_zone", "player": {"id": pid}, "video_s": v, "score": score,
+                "rank": -score, "facts": {"hardest_minutes_count": {"value": n}}}  # fmt: skip
+
+    found = {m["id"]: m for m in [mo("a", "H09", 1000.0, 1.0, 6), mo("b", "H09", 1300.0, 2.0, 6),
+                                  mo("c", "H09", 2000.0, 1.5, 7),
+                                  mo("d", "A04", 1100.0, 0.5, 6)]}  # fmt: skip
+    assert feed_mod.ensure_key(["a", "c", "d"], found) == ["d", "b", "c"]
+    assert feed_mod.pick_offline(found) == ["d", "b", "c"]  # a is b's episode: d takes its place
+
+
+def test_a_closed_gap_says_the_blocks_own_comparison():
+    """Decision 43: the natural feed's one fan line on a closed gap gave the earlier 18% and not
+    the block's 3%, and the template said "level" (G10 blocks it at 3%), so nothing was added."""
+    b = {"kind": "tug_of_war", "player": None,
+         "team": {"id": "away", "name": "Ravensholt Harriers"},
+         "opponent": {"name": "Westerlyn Town"},
+         "facts": {"pattern": "gap closed", "block": "30:00–45:00",
+                   "vs_opponent": {"value": 3}, "earlier_gap_vs_opponent": {"value": 18},
+                   "team_hsr_per_in_play_min": {"value": 150},
+                   "opponent_hsr_per_in_play_min": {"value": 146}}}  # fmt: skip
+    need = feed_mod.needs(b)
+    earlier_only = "The gap has closed after Ravensholt Harriers did up to 18% more earlier."
+    assert not re.search(need, earlier_only, re.I)
+    for mode in feed_mod.MODES:
+        line = feed_mod.template(b, mode)[0][1]
+        assert re.search(need, line, re.I) and "level" not in line, line
+    b["facts"]["vs_opponent"]["value"] = 0
+    assert re.search(feed_mod.needs(b), feed_mod.template(b, "fan")[0][1], re.I)
+
+
+def test_exported_signals_read_the_lines_second_in_both_halves(folder, tools, tmp_path):
+    """Decision 44: the first half ends mid-second, and one count from ``start`` read the second
+    half a second late (55% on screen against the line's "about 54%"); each half now has its own
+    first second (``halves``), and the overlay's lookup (``signalPos`` in data.ts) at a moment's
+    video_s finds the row the line read."""
+    import math
+
+    from runningbattery.export import export
+
+    export(folder, tmp_path)
+    signals = json.loads((tmp_path / "signals.json").read_text())
+    m = tools.m
+    for pid, s in m.series.items():
+        hs = signals[pid]["halves"]
+        for i in range(0, len(s.t), 37):
+            v = m.video_s(int(s.period[i]), float(s.t[i]) + 0.5)
+            t0, k0 = [h for h in hs if h[0] <= v][-1]
+            assert k0 + math.floor(v - t0) == s.index(int(s.period[i]), float(s.t[i]) + 0.5)
+    # The committed story match's first half ends mid-second: a second-half time reads the second
+    # half's own count, where one count from ``start`` would be a second behind.
+    data = Path(__file__).resolve().parents[1] / "app" / "public" / "data" / "story"
+    periods = json.loads((data / "match.json").read_text())["periods"]
+    second = next(p["video_start"] for p in periods if p["period"] == 2)
+    assert second % 1
+    for s in json.loads((data / "signals.json").read_text()).values():
+        if len(s["halves"]) == 2:
+            t0, k0 = s["halves"][1]
+            assert t0 == second and k0 == math.floor(second - s["start"]) + 1

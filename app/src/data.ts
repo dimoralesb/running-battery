@@ -53,6 +53,7 @@ export interface SituationBlock {
 
 export interface Signals {
   start: number;
+  halves?: [number, number][]; // each half's first second (video_s) and its index
   battery: number[];
   lo: number[] | null;
   hi: number[] | null;
@@ -192,11 +193,39 @@ export function position(d: MatchData, j: number, v: number): [number, number] |
   ];
 }
 
+/** Where each half's count starts: [video_s of its first second, its index]. The first half ends
+ * mid-second (2765.7 s in the story match), so one count from `start` read the second half a
+ * second late (decision 44). */
+const halves = (s: Signals): [number, number][] => s.halves ?? [[s.start, 0]];
+
+/** The last half whose `at` (0: its first second, 1: its index) is at most x, or -1. */
+function lastHalf(hs: [number, number][], at: 0 | 1, x: number): number {
+  let n = -1;
+  hs.forEach((h, k) => { if (h[at] <= x) n = k; });
+  return n;
+}
+
+/** Index into a player's per-second signals at replay time v, unbounded. */
+export function signalPos(s: Signals, v: number): number {
+  const hs = halves(s);
+  const n = lastHalf(hs, 0, v);
+  const [t0, k0] = hs[Math.max(n, 0)];
+  const i = k0 + Math.floor(v - t0);
+  return n >= 0 && n + 1 < hs.length ? Math.min(i, hs[n + 1][1] - 1) : i;
+}
+
 /** Index into a player's per-second signals at replay time v, or null when off the pitch. */
 export function signalIndex(s: Signals | undefined, v: number): number | null {
   if (!s) return null;
-  const i = Math.floor(v - s.start);
+  const i = signalPos(s, v);
   return i >= 0 && i < s.battery.length ? i : null;
+}
+
+/** The video_s of second k of a player's signals. */
+export function signalTime(s: Signals, k: number): number {
+  const hs = halves(s);
+  const [t0, k0] = hs[Math.max(lastHalf(hs, 1, k), 0)];
+  return t0 + k - k0;
 }
 
 export function score(meta: Meta, v: number): { home: number; away: number } {
@@ -251,8 +280,8 @@ export function fastSegments(s: Signals | undefined, a: number, b: number): [num
   const out: [number, number][] = [];
   if (!s) return out;
   for (let v = Math.ceil(a); v <= b; v++) {
-    const i = Math.floor(v - s.start); // a substitute's signals start mid-second
-    const fast = i >= 0 && i < s.speed.length && s.speed[i] > HI_SPEED && s.speed[i] <= 110;
+    const i = signalIndex(s, v); // a substitute's signals start mid-second
+    const fast = i !== null && s.speed[i] > HI_SPEED && s.speed[i] <= 110;
     const last = out[out.length - 1];
     if (fast && last && last[1] === v) last[1] = v + 1;
     else if (fast) out.push([v, v + 1]);

@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import copy from "./copy.json";
 import {
   type Item, type MatchData, type Mode, type Signals, gapFill, highlightValue, position,
-  signalIndex,
+  signalIndex, signalTime,
 } from "./data";
 
 // Pitch 105 × 68 m, centre origin (schema). y is drawn upwards.
@@ -74,15 +74,15 @@ function flatOutPeaks(s: Signals): number[] {
   let run: [number, number] | null = null; // [second, speed] of the fastest second so far
   s.speed.forEach((raw, k) => {
     const v = raw <= PLAUSIBLE ? raw : 0;
-    const hot = s.start + k >= FLAT_FROM && top >= FLAT_MIN && v >= FLAT_SHARE * top;
+    const hot = signalTime(s, k) >= FLAT_FROM && top >= FLAT_MIN && v >= FLAT_SHARE * top;
     if (hot) run = run && run[1] >= v ? run : [k, v];
     else if (run) {
-      out.push(s.start + run[0]);
+      out.push(signalTime(s, run[0]));
       run = null;
     }
     top = Math.max(top, v);
   });
-  if (run) out.push(s.start + (run as [number, number])[0]);
+  if (run) out.push(signalTime(s, (run as [number, number])[0]));
   return out;
 }
 

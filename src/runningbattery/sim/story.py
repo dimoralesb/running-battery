@@ -20,7 +20,15 @@ physiology"). ``python -m runningbattery.sim --seed 11 --story press-fade --out 
   ``sub_minute``) replaces the exposed full-back instead, at ``sub_minute``; the substitute's
   hidden values are the ones already drawn for that plan.
 
-All values are our assumptions, chosen to make the moments visible in one match.
+All values are our assumptions, chosen to make the moments visible in one match. Decision 44:
+``press_effort`` 1.06 → 1.02 from a scripted search (``press_chance`` 0.6–0.9 × ``press_effort``
+1.00–1.06 × ``press_run_boost`` 1.25–1.75, each point on the demo seed and 5 more): at 1.06 one
+15-min block of the demo match had the pressing team 79% ahead on high-speed running per
+ball-in-play minute, beyond the 7 IDSSE matches' largest (46%), and 4 of the 6 seeds went past
+46%. The rule, fixed before the results: the demo match below 46% with every story moment (the
+press team ahead in 2 of the first hour's blocks, a player caught on the break 3 times, a
+substitute with fresh legs, all 7 moment kinds), at most 1 of the 6 seeds above 46%, and of
+those the point nearest the old values. Now 27% at most, 1 seed of 6 above 46%.
 """
 
 from __future__ import annotations
@@ -37,7 +45,7 @@ class Story:
     press_chance: float = 0.9
     press_until_min: float = 60.0
     press_run_boost: float = 1.75
-    press_effort: float = 1.06
+    press_effort: float = 1.02  # decision 44: scripted search (module docstring)
     exposed_slot: int = 3  # engine index: home slot 4 (H04), the left-back (FORMATION_4231)
     counter_bias: float = 4.0
     counter_reach: float = 20.0

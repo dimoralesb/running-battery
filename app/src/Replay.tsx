@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { type Entry, type Item, type MatchData, type Mode, clockLabel } from "./data";
+import { type Entry, type Item, type MatchData, type Mode, clockLabel, signalIndex } from "./data";
 import { Blocked, Verdict, splitSources } from "./Feed";
 
 // The clip's details (decisions 29 and 34): shown when the clip is over, and growing with the
@@ -31,8 +31,8 @@ function speeds(d: MatchData, pid: string, a: number, b: number): (number | null
   const s = d.signals[pid];
   const out: (number | null)[] = [];
   for (let v = Math.floor(a); v <= b; v++) {
-    const i = Math.floor(v - (s?.start ?? 0)); // a substitute's signals start mid-second
-    out.push(s && i >= 0 && i < s.speed.length && s.speed[i] <= 110 ? s.speed[i] / 10 : null);
+    const i = signalIndex(s, v); // a substitute's signals start mid-second
+    out.push(s && i !== null && s.speed[i] <= 110 ? s.speed[i] / 10 : null);
   }
   return out;
 }

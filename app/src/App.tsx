@@ -15,6 +15,7 @@ import {
   quietGaps,
   score,
   signalIndex,
+  signalPos,
   topSoFar,
 } from "./data";
 import { BrandMark, LowerThird, TeamSheet, reading } from "./Battery";
@@ -274,7 +275,7 @@ export default function App() {
       const sp = data.signals[p.id];
       const tops = topSoFarBy[p.id];
       if (p.team !== team.id || !sp || !tops || p.position === "GK") continue;
-      const k = Math.min(Math.floor(now - sp.start), tops.length - 1);
+      const k = Math.min(signalPos(sp, now), tops.length - 1);
       if (k < 0) continue;
       if (!best || tops[k] > best.v) best = { name: p.name, v: tops[k] };
     }
