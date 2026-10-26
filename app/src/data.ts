@@ -31,6 +31,18 @@ export interface Meta {
   // What each feed moment's clip shows, [start, end] (export.moment_clips, decision 38); null:
   // no clip (its player does nothing above 5.5 m/s in it); missing: the default window.
   clips?: Record<string, [number, number] | null>;
+  shots?: Shot[]; // every shot, so that a clip runs on to the one its play ends in (toShot)
+}
+
+/** A shot (export.shots): when it is struck, when the ball arrives, and its team's possession's
+ * first and last event, video_s. */
+export interface Shot {
+  video_s: number;
+  arrive_s: number;
+  possession_from: number;
+  possession_to: number;
+  team: string;
+  player: string;
 }
 
 export interface TeamBlock {
@@ -305,6 +317,25 @@ export function quietGaps(runs: [number, number][], from: number, to: number): [
   return out;
 }
 
+/** A clip whose play is still on when it ends and ends in a shot runs on to the ball's arrival
+ * (decision 46: clips stopped a few seconds before the shot their play ended in). The play on
+ * screen at the clip's last second (2 s after its window, `clipTo`) is the possession then on;
+ * its first shot not landed before the clip counts if it comes within SHOT_REACH_S of that
+ * second, in the same half (a rebound later in the same possession does not). */
+export const SHOT_REACH_S = 20;
+export function toShot(d: MatchData, it: Item): Item {
+  if (it.lapse) return it;
+  const shown = it.end + 2;
+  const half = d.meta.periods.filter((p) => p.video_start <= it.start).at(-1);
+  const halfEnd = half ? half.video_start + half.duration_s : Infinity;
+  // The first shot of the play on screen that has not landed before the clip starts; none if
+  // the clip already shows it.
+  const s = (d.meta.shots ?? []).find((x) => x.possession_from <= shown && x.possession_to >= shown
+                                             && x.arrive_s > it.start && x.video_s < halfEnd);
+  return s && s.arrive_s > shown && s.video_s - shown <= SHOT_REACH_S
+    ? { ...it, end: s.arrive_s } : it;
+}
+
 export function itemOfHighlight(h: Highlight): Item {
   const lapse = h.kind === "most_ground";
   return {
@@ -343,7 +374,7 @@ function overlap(a: Item, b: Item): number {
  * gets no clip (decision 41: a clip of his hardest minutes replayed the last 8 s of a
  * team-mate's back-to-back runs). */
 export function queue(d: MatchData, mode: Mode, best: Highlight[]): Item[] {
-  const items = best.map(itemOfHighlight);
+  const items = best.map((h) => toShot(d, itemOfHighlight(h)));
   const moments: Item[] = [];
   for (const m of d.feed.moments) {
     const lines = d.feed.entries.filter((e) => e.moment_id === m.moment_id && e.mode === mode
@@ -353,14 +384,15 @@ export function queue(d: MatchData, mode: Mode, best: Highlight[]): Item[] {
     if (window === null) continue; // nothing to see: the line stays in the full match
     const e = lines[0];
     const pid = e.player?.id ?? null;
+    if (!pid) continue; // a team moment: a statistic of 15 minutes, in the Stats tab (decision 46)
     const [start, end] = window
       ?? [Math.max(m.video_s - MOMENT_BEFORE, 0), m.video_s + MOMENT_AFTER];
-    moments.push({
+    moments.push(toShot(d, {
       id: m.moment_id, source: "moment", kind: m.kind, player: pid, team: e.team,
       clock: window ? clockLabel(d.meta, start) : m.clock, at: window ? start : m.video_s,
-      start, end, segments: pid ? fastSegments(d.signals[pid], start, end) : [],
+      start, end, segments: fastSegments(d.signals[pid], start, end),
       caption: e.sentence, momentId: m.moment_id, momentKind: m.kind, lapse: false,
-    });
+    }));
   }
   const shared = (a: Item, b: Item) =>
     !a.lapse && (overlap(a, b) > 0.5 * Math.min(a.end - a.start, b.end - b.start)

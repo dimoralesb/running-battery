@@ -630,7 +630,14 @@ def test_key_moments_join_the_pick_and_wordings_keep_their_claim():
 def test_moment_clips_show_the_moment(tools):
     """A moment measured over minutes gets the part of the match that shows it, and a moment
     whose player does nothing above 5.5 m/s gets no clip, except a quiet one (decision 38)."""
-    from runningbattery.export import CLIP_AFTER, CLIP_BEFORE, moment_clips, player_runs
+    from runningbattery.export import (
+        CLIP_AFTER,
+        CLIP_BEFORE,
+        PLAY_ON_S,
+        moment_clips,
+        play_end,
+        player_runs,
+    )
 
     m = tools.m
     runs = {pid: player_runs(m, pid) for pid in m.series}
@@ -654,11 +661,26 @@ def test_moment_clips_show_the_moment(tools):
         {"moment_id": "tug_of_war:home:1:4", "kind": "tug_of_war", "video_s": 100.0},
     ]}  # fmt: skip
     clips = moment_clips(m, feed)
-    assert clips[f"second_wind:{pid}:1:1"] == [round(best[0], 1), round(best[1], 1)]
+    # his run, on to the end of its play (decision 46), at most PLAY_ON_S more
+    end = min(max(best[1], play_end(m, best[1])), best[1] + PLAY_ON_S)
+    assert clips[f"second_wind:{pid}:1:1"] == [round(best[0], 1), round(end, 1)]
+    assert best[1] <= end <= best[1] + PLAY_ON_S
     assert clips[f"flat_out:{pid}:1:2"] is None
     assert f"not_tired_tactical:{pid}:1:3" not in clips
     assert clips[f"exposed_on_turnover:{pid}:1:200"] == [200.5, 206.5]
     assert "tug_of_war:home:1:4" not in clips
+
+
+def test_exported_shots_carry_their_possession(tools):
+    """Decision 46: every shot with the ball's arrival and its possession's first and last event,
+    so that a clip runs on to the shot its play ends in (data.ts ``toShot``)."""
+    from runningbattery.export import shots
+
+    m = tools.m
+    out = shots(m)
+    assert len(out) == sum(1 for e in m.events if e.type.value == "shot")
+    for x in out:
+        assert x["possession_from"] <= x["video_s"] <= x["arrive_s"] <= x["possession_to"] + 1e-6
 
 
 def test_caught_on_the_break_needs_the_counter_near_him_or_a_shot(tools):

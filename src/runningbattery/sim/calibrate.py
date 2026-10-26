@@ -74,6 +74,7 @@ from runningbattery.sim.summary import (
 )
 
 SEED_BASE = 10001  # calibration seeds; the 120-seed check uses 1–120
+GOAL_X = P.HALF_LENGTH
 TRUST = 1.5  # largest step, in design radii (the design spans ±1)
 DAMPING = 0.05  # Levenberg–Marquardt damping, per scaled knob, in loss units
 SHRINK = 0.6  # radius factor after a round whose step stayed within half the trust region
@@ -93,6 +94,11 @@ DITHER_TOLERANCE = 2.0  # per player-hour: about half the IDSSE range (our choic
 # sprinting straight back after a turnover. Tolerances are our choice.
 SHORT_RUN_S, CLOSE_RUN_S, TURN_BACK_S = 2, 20, 10
 RUN_SHAPE_TOLERANCE = {"short_pct": 3.0, "close_pct": 2.0, "back_pct": 0.8}
+# Decision 46: goals a match and the share of shots from inside 6 m of the goal centre, Wyscout's
+# Premier League 2017/18 (380 matches, 8,451 open-play shots [Pappalardo2019]; computed offline,
+# the data is not in the repository); tolerances our choice (as shots', 15%; 1.5 points).
+WYSCOUT_PL = {"goals": (2.6, 0.39), "shots_close_pct": (3.7, 1.5)}
+SHOT_CLOSE_M = 6.0
 
 
 @dataclass(frozen=True)
@@ -133,6 +139,17 @@ KNOBS += [
     Knob("SHAPE_RUN_MIN", 0.30, 0.55, 0.04),
     Knob("RECOVERY_START", 0.40, P.SHAPE_RUN_SPEED, 0.05),
     Knob("COVER_SPEED", 0.35, P.SHAPE_RUN_SPEED, 0.05),
+    # Decision 46: the level of the dead-ball waits (ball in play), once the long stoppages with
+    # no cause had gone.
+    Knob("DEAD_TIME_SCALE", 0.8, 1.6, 0.08),
+    # ...and how often the team that lost the ball counter-presses, and the keeper claims a high
+    # ball into his six-yard box.
+    Knob("COUNTERPRESS_CHANCE", 0.0, 1.0, 0.1),
+    Knob("GK_CLAIM_CHANCE", 0.0, 1.0, 0.1),
+    # The shooting chances (tuned by hand to the shots per match before decision 46, when the
+    # runs onside and in behind made more chances).
+    Knob("SHOT_RATE", 0.10, 0.60, 0.04),
+    Knob("SHOT_RATE_CLEAR", 0.40, 1.00, 0.06),
 ]
 
 
@@ -272,6 +289,8 @@ def moment_targets(
                      ("passes", 0.10)):  # fmt: skip
         out.append((key, TARGETS[key][0], tol * TARGETS[key][0]))
     out.append(("ball_in_play_pct", TARGETS["ball_in_play_pct"][0], 4.0))
+    for key, (target, tol) in WYSCOUT_PL.items():
+        out.append((key, target, tol))
     if bands is not None:
         for label, pct in zip(SPEED_LABELS, bands, strict=True):
             out.append((f"band.{label}", float(pct), 3.0))  # batch.BAND_TOLERANCE, points
@@ -323,8 +342,14 @@ def match_moments(job: tuple[dict[str, float], int]) -> dict[str, float]:
     for name in PHASE_HID_TARGETS:
         out[f"phase_hid.{name}"] = hid[name] / (frames[name] / P.FRAME_RATE_HZ / 60.0)
     counts = event_counts(m.events)
-    for key in ("duels", "transitions", "fouls", "shots", "passes"):
+    for key in ("duels", "transitions", "fouls", "shots", "passes", "goals"):
         out[key] = float(counts[key])
+    # shots from inside SHOT_CLOSE_M of the goal centre they aim at (decision 46)
+    attack = {t.id: 1.0 if t.attacks_positive_x_in_period_1 else -1.0 for t in m.metadata.teams}
+    near = [math.hypot(GOAL_X - attack[e.team_id] * (1 if e.period == 1 else -1) * e.start.x,
+                       e.start.y) < SHOT_CLOSE_M
+            for e in m.events if e.type.value == "shot" and e.start is not None]  # fmt: skip
+    out["shots_close_pct"] = 100.0 * float(np.mean(near)) if near else 0.0
     alive = np.concatenate([pf.alive for pf in m.periods])
     out["ball_in_play_pct"] = 100.0 * float(alive.mean())
     is_gk = np.array([p.position == Position.GK for p in starters])

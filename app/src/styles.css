@@ -391,6 +391,20 @@ select { background: var(--surface); border: 1px solid var(--border); border-rad
 .feed-head h3 { margin: 0; }
 .blocked-list { border-left: 2px solid var(--border); padding-left: var(--space-3); margin: var(--space-2) 0; }
 
+/* Stats tab (decision 46): one row per 15-minute block, then the team charts. */
+.match-stats h3 { margin-bottom: var(--space-1); }
+.stat-blocks { list-style: none; margin: var(--space-3) 0; padding: 0; }
+.stat-block { padding: var(--space-2) 0; border-bottom: 1px solid var(--border-subtle); }
+.stat-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between;
+  gap: var(--space-2) var(--space-4); }
+.stat-when { font-weight: 600; }
+.stat-teams { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-5); margin-top: var(--space-1); }
+.stat-team { display: inline-flex; align-items: baseline; gap: var(--space-1); }
+.stat-team strong { font-size: var(--text-lg); }
+.stat-team .muted { font-size: var(--text-xs); }
+.stat-head button.link { font-size: var(--text-sm); }
+.stat-block .line { border-bottom: 0; padding-bottom: 0; }
+
 /* Settings. */
 .settings { display: grid; gap: var(--space-3); }
 .field { display: grid; grid-template-columns: 11em minmax(0, 1fr); align-items: center; gap: var(--space-3); }

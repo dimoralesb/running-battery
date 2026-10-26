@@ -14,6 +14,8 @@
   and ball-in-play seconds per situation of play (``tools.SITUATIONS``).
 - ``feed.json``: the agents' feed, copied as it is. ``match.json`` ``clips`` gives each feed
   moment the part of the match its clip shows (decision 38, ``moment_clips``).
+- ``match.json`` ``shots``: every shot, the ball's arrival and its possession's start, so that a
+  clip runs on to the shot its play ends in (decision 46).
 - ``highlights.json``: the physical highlights (``agents.highlights``, decision 28), with their
   captions (checked by the Verifier's rules) and the run's times for the trail on the pitch.
 
@@ -49,6 +51,10 @@ MISSING = -32768
 CLIP_BEFORE, CLIP_AFTER = 3.0, 2.0
 DEFAULT_BEFORE, DEFAULT_AFTER = 8.0, 4.0
 SECOND_WIND_LOOKBACK_S = 120.0  # second wind: his runs in the 2 min that brought him back
+# ...and the clip of that run (and of fresh legs) runs on to the end of the play it was part of
+# (its possession's last event), at most PLAY_ON_S more (decision 46: a 3-s run made an 8-s clip
+# that stopped while the play went on).
+PLAY_ON_S = 8.0
 # His hardest minutes: the clip shows the running of the minute up to the moment, the runs above
 # 5.5 m/s within RED_ZONE_CLIP_MAX_S of each other that hold most of its metres (decision 41: the
 # default window, 8 s before the moment, showed 12 of the 63 m that made it).
@@ -143,13 +149,26 @@ def red_zone_window(runs: list[tuple[float, float, float]], at: float) -> list[f
     return window
 
 
+def play_end(m: MatchData, v: float) -> float:
+    """When the play on at ``v`` (video_s) ends: the last event (or its ball's arrival) of the
+    possession of the last event at or before ``v``, in the same half; ``v`` if none."""
+    on = [e for e in m.events if e.possession_id is not None and m.video_s(e.period, e.t) <= v]
+    if not on:
+        return v
+    last = on[-1]
+    chain = [e for e in m.events
+             if e.period == last.period and e.possession_id == last.possession_id]  # fmt: skip
+    return max(v, max(m.video_s(e.period, max(e.end_t or e.t, e.t)) for e in chain))
+
+
 def moment_clips(m: MatchData, feed: dict) -> dict[str, list[float] | None]:
     """What each feed moment's clip shows (decision 38), as [start, end] in video_s, or None for
     a moment with no clip (its player does nothing above 5.5 m/s in it; the line stays in the
     full match's commentary). Moments measured over minutes get the part that shows them:
     caught on the break, the turnover to the end of the counter (``tools.counter_end_t``);
     second wind, his longest run in the 2 min before it; fresh legs, the substitute's longest run
-    in his minutes on; his hardest minutes, the running of the minute that made them
+    in his minutes on (both on to the end of that play, at most ``PLAY_ON_S`` more); his hardest
+    minutes, the running of the minute that made them
     (``RED_ZONE_*``). Moments missing here keep the overlay's default."""
     out: dict[str, list[float] | None] = {}
     runs = {pid: player_runs(m, pid) for pid in m.series}
@@ -178,7 +197,7 @@ def moment_clips(m: MatchData, feed: dict) -> dict[str, list[float] | None]:
                 out[mid] = None
                 continue
             a, b, _ = max(mine, key=lambda r: r[2])
-            window = [a, b]
+            window = [a, min(max(b, play_end(m, b)), b + PLAY_ON_S)]
         played = (
             (window[0] - CLIP_BEFORE, window[1] + CLIP_AFTER)
             if window
@@ -189,6 +208,33 @@ def moment_clips(m: MatchData, feed: dict) -> dict[str, list[float] | None]:
             out[mid] = None
         elif window:
             out[mid] = [round(window[0], 1), round(window[1], 1)]
+    return out
+
+
+def shots(m: MatchData) -> list[dict]:
+    """Every shot with the ball's arrival (``end_t``) and its possession's first and last event,
+    video_s:
+    a clip whose possession is still on at its end runs on to the shot (decision 46, data.ts
+    ``toShot``; a clip had stopped a few seconds before the shot its play ended in)."""
+    first: dict[tuple[int, int], float] = {}
+    last: dict[tuple[int, int], float] = {}
+    for e in m.events:
+        if e.possession_id is not None:
+            first.setdefault((e.period, e.possession_id), e.t)
+            last[(e.period, e.possession_id)] = max(e.end_t or e.t, e.t)
+    out = []
+    for e in m.events:
+        if e.type.value != "shot":
+            continue
+        arrive = e.end_t if e.end_t is not None else e.t
+        out.append({
+            "video_s": m.video_s(e.period, e.t),
+            "arrive_s": m.video_s(e.period, arrive),
+            "possession_from": m.video_s(e.period, first.get((e.period, e.possession_id), e.t)),
+            "possession_to": m.video_s(e.period, last.get((e.period, e.possession_id), arrive)),
+            "team": e.team_id,
+            "player": e.player_id,
+        })  # fmt: skip
     return out
 
 
@@ -269,6 +315,7 @@ def export(folder: Path, out: Path, feed_path: Path | None = None) -> dict:
             m.when(s.period, s.t) | {"team": s.team_id, "off": s.player_out, "on": s.player_in}
             for s in m.metadata.substitutions
         ],  # fmt: skip
+        "shots": shots(m),
     }
     feed_path = feed_path or folder / FEED
     if feed_path.exists():

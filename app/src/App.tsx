@@ -16,6 +16,7 @@ import {
   score,
   signalIndex,
   signalPos,
+  toShot,
   topSoFar,
 } from "./data";
 import { BrandMark, LowerThird, TeamSheet, reading } from "./Battery";
@@ -23,8 +24,7 @@ import { Feed } from "./Feed";
 import { Highlights, reel } from "./Highlights";
 import { Legend, Pitch } from "./Pitch";
 import { Replay } from "./Replay";
-import { SplitChart } from "./SplitChart";
-import { TeamChart } from "./TeamChart";
+import { Stats } from "./Stats";
 import { Trace } from "./Trace";
 
 const SPEEDS = [1, 5, 20];
@@ -37,7 +37,8 @@ const FOCUS_AFTER = 6;
 // mode=analyst&player=H04; the Highlights view takes ?hl=<kind> (the match's best of a kind),
 // ?moment=<kind or moment id> (with &player=), or ?item=<n>, then &step=watch|details|replay
 // (plays it, opens it finished with its details, or plays the replay) and &auto=1 (play the
-// clips one after another). JOURNEY.md "Deep links" lists the screen and tab each one opens.
+// clips one after another); &tab=stats opens the Stats tab. JOURNEY.md "Deep links" lists the
+// screen and tab each one opens.
 const QUERY = new URLSearchParams(window.location.search);
 // Dark by default (DESIGN.md); ?theme=light or Settings › Theme for light.
 const THEME = QUERY.get("theme") === "light" ? "light" : "dark";
@@ -46,11 +47,12 @@ type View = "highlights" | "full";
 // Each clip plays once (watch), then shows its details on its last frame; Replay plays it
 // again with the details growing (decision 34; at the clip speed since decision 37).
 type Step = "watch" | "details" | "replay";
-// The tabs under the pitch (decision 36); one open at a time.
-type Tab = "clips" | "team" | "details" | "settings";
+// The tabs under the pitch (decision 36); one open at a time. Stats holds the teams' running
+// over the whole match (decision 46: a statistic, not a clip).
+type Tab = "clips" | "team" | "stats" | "details" | "settings";
 const TABS: [Tab, string][] = [
-  ["clips", copy.tabClips], ["team", copy.tabTeam], ["details", copy.tabDetails],
-  ["settings", copy.tabSettings],
+  ["clips", copy.tabClips], ["team", copy.tabTeam], ["stats", copy.tabStats],
+  ["details", copy.tabDetails], ["settings", copy.tabSettings],
 ];
 const TEXT: Record<string, string> = copy;
 
@@ -63,7 +65,7 @@ function itemFromUrl(d: MatchData, list: Item[]): Item | undefined {
   const hl = QUERY.get("hl") as Parameters<typeof topSoFar>[1] | null;
   if (hl) {
     const top = topSoFar(d.highlights, hl, d.duration, 1)[0];
-    return top ? list.find((i) => i.h === top) ?? itemOfHighlight(top) : undefined;
+    return top ? list.find((i) => i.h === top) ?? toShot(d, itemOfHighlight(top)) : undefined;
   }
   const m = QUERY.get("moment");
   if (m) {
@@ -111,11 +113,13 @@ export default function App() {
   const [step, setStep] = useState<Step>("watch");
   const [auto, setAuto] = useState(QUERY.get("auto") === "1");
   const [theme, setTheme] = useState<"dark" | "light">(THEME);
-  const [tab, setTab] = useState<Tab>(QUERY.get("view") === "full" ? "details" : "clips");
+  const [tab, setTab] = useState<Tab>(
+    QUERY.get("tab") === "stats" ? "stats" : QUERY.get("view") === "full" ? "details" : "clips",
+  );
   // Tab rules (JOURNEY.md): a clip's end borrows the Details tab and the next clip hands back
   // the tab the viewer was on; a tab the viewer picks during a clip is never changed for them.
   const back = useRef<Tab | null>(null);
-  const picked = useRef(false);
+  const picked = useRef(QUERY.get("tab") === "stats"); // a tab named in the URL is the viewer's
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -473,7 +477,7 @@ export default function App() {
                   ))}
                 </div>
                 <Highlights all={data.highlights} meta={data.meta} now={now} text={TEXT}
-                            onPick={(h) => start(itemOfHighlight(h), "watch")}
+                            onPick={(h) => start(toShot(data, itemOfHighlight(h)), "watch")}
                             onReel={() => {
                               if (!items.length) return;
                               setAuto(true);
@@ -524,11 +528,15 @@ export default function App() {
                          setSelected(id);
                          if (view === "highlights") toFull();
                        }} />
-            <TeamChart meta={data.meta} now={now} title={copy.teamChart} sub={copy.teamChartSub}
-                       yTitle={copy.teamChartAxis} onSeek={setNow} />
-            <SplitChart meta={data.meta} text={TEXT} scope={copy.splitSoFar}
-                        blocks={data.meta.team_situations.filter((b) => b.video_end <= now + 0.5)} />
           </div>
+        )}
+
+        {tab === "stats" && (
+          <Stats data={data} mode={mode} text={TEXT} onWatch={(v) => {
+            toFull();
+            setNow(v);
+            setPlaying(true);
+          }} />
         )}
 
         {tab === "details" && (
@@ -539,18 +547,6 @@ export default function App() {
                         replaying={step === "replay"}
                         band={band && band.lo !== null ? fill(copy.ltBand, { lo: band.lo, hi: band.hi ?? "" }) : null}
                         text={TEXT} onSeek={(v) => { setNow(v); setPlaying(false); }} />
-                {!cur.player && (
-                  <TeamChart meta={data.meta} now={now} title={copy.teamChart} sub={copy.teamChartSub}
-                             yTitle={copy.teamChartAxis} onSeek={setNow} />
-                )}
-                {!cur.player && (() => {
-                  // The team moment's 15-min block (its key second is the block's last).
-                  const b = data.meta.team_situations.find((x) => x.video_start <= cur.at
-                                                                  && cur.at < x.video_end);
-                  return b ? <SplitChart meta={data.meta} blocks={[b]} text={TEXT}
-                                         scope={fill(copy.splitBlock, { block: `${b.from}–${b.to}` })} />
-                    : null;
-                })()}
               </>
             )
           ) : (

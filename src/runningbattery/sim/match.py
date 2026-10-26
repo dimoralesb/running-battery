@@ -96,6 +96,7 @@ class Touch:
     header: bool
     carry_ons: int = 0  # times he carried on at goal instead of releasing (``SHOT_CARRY_ON_*``)
     challenger: int = -1  # the opponent going in for the ball (``update_touch``)
+    smother_tried: bool = False  # the keeper has come for the ball at his feet (``update_touch``)
 
 
 @dataclass
@@ -117,6 +118,7 @@ class Restart:
     ball_from: np.ndarray
     t_dead: float
     huddle: Huddle | None = None  # after a goal
+    sub_wait: bool = False  # a substitution has set its stoppage's length (substitute_due)
 
 
 @dataclass
@@ -280,7 +282,7 @@ class MatchEngine:
         elif self.to_uv(team, where)[0] < -P.THIRD:
             if rng.random() < self.press_chance(1 - team, t):
                 self.press = (1 - team, t + P.PRESS_MAX_S)
-        self.roles.on_possession_change(team, t)
+        self.roles.on_possession_change(team, t, turnover)
 
     def clock(self, t: float) -> float:
         return t + (45.0 * 60.0 if self.period == 2 else 0.0)
@@ -373,8 +375,28 @@ class MatchEngine:
             if tc.challenger >= 0 and self.in_reach(tc.challenger, tc.player, t):
                 self.ground_duel(t, tc.challenger)
                 return
+        # A keeper who has come out (Roles: ``GK_RUSH_*``) and reaches the carrier goes for the
+        # ball at his feet, once (decision 46: nobody met a clear carrier, who ran on into
+        # point-blank range: 4 goals a match against the Premier League's 2.6).
+        gk = int(self.members(1 - int(self.team_of[tc.player]))[0])
+        if not tc.smother_tried and not tc.header and self.in_reach(gk, tc.player, t):
+            tc.smother_tried = True
+            if self.rng.random() < P.GK_SMOTHER_WINS:
+                self.smother(t, gk)
+                return
         if t >= tc.t_release:
             self.release(t)
+
+    def smother(self, t: float, gk: int) -> None:
+        """The keeper takes the ball at the carrier's feet (a duel he wins)."""
+        c = self.touch.player
+        where = self.pos[c].copy()
+        self.log(EventType.DUEL, t, gk, related_player_id=c, start=where, subtype="ground",
+                 body_part=BodyPart.OTHER, outcome=Outcome.SUCCESS)  # fmt: skip
+        self.end_touch(t)
+        self.log(EventType.BALL_LOSS, t, c, subtype="tackled", start=where)
+        self.gain_possession(int(self.team_of[gk]), t, True, where)
+        self.take_ball(t, gk)
 
     def in_reach(self, opp: int, c: int, t: float) -> bool:
         """``opp`` is within ``DUEL_REACH`` of carrier ``c`` and of the ball at his feet."""
@@ -455,9 +477,10 @@ class MatchEngine:
             self.log(EventType.DUEL, t, opp, outcome=Outcome.FAIL, **duel)
             self.end_touch(t)
             self.log(EventType.FOUL, t, opp, related_player_id=c, start=where)
-            if rng.random() < P.CARD_PER_FOUL:
+            booked = rng.random() < P.CARD_PER_FOUL
+            if booked:
                 self.log(EventType.CARD, t, opp, subtype="yellow")
-            self.free_kick(t, int(self.team_of[c]), where)
+            self.free_kick(t, int(self.team_of[c]), where, booked)
         elif r < P.FOUL_PER_DUEL + (1 - P.FOUL_PER_DUEL) * P.DUEL_CHALLENGER_WINS:
             self.log(EventType.DUEL, t, opp, outcome=Outcome.SUCCESS, **duel)
             self.log(EventType.TACKLE, t, opp, outcome=Outcome.SUCCESS, start=where)
@@ -581,8 +604,15 @@ class MatchEngine:
         self.roles.on_pass(t, c, r, through, wide_cross, restart is None, end)
 
         f = Flight(origin.copy(), end, t, snap(t + flight_s), peak, "complete", by=c, to=r)
+        e_uv = self.to_uv(team, end)
+        six = e_uv[0] > GOAL_U - P.SIX_YARD_DEPTH and abs(e_uv[1]) < P.SIX_YARD_HALF_WIDTH
         if offside:
             f.result = "offside"
+        elif height == PassHeight.HIGH and six and rng.random() < P.GK_CLAIM_CHANCE:
+            # The keeper comes for a high ball dropping into his six-yard box and claims it
+            # (decision 46: nobody did, and 14% of our shots came from inside 6 m, 57% of them
+            # goals; 3.7% in Wyscout's Premier League 2017/18).
+            f.result, f.to = "intercepted", int(self.members(1 - team)[0])
         elif height == PassHeight.HIGH:
             opp, d = self.nearest(1 - team, end)
             if d < P.AERIAL_DUEL_RADIUS:
@@ -967,21 +997,29 @@ class MatchEngine:
             spot = np.array([np.clip(x, -P.HALF_LENGTH, P.HALF_LENGTH), np.sign(y) * P.HALF_WIDTH])
             self.schedule_restart("throw_in", 1 - team, spot, t, point)
 
-    def free_kick(self, t: float, team: int, where: np.ndarray) -> None:
+    def free_kick(self, t: float, team: int, where: np.ndarray, booked: bool = False) -> None:
         u, v = self.to_uv(team, where)
         if u > GOAL_U - P.BOX_DEPTH and abs(v) < P.BOX_HALF_WIDTH:
             u = GOAL_U - P.BOX_DEPTH - 1.0  # no penalties in v0
         spot = self.inside(self.to_uv(team, np.array([u, v])))
-        self.schedule_restart("free_kick", team, spot, t, self.ball_xy[:2].copy())
+        extra = P.CARD_DELAY_S if booked else 0.0
+        self.schedule_restart("free_kick", team, spot, t, self.ball_xy[:2].copy(), extra)
 
     def schedule_restart(
-        self, kind: str, team: int, spot: np.ndarray, t: float, ball_from: np.ndarray
+        self,
+        kind: str,
+        team: int,
+        spot: np.ndarray,
+        t: float,
+        ball_from: np.ndarray,
+        extra: float = 0.0,
     ) -> None:
+        """The ball is dead: the restart is due after DEAD_TIME (scaled by DEAD_TIME_SCALE), plus
+        ``extra`` for a cause the match shows (a booking, CARD_DELAY_S). Decision 46: a long
+        stoppage with no cause (LONG_STOPPAGE, 10% of dead balls, 30–90 s more) is gone."""
         rng = self.rng
         median, sigma = P.DEAD_TIME[kind]
-        delay = rng.lognormal(math.log(median), sigma)
-        if rng.random() < P.LONG_STOPPAGE:
-            delay += rng.uniform(*P.LONG_STOPPAGE_S)
+        delay = rng.lognormal(math.log(median * P.DEAD_TIME_SCALE), sigma) + extra
         if kind == "goal_kick":
             taker = int(self.members(team)[0])
         elif kind == "kick_off":
@@ -1228,6 +1266,14 @@ class MatchEngine:
         clock = self.clock(t)
         due = [s for s in self.pending if s.clock_s <= clock]
         made = []
+        r = self.restart
+        if due and t > 0.0 and not r.sub_wait:
+            # A stoppage with a substitution lasts SUB_STOPPAGE from the ball going dead
+            # (decision 46: ours lasted 24 s, IDSSE's 59 s; the waits they had came from
+            # LONG_STOPPAGE, which had no cause).
+            median, sigma = P.SUB_STOPPAGE
+            r.t = max(r.t, snap(r.t_dead + self.rng.lognormal(math.log(median), sigma)))
+            r.sub_wait = True
         for sub in due:
             self.pending.remove(sub)
             if t > 0.0:
@@ -1237,7 +1283,6 @@ class MatchEngine:
         if t == 0.0:
             made += [self.swap(sub, t, k) for sub, _, _ in self.leaving.values()]
             self.leaving.clear()
-        r = self.restart
         if r.taker in self.leaving:
             free = [int(j) for j in self.members(r.team)[1:] if int(j) not in self.leaving]
             r.taker = min(free, key=lambda j: float(np.hypot(*(self.pos[j] - r.spot))))

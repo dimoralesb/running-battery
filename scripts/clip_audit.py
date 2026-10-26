@@ -21,7 +21,10 @@ whose winner (or fouler) is more than 1.5 m from the ball (aerial duel, tackle) 
 player (ground duel, foul); a completed pass passing within 0.35 m of an outfield opponent while
 low (ball under 1 m, away from its first and last 0.3 s); a substitute who comes on away from the
 halfway line, or a replaced player who leaves away from a line; and a red-zone clip that shows
-under half of the metres above 5.5 m/s of his last minute. Decision 45 adds a run into a
+under half of the metres above 5.5 m/s of his last minute. Decision 46 adds a shot after the
+clip: the play on screen at its last second (its possession) ends in a shot after it (the
+overlay runs a clip on to a shot within 20 s, ``toShot``), and leaves team moments out of the
+clips (the Stats tab). Decision 45 adds a run into a
 team-mate: above 5.5 m/s (over 1 s of tracking) for at least ``MATE_RUN_M``, then (ball in play,
 within 2 s) within ``MATE_END_M`` of a team-mate who is not on the ball (a full-back's 38 m
 overlap ended at his winger's shoulder, the story match's 9:58; IDSSE has 1.15 per in-play
@@ -49,6 +52,8 @@ RESTARTS = {"corner", "free_kick", "throw_in", "goal_kick", "kick_off", "penalty
 DEAD_GRACE_S = 1.5  # time to stop after the ball goes dead (decision 40)
 SHARE_MAX = 2.0  # s two clips of different players may share (data.ts; decision 41)
 RUNS_ON_S = 1.0  # a highlight running on past its player's moment gives way to it (decision 42)
+OFFSIDE_FLAG_M, OFFSIDE_FLAG_S = 5.0, 2.0  # an offside spell (decision 46)
+SHOT_REACH_S = 20.0  # data.ts: a clip runs on to a shot this soon after it (decision 46)
 TURN_SPEED, TURN_WITHIN_S, TURN_COS = 6.0, 4.0, -0.7  # sprint-turns (decision 41)
 DUEL_FLAG_M = 1.5  # a duel's winner, or a fouler, within reach (decision 41)
 PASS_NEAR_M, PASS_NEAR_FLAG_M = 0.6, 0.35  # completed low passes this close to an opponent
@@ -94,14 +99,34 @@ def clock_label(match: dict, v: float) -> str:
     return f"{int(end // 60)}+{mmss(c - end)}" if c >= end else mmss(c)
 
 
-def queue(match: dict, feed: dict, clips: dict, hls: list[dict], mode: str) -> list[dict]:
-    """data.ts ``queue``: one clip per action."""
+def to_shot(match: dict, it: dict, shots: list[dict]) -> dict:
+    """data.ts ``toShot`` (decision 46): a clip whose possession is still on at its last second
+    runs on to the first shot it leads to, if within SHOT_REACH_S of that second, in the same
+    half."""
+    if it["lapse"]:
+        return it
+    shown = it["end"] + CLIP_AFTER
+    half = next(q for q in reversed(match["periods"]) if q["video_start"] <= it["start"])
+    half_end = half["video_start"] + half["duration_s"]
+    # The first shot of the play on screen not landed before the clip; none if it shows it.
+    on = [x for x in shots if x["possession_from"] <= shown <= x["possession_to"]
+          and x["arrive_s"] > it["start"] and x["video_s"] < half_end]  # fmt: skip
+    if on and on[0]["arrive_s"] > shown and on[0]["video_s"] - shown <= SHOT_REACH_S:
+        return it | dict(end=on[0]["arrive_s"])
+    return it
+
+
+def queue(
+    match: dict, feed: dict, clips: dict, hls: list[dict], mode: str, shots: list[dict]
+) -> list[dict]:
+    """data.ts ``queue``: one clip per action; no team moments (decision 46: the Stats tab)."""
     items = [
-        dict(id=f"hl:{h['kind']}:{h['player']['id']}:{h['video_s']}", kind=h["kind"],
-             player=h["player"]["id"], clock=h["clock"],
-             at=h["start_video_s"] if h["kind"] == "recovery_run" else h["video_s"],
-             start=0.0 if h["kind"] == "most_ground" else h["start_video_s"], end=h["end_video_s"],
-             lapse=h["kind"] == "most_ground", moment=None)
+        to_shot(match, dict(
+            id=f"hl:{h['kind']}:{h['player']['id']}:{h['video_s']}", kind=h["kind"],
+            player=h["player"]["id"], clock=h["clock"],
+            at=h["start_video_s"] if h["kind"] == "recovery_run" else h["video_s"],
+            start=0.0 if h["kind"] == "most_ground" else h["start_video_s"],
+            end=h["end_video_s"], lapse=h["kind"] == "most_ground", moment=None), shots)
         for h in hls
     ]  # fmt: skip
     moments = []
@@ -109,8 +134,8 @@ def queue(match: dict, feed: dict, clips: dict, hls: list[dict], mode: str) -> l
         mid = m["moment_id"]
         lines = [e for e in feed["entries"] if e["moment_id"] == mid and e["mode"] == mode
                  and e["shown"]]  # fmt: skip
-        if not lines:
-            continue
+        if not lines or not lines[0].get("player"):
+            continue  # a team moment: a statistic, in the Stats tab (decision 46)
         window = clips.get(m["moment_id"], "default")
         if window is None:
             continue
@@ -119,11 +144,11 @@ def queue(match: dict, feed: dict, clips: dict, hls: list[dict], mode: str) -> l
             if window == "default"
             else window
         )
-        moments.append(dict(id=m["moment_id"], kind=m["kind"],
-                            player=(lines[0].get("player") or {}).get("id"),
-                            clock=m["clock"] if window == "default" else clock_label(match, start),
-                            at=m["video_s"] if window == "default" else start,
-                            start=start, end=end, lapse=False, moment=m["moment_id"]))  # fmt: skip
+        moments.append(to_shot(match, dict(
+            id=m["moment_id"], kind=m["kind"], player=lines[0]["player"]["id"],
+            clock=m["clock"] if window == "default" else clock_label(match, start),
+            at=m["video_s"] if window == "default" else start,
+            start=start, end=end, lapse=False, moment=m["moment_id"]), shots))  # fmt: skip
 
     def shared(a: dict, b: dict) -> bool:
         ov = min(a["end"], b["end"]) - max(a["start"], b["start"])
@@ -304,6 +329,21 @@ def main() -> None:
                             outcome=e.get("outcome")))  # fmt: skip
     shots = [(vstart[e["period"]] + e["t"], e["player_id"], e.get("subtype"), e.get("xg"))
              for e in events if e["type"] == "shot"]  # fmt: skip
+    # Each shot's possession (decision 46): its first and last event (export.shots).
+    poss_from: dict[tuple[int, int], float] = {}
+    poss_to: dict[tuple[int, int], float] = {}
+    for e in events:
+        if e.get("possession_id") is not None:
+            key = (e["period"], e["possession_id"])
+            poss_from.setdefault(key, e["t"])
+            poss_to[key] = max(e.get("end_t") or e["t"], e["t"])
+    shot_play = [dict(video_s=vstart[e["period"]] + e["t"], player=e["player_id"],
+                      arrive_s=vstart[e["period"]] + (e.get("end_t") or e["t"]),
+                      possession_from=vstart[e["period"]]
+                      + poss_from.get((e["period"], e.get("possession_id")), e["t"]),
+                      possession_to=vstart[e["period"]]
+                      + poss_to.get((e["period"], e.get("possession_id")), e["t"]))
+                 for e in events if e["type"] == "shot"]  # fmt: skip
 
     # Sprint-turns (decision 41): speed over 1 s of tracking (centred) above TURN_SPEED, then
     # within TURN_WITHIN_S above it the opposite way, ball in play; counted where they start.
@@ -331,6 +371,27 @@ def main() -> None:
         turns += [(float(vt[rows[f]]), ids[j]) for f, j in zip(*np.nonzero(start), strict=True)]
         play_s[per] = float((alive[rows][:, None] & ~np.isnan(p[..., 0])).sum()) / 10.0
     turns.sort()
+
+    # Offside spells (decision 46): an outfield attacker of the team on the ball more than
+    # OFFSIDE_FLAG_M beyond the offside line (the second-last opponent, the ball or halfway) for
+    # OFFSIDE_FLAG_S or more, ball in play (a run in behind had gone 13 m offside for 6 s; IDSSE
+    # 1.1 such spells per attacking player-hour, ours 10.9 before decision 46).
+    offside = []  # (video s at the start, player, seconds, metres at most)
+    for tm in ("home", "away"):
+        mine = [col[q] for q in ids if team_of[q] == tm and pos_of[q] != "GK"]
+        theirs = [col[q] for q in ids if team_of[q] != tm]
+        sign = np.array([attack_sign(tm, per) for per in period])
+        ou = np.where(np.isnan(pos[:, theirs, 0]), -np.inf, pos[:, theirs, 0] * sign[:, None])
+        line = np.maximum(np.maximum(np.sort(ou, axis=1)[:, -2], ball[:, 0] * sign), 0.0)
+        on = alive & (poss == tm)
+        for j in mine:
+            beyond = np.where(on, pos[:, j, 0] * sign - line, -np.inf)
+            bad = np.nan_to_num(beyond, nan=-np.inf) > OFFSIDE_FLAG_M
+            edges = np.diff(np.r_[0, bad.astype(int), 0])
+            for f0, f1 in zip(np.flatnonzero(edges == 1), np.flatnonzero(edges == -1), strict=True):
+                if (f1 - f0) / 10.0 >= OFFSIDE_FLAG_S and period[f0] == period[f1 - 1]:
+                    offside.append((float(vt[f0]), ids[j], (f1 - f0) / 10.0,
+                                    round(float(beyond[f0:f1].max()), 1)))  # fmt: skip
 
     # Runs into a team-mate (decision 45): above HI over 1 s of tracking (centred) for at least
     # MATE_RUN_M, ending with the ball in play within MATE_END_M of a team-mate not on the ball.
@@ -436,7 +497,7 @@ def main() -> None:
 
     end = match["periods"][-1]["video_start"] + match["periods"][-1]["duration_s"]
     moment_at = {mo["moment_id"]: mo for mo in feed["moments"]}
-    items = queue(match, feed, match.get("clips", {}), reel(hl, end), mode)
+    items = queue(match, feed, match.get("clips", {}), reel(hl, end), mode, shot_play)
     report = []
     for it in items:
         half = next(q for q in reversed(match["periods"]) if q["video_start"] <= it["start"])
@@ -483,6 +544,15 @@ def main() -> None:
         if len(lost) > len(long_):
             r["notes"].append(f"{len(lost) - len(long_)} tracking gaps drawn faded")
         r["shots"] = [f"{name[p]} {k} xG {xg}" for v, p, k, xg in shots if a <= v <= b]
+        # Its play ends in a shot after it stops (decision 46): the first shot of the possession
+        # on screen at its last second that had not landed before it started.
+        x = next((x for x in shot_play if x["possession_from"] <= b <= x["possession_to"]
+                  and x["arrive_s"] > a and x["video_s"] < h1 + 0.1), None)  # fmt: skip
+        if x is not None and x["arrive_s"] > b:  # beyond the overlay's reach: a long possession
+            (r["flags"] if x["video_s"] - b <= SHOT_REACH_S else r["notes"]).append(
+                f"shot after the clip: {name[x['player']]} at "
+                f"{x['video_s']:.1f}s, {x['video_s'] - b:.0f} s after its end"
+            )
         for c in (c for c in chances if a <= c["v"] <= b and c["type"] == "pass"):
             r["flags"].append(
                 f"pass on a clear chance at {c['v']:.1f}s by {name[c['player']]}, "
@@ -533,6 +603,9 @@ def main() -> None:
             r["flags"].append(f"substitution at {v:.1f}s: {text}")
         for v, p, q, m in (x for x in into_mate if a <= x[0] <= b):
             r["flags"].append(f"run into a team-mate: {name[p]} ran {m} m, ended by {name[q]} "
+                              f"at {v:.1f}s")  # fmt: skip
+        for v, p, secs, m in (x for x in offside if a <= x[0] <= b):
+            r["flags"].append(f"offside: {name[p]} {m} m beyond the line for {secs:.1f} s "
                               f"at {v:.1f}s")  # fmt: skip
         for v, p, depth in (c for c in behind_far if a <= c[0] <= b):
             r["flags"].append(
@@ -599,6 +672,11 @@ def main() -> None:
         runs_into_mate=len(into_mate),
         clips_run_into_mate=sum(
             1 for r in report if any(f.startswith("run into a team-mate") for f in r["flags"])
+        ),
+        offside_spells=len(offside),
+        clips_offside=sum(1 for r in report if any(f.startswith("offside:") for f in r["flags"])),
+        clips_shot_after=sum(
+            1 for r in report if any(f.startswith("shot after the clip") for f in r["flags"])
         ),
         clips_red_zone_short=sum(
             1 for r in report if any(f.startswith("red zone") for f in r["flags"])

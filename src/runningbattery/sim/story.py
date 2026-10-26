@@ -32,6 +32,9 @@ those the point nearest the old values. Now 27% at most, 1 seed of 6 above 46%. 
 (the generator's runs changed and were refitted): the same search and rule; 1.02 left the pressing
 team ahead in none of the first hour's blocks, so ``press_chance`` 0.9 → 0.8 and ``press_effort``
 1.02 → 1.04 (24% at most on the demo seed, ahead in 3 of the 4 blocks, 1 seed of 6 above 46%).
+Decision 46 (runs onside, counter-press, keeper claims; refitted): the same search and rule; one
+point passes, ``press_chance`` 0.8 → 0.7 and ``press_run_boost`` 1.75 → 1.25 (45% at most on the
+demo seed, ahead in 3 of the first hour's 4 blocks, 1 seed of 6 above 46%).
 """
 
 from __future__ import annotations
@@ -45,9 +48,9 @@ from runningbattery.sim.rosters import SimTeam, SubPlan
 class Story:
     name: str
     press_team: int = 0  # 0 home, 1 away
-    press_chance: float = 0.8  # decision 45: scripted search (module docstring)
+    press_chance: float = 0.7  # decision 46: scripted search (module docstring)
     press_until_min: float = 60.0
-    press_run_boost: float = 1.75
+    press_run_boost: float = 1.25  # decision 46: scripted search (module docstring)
     press_effort: float = 1.04  # decisions 44-45: scripted search (module docstring)
     exposed_slot: int = 3  # engine index: home slot 4 (H04), the left-back (FORMATION_4231)
     counter_bias: float = 4.0
