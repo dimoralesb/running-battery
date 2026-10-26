@@ -112,9 +112,11 @@ Checked on 2026-10-19 unless marked open.
   no login, free until judging ends on 2026-11-10 (Static Web Apps Free plan, $0).
 - [x] **Licence**: MIT ([LICENSE](../LICENSE)); third-party data (IDSSE, CC BY 4.0) is not
   redistributed.
-- [x] **Clean clone** (of 87d02cd, 2026-10-19): README "Development" from a fresh clone, no `.env`: `uv sync`, 287 tests
-  passed (1 skipped without IDSSE), ruff clean, `npm ci && npm run build`, the story match, an
-  offline feed and the export.
+- [x] **Clean clone** (of 8f18d1c, 2026-10-25, after the freeze; first done on 87d02cd, 2026-10-19): README
+  "Development" from a fresh clone of GitHub, no `.env` and no Azure variables: `uv sync --all-extras`,
+  347 tests passed (1 skipped without IDSSE), ruff and the format check clean, `npm ci && npm run build`
+  (tsc included), the story match (identical to the committed `positions.bin` on this machine), the
+  engine, an offline feed (13 moments, 52 lines) and the export.
 - [x] **Azure credit**: about $11.73 used of $200 (Cost Management, 1–19 Oct: Foundry Models
   $10.64, Event Hubs $1.10 before it was deleted). The site costs nothing; Foundry is only used when
   feeds or the suite are regenerated. The Foundry resource and its resource group stay.

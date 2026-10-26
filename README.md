@@ -429,7 +429,7 @@ used offline for calibration only.
 
 ## Development
 
-From a clean clone, without any Azure settings (checked on 2026-10-19 from a fresh clone, Python
+From a clean clone, without any Azure settings (checked on 2026-10-25 from a fresh clone, Python
 3.12 with [uv](https://docs.astral.sh/uv/), Node 20+):
 
 ```bash
