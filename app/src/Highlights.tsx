@@ -1,8 +1,8 @@
 import { type Highlight, type Meta, highlightValue, topSoFar } from "./data";
 
 // The physical highlights so far (decisions 28–29): per kind, the top 3 players, best first. A
-// click opens that moment in the Highlights view; "Play highlights" plays the whole match's best
-// moments back to back.
+// click opens that moment in the Highlights view. Decision 50: one card per kind, surnames, a clip
+// removed by hand is a plain row, and "Play highlights" is step 1's only.
 export const KINDS: Highlight["kind"][] = ["top_speed", "longest_run", "recovery_run",
                                           "back_to_back", "busiest_minute", "most_ground"];
 
@@ -13,20 +13,14 @@ interface Props {
   text: Record<string, string>;
   hidden: (h: Highlight) => boolean; // its clip was removed by hand (decision 48): no link
   onPick: (h: Highlight) => void;
-  onReel: () => void;
 }
 
-export function Highlights({ all, now, text, hidden, onPick, onReel }: Props) {
+export function Highlights({ all, now, text, hidden, onPick }: Props) {
   if (!all.length) return null;
   return (
     <section className="highlights">
-      <div className="hl-head">
-        <div>
-          <h3>{text.hlTitle}</h3>
-          <p className="muted small">{text.hlSub}</p>
-        </div>
-        <button className="outline" onClick={onReel}>{text.hlPlay}</button>
-      </div>
+      <h3>{text.hlTitle}</h3>
+      <p className="sub">{text.hlSub}</p>
       <div className="hl-grid">
         {KINDS.map((kind) => {
           const top = topSoFar(all, kind, now);
@@ -37,17 +31,23 @@ export function Highlights({ all, now, text, hidden, onPick, onReel }: Props) {
                 <p className="muted small">{kind === "most_ground" ? text.hlAtEnd : text.hlNone}</p>
               )}
               <ol>
-                {top.map((h) => (
-                  <li key={`${h.player.id}-${h.video_s}`}>
-                    <button className="hl-item" disabled={hidden(h)}
-                            onClick={() => onPick(h)} title={h.caption}>
+                {top.map((h) => {
+                  const row = (
+                    <>
                       <span className={`dot ${h.player.team}`} aria-hidden="true" />
-                      <span className="hl-name">{h.player.name}</span>
+                      <span className="hl-name">{h.player.name.split(" ").slice(-1)[0]}</span>
                       <strong className="num">{highlightValue(h)}</strong>
                       <span className="muted num">{h.clock}</span>
-                    </button>
-                  </li>
-                ))}
+                    </>
+                  );
+                  return (
+                    <li key={`${h.player.id}-${h.video_s}`}>
+                      {hidden(h) ? <span className="hl-item off" title={h.caption}>{row}</span> : (
+                        <button className="hl-item" onClick={() => onPick(h)} title={h.caption}>{row}</button>
+                      )}
+                    </li>
+                  );
+                })}
               </ol>
             </div>
           );

@@ -69,6 +69,24 @@ Overlay (one page, the URL's parameters set where it opens)
 
 ## Page specs
 
+### Decision 51 (user, 2026-10-27): Play stays put, any player's battery, the Clips tab
+
+Where the specs below (decisions 49 and 50 included) differ, this section wins:
+
+- **No scrolling on Play:** only a card, "Play highlights", a section-4 "Watch … in the full match"
+  link or a link that names a clip scrolls the clip into view; "Play the clip", Play, Pause,
+  Replay, Previous and Next never move the page.
+- **Any player's battery in a clip:** clicking another player on the pitch during a clip undims
+  him and shows his pitch battery with its percentage beside it; the clip's player keeps his ring
+  and the lower third. A new clip goes back to its own player. `step2Sub` says so ("Click any player
+  to see the battery a typical pro would have after the same running.").
+- **Text on the pitch stays on it:** the trail's value at a clip's end ("7 runs in 55 s") and the
+  picked player's percentage go to the left of the point near the right touchline.
+- **The full match's Clips tab:** "Moments" (`momentsTitle`, `momentsSub`) as small cards like step
+  1's (time, kind, surname or team, the one on screen outlined; a click jumps there), the fastest
+  so far, then "Highlights so far" (`hlTitle`, `hlSub`): one card per kind, surnames, no "Play
+  highlights" button (step 1 has it); a clip removed by hand is a plain row, not a dead button.
+
 ### Decision 50 (user, 2026-10-27): the whole match under the clip
 
 Where the specs below (decision 49's section included) differ, this section wins:

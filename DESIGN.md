@@ -356,6 +356,14 @@ Audience sit side by side with their labels above, and Match takes the next row 
 inline (the top controls 200 → 92 px). How to read the page: one line under each step's heading,
 `.sub` (`--text-sm`, `--text-secondary`), as step 1's.
 
+## Decision 51 (user, 2026-10-27): the Clips tab and a picked player
+
+The full match's Clips tab uses the card look: moments as step 1's cards, smaller (min 120 px, the
+outlined one is on screen), and the highlights as one `--surface` card per kind with a hairline
+edge, one column in the side panel (names were cut in two). A player picked during a clip gets the
+pitch battery and its percentage in the trail-label style (white, dark halo), to the left of him
+near the right touchline.
+
 ## Lock decisions (user, 2026-10-20)
 
 1. **The lower third docks under the pitch** at every width, not over it (it hid a player and the start of his run).

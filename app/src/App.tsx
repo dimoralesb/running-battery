@@ -188,11 +188,13 @@ export default function App() {
         const it = view === "highlights" ? itemFromUrl(d, list) ?? defaultItem : undefined;
         if (it) {
           const st = QUERY.get("step");
+          reveal.current = true;
           start(it, st === "replay" || st === "details" ? st : "watch", d);
           if (hasT) setNow(t);
           if (st === null && !["moment", "hl", "item", "auto", "t"].some((k) => QUERY.has(k))) {
             setPlaying(false);
             setPoised(true);
+            reveal.current = false; // a bare load stays at the top
           }
         } else if (view === "highlights") {
           setView("full"); // no clips in this mode: open the full match
@@ -218,12 +220,18 @@ export default function App() {
   useEffect(() => {
     if (playing) setPoised(false);
   }, [playing]);
-  // A clip that starts brings the pitch, its lower third and the play bar into view (the cards
-  // above push them down); the page's opening stays at the top.
+  // A clip started from above the pitch (a card, "Play highlights", a link that names a clip)
+  // brings the pitch, its lower third and the play bar into view; Play, Replay, Previous and Next
+  // never move the page (decision 50: Play scrolled it down). A link's clip waits for the first
+  // render (reveal); the others scroll at once.
   const stageRef = useRef<HTMLDivElement>(null);
+  const toStage = () => stageRef.current?.scrollIntoView({ block: "start" });
+  const reveal = useRef(false);
   useEffect(() => {
-    if (view === "highlights" && cur && !poised) stageRef.current?.scrollIntoView({ block: "start" });
-  }, [cur?.id, poised, view]);
+    if (!reveal.current || !cur) return;
+    reveal.current = false;
+    toStage();
+  }, [cur?.id, poised]);
   // &tab=stats (a video link from before decision 50) opens on the whole match's numbers.
   const wholeRef = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -370,7 +378,7 @@ export default function App() {
     return (
       <li key={it.id}>
         <button className={`card${on ? " on" : ""}`} aria-current={on || undefined}
-                onClick={() => start(it, "watch")}>
+                onClick={() => { start(it, "watch"); toStage(); }}>
           <span className="card-clock num">{it.clock}</span>
           <span className="card-kind">{label(it)}</span>
           <span className="card-who"><span className={`dot ${it.team}`} aria-hidden="true" />
@@ -389,6 +397,7 @@ export default function App() {
     if (!items.length) return;
     setAuto(true);
     start(items[0], "watch");
+    toStage();
   };
   // The Clips tab is the full match's (its moments and highlights); the cards are the clips.
   const tabs = TABS.filter(([t]) => view === "full" || t !== "clips");
@@ -531,19 +540,31 @@ export default function App() {
 
           <section className="panel" role="tabpanel">
             {shown === "clips" && (
+              // The full match's moments and highlights (decision 50: cards, as step 1).
               <div className="clips">
+                <h3>{copy.momentsTitle}</h3>
+                <p className="sub">{copy.momentsSub}</p>
+                <ol className="mini-cards">
+                  {data.feed.moments.map((m) => {
+                    const e = data.feed.entries.find((x) => x.moment_id === m.moment_id);
+                    const on = moment?.moment_id === m.moment_id;
+                    return (
+                      <li key={m.moment_id}>
+                        <button className={`card${on ? " on" : ""}`} aria-current={on || undefined}
+                                onClick={() => setNow(m.video_s - 3)}>
+                          <span className="card-clock num">{m.clock}</span>
+                          <span className="card-kind">{KIND[m.kind] ?? m.kind}</span>
+                          {e && <span className="card-who"><span className={`dot ${e.team}`} aria-hidden="true" />
+                            {e.player ? e.player.name.split(" ").slice(-1)[0] : e.team_name}</span>}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ol>
                 <ul className="fastest">{fastest(home)}{fastest(away)}</ul>
-                <div className="moments">
-                  {data.feed.moments.map((m) => (
-                    <button key={m.moment_id} className="moment" onClick={() => setNow(m.video_s - 3)}>
-                      <span className="num">{m.clock}</span> {KIND[m.kind] ?? m.kind}
-                    </button>
-                  ))}
-                </div>
                 <Highlights all={data.highlights} meta={data.meta} now={now} text={TEXT}
                             hidden={(h) => isHidden(data, itemOfHighlight(h))}
-                            onPick={(h) => start(toShot(data, itemOfHighlight(h)), "watch")}
-                            onReel={playAll} />
+                            onPick={(h) => start(toShot(data, itemOfHighlight(h)), "watch")} />
               </div>
             )}
 
@@ -632,7 +653,7 @@ export default function App() {
           toFull();
           setNow(v);
           setPlaying(true);
-          stageRef.current?.scrollIntoView({ block: "start" });
+          toStage();
         }} />
       </section>
 

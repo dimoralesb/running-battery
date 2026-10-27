@@ -155,7 +155,9 @@ attention.
 It opens on the **Highlights** (decision 29): one clip at a time, in match order, from the
 match's best physical moments and the feed's moments. The page opens on a clip stopped (the
 first recovery run, decision 50), with "Play the clip" on the pitch (decision 49: a clip that played at once left no time to see what
-the page is); a card, a link that names a clip, or Play starts it and brings the pitch into view.
+the page is); a card or a link that names a clip starts it and brings the pitch into view, and
+Play never moves the page (decision 51). During a clip, clicking any other player shows his battery
+and its percentage on the pitch.
 Each clip plays once, as it happened, at
 normal speed, with only that player's path on the pitch (the others dimmed), in white, fading
 towards its start with an arrowhead where he is. A moment measured over minutes shows the part

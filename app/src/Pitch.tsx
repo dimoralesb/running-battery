@@ -155,10 +155,22 @@ function Trail({ data, item, now, j }: { data: MatchData; item: Item; now: numbe
           + `L${(ex + ux * 2.6 - uy * 1.0).toFixed(2)},${(ey + uy * 2.6 + ux * 1.0).toFixed(2)}`
           + `L${(ex + ux * 2.6 + uy * 1.0).toFixed(2)},${(ey + uy * 2.6 - ux * 1.0).toFixed(2)}Z`} />
       )}
-      {item.h && now >= item.end && (
-        <text x={ex + 3.2} y={ey + 5} className="trail-label">{highlightValue(item.h)}</text>
-      )}
+      {item.h && now >= item.end && <OnPitchText x={ex} y={ey + 5} gap={3.2} size={2.4}
+                                                  className="trail-label" text={highlightValue(item.h)} />}
     </g>
+  );
+}
+
+/** Text beside a point, to its right, or to its left near the right touchline, so it is never cut
+ * off by the pitch's edge (decision 50: "7 runs in 55 s" ran off it). */
+function OnPitchText({ x, y, gap, size, className, text }: {
+  x: number; y: number; gap: number; size: number; className: string; text: string;
+}) {
+  const width = text.length * size * 0.6; // a generous estimate for the bold UI font
+  const left = x + gap + width > L / 2 + 1.5;
+  return (
+    <text x={left ? x - gap : x + gap} y={Math.min(y, W / 2 + 1.5)} textAnchor={left ? "end" : "start"}
+          className={className}>{text}</text>
   );
 }
 
@@ -201,8 +213,10 @@ export function Pitch({ data, now, mode, view, selected, allBatteries, item, foc
         const [x, y] = [xy[0], -xy[1]];
         const isSel = p.id === selected;
         const star = clip ? p.id === clip.player : inFocus(p.id);
-        // A team clip has no star player, so nothing is dimmed.
-        const dim = clip && clip.player ? !star : false;
+        // A team clip has no star player, so nothing is dimmed; a player clicked during a clip
+        // is not dimmed and shows his battery (decision 50).
+        const picked = !!clip && isSel && !star;
+        const dim = clip && clip.player ? !star && !picked : false;
         const red = !clip && star && i !== null && s.red_zone[i] === 1;
         const since = clip || !star ? undefined
           : (peaks[p.id] ?? []).map((v) => now - v).find((d) => d >= 0 && d < PULSE_S);
@@ -224,8 +238,12 @@ export function Pitch({ data, now, mode, view, selected, allBatteries, item, foc
             <circle cx={x} cy={y} r={1.45} className="dot" />
             <text x={x} y={y + 0.55} className="shirt">{p.shirt}</text>
             {i !== null && p.position !== "GK"
-             && (clip ? star : mode === "fan" && showBattery(p.id)) && (
+             && (clip ? star || picked : mode === "fan" && showBattery(p.id)) && (
               <BatteryIcon pct={s.battery[i]} x={x} y={y - 3.6} />
+            )}
+            {picked && i !== null && p.position !== "GK" && (
+              <OnPitchText x={x} y={y - 2.3} gap={3.4} size={2.2} className="trail-label"
+                           text={`${s.battery[i]}%`} />
             )}
           </g>
         );
