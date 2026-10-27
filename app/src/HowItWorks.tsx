@@ -1,11 +1,12 @@
 import { type Item, type MatchData, clockLabel, signalIndex } from "./data";
 
-// "How it works" (decision 52): the third view, for judges and the curious. Plain sentences first,
-// then the numbers, all from the README and checked by the Verifier's copy test (copy.json "how*").
+// "How it works" (decision 52): the third view, written for someone with no context (decision 53:
+// everyday words, the technical names in one quiet line per part), all from the README and checked
+// by the Verifier's copy test (copy.json "how*").
 // The battery chart uses the opening clip's player, around his run, from this match's own data.
 
 const REPO = "https://github.com/dimoralesb/running-battery#readme";
-const CS = 4.1; // m/s, the typical pro's critical speed (engine prior, PLAN decision 13)
+const CS_KMH = 4.1 * 3.6; // the typical pro's critical speed, 4.1 m/s (engine prior, PLAN decision 13)
 const WIDTH = 640;
 const PAD = { l: 40, r: 12, t: 22, b: 22 };
 
@@ -31,7 +32,7 @@ function BatteryChart({ data, item, name, text }: Props & { item: Item }) {
   const battery: (number | null)[] = [];
   for (let v = a; v <= b; v++) {
     const i = signalIndex(s, v);
-    speed.push(i !== null && s.speed[i] <= 110 ? s.speed[i] / 10 : null);
+    speed.push(i !== null && s.speed[i] <= 110 ? (s.speed[i] / 10) * 3.6 : null); // km/h, as the text
     battery.push(i !== null ? s.battery[i] : null);
   }
   const n = speed.length;
@@ -71,7 +72,7 @@ function BatteryChart({ data, item, name, text }: Props & { item: Item }) {
         <strong>{fill(text.howChartTitle, { name })}</strong>
         <span className="sub">{text.howChartSub}</span>
       </figcaption>
-      {panel(150, 10, [0, 5, 10], text.howChartSpeed, speed, CS)}
+      {panel(150, 36, [0, 15, 30], text.howChartSpeed, speed, CS_KMH)}
       {panel(130, 100, [0, 50, 100], text.howChartBattery, battery)}
     </figure>
   );
@@ -98,6 +99,7 @@ export function HowItWorks({ data, item, name, text }: Props) {
         <div>
           <h3>{text.howBatteryTitle}</h3>
           {list("howBattery_").map((p) => <p key={p}>{p}</p>)}
+          <p className="how-tech">{text.howBatteryTech}</p>
         </div>
         {item?.player && <BatteryChart data={data} item={item} name={name} text={text} />}
       </section>
@@ -110,6 +112,7 @@ export function HowItWorks({ data, item, name, text }: Props) {
           <div>
             <p>{text.howAgents_2}</p>
             <p className="sub">{text.howAgents_3}</p>
+            <p className="how-tech">{text.howAgentsTech}</p>
           </div>
           <div className="table-wrap">
             <table className="how-table">

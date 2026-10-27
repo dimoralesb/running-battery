@@ -69,6 +69,19 @@ Overlay (one page, the URL's parameters set where it opens)
 
 ## Page specs
 
+### Decision 53 (user, 2026-10-27): How it works in everyday words
+
+The user: "The page should be written for non experts … Explain the technical things in simple
+terms." How it works is rewritten for a reader with no context: the battery as a phone battery
+(drains above about 15 km/h for a typical professional, refills below it), "the one in the middle"
+of 200 typical professionals, "right about 1 time in 5" for the precision, the agents as four AI
+helpers in eight plain boxes, the checker's table as "wrong sentences stopped" and "correct
+sentences stopped by mistake", tracking data named and explained, the live steps without
+"filter" or "stream". The technical names stay in one small grey line per part (`howBatteryTech`,
+`howAgentsTech`). The chart's speed is in km/h, as the text. Three lines reworded after the
+Verifier's copy test failed them (G2: a battery next to a player's name says it is a typical
+pro's; rule 24: the 10–90% band "for a typical pro").
+
 ### Decision 52 (user, 2026-10-27): How it works
 
 The user wanted "more technical information … how the battery works, how the agents work, what

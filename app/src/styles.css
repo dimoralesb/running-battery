@@ -533,6 +533,7 @@ h2 { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--
 .how { margin-top: var(--space-5); }
 .how > h2 { font-size: var(--text-xl); }
 .how-intro { color: var(--text-secondary); max-width: 70ch; }
+.how p.how-tech { margin-top: var(--space-3); font-size: var(--text-xs); color: var(--text-secondary); }
 .how-part { margin-top: var(--space-6); padding-top: var(--space-5); border-top: 1px solid var(--border-subtle); }
 .how-part:first-of-type { border-top: 0; padding-top: 0; }
 .how h3 { font-size: var(--text-lg); margin: 0 0 var(--space-2); }
