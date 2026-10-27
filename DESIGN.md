@@ -345,6 +345,17 @@ from the window's height, at most 780 px) beside **3 What it shows** (at least 3
 up. "Play the clip" sits on the pitch as a plate-coloured pill (`--plate`, `--plate-text`) with a
 play triangle: the only control drawn over the picture, and only before the first clip plays.
 
+## Decision 50 (user, 2026-10-27): the whole match under the clip
+
+Nothing in the look changes; the teams' numbers move. **4 The whole match** (same step circle and
+heading) follows the clip and its panel, full width, after a hairline and `--space-6`: the
+15-minute blocks on the left, "High-speed running per minute" and "High-speed running by
+situation" stacked on the right, two equal columns from 1100 px (one column below). The Stats tab
+is gone (three tabs in the highlights, four in the full match). On a phone (≤ 520 px) View and
+Audience sit side by side with their labels above, and Match takes the next row with its label
+inline (the top controls 200 → 92 px). How to read the page: one line under each step's heading,
+`.sub` (`--text-sm`, `--text-secondary`), as step 1's.
+
 ## Lock decisions (user, 2026-10-20)
 
 1. **The lower third docks under the pitch** at every width, not over it (it hid a player and the start of his run).

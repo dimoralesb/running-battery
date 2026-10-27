@@ -69,6 +69,27 @@ Overlay (one page, the URL's parameters set where it opens)
 
 ## Page specs
 
+### Decision 50 (user, 2026-10-27): the whole match under the clip
+
+Where the specs below (decision 49's section included) differ, this section wins:
+
+- **Opening clip:** a bare load stops on the match's first recovery run (story match: Recovery run ·
+  3:50), else its first moment, else its first clip.
+- **4 The whole match** (`step4`): the old Stats tab's content (the 15-minute blocks with their
+  team lines and "Watch … in the full match", then the two team charts) is a section under the clip
+  and its panel in both views, full width; two columns from 1100 px (blocks left, charts right). The
+  Stats tab and `tabStats` are removed; 3 What it shows has Details, Team sheet, Settings (the full
+  match adds Clips). "Watch … in the full match" opens the full match there, plays it and scrolls
+  the pitch into view. `&tab=stats` scrolls to section 4. `statsSub` no longer mentions the
+  Verifier.
+- **No published-number comparison:** "Against the published number" (`compare`, `cmp*`) is removed
+  from Details.
+- **Before the clip's first second has run** the numbers strip shows "–", not 0 m.
+- **Phone (≤ 520 px):** View and Audience share a row; Match has its own row with its label inline.
+- **How to read the page:** one line under each step's heading (the user chose this over a band
+  above the cards or a folded link): step 1 keeps `step1Sub`; `step2Sub` / `step2FullSub`,
+  `step3Sub` / `step3FullSub` (the full match's), `step4Sub`. All pass the Verifier's copy test.
+
 ### Decision 49 (user, 2026-10-27): an overview first, no Verifier on the page
 
 The user, comparing a competitor's page: the clip played at once and "people won't have time to
@@ -136,7 +157,7 @@ all of it" for the Verifier on the page. Where the specs below differ, this sect
 
 #### Step: Watch
 
-A clip plays once at 1×, from 3 s before its first run to 2 s after its end (a whole-match clip, "Most ground covered", plays at 120× from kick-off). **What a moment's clip shows (decision 38):** a feed moment measured over minutes gets the part of the match that shows it (`match.json` `clips`, from the export): Caught on the break, from the turnover to the end of the opponents' attack (at least 6 s, at most 15 s); Second wind, his longest high-speed run in the 2 minutes before it, on to the end of that play (at most 8 s more, decision 46); Fresh legs, the substitute's longest high-speed run in his first 10 minutes, likewise; the other moments keep 8 s before to 4 s after their second. A moment whose player has no second above 5.5 m/s in its clip gets no clip (Quiet spell excepted); its lines stay in the full match. **A clip shows the shot its play ends in (decision 46):** when the possession on at a clip's last second goes on to a shot within 20 s, the clip runs on to the ball's arrival (`match.json` `shots`, `toShot` in data.ts), unless the clip already shows that possession's shot. **No team clips (decision 46):** a team moment compares 15 minutes; it lives in the Stats tab, not in the clip list, Previous/Next or the reel. **One clip per action:** a moment that shares more than half of the shorter clip with a highlight of the same player becomes that clip's line (one clip, both lines); one that shares more than half of the longer clip with another player's highlight (the same run seen from two players) takes its place. The viewer sees only the score bug, the pitch and the lower third as emphasis (heuristic pass below). The Details tab, if opened by hand, shows "This clip's details open when it ends." (`detailsWait`, new). Previous: the latest clip before this one in match time, disabled only on the first clip; Next: the earliest clip after it, disabled only on the last (fix 2). Play/Pause toggles; Replay jumps to Replay. Clicking a Clips row starts that clip in Watch.
+A clip plays once at 1×, from 3 s before its first run to 2 s after its end (a whole-match clip, "Most ground covered", plays at 120× from kick-off). **What a moment's clip shows (decision 38):** a feed moment measured over minutes gets the part of the match that shows it (`match.json` `clips`, from the export): Caught on the break, from the turnover to the end of the opponents' attack (at least 6 s, at most 15 s); Second wind, his longest high-speed run in the 2 minutes before it, on to the end of that play (at most 8 s more, decision 46); Fresh legs, the substitute's longest high-speed run in his first 10 minutes, likewise; the other moments keep 8 s before to 4 s after their second. A moment whose player has no second above 5.5 m/s in its clip gets no clip (Quiet spell excepted); its lines stay in the full match. **A clip shows the shot its play ends in (decision 46):** when the possession on at a clip's last second goes on to a shot within 20 s, the clip runs on to the ball's arrival (`match.json` `shots`, `toShot` in data.ts), unless the clip already shows that possession's shot. **No team clips (decision 46):** a team moment compares 15 minutes; it lives in the Stats tab (section 4 since decision 50), not in the clip list, Previous/Next or the reel. **One clip per action:** a moment that shares more than half of the shorter clip with a highlight of the same player becomes that clip's line (one clip, both lines); one that shares more than half of the longer clip with another player's highlight (the same run seen from two players) takes its place. The viewer sees only the score bug, the pitch and the lower third as emphasis (heuristic pass below). The Details tab, if opened by hand, shows "This clip's details open when it ends." (`detailsWait`, new). Previous: the latest clip before this one in match time, disabled only on the first clip; Next: the earliest clip after it, disabled only on the last (fix 2). Play/Pause toggles; Replay jumps to Replay. Clicking a Clips row starts that clip in Watch.
 
 **Exit:** the clip's end (automatic) → Details; Next/Previous/row → another Watch; Settings › View → Full match.
 
@@ -147,7 +168,7 @@ The clip stops on its last frame. Lower third unchanged. Pitch flag "Clip ended 
 1. **Numbers strip** (at most 4 cells; Cowan ~4±1): "Top speed in this clip" (m/s, km/h in brackets), "Distance in this clip", "Run above 19.8 km/h (5.5 m/s)" (decision 49; was "Of it above 5.5 m/s"); a back-to-back clip adds "High-speed run n / N" and "Since his last high-speed run"; a whole-match clip shows "Distance since kick-off" alone. "Speed now" shows only in Replay (it moves). No battery cell: the lower third carries it (no repeated values). **Not built:** the mock's "3rd time so far" cell (no such field in `feed.json`).
 2. **The lines**, under "Commentary" (`linesTitle`): the clip's first line (the caption, which for a highlight is the measured caption), then one quiet line (`--text-secondary`, `--text-sm`) saying what this kind of moment is (`about_<kind>`, decision 38; feed moments only; after the first line, which stays above the fold), then the moment's other lines, then, under a quiet "Blocked by the Verifier", any lines the Verifier blocked (struck through with the rule they broke; kept for both modes, they are the Verifier's evidence).
 3. **Speed chart** (`speedChart`, hover for values, click to jump; whole-match clip: the distance chart).
-4. **"Against the published number"** (`compare`) for highlight clips, once the clip is over.
+4. ~~"Against the published number"~~ (removed, decision 50).
 5. **Team clip** ("Team high-speed running"): instead of 1, 3, 4: the team running chart and that 15-minute block's "High-speed running by situation" chart, after the lines.
 
 **Verdict labels (fix 4).** Fan: each line has one short label, "Verified · measured" (claim "fact"), "Verified · our estimate" (claims 11, 12, 17 and 19c, our model's estimates: the typical-professional line, "the lowest point of his match by our estimate"; decision 39), "Verified · published research" (any other claim); a click opens the claim number and the papers, the measured fields, "Checked by", and the sentence before the Verifier if it was rewritten. Analyst: the full citation open by default ("Claim 11 · Skiba2012, Jones2017", the verdict, the checking stage), and the lower third's band sentence (`ltBand`) as the first analyst line. A highlight's caption (a measured line) reads "Verified · measured" for fans; analysts keep `hlChecked` ("Measured; checked by the Verifier's rules") with its sources. Blocked lines are labelled "Blocked by the Verifier" in both.
@@ -287,7 +308,7 @@ Frame = always visible. Tabs: C Clips, T Team sheet, D Details, S Settings. "Kep
 | "All the clips, in match order" (`upNext`, `.up-next`) | C, Highlights list | |
 | Replay panel: numbers (`Stats`, `stat*`) | D, numbers strip | |
 | Replay panel: speed / distance chart (`SpeedChart`) | D | |
-| Replay panel: "Against the published number" (`Compare`) | D | |
+| Replay panel: "Against the published number" (`Compare`) | **Dropped** (decision 50) | |
 | Replay panel: "Commentary" + lines (`Line`, `hlChecked`) | D, the lines | |
 | Replay panel: blocked lines with their rule | D, under the lines | both modes |
 | Team clip: `TeamChart` + block `SplitChart` in the Replay column | **Dropped** (decision 46) | no team clips: the Stats tab holds the blocks and both charts |
@@ -327,7 +348,7 @@ The app reads the URL once at load and never writes it. Precedence for the clip:
 | `moment` | a moment kind (first in the list) or a full moment id; `&player=` narrows | that feed moment's clip; none found → the first clip | Highlights, as `hl` |
 | `item` | n ≥ 1, in the current mode's list (numbers shift with `mode`) | the n-th clip | Highlights, as `hl` |
 | `step` | `watch` (default), `details`, `replay` | with a clip: plays at 1×; stops on its last frame with its details; plays it again at the clip speed with the details growing | `watch` → **Clips**; `details` → **Details**, paused; `replay` → **Details**. Ignored in Full match |
-| `tab` | `stats` | opens the Stats tab (decision 46, for the video); other tabs follow the rules above | the screen the other parameters give · **Stats** |
+| `tab` | `stats` | scrolls to 4 The whole match (decision 50; was the Stats tab, decision 46, for the video) | the screen the other parameters give, scrolled to section 4 |
 | `auto` | `1` | the clips play one after another: Watch → Details (6 s) → next Watch …; stops after the last Details, or on entering Full match or following a player from T | Highlights; Clips during Watch, the Details tab during the Details step, no touch needed. With `view=full` it waits until the viewer enters Highlights |
 
 Not in the URL: the open tab, speed, the blocked-lines checkbox, marker clicks.
@@ -340,7 +361,8 @@ Not in the URL: the open tab, speed, the blocked-lines checkbox, marker clicks.
 |----------------|------|-------|
 | `brand` | Running Battery | brand line (hard-coded today) |
 | `brandSynthetic` | synthetic match | brand line, next to the name (signed off 2026-10-20) |
-| `tabClips` `tabTeam` `tabStats` `tabDetails` `tabSettings` | Clips · Team sheet · Stats · Details · Settings | tab bar (Stats: decision 46) |
+| `tabClips` `tabTeam` `tabDetails` `tabSettings` | Clips · Team sheet · Details · Settings | tab bar (`tabStats` removed, decision 50) |
+| `step4` | The whole match | section 4 (decision 50) |
 | `statsTitle` `statsSub` `statsUnit` `statsWatch` `splitWhole` | High-speed running, 15 minutes at a time · its explanation · m per minute in play · Watch {block} in the full match · The whole match, every 15-minute block added up. | Stats tab (decision 46) |
 | `settingsView` `settingsAudience` `settingsMatch` `settingsTheme` `settingsPitch` | View · Audience · Match · Theme · On the pitch | Settings |
 | `themeDark` `themeLight` | Dark · Light | Settings |

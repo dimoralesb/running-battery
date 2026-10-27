@@ -145,13 +145,16 @@ brand line "Running Battery · synthetic match" with what it shows; the view, th
 analyst), then **1 Pick a moment**, one card per clip in match order (its time, what it is, the
 player, and the battery a typical professional would have at its end), then **2 Watch it**, the
 score bug with each team's colour, the pitch, one lower third docked under it and a quiet play bar,
-beside **3 What it shows**: the tabs **Details**, **Team sheet**, **Stats** and **Settings** (dark or
-light, the key; the full match adds **Clips**). On a phone the columns stack. While a clip plays,
-only the score, the pitch and the lower third ask for attention.
+beside **3 What it shows**: the tabs **Details**, **Team sheet** and **Settings** (dark or light,
+the key; the full match adds **Clips**), and under them **4 The whole match**: both teams'
+high-speed running in each 15-minute block beside the two team charts (decision 50). One line
+under each step says how to read it. On a phone
+the columns stack. While a clip plays, only the score, the pitch and the lower third ask for
+attention.
 
 It opens on the **Highlights** (decision 29): one clip at a time, in match order, from the
-match's best physical moments and the feed's moments. The page opens on the first clip stopped,
-with "Play the clip" on the pitch (decision 49: a clip that played at once left no time to see what
+match's best physical moments and the feed's moments. The page opens on a clip stopped (the
+first recovery run, decision 50), with "Play the clip" on the pitch (decision 49: a clip that played at once left no time to see what
 the page is); a card, a link that names a clip, or Play starts it and brings the pitch into view.
 Each clip plays once, as it happened, at
 normal speed, with only that player's path on the pitch (the others dimmed), in white, fading
@@ -172,8 +175,8 @@ line between where the tracking last and next saw him.
 When it is over it stops on its last frame ("Clip ended · last frame"). The **Details** tab beside
 it (decision 34) has the numbers (top speed, distance, metres above 5.5 m/s, the gap timer between
 back-to-back runs), what the feed says about it, the run's speed second by second (not for the most
-ground covered: decision 49 dropped its distance-since-kick-off chart) and his number against the
-published one; analysts get the 10–90% band as the first line. The Verifier's verdicts and blocked
+ground covered: decision 49 dropped its distance-since-kick-off chart; decision 50 dropped the
+comparison with a published number); analysts get the 10–90% band as the first line. The Verifier's verdicts and blocked
 lines are not on the page (decision 49: too much for a match page); they are in the feed files,
 [docs/feeds/](docs/feeds/), and in the Verifier section below.
 **Replay** plays the clip again at the clip speed (1× unless the viewer picks ½× or 2×), with the numbers growing; the progress bar seeks within the clip; **Next** starts the next

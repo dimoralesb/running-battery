@@ -2,9 +2,9 @@ import { useState } from "react";
 import { type Item, type MatchData, type Mode, clockLabel, signalIndex } from "./data";
 
 // The clip's details (decisions 29 and 34): shown when the clip is over, and growing with the
-// run during the replay; the numbers, the run's speed second by second, the published
-// number it is compared with, and the feed's lines (decision 49: no verdicts, no blocked lines and
-// no distance chart for the whole match on the page).
+// run during the replay; the numbers, the run's speed second by second and the feed's lines
+// (decision 49: no verdicts, no blocked lines and no distance chart for the whole match on the
+// page; decision 50: no comparison with a published number).
 const WIDTH = 640;
 const HEIGHT = 170;
 const PAD = { l: 40, r: 12, t: 26, b: 22 };
@@ -47,13 +47,15 @@ function Stats({ data, item, now, replaying, text }: Omit<Props, "mode" | "name"
   const hsr = done.reduce<number>((t, x) => t + (x !== null && x > HI ? x : 0), 0);
   const cur = v[Math.floor(until) - a] ?? 0;
   const top = Math.max(cur, ...done.map((x) => x ?? 0)); // the second under way counts too
+  // Before the clip's first second has run, a dash, not 0 m (decision 50).
+  const or = (x: string, sub?: string): [string, string?] => (done.length ? [x, sub] : ["–"]);
   const rows: [string, string, string?][] = item.lapse
-    ? [[text.statDistanceMatch, `${(dist / 1000).toFixed(2)} km`]]
+    ? [[text.statDistanceMatch, ...or(`${(dist / 1000).toFixed(2)} km`)]]
     : [
-        ...(replaying ? [[text.statSpeedNow, `${cur.toFixed(1)} m/s`, `${kmh(cur)} km/h`] as [string, string, string]] : []),
-        [text.statTop, `${top.toFixed(1)} m/s`, `${kmh(top)} km/h`],
-        [text.statDistance, `${Math.round(dist)} m`],
-        [text.statHsr, `${Math.round(hsr)} m`],
+        ...(replaying ? [[text.statSpeedNow, ...or(`${cur.toFixed(1)} m/s`, `${kmh(cur)} km/h`)] as [string, string, string?]] : []),
+        [text.statTop, ...or(`${top.toFixed(1)} m/s`, `${kmh(top)} km/h`)],
+        [text.statDistance, ...or(`${Math.round(dist)} m`)],
+        [text.statHsr, ...or(`${Math.round(hsr)} m`)],
       ];
   if (item.kind === "back_to_back") {
     // Which run he is on, and the time since the last one ended (the gap timer).
@@ -150,49 +152,10 @@ function SpeedChart({ data, item, now, name, text, onSeek }: Omit<Props, "mode" 
   );
 }
 
-const COMPARE: Record<string, [string, string, string]> = {
-  // kind: [his fact, the published fact, its label in copy.json]
-  top_speed: ["top_speed", "published_match_top_speed_for_position", "cmpTopSpeed"],
-  longest_run: ["metres", "typical_run", "cmpRun"],
-  recovery_run: ["metres", "typical_run", "cmpRun"],
-  back_to_back: ["longest_gap", "usual_gap_for_position", "cmpGap"],
-  busiest_minute: ["metres_in_one_minute", "published_best_minute", "cmpMinute"],
-  most_ground: ["km", "published_for_position", "cmpGround"],
-};
-
-/** His number against the published one, on one scale (shown once the clip is over). */
-function Compare({ item, name, text }: { item: Item; name: string; text: Record<string, string> }) {
-  const row = item.h ? COMPARE[item.h.kind] : undefined;
-  if (!row || !item.h) return null;
-  const f = item.h.facts;
-  const [his, pub] = [f[row[0]], f[row[1]]];
-  if (typeof his !== "object" || typeof pub !== "object") return null;
-  const unit = his.unit.split(/[ ,]/)[0];
-  const max = Math.max(his.value, pub.value) || 1;
-  const bars: [string, number, string][] = [
-    [name, his.value, item.team],
-    [text[row[2]], pub.value, "published"],
-  ];
-  return (
-    <figure className="compare">
-      <figcaption><strong>{text.compare}</strong></figcaption>
-      {bars.map(([label, v, cls]) => (
-        <div key={label} className="cmp-row">
-          <span className="cmp-label">{label}</span>
-          <span className="cmp-track"><span className={`cmp-bar ${cls}`} style={{ width: `${(100 * v) / max}%` }} /></span>
-          <span className="cmp-value num">{v} {unit}</span>
-        </div>
-      ))}
-      <p className="sub">{pub.source}</p>
-    </figure>
-  );
-}
-
 export function Replay({ data, item, now, mode, name, replaying, band, text, onSeek }: Props) {
   const lines = item.momentId
     ? data.feed.entries.filter((e) => e.moment_id === item.momentId && e.mode === mode && e.shown)
     : [];
-  const over = now >= item.end;
   const about = item.momentKind ? text[`about_${item.momentKind}`] : undefined;
   return (
     <section className="replay">
@@ -207,7 +170,6 @@ export function Replay({ data, item, now, mode, name, replaying, band, text, onS
         // line stays above the fold at 1440×900 (JOURNEY fix 1).
         k === 0 && about ? [el, <p key="about" className="sub about">{about}</p>] : [el])}
       {item.player && !item.lapse && <SpeedChart data={data} item={item} now={now} name={name} text={text} onSeek={onSeek} />}
-      {over && <Compare item={item} name={name} text={text} />}
     </section>
   );
 }

@@ -38,8 +38,8 @@ const FOCUS_AFTER = 6;
 // mode=analyst&player=H04; the Highlights view takes ?hl=<kind> (the match's best of a kind),
 // ?moment=<kind or moment id> (with &player=), or ?item=<n>, then &step=watch|details|replay
 // (plays it, opens it finished with its details, or plays the replay) and &auto=1 (play the
-// clips one after another); &tab=stats opens the Stats tab. JOURNEY.md "Deep links" lists the
-// screen and tab each one opens.
+// clips one after another); &tab=stats scrolls to the whole match's numbers (section 4).
+// JOURNEY.md "Deep links" lists the screen and tab each one opens.
 const QUERY = new URLSearchParams(window.location.search);
 // Dark by default (DESIGN.md); ?theme=light or Settings › Theme for light.
 const THEME = QUERY.get("theme") === "light" ? "light" : "dark";
@@ -48,12 +48,11 @@ type View = "highlights" | "full";
 // Each clip plays once (watch), then shows its details on its last frame; Replay plays it
 // again with the details growing (decision 34; at the clip speed since decision 37).
 type Step = "watch" | "details" | "replay";
-// The tabs under the pitch (decision 36); one open at a time. Stats holds the teams' running
-// over the whole match (decision 46: a statistic, not a clip).
-type Tab = "clips" | "team" | "stats" | "details" | "settings";
+// The tabs beside the pitch (decision 36); one open at a time. The teams' running over the whole
+// match (decision 46: a statistic, not a clip) is section 4 under them since decision 50.
+type Tab = "clips" | "team" | "details" | "settings";
 const TABS: [Tab, string][] = [
-  ["clips", copy.tabClips], ["team", copy.tabTeam], ["stats", copy.tabStats],
-  ["details", copy.tabDetails], ["settings", copy.tabSettings],
+  ["clips", copy.tabClips], ["team", copy.tabTeam], ["details", copy.tabDetails], ["settings", copy.tabSettings],
 ];
 const TEXT: Record<string, string> = copy;
 
@@ -117,11 +116,11 @@ export default function App() {
   // played at once left no time to see what the page is); a link that names a clip plays it.
   const [poised, setPoised] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">(THEME);
-  const [tab, setTab] = useState<Tab>(QUERY.get("tab") === "stats" ? "stats" : "details");
+  const [tab, setTab] = useState<Tab>("details");
   // Tab rules (JOURNEY.md): a clip's end borrows the Details tab and the next clip hands back
   // the tab the viewer was on; a tab the viewer picks during a clip is never changed for them.
   const back = useRef<Tab | null>(null);
-  const picked = useRef(QUERY.get("tab") === "stats"); // a tab named in the URL is the viewer's
+  const picked = useRef(false);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -182,7 +181,10 @@ export default function App() {
         setNow(hasT ? t : d.feed.moments[0]?.video_s ?? 0);
         setSelected(QUERY.get("player") ?? d.feed.entries.find((e) => e.player)?.player?.id ?? null);
         const list = queue(d, mode, reel(d.highlights, d.duration));
-        const defaultItem = list.find((i) => i.momentId) ?? list[0];
+        // The page opens on the first recovery run (decision 50, the user's pick); a match
+        // without one on its first moment.
+        const defaultItem = list.find((i) => i.source === "highlight" && i.kind === "recovery_run")
+          ?? list.find((i) => i.momentId) ?? list[0];
         const it = view === "highlights" ? itemFromUrl(d, list) ?? defaultItem : undefined;
         if (it) {
           const st = QUERY.get("step");
@@ -222,6 +224,11 @@ export default function App() {
   useEffect(() => {
     if (view === "highlights" && cur && !poised) stageRef.current?.scrollIntoView({ block: "start" });
   }, [cur?.id, poised, view]);
+  // &tab=stats (a video link from before decision 50) opens on the whole match's numbers.
+  const wholeRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (data && QUERY.get("tab") === "stats") wholeRef.current?.scrollIntoView({ block: "start" });
+  }, [data]);
 
   // Play: advance replay time with the wall clock.
   const last = useRef<number | null>(null);
@@ -425,6 +432,7 @@ export default function App() {
         <div className="stage-main">
           <h2><span className="step-n" aria-hidden="true">2</span>
             {view === "highlights" ? copy.step2 : copy.step2Full}</h2>
+          <p className="sub step-sub">{view === "highlights" ? copy.step2Sub : copy.step2FullSub}</p>
           <div className="bug" aria-label={`${home.name} ${sc.home}, ${away.name} ${sc.away}`}>
             <span className="bug-team"><span className="chip home" aria-hidden="true" />
               <span className="full">{home.name}</span><span className="code">{code(home.name)}</span></span>
@@ -513,6 +521,7 @@ export default function App() {
 
         <div className="stage-side">
           <h2><span className="step-n" aria-hidden="true">3</span>{copy.step3}</h2>
+          <p className="sub step-sub">{view === "highlights" ? copy.step3Sub : copy.step3FullSub}</p>
           <nav className="tabs" role="tablist">
             {tabs.map(([t, l]) => (
               <button key={t} role="tab" aria-selected={shown === t} className={shown === t ? "on" : ""}
@@ -581,14 +590,6 @@ export default function App() {
               </div>
             )}
 
-            {shown === "stats" && (
-              <Stats data={data} mode={mode} text={TEXT} onWatch={(v) => {
-                toFull();
-                setNow(v);
-                setPlaying(true);
-              }} />
-            )}
-
             {shown === "details" && (
               view === "highlights" && cur ? (
                 <Replay data={data} item={cur} now={now} mode={mode} name={who(cur) ?? ""}
@@ -623,6 +624,17 @@ export default function App() {
           </section>
         </div>
       </div>
+
+      <section className="whole-match" ref={wholeRef} aria-labelledby="step4">
+        <h2 id="step4"><span className="step-n" aria-hidden="true">4</span>{copy.step4}</h2>
+        <p className="sub step-sub">{copy.step4Sub}</p>
+        <Stats data={data} mode={mode} text={TEXT} onWatch={(v) => {
+          toFull();
+          setNow(v);
+          setPlaying(true);
+          stageRef.current?.scrollIntoView({ block: "start" });
+        }} />
+      </section>
 
       <footer className="footer">{copy.disclaimer}</footer>
     </div>

@@ -6,8 +6,8 @@ import { TeamChart } from "./TeamChart";
 // A team moment ("Westerlyn Albion did 19% more high-speed running per ball-in-play minute in
 // 15:00–30:00") compares fifteen minutes; its clip showed a few seconds of them, at times a dead
 // ball. Here each 15-minute block has both teams' numbers, its team lines (decision 49: no
-// verdicts or blocked lines on the page), and a link to the full match there; then the two team
-// charts.
+// verdicts or blocked lines on the page), and a link to the full match there; beside them the two
+// team charts (decision 50: section 4 under the clip, two columns from 1100 px).
 
 interface Props {
   data: MatchData;
@@ -55,39 +55,43 @@ export function Stats({ data, mode, text, onWatch }: Props) {
   const rate = (v: number | null) => (v === null ? "–" : `${Math.round(v)}`);
   return (
     <div className="match-stats">
-      <h3>{text.statsTitle}</h3>
-      <p className="sub">{text.statsSub}</p>
-      <ol className="stat-blocks">
-        {blocks.map((b) => {
-          const mine = lines.filter((e) => inBlock(e, b));
-          return (
-            <li key={b.video_start} className="stat-block">
-              <div className="stat-head">
-                <span className="num stat-when">{label(b)}</span>
-                <button className="link" onClick={() => onWatch(b.video_start)}>
-                  {fill(text.statsWatch, { block: label(b) })}
-                </button>
-              </div>
-              <div className="stat-teams">
-                {meta.teams.map((t) => (
-                  <span key={t.id} className="stat-team">
-                    <span className={`dot ${t.id}`} aria-hidden="true" />
-                    <span>{t.name}</span>
-                    <strong className="num">{rate(b[t.id as "home" | "away"].hsr)}</strong>
-                    <span className="muted">{text.statsUnit}</span>
-                  </span>
+      <div>
+        <h3>{text.statsTitle}</h3>
+        <p className="sub">{text.statsSub}</p>
+        <ol className="stat-blocks">
+          {blocks.map((b) => {
+            const mine = lines.filter((e) => inBlock(e, b));
+            return (
+              <li key={b.video_start} className="stat-block">
+                <div className="stat-head">
+                  <span className="num stat-when">{label(b)}</span>
+                  <button className="link" onClick={() => onWatch(b.video_start)}>
+                    {fill(text.statsWatch, { block: label(b) })}
+                  </button>
+                </div>
+                <div className="stat-teams">
+                  {meta.teams.map((t) => (
+                    <span key={t.id} className="stat-team">
+                      <span className={`dot ${t.id}`} aria-hidden="true" />
+                      <span>{t.name}</span>
+                      <strong className="num">{rate(b[t.id as "home" | "away"].hsr)}</strong>
+                      <span className="muted">{text.statsUnit}</span>
+                    </span>
+                  ))}
+                </div>
+                {mine.filter((e) => e.shown).map((e, k) => (
+                  <article key={`s${k}`} className="line"><p>{e.sentence}</p></article>
                 ))}
-              </div>
-              {mine.filter((e) => e.shown).map((e, k) => (
-                <article key={`s${k}`} className="line"><p>{e.sentence}</p></article>
-              ))}
-            </li>
-          );
-        })}
-      </ol>
-      <TeamChart meta={meta} now={data.duration} title={text.teamChart} sub={text.teamChartSub}
-                 yTitle={text.teamChartAxis} onSeek={onWatch} />
-      <SplitChart meta={meta} text={text} scope={text.splitWhole} blocks={meta.team_situations} />
+              </li>
+            );
+          })}
+        </ol>
+      </div>
+      <div>
+        <TeamChart meta={meta} now={data.duration} title={text.teamChart} sub={text.teamChartSub}
+                   yTitle={text.teamChartAxis} onSeek={onWatch} />
+        <SplitChart meta={meta} text={text} scope={text.splitWhole} blocks={meta.team_situations} />
+      </div>
     </div>
   );
 }

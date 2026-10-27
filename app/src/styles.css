@@ -148,11 +148,23 @@ select { background: var(--surface); border: 1px solid var(--border); border-rad
 .top .tagline { font-size: var(--text-sm); margin-top: 2px; }
 .top-controls { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-2) var(--space-5); }
 .top-controls .field { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; margin: 0; }
+/* Phone (decision 50): View and Audience side by side, Match on a row of its own with its label inline. */
+@media (max-width: 520px) {
+  .top-controls { width: 100%; display: grid; grid-template-columns: auto auto; justify-content: start;
+    gap: var(--space-1) var(--space-5); }
+  .top-controls > :nth-child(1) { order: 1; }
+  .top-controls > :nth-child(3) { order: 2; }
+  .top-controls > :nth-child(2) { order: 3; grid-column: 1 / -1; flex-direction: row; align-items: center;
+    gap: var(--space-2); }
+  .top-controls select { min-width: 0; }
+}
 h2 { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-2);
   font-size: var(--text-lg); font-weight: 700; line-height: var(--leading-tight); }
 .step-n { display: inline-grid; place-items: center; width: 22px; height: 22px; flex: none; border-radius: 50%;
   background: var(--text); color: var(--background); font-size: var(--text-xs); font-weight: 700; }
 .moments-strip { margin-top: var(--space-4); }
+/* How to read the page (decision 50): one line under each step's heading. */
+.step-sub { margin: calc(-1 * var(--space-1)) 0 var(--space-3); }
 .step-head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); }
 .step-head h2 { margin: 0; }
 .cards { list-style: none; margin: var(--space-3) 0 0; padding: 0 0 var(--space-1); display: grid;
@@ -417,7 +429,15 @@ h2 { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--
 .feed-head h3 { margin: 0; }
 .blocked-list { border-left: 2px solid var(--border); padding-left: var(--space-3); margin: var(--space-2) 0; }
 
-/* Stats tab (decision 46): one row per 15-minute block, then the team charts. */
+/* The whole match (decision 46, section 4 since decision 50): one row per 15-minute block, the
+   team charts beside them from 1100 px. */
+.whole-match { margin-top: var(--space-6); padding-top: var(--space-5); border-top: 1px solid var(--border-subtle);
+  scroll-margin-top: var(--space-3); }
+.match-stats h3:first-child, .match-stats .chart:first-child { margin-top: 0; }
+@media (min-width: 1100px) {
+  .match-stats { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-6);
+    align-items: start; }
+}
 .match-stats h3 { margin-bottom: var(--space-1); }
 .stat-blocks { list-style: none; margin: var(--space-3) 0; padding: 0; }
 .stat-block { padding: var(--space-2) 0; border-bottom: 1px solid var(--border-subtle); }
@@ -486,16 +506,10 @@ h2 { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--
   min-height: 1.4em; padding: 2px 0; color: var(--text-secondary); }
 .tooltip strong { color: var(--text); }
 .trace { margin-top: var(--space-2); }
-.compare { margin: var(--space-4) 0 0; }
-.compare figcaption { font-size: var(--text-base); margin-bottom: var(--space-1); }
-.cmp-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) auto; gap: var(--space-2);
-  align-items: center; font-size: var(--text-sm); margin: 3px 0; }
-.cmp-label { overflow-wrap: anywhere; }
 .cmp-track { height: 10px; }
 .cmp-bar { display: block; height: 10px; }
 .cmp-bar.home { background: var(--home); }
 .cmp-bar.away { background: var(--away); }
-.cmp-bar.published { background: var(--neutral-8); }
 .cmp-value { white-space: nowrap; }
 .split-chart .legend { margin: 2px 0 var(--space-2); }
 .split-rows { display: grid; gap: var(--space-2); }
