@@ -28,15 +28,7 @@ analyst wording and the spread of the battery across the 200 typical professiona
 
 ## How it works
 
-```mermaid
-flowchart LR
-    T["Tracking data<br/>10 positions a second"] --> E["Running and battery<br/>per player, per second"]
-    E --> M["MCP server<br/>read-only tools"]
-    M --> A["Four agents<br/>on Microsoft Foundry"]
-    A --> C["The check<br/>rules, then an AI that can only block"]
-    C --> P["Web page<br/>clips, batteries, commentary"]
-    E --> P
-```
+![Tracking data goes to the running and battery measures, the MCP server, the four agents, the check and the web page](docs/figures/flow.svg)
 
 1. The simulator ([src/runningbattery/sim/](src/runningbattery/sim/)) generates a match at 10
    frames a second, with passes, shots and substitutions. Its players have a hidden physiology

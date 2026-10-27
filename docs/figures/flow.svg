@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 982 150" width="982" height="150" role="img" aria-label="Tracking data goes to the running and battery measures, then the MCP server, the four agents, the check and the web page; the measures also go straight to the page">
+  <title>How Running Battery works</title>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#8c959f"/>
+    </marker>
+  </defs>
+  <style>
+    rect { fill: #f6f8fa; stroke: #8c959f; stroke-width: 1.2; }
+    text { font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 12px; fill: #1f2328; text-anchor: middle; }
+    .t { font-weight: 600; font-size: 13px; }
+    .l { fill: none; stroke: #8c959f; stroke-width: 1.4; marker-end: url(#a); }
+  </style>
+  <rect x="8" y="16" width="146" height="76" rx="6"/>
+  <text x="81" y="48" class="t">Tracking data</text>
+  <text x="81" y="66">10 positions a second</text>
+
+  <rect x="172" y="16" width="146" height="76" rx="6"/>
+  <text x="245" y="48" class="t">Running and battery</text>
+  <text x="245" y="66">per player, per second</text>
+
+  <rect x="336" y="16" width="146" height="76" rx="6"/>
+  <text x="409" y="48" class="t">MCP server</text>
+  <text x="409" y="66">read-only tools</text>
+
+  <rect x="500" y="16" width="146" height="76" rx="6"/>
+  <text x="573" y="48" class="t">Four agents</text>
+  <text x="573" y="66">on Microsoft Foundry</text>
+
+  <rect x="664" y="16" width="146" height="76" rx="6"/>
+  <text x="737" y="40" class="t">The check</text>
+  <text x="737" y="58">rules, then an AI</text>
+  <text x="737" y="74">that can only block</text>
+
+  <rect x="828" y="16" width="146" height="76" rx="6"/>
+  <text x="901" y="40" class="t">Web page</text>
+  <text x="901" y="58">clips, batteries,</text>
+  <text x="901" y="74">commentary</text>
+
+  <path class="l" d="M154 54H170"/>
+  <path class="l" d="M318 54H334"/>
+  <path class="l" d="M482 54H498"/>
+  <path class="l" d="M646 54H662"/>
+  <path class="l" d="M810 54H826"/>
+  <path class="l" d="M245 92V132H901V94"/>
+</svg>
