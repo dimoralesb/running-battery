@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The full re-run after a generator change (PLAN §3.3, "Re-run after decision N"; about 35 min).
+# The full re-run after a generator change ("Re-run after decision N"; about 35 min).
 # Keeps the old batches and figure cache in data/synthetic/<tag>/, then regenerates the batch
 # reports, the fatigue checks, the dev / heldout / validation / validation_club matches, their
 # estimates and every cached number behind the README and docs/figures. Synthetic data only.

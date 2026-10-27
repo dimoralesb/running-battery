@@ -1,4 +1,4 @@
-"""MCP server over one match (PLAN §4): the agents' only window on the data.
+"""MCP server over one match: the agents' only window on the data.
 
 ``python -m runningbattery.agents.mcp_server <match folder>`` (stdio). The folder needs
 ``metadata.json``, ``events.jsonl``, ``tracking.jsonl`` and the estimator's ``signals.json``;
@@ -88,7 +88,7 @@ def build(folder: Path | str) -> FastMCP:
 
     @server.tool(annotations=READ_ONLY)
     def claim(claim_id: str) -> dict[str, Any]:
-        """One row of the claims register (synthesis §5): status, sources, qualifier, allowed
+        """One row of the claims register: status, sources, qualifier, allowed
         wording and mode; or a global rule (G1–G5, G9)."""
         return tools.claim(claim_id)
 

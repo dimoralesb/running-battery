@@ -1,5 +1,5 @@
-"""Per-second signals from 10 Hz kinematics (PLAN §3.3): load, recent intensity, red-zone spells
-and post-peak flags, and tired moments (battery low; the post-peak flag is separate, decision 12).
+"""Per-second signals from 10 Hz kinematics: load, recent intensity, red-zone spells
+and post-peak flags, and tired moments (battery low; the post-peak flag is separate).
 
 All rolling windows look back only (they work live) and stay inside a period: half-time is a
 rest, so a window never spans it and a post-peak flag ends at half-time. At the start of a
@@ -20,7 +20,7 @@ from runningbattery.engine.preprocess import Tracks
 
 def metabolic_power(speed: np.ndarray, accel: np.ndarray) -> np.ndarray:
     """Metabolic power, W/kg, from speed (m/s) and tangential acceleration (m/s²)
-    [diPrampero2005, Eq. 1–4; Osgnach2010, Eq. 2–4; synthesis §3.3]."""
+    [diPrampero2005, Eq. 1–4; Osgnach2010, Eq. 2–4]."""
     es = np.clip(accel / P.G, -P.ES_LIMIT, P.ES_LIMIT)
     em = np.sqrt(es**2 + 1.0)
     ec = np.polyval(P.EC_POLY, es) * em * P.KT
@@ -148,7 +148,7 @@ def red_zone(
 
 def tired(s: Seconds, low_battery: float = P.LOW_BATTERY) -> np.ndarray:
     """Tired moments per second and player: the median battery below ``low_battery`` of the
-    player's estimated D′ (PLAN §7, decision 12)."""
+    player's estimated D′."""
     return (s.battery < low_battery) & s.on
 
 

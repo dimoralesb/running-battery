@@ -1,11 +1,11 @@
 """Statistics over many seeds: ``python -m runningbattery.sim.batch --seeds 1-30``.
 
-Simulates the matches in parallel, in memory (no files), and prints the mean ± SD across matches
-of the match figures against the interim targets (``summary.TARGETS``), movement per position
-and per team against synthesis §4.2, running and high-speed running by phase, the purpose of the
-high-intensity runs, the time in each speed and acceleration band, the spacing between players
-(``sim.spacing``), and the fatigue checks (``sim.fatigue_checks``). Fatigue is on and the tempo
-drawn, as in ``simulate``; ``--no-fatigue`` runs the no-fatigue control of the same seeds.
+Simulates the matches in parallel, in memory (no files), and prints the mean ± SD across matches of
+the match figures against the interim targets (``summary.TARGETS``), movement per position and per
+team against the Premier League targets below, running and high-speed running by phase, the purpose
+of the high-intensity runs, the time in each speed and acceleration band, the spacing between
+players (``sim.spacing``), and the fatigue checks (``sim.fatigue_checks``). Fatigue is on and the
+tempo drawn, as in ``simulate``; ``--no-fatigue`` runs the no-fatigue control of the same seeds.
 ``--json`` also writes the report as JSON, so two runs can be compared; ``--idsse`` adds the
 IDSSE bands (``sim.idsse``) and, once ``sim.spacing --idsse`` has cached the IDSSE positions,
 the IDSSE spacing.
@@ -57,7 +57,7 @@ from runningbattery.sim.summary import (
 )
 
 # Per-match targets by position, 2024/25: total, >5.5 m/s and >7 m/s distance (m)
-# [synthesis §4.2: Allen2024, Table 4, scaled to Allen2025, Figs 2–3; derived].
+# [Allen2024, Table 4, scaled to Allen2025, Figs 2–3; derived].
 POSITION_TARGETS = {
     "GK": (4720, 33, 2),
     "CB": (9830, 610, 140),
@@ -68,20 +68,20 @@ POSITION_TARGETS = {
     "WM": (10870, 1190, 340),
     "CF": (10600, 1020, 280),
 }
-POSITION_TOLERANCE = 0.05  # ±5% (synthesis §4.2; PLAN §2.5)
+POSITION_TOLERANCE = 0.05  # ±5%
 # Goalkeepers barely sprint: 2 ± 6 m above 7 m/s (25.2 km/h) [Allen2024, Table 4], so ±5% of the
 # target means nothing. Their >7 m/s distance is judged within ±5 m of it instead (our choice).
 GK_SPRINT_TOLERANCE_M = 5.0
 # Team totals per match, mean (SD): total, >5.5 m/s, >7 m/s (m) [Allen2025, Figs 2–3].
 TEAM_TARGETS = {"distance": (113891, 4097), "hid": (9611, 1300), "sprint": (2326, 471)}
 # Home and away team totals correlate at r = 0.68–0.75 (total, 5.5–7 m/s, >5.5 m/s and >7 m/s
-# distance) [Allen2026a, abstract]; pass if r is 0.5–0.85 over 50 or more matches (PLAN §2.5).
+# distance) [Allen2026a, abstract]; pass if r is 0.5–0.85 over 50 or more matches.
 TEAM_R = (0.68, 0.75)
 TEAM_R_PASS = (0.5, 0.85)
 # Efforts per 98 min [Castellano2025, Table 3]: sprints >6.94 m/s and decelerations < -3 m/s²,
 # each ≥ 0.7 s (summary.EFFORTS). Their CD row is used for CB, CM for CM only, WN for WM and FW
-# for CF. Broadcast tracking: compare counts loosely (±30%, PLAN §2.5); deceleration counts
-# depend most on the system (synthesis §2.2), so they are shown, not tuned.
+# for CF. Broadcast tracking: compare counts loosely (±30%); deceleration counts
+# depend most on the system, so they are shown, not tuned.
 SPRINT_COUNT_TARGETS = {"CB": 7.2, "FB": 12.7, "CM": 8.8, "WM": 14.0, "CF": 13.2}
 HIGH_DECEL_TARGETS = {"CB": 13.3, "FB": 20.7, "CM": 16.1, "WM": 21.9, "CF": 20.3}
 # Mean match peak speed, m/s [SilvaH2025, Table 1]; their FW row is used for CF.
@@ -90,8 +90,8 @@ TOP_SPEED_TARGETS = {"CB": 8.09, "FB": 8.79, "CM": 8.41, "WM": 8.52, "CF": 8.29}
 # and >5.5 m/s (middle of the ranges 11.5–12.8 and 14.8–17.6) [Allen2026b, Table 5].
 PHASE_TARGETS = {"in_possession": 133.0, "out_of_possession": 145.0, "dead": 63.0}
 PHASE_HID_TARGETS = {"in_possession": 12.1, "out_of_possession": 16.2}
-PHASE_TOLERANCE = 0.10  # PLAN §2.5
-BAND_TOLERANCE = 3.0  # percentage points per speed band against IDSSE (PLAN §2.5)
+PHASE_TOLERANCE = 0.10  # our pass band, ±10%
+BAND_TOLERANCE = 3.0  # percentage points per speed band against IDSSE
 # Share of high-intensity runs by purpose in peak periods, players [Ju2022, p.975]: recovery
 # runs 28–34%, covering 22–25%, support play 11%.
 PURPOSE_TARGETS = {"recovery_run": "28–34", "covering": "22–25", "support_play": "11"}
@@ -116,7 +116,7 @@ def match_stats(
     seed: int, fatigue: bool = True, tempo: bool = True, subs: bool = True, vary: bool = False
 ) -> dict:
     """Everything the report needs from one match, as plain numbers. Movement is per slot
-    (starter plus substitute), like the position targets (synthesis §4.2)."""
+    (starter plus substitute), like the position targets."""
     m = simulate(seed, f"batch{seed:04d}", fatigue=fatigue, tempo=tempo, subs=subs, vary=vary)
     starters = [p for team in m.metadata.teams for p in team.players if p.starter]
     ids = [p.id for p in starters]

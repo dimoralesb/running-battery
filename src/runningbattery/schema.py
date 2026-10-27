@@ -1,4 +1,4 @@
-"""Data contract for one Running Battery match (PLAN §2.3; RESEARCH_SYNTHESIS §7).
+"""Data contract for one Running Battery match.
 
 A match is four files in one folder:
 
@@ -25,8 +25,8 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-# 0.1.3: truth.json gets ``settings`` (the generator assumptions used for each match, PLAN §2.6
-# point 3); tracking frames document dropouts (a player left out of ``players``).
+# 0.1.3: truth.json gets ``settings`` (the generator assumptions used for each match); tracking
+# frames document dropouts (a player left out of ``players``).
 # 0.1.4: ``tired`` is short-term tiredness only (late-match fatigue is the ``tank`` below
 # ``settings["late_tank_below"]``); skipped runs are one per situation and only those forecast to
 # have been high-intensity runs.
@@ -35,7 +35,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 # 0.1.6: ``signals.json``, the estimator's output (per player, per second on the pitch).
 # 0.1.7: ``signals.json`` records the typical-player prior (``engine.prior``).
 # 0.1.8: ``signals.json`` gets ``low_chance``, the typical-pro chance of a low battery (decision
-# 14); the default prior is ``pro``, the generator's population (decision 13).
+# 14); the default prior is ``pro``, the generator's population.
 # 0.1.9: ``low_chance`` is calibrated (a monotone map fitted on the dev seeds,
 # ``engine/params.py`` LOW_CHANCE_MAP); the raw share of the draws is kept as ``low_chance_raw``,
 # and ``engine.low_chance_map`` names the map (null: no map, the two are the same).
@@ -60,7 +60,7 @@ class _Model(BaseModel):
 
 
 class Position(StrEnum):
-    """Position codes as in Allen2024 (synthesis §4.2)."""
+    """Position codes as in Allen2024."""
 
     GK = "GK"
     CB = "CB"
@@ -78,7 +78,7 @@ class BallStatus(StrEnum):
 
 
 class Phase(StrEnum):
-    """Phase of play, from the viewpoint of the event's team (synthesis §7.2).
+    """Phase of play, from the viewpoint of the event's team.
 
     ``positive_transition`` / ``negative_transition`` are the first seconds after winning / losing
     the ball [Bortnik2022]. ``high_press`` and ``defensive_block`` are out-of-possession phases.
@@ -204,7 +204,7 @@ class Score(_Model):
 
 
 class Event(_Model):
-    """One on-ball or match event, SPADL / StatsBomb-like (synthesis §7.2)."""
+    """One on-ball or match event, SPADL / StatsBomb-like."""
 
     id: Annotated[int, Field(ge=0)]
     period: Period
@@ -249,7 +249,7 @@ class Event(_Model):
 
 
 class ClubTestValues(_Model):
-    """Club fitness-test values: the truth plus measurement error (PLAN §3.2).
+    """Club fitness-test values: the truth plus measurement error.
 
     Broadcasters never have these, so the generator leaves them out unless asked
     (``--club-tests``). They exist for one validation experiment: how much club data would help.
@@ -346,7 +346,7 @@ class MatchMetadata(_Model):
 
 
 class TrueParams(_Model):
-    """Hidden physiology of one player (synthesis §3.2.3–3.2.4)."""
+    """Hidden physiology of one player."""
 
     cs: Annotated[float, Field(gt=0)]
     d_prime: Annotated[float, Field(gt=0)]
@@ -416,7 +416,7 @@ class MatchTruth(_Model):
     settings: dict[str, str | float | int | bool] = Field(
         default={},
         description="Generator assumptions used for this match (position noise, tempo, fatigue "
-        "effect sizes), so validation can report results across them (PLAN §2.6)",
+        "effect sizes), so validation can report results across them",
     )
     players: list[PlayerTruth]
     runs: list[RunTruth] = []
@@ -428,7 +428,7 @@ Share = Annotated[float, Field(ge=0, le=1)]
 
 
 class EngineSettings(_Model):
-    """How the signals were made (PLAN §3.2–3.3; values and sources in ``engine/params.py``)."""
+    """How the signals were made (values and sources in ``engine/params.py``)."""
 
     mode: Literal["broadcast", "club"] = Field(
         description="broadcast: shared prior only; club: club test values (validation only)"
@@ -438,7 +438,7 @@ class EngineSettings(_Model):
         "university (sensitivity); engine/params.py PRIORS"
     )
     update: Literal["draws", "correction"] = Field(
-        description="draws: per-player update of CS and D′ from prior draws (decision 9); "
+        description="draws: per-player update of CS and D′ from prior draws; "
         "correction: one value with the one-way D′ correction only (club mode, fallback)"
     )
     k: Annotated[float, Field(gt=0, description="Battery recharge factor, τ = k·D′/(CS − v)")]
@@ -491,7 +491,7 @@ class SignalSeries(_Model):
         description="Chance that a typical player of the prior's population (a typical "
         "professional by default) would be short-term tired after this running (broadcast "
         "mode): low_chance_raw through the calibration map named in engine.low_chance_map. "
-        "About the running, not this player's own state (PLAN §7, decision 14)",
+        "About the running, not this player's own state",
     )
     low_chance_raw: list[Share] | None = Field(
         default=None,
@@ -513,7 +513,7 @@ class SignalSeries(_Model):
     red_zone: list[bool] = Field(description="In a 1-, 2- or 5-min red-zone (peak) spell")
     post_peak: list[bool] = Field(
         description="In a red-zone spell or the minutes after one; neutral wording only "
-        '("catching breath"), never "tired" (PLAN §7, decision 12)'
+        '("catching breath"), never "tired"'
     )
     tired: list[bool] = Field(description="Tired moment: battery below low_battery")
 
@@ -540,7 +540,7 @@ class PlayerSignals(_Model):
 
 class TiredSpell(_Model):
     """A run of tired seconds for one player, with the events that fall inside it: the
-    player's defensive actions and ball losses (PLAN §3.3)."""
+    player's defensive actions and ball losses."""
 
     player_id: str
     period: Period

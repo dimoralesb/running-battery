@@ -1,4 +1,4 @@
-"""MCP tools, server and feed (BUILD_PLAN "Wed 21"–"Thu 22") on a constructed match: each tool's
+"""MCP tools, server and feed on a constructed match: each tool's
 output shape, the moments it must find, the context reasons, and that nothing in agents/ can
 read the truth. Constructed inputs only (the same seed gives a different match elsewhere); no
 LLM calls (the feed runs offline)."""
@@ -198,7 +198,7 @@ def test_find_moments(tools):
     red = tools.find_moments("red_zone")["moments"]
     assert red and red[0]["player"]["id"] == "H04" and red[0]["period"] == 1
     # The turnover at 200.5 s comes 200 s into his match, under SO_FAR_MIN_S: "just after his
-    # hardest minutes so far" would be true of almost any running (decision 42).
+    # hardest minutes so far" would be true of almost any running.
     assert not tools.find_moments("exposed_on_turnover", player="H04")["moments"]
     back = tools.find_moments("second_wind", player="H04")["moments"]
     assert back and 700.0 <= back[0]["t"] <= 760.0  # back to his normal on the second run
@@ -226,7 +226,7 @@ def test_team_running_and_tug_of_war(tools):
 
 def test_flat_out_is_near_his_top_speed_so_far(tools, monkeypatch):
     """H04's second run reaches 94% of his first: before the 75th minute that is no moment
-    (decision 39: below FLAT_OUT_EARLY_SHARE); at the 90% bar it is, with these facts."""
+    (below FLAT_OUT_EARLY_SHARE); at the 90% bar it is, with these facts."""
     import runningbattery.agents.tools as T
 
     assert tools.find_moments("flat_out", player="H04")["moments"] == []
@@ -243,7 +243,7 @@ def test_flat_out_is_near_his_top_speed_so_far(tools, monkeypatch):
 
 
 def test_hardest_minutes_spells_close_together_count_once():
-    """Decision 39: spells less than EPISODE_GAP_S apart in a half are one time ("for the eighth
+    """Spells less than EPISODE_GAP_S apart in a half are one time ("for the eighth
     time" at 19:50 was a flickering flag); a new half starts a new one."""
     from types import SimpleNamespace
 
@@ -257,7 +257,7 @@ def test_hardest_minutes_spells_close_together_count_once():
 
 
 def test_touches_are_measured_and_gate_claim_14(tools):
-    """Decision 25: touch counts from events.jsonl; claim 14 only when touches fell while the ball
+    """Touch counts from events.jsonl; claim 14 only when touches fell while the ball
     was out of play more than usual."""
     assert tools.m.touches == {"A08": [(1, 200.5)], "A11": [(1, 205.0)]}  # a pass and a shot
     s = tools.m.series["A11"]
@@ -365,11 +365,11 @@ def test_offline_feed_is_verified_and_timestamped(folder):
     assert any(e["player"] is None and e["kind"] == "tug_of_war" for e in feed["entries"])
     times = [e["video_s"] for e in feed["entries"]]
     assert times == sorted(times)
-    for mode in feed_mod.MODES:  # a team moment says how the two teams compare (decision 25)
+    for mode in feed_mod.MODES:  # a team moment says how the two teams compare
         team = [e["sentence"] for e in feed["entries"]
                 if e["kind"] == "tug_of_war" and e["mode"] == mode and e["shown"]]  # fmt: skip
         assert any(re.search(feed_mod.MUST_SAY["ran harder"], x) for x in team), team
-    assert "favourite" not in feed  # no favourite player (decision 42)
+    assert "favourite" not in feed  # no favourite player
     # The substitute who out-ran his team-mates is a key moment (ensure_key).
     assert any(m["moment_id"].startswith("fresh_legs:H12") for m in feed["moments"])
 
@@ -393,7 +393,7 @@ def test_general_sentences_at_most_twice_per_mode():
     assert entries[0]["verdict"] == "repeat" and feed_mod.MAX_GENERAL == 2
     assert feed_mod.unlabel("fact: he had 0 touches.") == "He had 0 touches."
     assert feed_mod.unlabel("Factually level.") == "Factually level."
-    # Decision 31: a bare claim id ("11: He has done…"), never a clock.
+    # A bare claim id ("11: He has done…"), never a clock.
     assert feed_mod.unlabel("9a: Albion did more.") == "Albion did more."
     assert feed_mod.unlabel("60:00–75:00 — level.") == "60:00–75:00 — level."
     rep = [
@@ -417,8 +417,8 @@ def test_general_sentences_at_most_twice_per_mode():
 
 
 def test_moments_say_what_they_are_for():
-    """Decision 31: a substitute against his team-mates, a player caught on the break with the
-    typical-pro line (any player since decision 42), and a team moment's comparison; decision
+    """A substitute against his team-mates, a player caught on the break with the
+    typical-pro line (any player since then), and a team moment's comparison; decision
     39: a second wind against his match average; the others need nothing."""
     bat = {"typical_pro_battery_now": {"value": 0.83, "unit": "share"}}
     exposed = {"kind": "exposed_on_turnover", "player": {"id": "H04"}, "facts": bat}
@@ -434,7 +434,7 @@ def test_moments_say_what_they_are_for():
 
 
 def test_a_counter_that_ended_in_a_goal_says_so():
-    """Decision 39: caught on the break by a counter that scored, a line says the goal ("his own
+    """Caught on the break by a counter that scored, a line says the goal ("his own
     goal" does not count); without the goal nothing is added."""
     player = {"id": "H04", "name": "Marco Tarvsall", "shirt": 3, "team": "home",
               "team_name": "Westerlyn Albion"}  # fmt: skip
@@ -453,7 +453,7 @@ def test_a_counter_that_ended_in_a_goal_says_so():
 
 
 def test_highlights_are_measured_ranked_and_verified(folder):
-    """Decision 28: H04's two 60-s runs at 7.5 m/s top the longest-run and top-speed lists;
+    """H04's two 60-s runs at 7.5 m/s top the longest-run and top-speed lists;
     every kept event was among the top 3 players when it happened; captions pass the rules."""
     from runningbattery.agents import highlights as hl
 
@@ -477,7 +477,7 @@ def test_highlights_are_measured_ranked_and_verified(folder):
 
 
 def test_most_ground_and_recovery_runs(folder, monkeypatch):
-    """Decision 29: most ground covered at the final whistle (whole-match players only, the
+    """Most ground covered at the final whistle (whole-match players only, the
     top 3), and a recovery run (back towards his own goal within 10 s of his team losing it)."""
     from runningbattery.agents import highlights as hl
 
@@ -506,7 +506,7 @@ def test_most_ground_and_recovery_runs(folder, monkeypatch):
 
 
 def test_general_claims_with_only_measured_numbers_are_facts():
-    """Decision 29: a line the Narrator tagged with a general claim (6, 9b) but whose numbers
+    """A line the Narrator tagged with a general claim (6, 9b) but whose numbers
     all come from the moment's facts is a measured fact."""
     b = {"kind": "fresh_legs", "facts": {"sub_hsr_per_min": {"value": 12.2, "unit": "m/min"}},
          "claims": [{"id": "6", "wording": "Fresh legs: substitutes typically do 15–25% more "
@@ -517,7 +517,7 @@ def test_general_claims_with_only_measured_numbers_are_facts():
 
 
 def test_running_split_by_situation(folder, tools):
-    """Decision 30: where each team's high-speed running happened, from possession and the
+    """Where each team's high-speed running happened, from possession and the
     ball's position only. Home lose the ball at 200 s and win it back at 260 s (period 1); A04
     runs 300–360 s without the ball (ball on the centre spot, so in the middle third)."""
     from runningbattery.agents.tools import SITUATIONS, TRANSITION_S
@@ -550,7 +550,7 @@ def test_running_split_by_situation(folder, tools):
 
 
 def test_team_moment_lines_never_blame_fatigue():
-    """Decision 30: on a team moment, claim 4's "tired legs" would be about the team (35)."""
+    """On a team moment, claim 4's "tired legs" would be about the team (35)."""
     wording = (
         "Losing the ball forces the hardest running of the game. This is where tired legs get "
     )
@@ -594,8 +594,8 @@ def test_purpose_rules_against_the_truth(folder, monkeypatch):
 
 
 def test_key_moments_join_the_pick_and_wordings_keep_their_claim():
-    """Decision 42 (no favourite player): the best-ranked moment of each key kind joins the pick
-    (the next best when it clashes and the agent left that kind out), and (decision 39) the best
+    """Then (no favourite player): the best-ranked moment of each key kind joins the pick
+    (the next best when it clashes and the agent left that kind out), and the best
     turnover that ended in a goal;
     a register wording tagged "fact" is that claim."""
 
@@ -611,7 +611,7 @@ def test_key_moments_join_the_pick_and_wordings_keep_their_claim():
     assert feed_mod.ensure_key(["c"], found) == ["a", "c"]  # when there is none of its kind
     assert feed_mod.ensure_key(["a", "c"], found) == ["a", "c"]
     found["b"]["video_s"] = 900.0
-    # Decision 39: and the turnover that ended in a goal, though it ranks lower.
+    # And the turnover that ended in a goal, though it ranks lower.
     found["g"] = mo("g", "exposed_on_turnover", "H04", 1500.0, 0.5) | {
         "facts": {"counter_goal": True}
     }
@@ -629,7 +629,7 @@ def test_key_moments_join_the_pick_and_wordings_keep_their_claim():
 
 def test_moment_clips_show_the_moment(tools):
     """A moment measured over minutes gets the part of the match that shows it, and a moment
-    whose player does nothing above 5.5 m/s gets no clip, except a quiet one (decision 38)."""
+    whose player does nothing above 5.5 m/s gets no clip, except a quiet one."""
     from runningbattery.export import (
         CLIP_AFTER,
         CLIP_BEFORE,
@@ -661,7 +661,7 @@ def test_moment_clips_show_the_moment(tools):
         {"moment_id": "tug_of_war:home:1:4", "kind": "tug_of_war", "video_s": 100.0},
     ]}  # fmt: skip
     clips = moment_clips(m, feed)
-    # his run, on to the end of its play (decision 46), at most PLAY_ON_S more
+    # his run, on to the end of its play, at most PLAY_ON_S more
     end = min(max(best[1], play_end(m, best[1])), best[1] + PLAY_ON_S)
     assert clips[f"second_wind:{pid}:1:1"] == [round(best[0], 1), round(end, 1)]
     assert best[1] <= end <= best[1] + PLAY_ON_S
@@ -672,7 +672,7 @@ def test_moment_clips_show_the_moment(tools):
 
 
 def test_exported_shots_carry_their_possession(tools):
-    """Decision 46: every shot with the ball's arrival and its possession's first and last event,
+    """Every shot with the ball's arrival and its possession's first and last event,
     so that a clip runs on to the shot its play ends in (data.ts ``toShot``)."""
     from runningbattery.export import shots
 
@@ -684,7 +684,7 @@ def test_exported_shots_carry_their_possession(tools):
 
 
 def test_caught_on_the_break_needs_the_counter_near_him_or_a_shot(tools):
-    """Decision 38: a clip showed him 34 m from a counter that went elsewhere."""
+    """A clip showed him 34 m from a counter that went elsewhere."""
     from runningbattery.agents.tools import COUNTER_MAX_S, COUNTER_MIN_S, COUNTER_NEAR_M
 
     for x in tools.find_moments("exposed_on_turnover", limit=100)["moments"]:
@@ -695,7 +695,7 @@ def test_caught_on_the_break_needs_the_counter_near_him_or_a_shot(tools):
 
 
 def test_possessives_of_names_ending_in_s():
-    """Decision 41: the feed showed "Ravensholt Harriers's"."""
+    """The feed showed "Ravensholt Harriers's"."""
     assert feed_mod.possessive("Ravensholt Harriers") == "Ravensholt Harriers'"
     assert feed_mod.possessive("Westerlyn Albion") == "Westerlyn Albion's"
     b = {"kind": "red_zone", "player": {"name": "Sam Jones"},
@@ -706,7 +706,7 @@ def test_possessives_of_names_ending_in_s():
 
 
 def test_so_far_claims_need_ten_minutes_on_the_pitch(folder, monkeypatch):
-    """Decision 41: "his hardest minutes so far" at 1:47 is true of almost any running. H04's
+    """The line "his hardest minutes so far" at 1:47 is true of almost any running. H04's
     first hard minute (60–120 s) is no moment; his second (700–760 s) is, and only its brief
     offers "the lowest point of his match so far"."""
     import runningbattery.agents.tools as T
@@ -722,7 +722,7 @@ def test_so_far_claims_need_ten_minutes_on_the_pitch(folder, monkeypatch):
     later = next(m for m in red if m["period"] == 1)
     facts = feed_mod.brief(tools, later)["facts"]
     assert "lowest_typical_pro_battery_so_far" in facts
-    # Unrounded (decision 41: 0.620 against an earlier 0.618 both read as 0.62).
+    # Unrounded (0.620 against an earlier 0.618 both read as 0.62).
     s = tools.m.series["H04"]
     battery = s.cols["battery"][: s.index(later["period"], later["t"]) + 1]
     assert facts["at_lowest_point_so_far"] == bool(battery[-1] <= battery.min())
@@ -732,7 +732,7 @@ def test_so_far_claims_need_ten_minutes_on_the_pitch(folder, monkeypatch):
 
 
 def test_nearest_to_the_ball_reads_every_frame(folder):
-    """Decision 41: "as close as 2 m" from the 1-Hz samples was 1.2 m in the full tracking."""
+    """The line "as close as 2 m" from the 1-Hz samples was 1.2 m in the full tracking."""
     m = MatchTools(folder).m
     times = np.round(np.arange(0.0, 3.01, 0.1), 1)
     xy = np.full((len(times), len(m.col), 2), np.nan)
@@ -743,9 +743,9 @@ def test_nearest_to_the_ball_reads_every_frame(folder):
 
 
 def test_red_zone_clip_shows_the_running_of_the_minute():
-    """Decision 41: the clip of his hardest minutes shows the runs that made them, the cluster
-    within RED_ZONE_CLIP_MAX_S holding most of the minute's metres, not the 8 s before it; since
-    decision 42 that is the whole minute (the overlay fast-forwards between his runs)."""
+    """The clip of his hardest minutes shows the runs that made them, the cluster
+    within RED_ZONE_CLIP_MAX_S holding most of the minute's metres, not the 8 s before it; that
+    is the whole minute (the overlay fast-forwards between his runs)."""
     from runningbattery.export import red_zone_window
 
     runs = [(1953.0, 1956.0, 23.0), (1991.0, 1994.0, 20.0), (2006.0, 2007.0, 6.0),
@@ -756,8 +756,8 @@ def test_red_zone_clip_shows_the_running_of_the_minute():
 
 
 def test_a_key_moment_replaces_another_view_of_the_same_action():
-    """Decision 41: the agent picked a team-mate's view of a turnover (both caught on the same
-    counter), and the key one could not join within a minute of it; since decision 42 the
+    """The agent picked a team-mate's view of a turnover (both caught on the same
+    counter), and the key one could not join within a minute of it; since then the
     best-ranked turnover that ended in a goal is the key one."""
 
     def mo(i, kind, pid, v, score, goal=False):
@@ -775,7 +775,7 @@ def test_a_key_moment_replaces_another_view_of_the_same_action():
 
 
 def test_one_hardest_minutes_moment_per_episode():
-    """Decision 43: two clips of one spell both said "for the sixth time" (2 of 7 real matches'
+    """Two clips of one spell both said "for the sixth time" (2 of 7 real matches'
     feeds, 2 of 30 synthetic); the agent's pick and the offline one keep the best-ranked."""
 
     def mo(i, pid, v, score, n):
@@ -790,7 +790,7 @@ def test_one_hardest_minutes_moment_per_episode():
 
 
 def test_a_closed_gap_says_the_blocks_own_comparison():
-    """Decision 43: the natural feed's one fan line on a closed gap gave the earlier 18% and not
+    """The natural feed's one fan line on a closed gap gave the earlier 18% and not
     the block's 3%, and the template said "level" (G10 blocks it at 3%), so nothing was added."""
     b = {"kind": "tug_of_war", "player": None,
          "team": {"id": "away", "name": "Ravensholt Harriers"},
@@ -810,7 +810,7 @@ def test_a_closed_gap_says_the_blocks_own_comparison():
 
 
 def test_exported_signals_read_the_lines_second_in_both_halves(folder, tools, tmp_path):
-    """Decision 44: the first half ends mid-second, and one count from ``start`` read the second
+    """The first half ends mid-second, and one count from ``start`` read the second
     half a second late (55% on screen against the line's "about 54%"); each half now has its own
     first second (``halves``), and the overlay's lookup (``signalPos`` in data.ts) at a moment's
     video_s finds the row the line read."""

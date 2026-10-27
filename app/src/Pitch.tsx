@@ -8,7 +8,7 @@ import {
 // Pitch 105 × 68 m, centre origin (schema). y is drawn upwards.
 const L = 105;
 const W = 68;
-// Flat out (decision 24, as agents/tools.py): a second at ≥ 90% of his top speed so far, from
+// Flat out (as agents/tools.py): a second at ≥ 90% of his top speed so far, from
 // the 10th minute, top so far ≥ 7.0 m/s; faster than 11 m/s is a tracking error.
 const FLAT_SHARE = 0.9;
 const FLAT_MIN = 70; // decimetres per second
@@ -20,7 +20,7 @@ const LAPSE_STEP = 2; // s between trail points for a whole match (most ground c
 const STRIPES = 12; // mown stripes across the pitch, as on a broadcast
 const FADE_STEPS = 6; // the trail fades towards its start in this many steps, so it shows direction
 
-// Three views (decision 29): the full match, and a clip's Watch and Replay-with-details steps,
+// Three views: the full match, and a clip's Watch and Replay-with-details steps,
 // which show only the clip's player path.
 export type View = "full" | "watch" | "replay";
 
@@ -54,7 +54,7 @@ function Markings() {
   );
 }
 
-/** The typical-pro battery as a continuous fill (decision 33). */
+/** The typical-pro battery as a continuous fill. */
 function BatteryIcon({ pct, x, y }: { pct: number; x: number; y: number }) {
   const w = 5.0 * Math.min(Math.max(pct, 0), 100) / 100;
   return (
@@ -162,7 +162,7 @@ function Trail({ data, item, now, j }: { data: MatchData; item: Item; now: numbe
 }
 
 /** Text beside a point, to its right, or to its left near the right touchline, so it is never cut
- * off by the pitch's edge (decision 50: "7 runs in 55 s" ran off it). */
+ * off by the pitch's edge ("7 runs in 55 s" ran off it). */
 function OnPitchText({ x, y, gap, size, className, text }: {
   x: number; y: number; gap: number; size: number; className: string; text: string;
 }) {
@@ -214,7 +214,7 @@ export function Pitch({ data, now, mode, view, selected, allBatteries, item, foc
         const isSel = p.id === selected;
         const star = clip ? p.id === clip.player : inFocus(p.id);
         // A team clip has no star player, so nothing is dimmed; a player clicked during a clip
-        // is not dimmed and shows his battery (decision 50).
+        // is not dimmed and shows his battery.
         const picked = !!clip && isSel && !star;
         const dim = clip && clip.player ? !star && !picked : false;
         const red = !clip && star && i !== null && s.red_zone[i] === 1;

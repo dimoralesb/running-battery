@@ -4,7 +4,7 @@
 fatigue on and off and prints both next to the published values; ``sim.batch`` adds the same
 table to its report. Picking each player's most intense window guarantees lower values after it
 even with no fatigue at all, so the gap between the two columns is the part that is really
-fatigue (PLAN §2.5, "No-fatigue control").
+fatigue ("No-fatigue control").
 
 Per match (``sim_measure``), on the noise-free positions, outfield players who played the whole
 match (as in the papers; substitutes have their own check), kept as sums so that matches pool by
@@ -38,7 +38,7 @@ adding (``summarise`` then gives % changes of the pooled sums):
   tired) and while neither, in total and for covering, recovery runs and closing down. Ju2022's
   drops after peak periods [p.975] are the reference for the size. (Distance run while tired is
   no measure of this: players get tired in the busiest spells, when everyone runs more.)
-- **Substitutes** [Bradley2013, Table IV; Bradley 2014 via Hills2018; synthesis §4.7]:
+- **Substitutes** [Bradley2013, Table IV; Bradley 2014 via Hills2018]:
   distance above 5.5 m/s per minute on the pitch against whole-match outfield players over the
   same minutes and over the whole match, and against the player each one replaced (before the
   substitution).
@@ -65,7 +65,7 @@ from runningbattery.sim.runs import speeds, spells
 
 HZ = round(P.FRAME_RATE_HZ)
 AFTER_S = 300  # the 5 min after a peak that Leifsson2024 follows, minute by minute
-SPRINT_SPEED = 7.0  # m/s (25.2 km/h) [Leifsson2024; synthesis §4.1]
+SPRINT_SPEED = 7.0  # m/s (25.2 km/h) [Leifsson2024]
 ACC_HARD = 3.0  # m/s², intense acceleration [Leifsson2024]
 HIR_SPEED = 4.0  # m/s (14.4 km/h), high-intensity running [Bradley2009]
 ACC_EFFORT, ACC_EFFORT_S = 2.0, 0.5  # m/s² [VighLarsen2018] and s (our definition)
@@ -79,7 +79,7 @@ DIP_S = 600  # first 10 min of each half [Bradley2013, p.4]
 TIRED_BLOCKS = (0, 900, 1800, 2700)  # 15-min blocks of each half (the last includes added time)
 
 # Peak distance per minute in the most intense 1-, 2- and 5-min window: HSR 62 / 38 / 22, sprint
-# 53 / 30 / 15 m/min [Leifsson2024, Table 1; synthesis §4.3]; AccD not given there.
+# 53 / 30 / 15 m/min [Leifsson2024, Table 1]; AccD not given there.
 LEIFSSON_PEAK = {"hsr": (62, 38, 22), "sprint": (53, 30, 15)}
 # Published values, % against the match average per minute [Leifsson2024, Table 1].
 LEIFSSON = {
@@ -93,7 +93,7 @@ LEIFSSON = {
     "accd_120": (47, 86, 93, 90, 88),
     "accd_300": (23, 56, 76, 85, 87),
 }
-# PLAN §2.5: each minute within ±10 percentage points; minute 1 after a 5-min HSR peak between
+# Each minute within ±10 percentage points; minute 1 after a 5-min HSR peak between
 # −35 and −55%.
 LEIFSSON_TOLERANCE = 10.0
 LEIFSSON_HSR_300_MIN1 = (-55.0, -35.0)
@@ -106,7 +106,7 @@ JU_PURPOSE = {"covering": (-44, -22), "recovery_run": (-43, -34), "close_down": 
 # ES −0.5); distance above 5.5 m/s per minute −77.2% (Table 2).
 FANG = {"length": -23, "duration": -32, "speed": -3, "carries": -26, "hsr": -77}
 # End of the match: (published %, our pass range) [Bradley2009, Fig. 2, p.162–163; Chen2025;
-# VighLarsen2018]; the pass ranges are PLAN §2.5.
+# VighLarsen2018]; the pass ranges are ours.
 END = {
     "hir_last15_vs_first15": (-21, (-30, -10)),
     "hsr_half2_vs_half1": (3, (-10, 10)),

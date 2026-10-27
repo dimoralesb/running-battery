@@ -1,4 +1,4 @@
-"""Foundry smoke test (decision 2): can this account call its models, and how fast?
+"""Foundry smoke test: can this account call its models, and how fast?
 
 ``uv run --extra agents python scripts/foundry_smoke.py``
 

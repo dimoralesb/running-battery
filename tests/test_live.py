@@ -1,4 +1,4 @@
-"""The live runner (decision 58): the engine's battery fed one frame at a time, a one-way speed
+"""The live runner: the engine's battery fed one frame at a time, a one-way speed
 filter that never reads ahead, and the same output as the replay up to the filter's lag."""
 
 import io

@@ -1,4 +1,4 @@
-"""The rule-based Verifier suite (BUILD_PLAN §3, run 7; v2 2026-10-17): every blocked sentence
+"""The rule-based Verifier suite (v2, 2026-10-17): every blocked sentence
 and every unbaselined % must be caught, no valid sentence may be blocked (false-block rate 0),
 and the context and numbers checks get their cases right. The sentences live in
 ``agents.verifier_suite``; the LLM pass is reported in docs/verifier_report.json."""
@@ -22,21 +22,21 @@ REPORT = Path(__file__).resolve().parents[1] / "docs" / "verifier_report.json"
 # Context cases the rules get wrong on purpose: naming the time ("after the break") without
 # naming it as the reason, and a claim the facts contradict (F1); only the LLM pass can tell.
 RULES_MISS = {"He likely faded after the break.",
-              # Decision 30: "most" for 43% contradicts the facts (F1, the LLM pass).
+              # "most" for 43% contradicts the facts (F1, the LLM pass).
               "Most of Albion's high-speed running in 0:00–15:00 came in the first 10 seconds "
               "after the ball changed hands.",
               "In the Premier League, players make about a third fewer high-speed recovery runs "
               "right after their hardest minutes than they normally do; here his mean speed in "
               "the next 8 s was 3.7 m/s and he was 44 m from the ball 8 s later.",
               # (the "lowest point" the facts contradict is now blocked by the rules: claim 19c
-              # needs at_lowest_point_so_far, decision 41)
+              # needs at_lowest_point_so_far)
               "Westerlyn cover 196 m of high-speed running per ball-in-play minute while their "
               "opponents cover 160 m, roughly 22% less.",
-              # (the "less opportunity to run" line of decision 29 is now blocked by the rules
-              # for its old name, "red-zone spell", G10 of decision 30)
+              # (the "less opportunity to run" line is now blocked by the rules
+              # for its old name, "red-zone spell", G10)
               # (the 76 s and 197 s spells explained by claim 2 are now blocked by the rules, the
               # claim 2 rule of 2026-10-19)
-              # Decision 29, from the feeds: his own state in hedged words.
+              # From the feeds: his own state in hedged words.
               "In the Premier League players make about a third fewer high-speed recovery runs "
               "after a peak, and our estimate says he may have had less in the tank here.",
 }  # fmt: skip
@@ -120,21 +120,21 @@ def test_report_covers_this_suite():
     assert [r["rules_ok"] for r in rep["rows"]] == [r["rules_ok"] for r in run_rules()]
     # The LLM pass varies from run to run (README, Limitations): 1.0 on the suites of
     # 2026-10-17, 76/78 on 2026-10-18 (it missed two F1 cases that disagree with the facts),
-    # 86/89 with the held-out fact checks (decision 29); with decision 30's cases, runs of the
+    # 86/89 with the held-out fact checks; with the cases, runs of the
     # same prompt gave 92/96, 98/101, 98/102, 99/103 and 97/104 (held-out F1 3/6 in the last);
-    # prompt revision 6 with decision 31's cases, 106/108 (F1 5/6; one LLM call timed out),
+    # prompt revision 6 with the cases, 106/108 (F1 5/6; one LLM call timed out),
     # then with G11's wording made clear on 174 sentences, 106/108 (F1 5/6).
-    # Decision 37 ("typical pro" as a rule-24 baseline), same prompt: 103/108 (F1 4/6).
+    # Then ("typical pro" as a rule-24 baseline), same prompt: 103/108 (F1 4/6).
     # With the G12 rule and its two cases, 176 sentences: 106/109 (F1 4/6), 3/67 false blocks.
     # Rule 33 ("reserve") and the team G5 check with their three cases, 179: 106/111, 4/68;
     # rule 33 with "his estimated typical-pro reserve", 180: 110/112, 0/68 (F1 5/6).
-    # Decision 38's G13 (a scoreline is the score then) and its two cases, 182: rules 80/113,
+    # The G13 (a scoreline is the score then) and its two cases, 182: rules 80/113,
     # 0/69; rules + LLM 109/113, 3/69 (F1 3/6). G5 for players and G10's "level" with four
     # cases (two older cases reworded to say high-speed), 186: 82/115, 0/71; 113/115, 5/71 (F1 5/6).
     # G14 (the player he replaced, not "over the same minutes") and two cases, 188: 83/116, 0/72;
     # rules + LLM 112/116, 4/72 (F1 5/6, paraphrases 22/23). G9 (reserve as %, not 0.59) and
     # claim 2 (keep "shaken off" or "recover") with two cases, 190: 85/118, 0/72; 114/118, 4/72
-    # (F1 4/6, paraphrases 23/23). Decision 39's G5 for a percentage of "running" and its two
+    # (F1 4/6, paraphrases 23/23). The G5 for a percentage of "running" and its two
     # cases, 192: 86/119, 0/73; 116/119, 1/73 (F1 4/6, paraphrases 23/23).
     assert rep["report"]["llm"]["caught_rate"] >= 0.93
 
@@ -169,15 +169,15 @@ def test_overlay_copy_passes_the_verifier():
 
 
 def test_claim_11_takes_no_reason_after_it():
-    """Decision 41: two lines on the site's feed gave a reason after claim 11's wording; two
-    more in decision 42."""
+    """Two lines on the site's feed gave a reason after claim 11's wording; two
+    more earlier."""
     lines = (
         "Relative to a typical professional, this sequence would leave them at about 76% of their "
         "short-term reserve, though that may reflect the ball being in play only 48% of the last "
         "5 min.",
         "By our typical-pro calibration this running would leave a typical professional at about "
         "71% of their short-term reserve, partly because the ball was out of play.",
-        # decision 42, the site's 27:59 and 42:00
+        # The site's 27:59 and 42:00
         "He has done running that would leave a typical professional at about 55% of their "
         "short-term reserve, which may be related to his team having just won the ball.",
         "He has done running that would leave a typical professional at about 89% of their "
@@ -190,7 +190,7 @@ def test_claim_11_takes_no_reason_after_it():
 
 
 def test_an_earlier_gap_is_not_earlier_in_this_block():
-    """Decision 43 (the story feed's 74:59, the LLM pass's rewrite): a closed gap's earlier
+    """Then (the story feed's 74:59, the LLM pass's rewrite): a closed gap's earlier
     width comes from the blocks before; "it reached 33% earlier in the block" is blocked, the
     plain "earlier" is not."""
     ctx = {"facts": {"earlier_gap_vs_opponent": {"value": 33}, "vs_opponent": {"value": 6}}}
@@ -201,7 +201,7 @@ def test_an_earlier_gap_is_not_earlier_in_this_block():
 
 
 def test_the_team_that_led_did_not_close_the_gap():
-    """Decision 43 (the natural feed's 59:59, the LLM pass's rewrite): "Westerlyn Town have closed
+    """Then (the natural feed's 59:59, the LLM pass's rewrite): "Westerlyn Town have closed
     the gap" when Westerlyn Town had led; "the gap has closed" is the plain wording."""
     ctx = {"subject": "Westerlyn Town", "team_moment": True,
            "team_names": ["Westerlyn Town", "Ravensholt Harriers"],

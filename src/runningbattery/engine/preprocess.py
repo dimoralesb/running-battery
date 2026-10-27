@@ -1,4 +1,4 @@
-"""Positions to speed and acceleration (PLAN §3.1), with the generator's pipeline
+"""Positions to speed and acceleration, with the generator's pipeline
 (``sim.summary.smooth`` and ``kinematics``): dropouts filled by linear interpolation, a zero-lag
 4th-order Butterworth low-pass at 1 Hz, central differences for speed and tangential acceleration
 [Deutsch2025, Methods]. Frames above the speed or acceleration caps are tracking errors; they are

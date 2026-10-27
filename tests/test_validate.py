@@ -1,4 +1,4 @@
-"""Validation tools (BUILD_PLAN §3, run 3): the calibration check of the typical-pro chance, the
+"""Validation tools (run 3): the calibration check of the typical-pro chance, the
 fit of its calibration map, and the ceiling for positions-only tired detection. Constructed
 inputs only."""
 

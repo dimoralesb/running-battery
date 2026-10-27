@@ -1,4 +1,4 @@
-"""Physical highlights (PLAN decision 28): the match's fastest, longest and busiest running,
+"""Physical highlights: the match's fastest, longest and busiest running,
 measured from positions and told in football's words, with fixed captions the Verifier checks.
 
 ``python -m runningbattery.agents.highlights <match folder>`` prints them; ``runningbattery.export``

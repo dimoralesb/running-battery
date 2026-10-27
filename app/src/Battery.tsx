@@ -1,8 +1,8 @@
 import { type MatchData, type Mode, type Player, type TeamBlock, signalIndex } from "./data";
 
-// The battery (decision 14, decision 32): what a player's running so far would leave a typical
-// professional, never his own state. One shell drawn one way at every size (DESIGN.md "The
-// battery"): a continuous charge in the ink of its ground that never changes colour with its
+// The battery: what a player's running so far would leave a typical
+// professional, never his own state. One shell drawn one way at every size: a
+// continuous charge in the ink of its ground that never changes colour with its
 // level, the percentage outside it, and in analyst mode the 10–90% band as brackets above and
 // below. Goalkeepers get none, as on the pitch.
 const POSITIONS = ["GK", "CB", "FB", "DM", "CM", "WM", "AM", "CF"];

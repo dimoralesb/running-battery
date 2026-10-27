@@ -1,7 +1,7 @@
 import { type Highlight, type Meta, highlightValue, topSoFar } from "./data";
 
-// The physical highlights so far (decisions 28–29): per kind, the top 3 players, best first. A
-// click opens that moment in the Highlights view. Decision 50: one card per kind, surnames, a clip
+// The physical highlights so far: per kind, the top 3 players, best first. A
+// click opens that moment in the Highlights view. One card per kind, surnames, a clip
 // removed by hand is a plain row, and "Play highlights" is step 1's only.
 export const KINDS: Highlight["kind"][] = ["top_speed", "longest_run", "recovery_run",
                                           "back_to_back", "busiest_minute", "most_ground"];
@@ -11,7 +11,7 @@ interface Props {
   meta: Meta;
   now: number;
   text: Record<string, string>;
-  hidden: (h: Highlight) => boolean; // its clip was removed by hand (decision 48): no link
+  hidden: (h: Highlight) => boolean; // its clip was removed by hand: no link
   onPick: (h: Highlight) => void;
 }
 

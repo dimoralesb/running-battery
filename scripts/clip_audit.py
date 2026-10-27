@@ -1,11 +1,11 @@
-"""Clip audit: every clip of the site's Highlights view checked against the match (decision 38).
+"""Clip audit: every clip of the site's Highlights view checked against the match.
 
     uv run python scripts/clip_audit.py data/synthetic/demo/story app/public/data/story \
         [fan|analyst] [--json out.json]
 
 Rebuilds the clip list as the overlay does (``reel`` in Highlights.tsx, ``queue`` in data.ts,
 played from 3 s before a clip's start to 2 s after its end within its half, ``clipFrom``/``clipTo``
-in App.tsx; without the clips removed by hand, ``hidden.json``, decision 48)
+in App.tsx; without the clips removed by hand, ``hidden.json``)
 and reports, per clip: the clip player's top speed and metres above 5.5 m/s (flagged below
 5.5 m/s); players the tracking loses for longer than the overlay fills (2.4 s, drawn nowhere) and
 the shorter gaps it draws faded; shots, and passes on a clear chance (inside 25 m, no outfield
@@ -14,17 +14,17 @@ frames while in play; team-mates within 0.7 m in play (noted while the ball is d
 corner packs may stand closer); players off the pitch; a keeper more than 25 m off his line while
 his team defends; a player above 5.5 m/s (over 1 s of tracking) more than 1.5 s after the ball
 went dead; a clearance that goes out behind the clearer's own goal line from further out than
-``CLEAR_CORNER_DEPTH`` (decision 40); and two clips sharing more than 2 s. Decision 41 adds: a
+``CLEAR_CORNER_DEPTH``; and two clips sharing more than 2 s. Also: a
 sprint-turn (over 1 s of tracking above 6 m/s, then within 4 s above 6 m/s the opposite way,
 cos < −0.7, ball in play; real matches 0–1.04 per player-hour, IDSSE); a duel, tackle or foul
 whose winner (or fouler) is more than 1.5 m from the ball (aerial duel, tackle) or the other
 player (ground duel, foul); a completed pass passing within 0.35 m of an outfield opponent while
 low (ball under 1 m, away from its first and last 0.3 s); a substitute who comes on away from the
 halfway line, or a replaced player who leaves away from a line; and a red-zone clip that shows
-under half of the metres above 5.5 m/s of his last minute. Decision 46 adds a shot after the
+under half of the metres above 5.5 m/s of his last minute. Also a shot after the
 clip: the play on screen at its last second (its possession) ends in a shot after it (the
 overlay runs a clip on to a shot within 20 s, ``toShot``), and leaves team moments out of the
-clips (the Stats tab). Decision 45 adds a run into a
+clips (the Stats tab). Also a run into a
 team-mate: above 5.5 m/s (over 1 s of tracking) for at least ``MATE_RUN_M``, then (ball in play,
 within 2 s) within ``MATE_END_M`` of a team-mate who is not on the ball (a full-back's 38 m
 overlap ended at his winger's shoulder, the story match's 9:58; IDSSE has 1.15 per in-play
@@ -50,17 +50,17 @@ MOMENT_BEFORE, MOMENT_AFTER = 8.0, 4.0  # data.ts, a moment's default window
 GAP_FILL_S = 2.4  # data.ts gapFill
 PRIORITY = ["longest_run", "recovery_run", "top_speed", "back_to_back", "busiest_minute"]
 RESTARTS = {"corner", "free_kick", "throw_in", "goal_kick", "kick_off", "penalty"}
-DEAD_GRACE_S = 1.5  # time to stop after the ball goes dead (decision 40)
-SHARE_MAX = 2.0  # s two clips of different players may share (data.ts; decision 41)
-RUNS_ON_S = 1.0  # a highlight running on past its player's moment gives way to it (decision 42)
-OFFSIDE_FLAG_M, OFFSIDE_FLAG_S = 5.0, 2.0  # an offside spell (decision 46)
-SHOT_REACH_S = 20.0  # data.ts: a clip runs on to a shot this soon after it (decision 46)
-TURN_SPEED, TURN_WITHIN_S, TURN_COS = 6.0, 4.0, -0.7  # sprint-turns (decision 41)
-DUEL_FLAG_M = 1.5  # a duel's winner, or a fouler, within reach (decision 41)
+DEAD_GRACE_S = 1.5  # time to stop after the ball goes dead
+SHARE_MAX = 2.0  # s two clips of different players may share (data.ts)
+RUNS_ON_S = 1.0  # a highlight running on past its player's moment gives way to it
+OFFSIDE_FLAG_M, OFFSIDE_FLAG_S = 5.0, 2.0  # an offside spell
+SHOT_REACH_S = 20.0  # data.ts: a clip runs on to a shot this soon after it
+TURN_SPEED, TURN_WITHIN_S, TURN_COS = 6.0, 4.0, -0.7  # sprint-turns
+DUEL_FLAG_M = 1.5  # a duel's winner, or a fouler, within reach
 PASS_NEAR_M, PASS_NEAR_FLAG_M = 0.6, 0.35  # completed low passes this close to an opponent
 SUB_LINE_M = 3.0  # a substitute comes on within this of halfway; the replaced player leaves
 # within this of a line
-MATE_RUN_M, MATE_END_M, MATE_BALL_M = 15.0, 2.5, 3.0  # a run into a team-mate (decision 45)
+MATE_RUN_M, MATE_END_M, MATE_BALL_M = 15.0, 2.5, 3.0  # a run into a team-mate
 MATE_SETTLE = 20  # frames after the run in which he comes to rest
 
 
@@ -101,7 +101,7 @@ def clock_label(match: dict, v: float) -> str:
 
 
 def to_shot(match: dict, it: dict, shots: list[dict]) -> dict:
-    """data.ts ``toShot`` (decision 46): a clip whose possession is still on at its last second
+    """data.ts ``toShot``: a clip whose possession is still on at its last second
     runs on to the first shot it leads to, if within SHOT_REACH_S of that second, in the same
     half."""
     if it["lapse"]:
@@ -131,8 +131,8 @@ def queue(
     shots: list[dict],
     hidden: frozenset[str] = frozenset(),
 ) -> list[dict]:
-    """data.ts ``queue``: one clip per action; no team moments (decision 46: the Stats tab);
-    the clips removed by hand (``hidden``, decision 48) taken out last, leaving a gap."""
+    """data.ts ``queue``: one clip per action; no team moments (the Stats tab);
+    the clips removed by hand (``hidden``) taken out last, leaving a gap."""
     items = [
         to_shot(match, dict(
             id=f"hl:{h['kind']}:{h['player']['id']}:{js_num(h['video_s'])}", kind=h["kind"],
@@ -148,7 +148,7 @@ def queue(
         lines = [e for e in feed["entries"] if e["moment_id"] == mid and e["mode"] == mode
                  and e["shown"]]  # fmt: skip
         if not lines or not lines[0].get("player"):
-            continue  # a team moment: a statistic, in the Stats tab (decision 46)
+            continue  # a team moment: a statistic, in the Stats tab
         window = clips.get(m["moment_id"], "default")
         if window is None:
             continue
@@ -167,7 +167,7 @@ def queue(
         ov = min(a["end"], b["end"]) - max(a["start"], b["start"])
         half = ov > 0.5 * min(a["end"] - a["start"], b["end"] - b["start"])
         other = a["player"] != b["player"] and ov > SHARE_MAX - CLIP_BEFORE - CLIP_AFTER
-        return not a["lapse"] and (half or other)  # decision 41: more than SHARE_MAX played
+        return not a["lapse"] and (half or other)  # more than SHARE_MAX played
 
     ln = lambda x: x["end"] - x["start"]  # noqa: E731
     ov = lambda a, b: min(a["end"], b["end"]) - max(a["start"], b["start"])  # noqa: E731
@@ -175,12 +175,12 @@ def queue(
 
     out: list[dict] = []
     for m in moments:
-        if any(ov(o, m) > 0.5 * min(ln(o), ln(m))  # the same action (decision 39)
-               or (o["player"] != m["player"] and ov(o, m) > SHARE_MAX - pad)  # decision 41
+        if any(ov(o, m) > 0.5 * min(ln(o), ln(m))  # the same action
+               or (o["player"] != m["player"] and ov(o, m) > SHARE_MAX - pad)
                for o in out):  # fmt: skip
             continue
         k = next((i for i, h in enumerate(items) if shared(h, m)), None)
-        if k is None and m["player"]:  # touching the same player's highlight (decision 40)
+        if k is None and m["player"]:  # touching the same player's highlight
             k = next((i for i, h in enumerate(items) if not h["lapse"] and h["moment"] is None
                       and h["player"] == m["player"] and ov(h, m) > -pad), None)  # fmt: skip
         if k is None:
@@ -343,7 +343,7 @@ def main() -> None:
                             outcome=e.get("outcome")))  # fmt: skip
     shots = [(vstart[e["period"]] + e["t"], e["player_id"], e.get("subtype"), e.get("xg"))
              for e in events if e["type"] == "shot"]  # fmt: skip
-    # Each shot's possession (decision 46): its first and last event (export.shots).
+    # Each shot's possession: its first and last event (export.shots).
     poss_from: dict[tuple[int, int], float] = {}
     poss_to: dict[tuple[int, int], float] = {}
     for e in events:
@@ -359,7 +359,7 @@ def main() -> None:
                       + poss_to.get((e["period"], e.get("possession_id")), e["t"]))
                  for e in events if e["type"] == "shot"]  # fmt: skip
 
-    # Sprint-turns (decision 41): speed over 1 s of tracking (centred) above TURN_SPEED, then
+    # Sprint-turns: speed over 1 s of tracking (centred) above TURN_SPEED, then
     # within TURN_WITHIN_S above it the opposite way, ball in play; counted where they start.
     turns = []  # (video s, player)
     play_s = {1: 0.0, 2: 0.0}
@@ -386,10 +386,10 @@ def main() -> None:
         play_s[per] = float((alive[rows][:, None] & ~np.isnan(p[..., 0])).sum()) / 10.0
     turns.sort()
 
-    # Offside spells (decision 46): an outfield attacker of the team on the ball more than
+    # Offside spells: an outfield attacker of the team on the ball more than
     # OFFSIDE_FLAG_M beyond the offside line (the second-last opponent, the ball or halfway) for
     # OFFSIDE_FLAG_S or more, ball in play (a run in behind had gone 13 m offside for 6 s; IDSSE
-    # 1.1 such spells per attacking player-hour, ours 10.9 before decision 46).
+    # 1.1 such spells per attacking player-hour, ours 10.9 earlier).
     offside = []  # (video s at the start, player, seconds, metres at most)
     for tm in ("home", "away"):
         mine = [col[q] for q in ids if team_of[q] == tm and pos_of[q] != "GK"]
@@ -407,7 +407,7 @@ def main() -> None:
                     offside.append((float(vt[f0]), ids[j], (f1 - f0) / 10.0,
                                     round(float(beyond[f0:f1].max()), 1)))  # fmt: skip
 
-    # Runs into a team-mate (decision 45): above HI over 1 s of tracking (centred) for at least
+    # Runs into a team-mate: above HI over 1 s of tracking (centred) for at least
     # MATE_RUN_M, ending with the ball in play within MATE_END_M of a team-mate not on the ball.
     into_mate = []  # (video s at the end, player, team-mate, metres run)
     running = alive[:, None] & (v1 > HI)
@@ -434,7 +434,7 @@ def main() -> None:
                     into_mate.append((float(vt[at]), pid, ids[j], round(metres)))
             f = g + 1
 
-    # Duels from too far (decision 41): the winner of an aerial duel or a tackle to the ball, the
+    # Duels from too far: the winner of an aerial duel or a tackle to the ball, the
     # two players of a ground duel or a foul to each other.
     far_duels = []  # (video s, kind, player, metres)
     duel_gaps = {"aerial": [], "ground": [], "tackle": [], "foul": []}
@@ -457,7 +457,7 @@ def main() -> None:
         if d > DUEL_FLAG_M:
             far_duels.append((vstart[e["period"]] + e["t"], kind, e["player_id"], round(d, 1)))
 
-    # Completed passes through opponents (decision 41): the ball low (under 1 m), away from its
+    # Completed passes through opponents: the ball low (under 1 m), away from its
     # first and last 0.3 s, near an outfield opponent before the receiver takes it.
     recs: dict[tuple[int, str], list[float]] = {}
     for e in events:
@@ -486,7 +486,7 @@ def main() -> None:
                 (float(vt[seg[k[0]]]), e["player_id"], ids[opp[k[1]]], round(float(dd[k]), 2))
             )
 
-    # Substitutions (decision 41): on at the halfway line, off at a line.
+    # Substitutions: on at the halfway line, off at a line.
     sub_bad = []  # (video s, text)
     for e in events:
         if e["type"] != "substitution":
@@ -560,7 +560,7 @@ def main() -> None:
         if len(lost) > len(long_):
             r["notes"].append(f"{len(lost) - len(long_)} tracking gaps drawn faded")
         r["shots"] = [f"{name[p]} {k} xG {xg}" for v, p, k, xg in shots if a <= v <= b]
-        # Its play ends in a shot after it stops (decision 46): the first shot of the possession
+        # Its play ends in a shot after it stops: the first shot of the possession
         # on screen at its last second that had not landed before it started.
         x = next((x for x in shot_play if x["possession_from"] <= b <= x["possession_to"]
                   and x["arrive_s"] > a and x["video_s"] < h1 + 0.1), None)  # fmt: skip

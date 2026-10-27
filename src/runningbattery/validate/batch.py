@@ -1,4 +1,4 @@
-"""Estimator vs hidden truth over many matches (BUILD_PLAN §3, runs 3 and 5).
+"""Estimator vs hidden truth over many matches (runs 3 and 5).
 
 ``python -m runningbattery.validate.batch data/synthetic/validation [--k 4] [--mode club]``
 
@@ -9,7 +9,7 @@ calibration of the typical-pro chance, raw and calibrated (reliability table, Br
 expected calibration error), and late-match wear as a trend: the hidden tank against the estimator's
 energy since kick-off (load), per player-second and at each whole-match player's last second.
 Per-match values are summarised too (median and 10–90% range), because the varied batch draws
-its own assumptions per match (PLAN §2.6, point 3).
+its own assumptions per match.
 """
 
 from __future__ import annotations
@@ -113,7 +113,7 @@ def pooled(parts: list[dict], low_battery: float = EP.LOW_BATTERY) -> dict:
             out |= {f"{name}_{k}": v for k, v in calibration_scores(a[name], a["tired"]).items()}
             out[f"calibration_{name}"] = calibration(a[name], a["tired"], a["pools"] < low_battery)
     # Late-match wear: the tank falls as work piles up; the load (energy since kick-off) is the
-    # estimator's measure of that work (PLAN §2.3, "Two truth labels").
+    # estimator's measure of that work ("Two truth labels").
     out["late_share"] = float(np.mean(a["tank"] < SP.LATE_TANK_BELOW))
     out["load_vs_tank_rho"] = spearman(a["energy"], -a["tank"])
     out["end_load_vs_tank_rho"] = spearman(a["end_energy"], -a["end_tank"])
@@ -168,7 +168,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--k", type=float, default=EP.K)
     parser.add_argument("--prior", choices=sorted(EP.PRIORS), default=EP.DEFAULT_PRIOR)
     parser.add_argument("--jobs", type=int)
-    # Decision 56 experiment: the battery driven by equivalent speed, and wear slowing its refill.
+    # an experiment: the battery driven by equivalent speed, and wear slowing its refill.
     parser.add_argument("--drive", choices=["speed", "power"], default=EP.DRIVE)
     parser.add_argument(
         "--wear",

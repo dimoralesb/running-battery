@@ -3,12 +3,12 @@ import { BatteryMap } from "./BatteryMap";
 import { SplitChart } from "./SplitChart";
 import { TeamChart } from "./TeamChart";
 
-// The Stats tab (decision 46): the teams' running over the whole match, as statistics, not clips.
+// The Stats tab: the teams' running over the whole match, as statistics, not clips.
 // A team moment ("Westerlyn Albion did 19% more high-speed running per ball-in-play minute in
 // 15:00–30:00") compares fifteen minutes; its clip showed a few seconds of them, at times a dead
-// ball. Here each 15-minute block has both teams' numbers, its team lines (decision 49: no
+// ball. Here each 15-minute block has both teams' numbers, its team lines (no
 // verdicts or blocked lines on the page), and a link to the full match there; beside them the two
-// team charts (decision 50: section 4 under the clip, two columns from 1100 px).
+// team charts (section 4 under the clip, two columns from 1100 px).
 
 interface Props {
   data: MatchData;

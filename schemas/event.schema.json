@@ -52,7 +52,7 @@
       "type": "string"
     },
     "Phase": {
-      "description": "Phase of play, from the viewpoint of the event's team (synthesis §7.2).\n\n``positive_transition`` / ``negative_transition`` are the first seconds after winning / losing\nthe ball [Bortnik2022]. ``high_press`` and ``defensive_block`` are out-of-possession phases.",
+      "description": "Phase of play, from the viewpoint of the event's team.\n\n``positive_transition`` / ``negative_transition`` are the first seconds after winning / losing\nthe ball [Bortnik2022]. ``high_press`` and ``defensive_block`` are out-of-possession phases.",
       "enum": [
         "build_up",
         "progression",
@@ -112,7 +112,7 @@
     }
   },
   "additionalProperties": false,
-  "description": "One on-ball or match event, SPADL / StatsBomb-like (synthesis §7.2).",
+  "description": "One on-ball or match event, SPADL / StatsBomb-like.",
   "properties": {
     "id": {
       "minimum": 0,

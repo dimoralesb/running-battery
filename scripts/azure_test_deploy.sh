@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Azure test deployment (BUILD_PLAN §4, "Fri 16"): an empty Container App and a Basic Event Hub,
+# Azure test deployment ("Fri 16"): an empty Container App and a Basic Event Hub,
 # to find free-trial limits early. Settings come from .env (see .env.example); auth is keyless
 # (az login), and the Event Hubs namespace has local (key) auth switched off.
 #

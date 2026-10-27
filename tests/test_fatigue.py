@@ -1,4 +1,4 @@
-"""Hidden physiology, what low energy changes, and the shared tempo (BUILD_PLAN "Sat 17").
+"""Hidden physiology, what low energy changes, and the shared tempo.
 
 Behaviours are tested on constructed states (an engine a few seconds into a match, with the
 physiology set by hand), because the same seed gives a different match on another machine. The
@@ -287,7 +287,7 @@ def test_tempo_draw_is_clipped():
 def test_tempo_scales_both_teams_work_rate_in_play():
     """The tempo multiplies both teams' work rate on runs and ball roles while the ball is in
     play (still capped at S0); calm movement keeps its speed."""
-    # 5 s in, both teams have someone on a run or a ball role (4 s before decision 43's shape-run
+    # 5 s in, both teams have someone on a run or a ball role (4 s before the shape-run
     # gap, which starts team 0's first run later).
     plain, fast = _engine(body=False, seconds=5.0), _engine(body=False, seconds=5.0)
     fast.roles.tempo = fast.tempo = 1.05
@@ -387,7 +387,7 @@ def test_substitution_at_a_stoppage():
 
 
 def test_wider_prior_reaches_outside_the_estimator_prior():
-    """``VARY_PLAYERS`` draws some CS and D′ outside the estimator's prior ranges (PLAN §3.2);
+    """``VARY_PLAYERS`` draws some CS and D′ outside the estimator's prior ranges;
     the default prior never does. Overrides reach the physiology's settings."""
     rng = np.random.default_rng(0)
     from runningbattery.sim.rosters import true_params

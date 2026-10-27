@@ -3,7 +3,7 @@
 Match length, ball in play, possession, event counts against the interim targets, and per-player
 distance, high-speed and sprint distance, and top speed. ``tracking.jsonl`` is noisy, so positions
 are first smoothed as in Deutsch2025: dropouts filled by linear interpolation, then a zero-lag
-4th-order Butterworth low-pass at 1 Hz (synthesis §3.1). Raw 10 Hz differences of σ = 0.05 m noise
+4th-order Butterworth low-pass at 1 Hz. Raw 10 Hz differences of σ = 0.05 m noise
 would make a player standing still seem to move at about 0.9 m/s (derived: 10 Hz × 0.05 m × √2
 × √(π/2)). ``--clean`` reads the noise-free debug copy instead, if the match was generated with
 ``--clean-copy``.
@@ -55,8 +55,8 @@ def count_tolerance(target: float, matches: int) -> float:
     return max(COUNT_TOLERANCE, 3.0 * math.sqrt(target / matches) / target)
 
 
-FILTER_HZ, FILTER_ORDER = 1.0, 4  # [Deutsch2025, Methods]; see synthesis §3.1
-SPRINT_SPEED = 7.0  # m/s (25.2 km/h) [Allen2024, p.781; synthesis §4.1]
+FILTER_HZ, FILTER_ORDER = 1.0, 4  # [Deutsch2025, Methods]
+SPRINT_SPEED = 7.0  # m/s (25.2 km/h) [Allen2024, p.781]
 # Speed and acceleration of tracking errors, removed before any statistic [Deutsch2025, Methods].
 SPEED_CAP, ACCEL_CAP = 10.5, 10.0
 # Speed bands: walking, jogging, low-, intermediate-, high- and maximum-speed running, with
@@ -155,10 +155,10 @@ def smooth(xy: np.ndarray) -> np.ndarray:
 
 
 def kinematics(xy: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    """Speed (m/s) and tangential acceleration (the rate of change of speed, m/s²) per frame,
-    by central differences of smoothed positions (frames, players, 2) [Deutsch2025, Methods;
-    synthesis §3.1]. Frames faster than ``SPEED_CAP`` or with |a| above ``ACCEL_CAP`` are
-    tracking errors and come back as NaN, in both arrays (same source)."""
+    """Speed (m/s) and tangential acceleration (the rate of change of speed, m/s²) per frame, by
+    central differences of smoothed positions (frames, players, 2) [Deutsch2025, Methods]. Frames
+    faster than ``SPEED_CAP`` or with |a| above ``ACCEL_CAP`` are tracking errors and come back as
+    NaN, in both arrays (same source)."""
     v = np.gradient(xy, axis=0) * P.FRAME_RATE_HZ
     speed = np.hypot(v[..., 0], v[..., 1])
     acc = np.gradient(speed, axis=0) * P.FRAME_RATE_HZ

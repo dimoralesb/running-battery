@@ -20,7 +20,7 @@
     },
     "EngineSettings": {
       "additionalProperties": false,
-      "description": "How the signals were made (PLAN §3.2–3.3; values and sources in ``engine/params.py``).",
+      "description": "How the signals were made (values and sources in ``engine/params.py``).",
       "properties": {
         "mode": {
           "description": "broadcast: shared prior only; club: club test values (validation only)",
@@ -37,7 +37,7 @@
           "type": "string"
         },
         "update": {
-          "description": "draws: per-player update of CS and D′ from prior draws (decision 9); correction: one value with the one-way D′ correction only (club mode, fallback)",
+          "description": "draws: per-player update of CS and D′ from prior draws; correction: one value with the one-way D′ correction only (club mode, fallback)",
           "enum": [
             "draws",
             "correction"
@@ -151,7 +151,7 @@
       "type": "object"
     },
     "Position": {
-      "description": "Position codes as in Allen2024 (synthesis §4.2).",
+      "description": "Position codes as in Allen2024.",
       "enum": [
         "GK",
         "CB",
@@ -281,7 +281,7 @@
             }
           ],
           "default": null,
-          "description": "Chance that a typical player of the prior's population (a typical professional by default) would be short-term tired after this running (broadcast mode): low_chance_raw through the calibration map named in engine.low_chance_map. About the running, not this player's own state (PLAN §7, decision 14)",
+          "description": "Chance that a typical player of the prior's population (a typical professional by default) would be short-term tired after this running (broadcast mode): low_chance_raw through the calibration map named in engine.low_chance_map. About the running, not this player's own state",
           "title": "Low Chance"
         },
         "low_chance_raw": {
@@ -410,7 +410,7 @@
           "type": "array"
         },
         "post_peak": {
-          "description": "In a red-zone spell or the minutes after one; neutral wording only (\"catching breath\"), never \"tired\" (PLAN §7, decision 12)",
+          "description": "In a red-zone spell or the minutes after one; neutral wording only (\"catching breath\"), never \"tired\"",
           "items": {
             "type": "boolean"
           },
@@ -452,7 +452,7 @@
     },
     "TiredSpell": {
       "additionalProperties": false,
-      "description": "A run of tired seconds for one player, with the events that fall inside it: the\nplayer's defensive actions and ball losses (PLAN §3.3).",
+      "description": "A run of tired seconds for one player, with the events that fall inside it: the\nplayer's defensive actions and ball losses.",
       "properties": {
         "player_id": {
           "title": "Player Id",

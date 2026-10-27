@@ -25,7 +25,7 @@ def clips(match: str, hidden: frozenset[str]) -> list[dict]:
 
 @pytest.mark.parametrize("match", ["story", "natural"])
 def test_clips_removed_by_hand_leave_a_gap(match):
-    """Decision 48: every id in hidden.json names a clip of the list, and taking them out removes
+    """Every id in hidden.json names a clip of the list, and taking them out removes
     exactly those clips (also a moment that became a highlight's line); no other clip takes their
     place."""
     hidden = frozenset(json.loads((ROOT / "app/public/data" / match / "hidden.json").read_text()))

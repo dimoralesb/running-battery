@@ -1,4 +1,4 @@
-"""The Verifier's second pass (decision 4): an LLM reads each sentence the rules let through and
+"""The Verifier's second pass: an LLM reads each sentence the rules let through and
 checks it against the claim it cites, the whole register and the moment's context.
 
 Order: the rules first (``verifier.verify``); they can only block. Then the LLM, which can
@@ -110,7 +110,7 @@ How to read the rules (do not block for these):
 - G5 is about phases of play (with or without the ball, ball in play), not halves or minutes.
 - "His hardest minutes (so far)" and "just after his hardest minutes (so far)" are the system's
   neutral names for measured windows (his high-speed running at its peak, and the minutes after
-  it, the post-peak flag; decision 12), not claims about his physiology or his own tiredness.
+  it, the post-peak flag), not claims about his physiology or his own tiredness.
 - The moments' names are football's names for kinds of moment, not claims about anyone's body
   or tiredness (prompt revision 6): "second wind" (his running back up after his hardest
   minutes), "fresh legs" (a substitute's running against his team-mates'), "caught on the

@@ -1,7 +1,7 @@
 """Generate one match: ``python -m runningbattery.sim --seed 1 --out data/synthetic/m0001``.
 
 Fatigue is on and the match tempo drawn by default. ``--no-fatigue`` gives the no-fatigue
-control of the same seed (PLAN §2.5); adding ``--no-tempo`` gives the match as the generator
+control of the same seed; adding ``--no-tempo`` gives the match as the generator
 made it before fatigue and tempo existed (81f023d), file for file.
 """
 

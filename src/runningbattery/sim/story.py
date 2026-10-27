@@ -1,10 +1,10 @@
-"""Story controls (PLAN §2.3): seeded settings that make a demo match tell a story on purpose.
+"""Story controls: seeded settings that make a demo match tell a story on purpose.
 
 Story matches are for the demo only. They over-represent the moments the agents explain, so
-they are never used for validation numbers (PLAN §2.6, point 4).
+they are never used for validation numbers.
 
 A story changes what the teams *try* to do, never the physiology: the fade after a high press
-comes from the same pools and tank as in any match (synthesis §9.4, "story controls tied to
+comes from the same pools and tank as in any match ("story controls tied to
 physiology"). ``python -m runningbattery.sim --seed 11 --story press-fade --out …``
 
 - **High press, then fade.** Until ``press_until_min`` the pressing team presses whenever the
@@ -20,7 +20,7 @@ physiology"). ``python -m runningbattery.sim --seed 11 --story press-fade --out 
   ``sub_minute``) replaces the exposed full-back instead, at ``sub_minute``; the substitute's
   hidden values are the ones already drawn for that plan.
 
-All values are our assumptions, chosen to make the moments visible in one match. Decision 44:
+All values are our assumptions, chosen to make the moments visible in one match. First,
 ``press_effort`` 1.06 → 1.02 from a scripted search (``press_chance`` 0.6–0.9 × ``press_effort``
 1.00–1.06 × ``press_run_boost`` 1.25–1.75, each point on the demo seed and 5 more): at 1.06 one
 15-min block of the demo match had the pressing team 79% ahead on high-speed running per
@@ -28,13 +28,13 @@ ball-in-play minute, beyond the 7 IDSSE matches' largest (46%), and 4 of the 6 s
 46%. The rule, fixed before the results: the demo match below 46% with every story moment (the
 press team ahead in 2 of the first hour's blocks, a player caught on the break 3 times, a
 substitute with fresh legs, all 7 moment kinds), at most 1 of the 6 seeds above 46%, and of
-those the point nearest the old values. Now 27% at most, 1 seed of 6 above 46%. Decision 45
+those the point nearest the old values. Now 27% at most, 1 seed of 6 above 46%. Then
 (the generator's runs changed and were refitted): the same search and rule; 1.02 left the pressing
 team ahead in none of the first hour's blocks, so ``press_chance`` 0.9 → 0.8 and ``press_effort``
 1.02 → 1.04 (24% at most on the demo seed, ahead in 3 of the 4 blocks, 1 seed of 6 above 46%).
-Decision 46 (runs onside, counter-press, keeper claims; refitted): the same search and rule; one
+Then (runs onside, counter-press, keeper claims; refitted): the same search and rule; one
 point passes, ``press_chance`` 0.8 → 0.7 and ``press_run_boost`` 1.75 → 1.25 (45% at most on the
-demo seed, ahead in 3 of the first hour's 4 blocks, 1 seed of 6 above 46%). Decision 47
+demo seed, ahead in 3 of the first hour's 4 blocks, 1 seed of 6 above 46%). Then
 (keeper box clearing, out-of-possession shape-run cap, build-up press; refitted): the same search
 and rule; ``press_chance`` 0.7 → 0.9, ``press_effort`` 1.04 → 1.02 and ``press_run_boost``
 1.25 → 1.75 (28% at most on the demo seed, ahead in 2 of the first hour's 4 blocks, 0 seeds of 6
@@ -55,10 +55,10 @@ from runningbattery.sim.rosters import SimTeam, SubPlan
 class Story:
     name: str
     press_team: int = 0  # 0 home, 1 away
-    press_chance: float = 0.7  # decision 47: scripted search (module docstring)
+    press_chance: float = 0.7  # Scripted search (module docstring)
     press_until_min: float = 60.0
-    press_run_boost: float = 1.75  # decision 47: scripted search (module docstring)
-    press_effort: float = 1.04  # decision 47: scripted search (module docstring)
+    press_run_boost: float = 1.75  # Scripted search (module docstring)
+    press_effort: float = 1.04  # Scripted search (module docstring)
     exposed_slot: int = 3  # engine index: home slot 4 (H04), the left-back (FORMATION_4231)
     counter_bias: float = 4.0
     counter_reach: float = 20.0

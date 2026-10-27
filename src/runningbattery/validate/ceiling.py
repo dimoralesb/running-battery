@@ -1,4 +1,4 @@
-"""The ceiling for telling who is tired from positions (PLAN §3.3 "As built").
+"""The ceiling for telling who is tired from positions.
 
 ``python -m runningbattery.validate.ceiling data/synthetic/dev --matches 20``
 

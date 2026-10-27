@@ -330,7 +330,7 @@ class MatchEngine:
                 speed *= self.physiology.carry(player)  # slower, so shorter [Fang2024, Fig. 1]
         start = self.pos[player].copy()
         # Carry towards the opponent's goal, with a spread of angles and a pull to the middle;
-        # inside their penalty area, at the goal (decision 40: from the goal line straight
+        # inside their penalty area, at the goal (from the goal line straight
         # upfield ran him to the byline).
         u, v = self.to_uv(team, start)
         aim = math.atan2(-v, GOAL_U - u) if u > GOAL_U - P.BOX_DEPTH else -0.01 * v
@@ -364,7 +364,7 @@ class MatchEngine:
         """From the duel's moment, the nearest opponent within ``DUEL_ENGAGE`` goes in for the
         ball (``roles.targets``) and holds the carrier up for up to ``DUEL_HOLD_S``; the duel
         happens once he is within ``DUEL_REACH`` of the carrier and the ball, if the carrier has
-        not released it first (decision 41)."""
+        not released it first."""
         tc = self.touch
         if tc.duel_at is not None and t >= tc.duel_at:
             if tc.challenger < 0:
@@ -376,7 +376,7 @@ class MatchEngine:
                 self.ground_duel(t, tc.challenger)
                 return
         # A keeper who has come out (Roles: ``GK_RUSH_*``) and reaches the carrier goes for the
-        # ball at his feet, once (decision 46: nobody met a clear carrier, who ran on into
+        # ball at his feet, once (nobody met a clear carrier, who ran on into
         # point-blank range: 4 goals a match against the Premier League's 2.6).
         gk = int(self.members(1 - int(self.team_of[tc.player]))[0])
         if not tc.smother_tried and not tc.header and self.in_reach(gk, tc.player, t):
@@ -427,7 +427,7 @@ class MatchEngine:
             if clear and d_goal >= P.SHOT_CLOSE and tc.carry_ons < P.SHOT_CARRY_ON_MAX:
                 self.carry_on(t, tc)
                 return
-            if clear:  # still clear after his last carry-on: he shoots (decision 42)
+            if clear:  # still clear after his last carry-on: he shoots
                 self.shoot(t, c, tc.header)
                 return
         self.play_pass(t, c, self.pos[c].copy())
@@ -610,7 +610,7 @@ class MatchEngine:
             f.result = "offside"
         elif height == PassHeight.HIGH and six and rng.random() < P.GK_CLAIM_CHANCE:
             # The keeper comes for a high ball dropping into his six-yard box and claims it
-            # (decision 46: nobody did, and 14% of our shots came from inside 6 m, 57% of them
+            # (nobody did, and 14% of our shots came from inside 6 m, 57% of them
             # goals; 3.7% in Wyscout's Premier League 2017/18).
             f.result, f.to = "intercepted", int(self.members(1 - team)[0])
         elif height == PassHeight.HIGH:
@@ -678,7 +678,7 @@ class MatchEngine:
         low (``CUT_OUT_*``; near its end only if it will roll on past its receiver) is cut out
         there: intercepted (or cleared in his own penalty area)
         when it comes within ``CUT_OUT_CONTROL`` of him, otherwise deflected loose. The path is
-        the ball's since the last frame, so a fast ball does not jump past him (decision 41)."""
+        the ball's since the last frame, so a fast ball does not jump past him."""
         f = self.flight
         if f.event < 0 or f.result not in ("complete", "aerial", "offside"):
             return
@@ -847,7 +847,7 @@ class MatchEngine:
         rng = self.rng
         f = self.flight
         if f.result == "aerial" and np.hypot(*(self.pos[f.challenger] - f.end)) > P.DUEL_REACH:
-            # Not under the ball: no duel; it is the receiver's (decision 41).
+            # Not under the ball: no duel; it is the receiver's.
             f.result, f.receiver_wins = "complete", True
             if f.event >= 0:
                 self.events[f.event]["outcome"] = Outcome.SUCCESS
@@ -1015,7 +1015,7 @@ class MatchEngine:
         extra: float = 0.0,
     ) -> None:
         """The ball is dead: the restart is due after DEAD_TIME (scaled by DEAD_TIME_SCALE), plus
-        ``extra`` for a cause the match shows (a booking, CARD_DELAY_S). Decision 46: a long
+        ``extra`` for a cause the match shows (a booking, CARD_DELAY_S). A long
         stoppage with no cause (LONG_STOPPAGE, 10% of dead balls, 30–90 s more) is gone."""
         rng = self.rng
         median, sigma = P.DEAD_TIME[kind]
@@ -1269,7 +1269,7 @@ class MatchEngine:
         r = self.restart
         if due and t > 0.0 and not r.sub_wait:
             # A stoppage with a substitution lasts SUB_STOPPAGE from the ball going dead
-            # (decision 46: ours lasted 24 s, IDSSE's 59 s; the waits they had came from
+            # (ours lasted 24 s, IDSSE's 59 s; the waits they had came from
             # LONG_STOPPAGE, which had no cause).
             median, sigma = P.SUB_STOPPAGE
             r.t = max(r.t, snap(r.t_dead + self.rng.lognormal(math.log(median), sigma)))

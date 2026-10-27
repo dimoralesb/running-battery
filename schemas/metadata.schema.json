@@ -2,7 +2,7 @@
   "$defs": {
     "ClubTestValues": {
       "additionalProperties": false,
-      "description": "Club fitness-test values: the truth plus measurement error (PLAN §3.2).\n\nBroadcasters never have these, so the generator leaves them out unless asked\n(``--club-tests``). They exist for one validation experiment: how much club data would help.",
+      "description": "Club fitness-test values: the truth plus measurement error.\n\nBroadcasters never have these, so the generator leaves them out unless asked\n(``--club-tests``). They exist for one validation experiment: how much club data would help.",
       "properties": {
         "cs": {
           "description": "Critical speed, m/s",
@@ -167,7 +167,7 @@
       "type": "object"
     },
     "Position": {
-      "description": "Position codes as in Allen2024 (synthesis §4.2).",
+      "description": "Position codes as in Allen2024.",
       "enum": [
         "GK",
         "CB",

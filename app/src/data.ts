@@ -28,7 +28,7 @@ export interface Meta {
   situations: string[]; // situations of play, in order (agents/tools.py SITUATIONS)
   team_situations: SituationBlock[];
   substitutions: { video_s: number; team: string; off: string; on: string; clock: string }[];
-  // What each feed moment's clip shows, [start, end] (export.moment_clips, decision 38); null:
+  // What each feed moment's clip shows, [start, end] (export.moment_clips); null:
   // no clip (its player does nothing above 5.5 m/s in it); missing: the default window.
   clips?: Record<string, [number, number] | null>;
   shots?: Shot[]; // every shot, so that a clip runs on to the one its play ends in (toShot)
@@ -53,7 +53,7 @@ export interface TeamBlock {
   away: { hsr: number | null; possession: number; in_play_s: number };
 }
 
-/** Where the running happened (decision 30), one 15-min block: per team and situation,
+/** Where the running happened, one 15-min block: per team and situation,
  * [metres above 5.5 m/s, ball-in-play seconds], team totals of the outfield players. */
 export interface SituationBlock {
   video_start: number;
@@ -109,7 +109,7 @@ export interface Feed {
   entries: Entry[];
 }
 
-/** A physical highlight (agents/highlights.py, decision 28): measured, with its caption. */
+/** A physical highlight (agents/highlights.py): measured, with its caption. */
 export interface Highlight {
   kind: "top_speed" | "longest_run" | "back_to_back" | "busiest_minute" | "most_ground"
     | "recovery_run";
@@ -132,7 +132,7 @@ export interface MatchData {
   signals: Record<string, Signals>;
   feed: Feed;
   duration: number;
-  // Clips removed by hand (hidden.json, decision 48: their movement did not look like football):
+  // Clips removed by hand (hidden.json: their movement did not look like football):
   // Item ids; a hidden moment's lines stay in the full match.
   hidden: Set<string>;
 }
@@ -173,7 +173,7 @@ export function clockLabel(meta: Meta, v: number): string {
 const GAP_FILL_S = 2.4; // tracking loses a player for up to 2 s (sim/params.py DROPOUT_S)
 
 /** Where column j must have been at replay time v while the tracking lost him for a moment:
- * straight between his positions either side of a gap of at most GAP_FILL_S (decision 38), or
+ * straight between his positions either side of a gap of at most GAP_FILL_S, or
  * null (no gap, or a longer one: off the pitch). Drawn faded; the estimator still sees the gap. */
 export function gapFill(d: MatchData, j: number, v: number): [number, number] | null {
   const cols = d.meta.ids.length + 1;
@@ -214,7 +214,7 @@ export function position(d: MatchData, j: number, v: number): [number, number] |
 
 /** Where each half's count starts: [video_s of its first second, its index]. The first half ends
  * mid-second (2765.7 s in the story match), so one count from `start` read the second half a
- * second late (decision 44). */
+ * second late. */
 const halves = (s: Signals): [number, number][] => s.halves ?? [[s.start, 0]];
 
 /** The last half whose `at` (0: its first second, 1: its index) is at most x, or -1. */
@@ -269,9 +269,9 @@ export function highlightValue(h: Highlight): string {
   return `${f("metres_in_one_minute")} m`;
 }
 
-/** One clip of the Highlights view (decision 29): a highlight or a feed moment, shown first
- * as it happened, then its details on the last frame; a Replay button plays it again slowed down
- * (decision 34). */
+/** One clip of the Highlights view: a highlight or a feed moment, shown first
+ * as it happened, then its details on the last frame; a Replay button plays it again slowed down.
+ */
 export interface Item {
   id: string;
   source: "highlight" | "moment";
@@ -308,8 +308,8 @@ export function fastSegments(s: Signals | undefined, a: number, b: number): [num
   return out;
 }
 
-/** A highlight clip fast-forwards the stretches between a player's high-speed runs (decision 39:
- * a back-to-back or busiest-minute clip ran a minute at 1×, mostly between his runs): from
+/** A highlight clip fast-forwards the stretches between a player's high-speed runs (a
+ * back-to-back or busiest-minute clip ran a minute at 1×, mostly between his runs): from
  * 1.5 s after one run to 2 s before the next, if that is 3 s or more, and never the clip's
  * first 1.5 s. */
 export const FAST_FORWARD = 4;
@@ -325,7 +325,7 @@ export function quietGaps(runs: [number, number][], from: number, to: number): [
 }
 
 /** A clip whose play is still on when it ends and ends in a shot runs on to the ball's arrival
- * (decision 46: clips stopped a few seconds before the shot their play ended in). The play on
+ * (clips stopped a few seconds before the shot their play ended in). The play on
  * screen at the clip's last second (2 s after its window, `clipTo`) is the possession then on;
  * its first shot not landed before the clip counts if it comes within SHOT_REACH_S of that
  * second, in the same half (a rebound later in the same possession does not). */
@@ -359,7 +359,7 @@ export function itemOfHighlight(h: Highlight): Item {
 const PLAYED_PAD = 5;
 const SHARE_MAX = 2; // s two clips of different players may share (clip_audit's "shares")
 // A highlight of the moment's player that runs on past the moment's clip gives way to it, so that
-// the clip ends on the second its line is about (decision 42: a back-to-back clip 37 s past a
+// the clip ends on the second its line is about (a back-to-back clip 37 s past a
 // hardest-minutes moment ended on 48% under the line's 57%).
 const RUNS_ON_S = 1;
 
@@ -368,17 +368,17 @@ function overlap(a: Item, b: Item): number {
 }
 
 /** The Highlights view's clips in match order: the match's best highlights (as the reel) and
- * the feed's moments, each with its first verified line in this mode. One clip per action
- * (decision 38): a moment that shares more than half of the shorter clip with a highlight of the
+ * the feed's moments, each with its first verified line in this mode. One clip per action:
+ * a moment that shares more than half of the shorter clip with a highlight of the
  * same player becomes that clip's line; one that shares more than half of the shorter clip with
- * another player's highlight (the same action seen twice; decision 40, the longer clip before)
+ * another player's highlight (the same action seen twice; the longer clip before)
  * takes its place; one that shares more than half of the shorter clip with a moment already in
  * the list (the same action, from either side) gets no clip. A moment whose played clip touches
  * the same player's highlight (3 s before and 2 s after each, `clipFrom`/`clipTo` in App.tsx)
- * also becomes that clip's line, so his two clips do not replay the same seconds (decision 40).
+ * also becomes that clip's line, so his two clips do not replay the same seconds.
  * One whose played clip shares more than SHARE_MAX seconds with another player's highlight takes
  * its place too, and one that shares that much with another player's moment already in the list
- * gets no clip (decision 41: a clip of his hardest minutes replayed the last 8 s of a
+ * gets no clip (a clip of his hardest minutes replayed the last 8 s of a
  * team-mate's back-to-back runs). */
 export function queue(d: MatchData, mode: Mode, best: Highlight[]): Item[] {
   const items = best.map((h) => toShot(d, itemOfHighlight(h)));
@@ -391,7 +391,7 @@ export function queue(d: MatchData, mode: Mode, best: Highlight[]): Item[] {
     if (window === null) continue; // nothing to see: the line stays in the full match
     const e = lines[0];
     const pid = e.player?.id ?? null;
-    if (!pid) continue; // a team moment: a statistic of 15 minutes, in the Stats tab (decision 46)
+    if (!pid) continue; // a team moment: a statistic of 15 minutes, in the Stats tab
     const [start, end] = window
       ?? [Math.max(m.video_s - MOMENT_BEFORE, 0), m.video_s + MOMENT_AFTER];
     moments.push(toShot(d, {
@@ -406,7 +406,7 @@ export function queue(d: MatchData, mode: Mode, best: Highlight[]): Item[] {
                  || (a.player !== b.player && overlap(a, b) > SHARE_MAX - PLAYED_PAD));
   const out: Item[] = [];
   for (const m of moments) {
-    // The same run again, or the same action seen from another player (decision 39: a defender
+    // The same run again, or the same action seen from another player (a defender
     // caught on the break and the attacker's flat-out run on that counter); its lines stay in
     // the full match.
     const len = (x: Item) => x.end - x.start;
@@ -431,7 +431,7 @@ export function queue(d: MatchData, mode: Mode, best: Highlight[]): Item[] {
       out.push(m);
     }
   }
-  // A clip removed by hand leaves a gap (decision 48): the list is built as before and the hidden
+  // A clip removed by hand leaves a gap: the list is built as before and the hidden
   // clips (a highlight, or a moment, also one that became a highlight's line) taken out after, so
   // no other clip takes their place.
   return [...items, ...out].sort((a, b) => a.at - b.at).filter((it) => !isHidden(d, it));

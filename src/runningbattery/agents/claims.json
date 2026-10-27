@@ -1,21 +1,21 @@
 {
-  "source": "docs/RESEARCH_SYNTHESIS.md §5 (claims register) and docs/PLAN.md §3.4 (Verifier rulebook), 2026-10-17",
+  "source": "Our claims register and Verifier rulebook, written by hand from the papers in docs/References.bib, 2026-10-17",
   "status_key": {
     "supported": "Large match studies agree.",
     "qualified": "Allowed only with the stated qualifier.",
     "blocked": "Not supported: the Verifier blocks it."
   },
   "global_rules": [
-    {"id": "G1", "rule": "Every percentage names its baseline: vs his match average, vs his peak, vs the first 15 min, or of a typical professional's reserve.", "source": "synthesis §5, rule 1; PLAN §3.4, rule 1"},
-    {"id": "G2", "rule": "Every fatigue statement uses estimate language (likely, our estimate, the data suggest) or the typical-professional wording.", "source": "synthesis §5, rule 2; PLAN §3.4, rule 8"},
-    {"id": "G3", "rule": "Context check before 'tired' or 'fatigue': ball in play, score, start of a half, first-half load, role, just substituted on, just lost or won the ball.", "source": "synthesis §5, rule 3; PLAN §3.4, rule 2"},
-    {"id": "G4", "rule": "No claims about an individual's physiology (lactate, glycogen); only estimates from movement.", "source": "synthesis §5, rule 4"},
-    {"id": "G5", "rule": "Compare phases per minute of that phase, never as raw totals.", "source": "synthesis §5, rule 5; PLAN §3.4, rule 3"},
-    {"id": "G9", "rule": "The battery and the low-battery chance describe the running, relative to a typical professional, never the player's own state.", "source": "PLAN §3.4, rule 9; decision 14"},
-    {"id": "G10", "rule": "Plain English on screen: no field names or code identifiers (times_exposed_so_far, vs_opponent), and \"level\" rather than \"0% more\".", "source": "PLAN decision 29 (the Narrator's prompt, decision 25)"},
-    {"id": "G11", "rule": "Name each team so the viewer can tell which is meant: in full when the two names share a word (Westerlyn Albion, Ravensholt Albion), never the shared word alone. A team named through its player (\"Marco Tarvsall's team\", \"his team\") is clear.", "source": "PLAN decision 31 (the site's feed, 2026-10-19)"},
-    {"id": "G13", "rule": "A scoreline on screen is the score at that moment, never a claim's example (\"a 3–0 lead\").", "source": "PLAN decision 38 (the site's feed, 86:33, 2026-10-20)"},
-    {"id": "G14", "rule": "A substitute is compared with the player he replaced over that player's own minutes on the pitch; only the team-mates are compared over the same minutes.", "source": "PLAN decision 38 (the site's feed, 75:59, 2026-10-20)"}
+    {"id": "G1", "rule": "Every percentage names its baseline: vs his match average, vs his peak, vs the first 15 min, or of a typical professional's reserve.", "source": "Rule 1"},
+    {"id": "G2", "rule": "Every fatigue statement uses estimate language (likely, our estimate, the data suggest) or the typical-professional wording.", "source": "Rule 8"},
+    {"id": "G3", "rule": "Context check before 'tired' or 'fatigue': ball in play, score, start of a half, first-half load, role, just substituted on, just lost or won the ball.", "source": "Rule 2"},
+    {"id": "G4", "rule": "No claims about an individual's physiology (lactate, glycogen); only estimates from movement.", "source": "Rule 4"},
+    {"id": "G5", "rule": "Compare phases per minute of that phase, never as raw totals.", "source": "Rule 3"},
+    {"id": "G9", "rule": "The battery and the low-battery chance describe the running, relative to a typical professional, never the player's own state.", "source": "Rule 9"},
+    {"id": "G10", "rule": "Plain English on screen: no field names or code identifiers (times_exposed_so_far, vs_opponent), and \"level\" rather than \"0% more\".", "source": "The Narrator's prompt"},
+    {"id": "G11", "rule": "Name each team so the viewer can tell which is meant: in full when the two names share a word (Westerlyn Albion, Ravensholt Albion), never the shared word alone. A team named through its player (\"Marco Tarvsall's team\", \"his team\") is clear.", "source": "Found on the site's feed, 2026-10-19"},
+    {"id": "G13", "rule": "A scoreline on screen is the score at that moment, never a claim's example (\"a 3–0 lead\").", "source": "Found on the site's feed, 86:33, 2026-10-20"},
+    {"id": "G14", "rule": "A substitute is compared with the player he replaced over that player's own minutes on the pitch; only the team-mates are compared over the same minutes.", "source": "Found on the site's feed, 75:59, 2026-10-20"}
   ],
   "claims": [
     {"id": "1", "status": "supported", "mode": "fan", "pattern": "After his hardest minutes, high-speed running drops for a few minutes and then recovers", "sources": ["Leifsson2024", "Schimpchen2020", "Ju2022", "Fang2024"], "wording": "After a player's hardest 5 minutes, high-speed running in the next minute is typically about 40% below their match average. It comes back over about 5 minutes."},
@@ -31,7 +31,7 @@
     {"id": "9b", "status": "supported", "mode": "fan", "pattern": "Teams run harder per minute without the ball than with it", "sources": ["Allen2026b"], "wording": "Without the ball, Premier League players typically cover about 10% more ground per minute than when they have it."},
     {"id": "9c", "status": "supported", "mode": "analyst", "pattern": "Recovery starts fast: part of short-term capacity returns within 30 s (lab, cycling)", "sources": ["Lievens2024", "Chorley2022"], "wording": "In lab tests, about a fifth of the short-term reserve returns in the first 30 seconds of easy recovery."},
     {"id": "10", "status": "qualified", "mode": "fan", "pattern": "He's slower now (top speed)", "sources": ["Bradley2009", "SilvaJR2018"], "qualifier": "Only for repeated efforts or after a peak; never 'he's lost his pace'.", "wording": "His last few sprints were a bit slower than earlier ones."},
-    {"id": "11", "status": "qualified", "mode": "fan", "pattern": "Battery / D′ balance and the typical-pro chance", "sources": ["Skiba2012", "Jones2017", "Modric2020"], "qualifier": "Relative to a typical professional only (decision 14), with the band; the chance quoted with its measured calibration.", "wording": "He has done running that would leave a typical professional at about 40% of their short-term reserve."},
+    {"id": "11", "status": "qualified", "mode": "fan", "pattern": "Battery / D′ balance and the typical-pro chance", "sources": ["Skiba2012", "Jones2017", "Modric2020"], "qualifier": "Relative to a typical professional only, with the band; the chance quoted with its measured calibration.", "wording": "He has done running that would leave a typical professional at about 40% of their short-term reserve."},
     {"id": "12", "status": "qualified", "mode": "fan", "pattern": "Equivalent distance", "sources": ["Osgnach2010", "Buchheit2015"], "qualifier": "Labelled a model estimate.", "wording": "About 11 km, an effort roughly like 13 km of steady running (model estimate)."},
     {"id": "13", "status": "qualified", "mode": "fan", "pattern": "Drop in running due to fatigue vs tactics", "sources": ["Bradley2013", "Morgans2025", "Cortez2026", "MarquesJimenez2017"], "qualifier": "Must pass the context check.", "wording": "His running dropped while his team sat on a 3–0 lead, so this may be tactical rather than fatigue."},
     {"id": "14", "status": "qualified", "mode": "fan", "pattern": "Pass, shot or touch volume falls after peaks or late", "sources": ["Cortez2026", "Carling2011"], "qualifier": "Only together with ball in play.", "wording": "Fewer touches, partly because the ball was out of play more."},

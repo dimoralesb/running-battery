@@ -1,1 +1,1 @@
-"""Fatigue estimator: sees positions, ball status and possession only (PLAN §3)."""
+"""Fatigue estimator: sees positions, ball status and possession only."""

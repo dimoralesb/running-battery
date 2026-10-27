@@ -1,5 +1,5 @@
-"""The explanation feed (BUILD_PLAN "Thu 22"): a match folder in, a verified, timestamped
-``feed.json`` out, so the overlay and a video can sync to it (PLAN §4).
+"""The explanation feed: a match folder in, a verified, timestamped
+``feed.json`` out, so the overlay and a video can sync to it.
 
 ``python -m runningbattery.agents.feed <match folder> [--offline]``
 
@@ -9,16 +9,16 @@ Four agents, each with a plain-code fallback so the feed never has a gap:
    spread over the match.
 2. **Narrator** writes one sentence per moment from the claims register's wordings and the
    moment's facts; offline (or as the fallback for a blocked sentence), fixed templates.
-3. **Personalization** (a thin step, decision 6): fan or analyst wording. There is no
-   favourite player (decision 42): the feed describes the match's most relevant moments.
+3. **Personalization** (a thin step): fan or analyst wording. There is no
+   favourite player: the feed describes the match's most relevant moments.
 4. **Verifier** checks every sentence: the rules, then the LLM pass (``agents.llm_verifier``).
    A blocked sentence is replaced by the Verifier's rewrite if that passes both checks, else by
    the template, else left out. Blocked sentences stay in the feed with ``shown: false``.
 
-Then plain code makes sure of three things the prompts ask for (decision 25): the match's key
+Then plain code makes sure of three things the prompts ask for: the match's key
 moments are in the pick (``ensure_key``: the agent's picks vary between runs); a team moment
 says how the two teams compare (``MUST_SAY``; else the verified template line is added;
-decision 31 adds a substitute against his team-mates and, for a player caught on the break,
+the same for a substitute against his team-mates and, for a player caught on the break,
 what his running would leave a typical professional), and each
 general register sentence is shown at most ``MAX_GENERAL`` times per mode (later ones stay in
 the feed with ``verdict: "repeat"``, ``shown: false``); a moment left with no line gets its
@@ -54,16 +54,16 @@ PER_KIND = {"tug_of_war": 2, "red_zone": 3, "exposed_on_turnover": 3, "flat_out"
             "second_wind": 2, "fresh_legs": 2, "not_tired_tactical": 2}  # fmt: skip
 MIN_GAP_S = 180.0  # moments at least 3 min apart (our assumption, for a readable feed)
 MAX_PER_PLAYER = 3
-MAX_GENERAL = 2  # each general register sentence at most twice per mode (decision 25)
+MAX_GENERAL = 2  # each general register sentence at most twice per mode
 # Register claims about this player or moment; every other claim is a general finding.
 SPECIFIC = {"5", "8", "10", "11", "12", "13", "14", "17", "19", "19c"}
 # Player moment kinds the feed always holds when the match has one (``ensure_key``): its best-
-# ranked moment of each (decision 42, after the favourite player went: the agent's picks vary
+# ranked moment of each (after the favourite player went: the agent's picks vary
 # between runs, and a regenerated feed had lost the turnover that cost a goal and the fresh legs).
 KEY_KINDS = ("exposed_on_turnover", "red_zone", "fresh_legs", "second_wind", "flat_out",
              "not_tired_tactical")  # fmt: skip
-# What a team moment's lines must say (decision 25): the comparison between the two teams.
-# Decision 43: a closed gap gives the block's own comparison ({now}, ``comparison``), not only
+# What a team moment's lines must say: the comparison between the two teams.
+# A closed gap gives the block's own comparison ({now}, ``comparison``), not only
 # the earlier gap (the natural feed's one fan line gave the earlier 18% and not the block's 3%);
 # "level" only when it is 0% (G10), and a closed gap is anything below GAP_CLOSED.
 MUST_SAY = {
@@ -71,16 +71,16 @@ MUST_SAY = {
     "gap closed": r"(?<![\d.]){now}\s*%\s*(more|less|higher|lower)\b",
 }
 LEVEL_SAYS = r"\blevel\b|\bthe same\b"
-# Decision 31: the point of a fresh-legs moment is the comparison with his team-mates, and a
+# The point of a fresh-legs moment is the comparison with his team-mates, and a
 # caught-on-the-break moment says what his running would cost (claim 11; the favourite's only
-# before decision 42); the Narrator left both out of a regenerated feed.
+# earlier); the Narrator left both out of a regenerated feed.
 FRESH_LEGS_SAYS = r"\bteam-?mates\b"
-# Decision 39: a second wind says his running against his match average (the site's 42:55 showed
+# A second wind says his running against his match average (the site's 42:55 showed
 # only "He's about 5.2 minutes after his hardest minutes.").
-# Decision 42: "his" match average, so that claim 1's general "below their match average" does
+# "his" match average, so that claim 1's general "below their match average" does
 # not stand in for it (the site's 83:15 said only "5.0 minutes after his hardest minutes").
 SECOND_WIND_SAYS = r"\bhis match average\b"
-# Decision 39: a quiet spell says why it may not be fatigue (the site's fan lines at 52:00 gave
+# A quiet spell says why it may not be fatigue (the site's fan lines at 52:00 gave
 # only "96% less running" and "0 touches").
 QUIET_SAYS = verifier.NOT_FATIGUE
 EXPOSED_SAYS = r"\btypical professional\b"
@@ -105,11 +105,11 @@ def ensure_key(picked: list[str], found: dict[str, dict]) -> list[str]:
     """Add the best-ranked moment of each kind in KEY_KINDS (the next best if it clashes, when
     the pick has none of that kind), and the best-ranked turnover that ended in a goal (decision
     39: the agent once picked two others and left out the one that cost a goal), each at least a
-    minute from the other player moments (decision 42: the agent picked a full-back's first and
+    minute from the other player moments (the agent picked a full-back's first and
     second turnovers and left out the best-ranked, his third).
     Another player's moment of the same kind within that minute is the same action seen from
-    him, and makes way (decision 41: the agent picked a team-mate's view of a turnover). Of two
-    hardest-minutes moments of one episode (``episode``), the best-ranked stays (decision 43)."""
+    him, and makes way (the agent picked a team-mate's view of a turnover). Of two
+    hardest-minutes moments of one episode (``episode``), the best-ranked stays."""
     chosen = [found[i] for i in picked]
 
     def add(kind: str, goal: bool = False, best_only: bool = False) -> None:
@@ -147,7 +147,7 @@ def who(mo: dict) -> str:
 
 def episode(mo: dict) -> tuple[str, int] | None:
     """A hardest-minutes moment's player and which time it is. Spells less than EPISODE_GAP_S
-    apart are one time, so two of its clips both said "for the sixth time" (decision 43: 2 of the
+    apart are one time, so two of its clips both said "for the sixth time" (2 of the
     7 real matches' feeds and 2 of 30 synthetic); the feed keeps the best-ranked one."""
     n = mo.get("facts", {}).get("hardest_minutes_count")
     if mo["kind"] != "red_zone" or n is None:
@@ -249,7 +249,7 @@ def brief(tools: MatchTools, mo: dict) -> dict[str, Any]:
         if on_for >= SO_FAR_MIN_S:  # "the lowest point of his match so far" (SO_FAR_MIN_S)
             facts["lowest_typical_pro_battery_so_far"] = b["lowest_in_match_so_far"]
             battery = tools.m.series[pid].cols["battery"][: on_for + 1]
-            # Unrounded (decision 41: 0.620 against an earlier 0.618 read as "0.62 and 0.62").
+            # Unrounded (0.620 against an earlier 0.618 read as "0.62 and 0.62").
             facts["at_lowest_point_so_far"] = bool(battery[-1] <= battery.min())
     claims = []
     for cid in mo["claims"]:
@@ -267,7 +267,7 @@ def brief(tools: MatchTools, mo: dict) -> dict[str, Any]:
                                         "came_on") if k in ctx},
         "claims": claims,
         "low_chance_calibration": "calibrated for a typical professional; when it says 0.1–0.2 "
-        "a typical professional was short-term tired about 12% of the time (PLAN §3.3)",
+        "a typical professional was short-term tired about 12% of the time",
     }  # fmt: skip
 
 
@@ -287,7 +287,7 @@ def _name(b: dict) -> str:
 
 
 def possessive(name: str) -> str:
-    """The possessive of a name: Westerlyn Albion's, Ravensholt Harriers' (decision 41: the feed
+    """The possessive of a name: Westerlyn Albion's, Ravensholt Harriers' (the feed
     showed "Harriers's")."""
     return f"{name}'" if name.endswith("s") else f"{name}'s"
 
@@ -638,7 +638,7 @@ def personalize(mode: str) -> str:
 
 def unlabel(sentence: str) -> str:
     """Drop a label the Narrator put before a sentence ("fact: he had 0 touches…", or a bare
-    claim id, "11: He has done running…", in the decision 31 feed; "60:00–75:00" stays)."""
+    claim id, "11: He has done running…", in an earlier feed; "60:00–75:00" stays)."""
     s = re.sub(r"^\s*(fact|claim\s*[\w.]+)\s*:\s*|^\s*(\d{1,2}[a-d]?|G\d{1,2})\s*:\s+", "",
                sentence, flags=re.I)  # fmt: skip
     return s[:1].upper() + s[1:]
@@ -646,7 +646,7 @@ def unlabel(sentence: str) -> str:
 
 def narrator_view(b: dict) -> dict:
     """A moment as the Narrator gets it: no "what", and the facts without their source fields,
-    whose code names ("series.red_zone") it copied into sentences (decision 29)."""
+    whose code names ("series.red_zone") it copied into sentences."""
     facts = {k: {x: y for x, y in v.items() if x != "source"} if isinstance(v, dict) else v
              for k, v in b["facts"].items()}  # fmt: skip
     return {k: v for k, v in b.items() if k != "what"} | {"facts": facts}
@@ -686,7 +686,7 @@ async def check(
 
 def comparison(b: dict) -> str | None:
     """A team moment's comparison (MUST_SAY) as a pattern; a closed gap's with the block's own
-    difference (decision 43)."""
+    difference."""
     pattern = b["facts"].get("pattern") if b["kind"] in TEAM_KINDS else None
     if pattern != "gap closed":
         return MUST_SAY.get(pattern)
@@ -700,8 +700,7 @@ def as_fact(b: dict, claim: str, sentence: str) -> str:
     """A team moment's comparison (MUST_SAY) is a measured fact, whatever claim the Narrator
     tagged it with (it tagged them 9a and 9b, which then counted as general sentences). So is a
     line tagged with a general claim whose numbers all come from the moment's facts, not from
-    the claim's wording ("Theo Galdcott has done 12.2 m/min since coming on", tagged 6;
-    decision 29)."""
+    the claim's wording ("Theo Galdcott has done 12.2 m/min since coming on", tagged 6)."""
     need = comparison(b)
     if need and re.search(need, sentence, re.I):
         return "fact"
@@ -713,7 +712,7 @@ def as_fact(b: dict, claim: str, sentence: str) -> str:
     if claim in SPECIFIC:
         return claim
     # The register's wording even for a claim the moment does not offer: else a number of the
-    # wording that matches a fact by chance ("40%") made claim 1 a "fact" (decision 30).
+    # wording that matches a fact by chance ("40%") made claim 1 a "fact".
     row = next((c for c in b["claims"] if c["id"] == claim), None) or verifier.register_row(claim)
     wording = (row or {}).get("wording") or ""
     return "fact" if verifier.from_facts(sentence, b["facts"], wording) else claim
@@ -756,9 +755,9 @@ async def entries_for(b: dict, mode: str, lines: list[tuple[str, str]], agent) -
 
 def needs(b: dict) -> str | None:
     """What a moment's lines must say, as a pattern: a team moment's comparison (MUST_SAY), a
-    substitute's against his team-mates, the typical-pro line when caught on the break
-    (decision 31), a second wind's running against his match average and a quiet spell's
-    reason that it may not be fatigue (decision 39)."""
+    substitute's against his team-mates, the typical-pro line when caught on the break,
+    a second wind's running against his match average and a quiet spell's
+    reason that it may not be fatigue."""
     if b["kind"] in TEAM_KINDS:
         return comparison(b)
     if b["kind"] == "fresh_legs" and b["facts"].get("vs_teammates") is not None:
@@ -773,7 +772,7 @@ def needs(b: dict) -> str | None:
 
 
 def goal_line(b: dict) -> tuple[str, str] | None:
-    """Decision 39: a caught-on-the-break counter that ended in a goal says so (the site's fan
+    """A caught-on-the-break counter that ended in a goal says so (the site's fan
     lines at 30:11 left the goal out; its clip shows it)."""
     if b["kind"] != "exposed_on_turnover" or not b["facts"].get("counter_goal"):
         return None
@@ -826,7 +825,7 @@ def _numbers(sentence: str) -> list[float]:
 
 def cap_repeated_numbers(entries: list[dict]) -> None:
     """Hold back a shown line whose numbers all appear in an earlier shown line of the same
-    moment and mode (decision 38 feeds: a fallback template followed by the second line)."""
+    moment and mode (in earlier feeds a fallback template was followed by the second line)."""
     seen: dict[tuple[str, str], list[float]] = {}
     for e in entries:
         if not e.get("shown") or "moment_id" not in e or "sentence" not in e:
@@ -849,7 +848,7 @@ def _own(e: dict) -> bool:
 async def refill(briefs: list[dict], entries: list[dict], agent) -> list[dict]:
     """A moment left with no line about its own player or team in a mode (none at all, or only
     general sentences) gets its first verified template line that is not a general sentence
-    (decision 39: both fact lines of a second wind were blocked, leaving its clip with only
+    (both fact lines of a second wind were blocked, leaving its clip with only
     "Short bursts are shaken off…")."""
     added = []
     for b in briefs:

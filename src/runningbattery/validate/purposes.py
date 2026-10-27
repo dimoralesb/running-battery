@@ -1,5 +1,5 @@
 """Can a run's purpose be read from positions? Positions-only rules for "pressing" and
-"recovery run" against the generator's hidden run purposes (PLAN decision 30).
+"recovery run" against the generator's hidden run purposes.
 
 ``python -m runningbattery.validate.purposes data/synthetic/dev [--json out.json] [--workers 8]``
 
@@ -19,7 +19,7 @@ and positions:
   position" [Ju2022, Table 1]): his team without the ball at the start, at least ``BACK_M`` back
   towards his own goal, and starting on the wrong side of the ball (nearer the opponents' goal
   than the ball is).
-- **recovery_highlight**: the overlay's recovery-run highlight (decision 29): at least 10 m back
+- **recovery_highlight**: the overlay's recovery-run highlight: at least 10 m back
   towards his own goal, starting within 10 s of his team losing the ball.
 
 Reported per rule, by runs and by metres above 5.5 m/s: precision (share of the runs it labels

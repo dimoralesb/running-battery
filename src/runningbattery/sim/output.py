@@ -1,6 +1,6 @@
 """Run one seeded match and turn the engine's arrays and event log into the four files.
 
-Fatigue is on by default; ``fatigue=False`` gives the no-fatigue control (PLAN §2.5): the same
+Fatigue is on by default; ``fatigue=False`` gives the no-fatigue control: the same
 seed, teams, physiology settings, tempo and work rates, with every player fresh all match. The
 tempo is drawn from its own generator, so with ``tempo=False`` as well (and the fatigue-off
 calibration, ``params.PRE_FATIGUE``) the match is the one the generator made before fatigue and
@@ -124,7 +124,7 @@ def period_lengths(rng: np.random.Generator) -> list[int]:
 def observe(
     rng: np.random.Generator, periods: list[PeriodFrames], sigma: float = P.NOISE_SIGMA
 ) -> list[Observed]:
-    """Add Gaussian position noise (σ per axis) and dropouts (synthesis §3.1).
+    """Add Gaussian position noise (σ per axis) and dropouts.
 
     The draws do not depend on ``sigma``, so changing it rescales the same noise pattern.
     """
@@ -313,7 +313,7 @@ def run_truth(
 
 
 def draw_variation(rng: np.random.Generator) -> tuple[dict[str, float], dict]:
-    """This match's validation spread (PLAN §2.6, point 3): effect sizes and position noise,
+    """This match's validation spread: effect sizes and position noise,
     each uniform in its ``params.VARY`` range, and the wider player prior
     (``params.VARY_PLAYERS``)."""
     effects = {k: round(float(rng.uniform(*r)), 4) for k, r in P.VARY.items()}

@@ -1,10 +1,10 @@
 """Calibrate the generator's tuned knobs to the reference data, by algorithm, not by hand:
-``python -m runningbattery.sim.calibrate --rounds 3 --json out.json`` (decision 42).
+``python -m runningbattery.sim.calibrate --rounds 3 --json out.json``.
 
 The method of simulated moments (our implementation): pick the knobs (``KNOBS``) that minimise
 the sum of squared, tolerance-scaled gaps between the batch statistics of simulated matches and
 their targets (``moment_targets``): distance, high-speed running and sprint
-distance per position (synthesis §4.2), running and high-speed running by phase [Allen2026b],
+distance per position, running and high-speed running by phase [Allen2026b],
 event counts (``summary.TARGETS``), and the outfield speed bands and "dithering" (``dither``) of
 IDSSE [Bassek2025]. A gap of
 1 is the edge of its tolerance, so the loss counts how many tolerances off the batch is.
@@ -25,14 +25,14 @@ varies by a quarter), so the loss is never evaluated point by point. Each round:
 The next round is centred on the step's knobs, so its fitted gaps at the centre check the last
 round's prediction. A round whose loss at the centre is worse than the best round's rejects that
 step: the next step is taken again from the best round's surface, with half the trust region (a
-trust-region method; decision 42's first run went 62 → 43 → 101 → 31 without it). The design
+trust-region method; the first run went 62 → 43 → 101 → 31 without it). The design
 radius shrinks when the steps get small. The result is a set of knob
 values to write into ``params.py`` (by hand, with the decision's comment), then judged on the
 usual 120-seed ``sim.batch`` (seeds 1–120, never used here). Fatigue, tempo and substitutions
 are on, as in ``simulate``. ``--start`` continues from an earlier run's result;
 ``--line-search`` instead backtracks along an earlier run's last step (``line_search``).
 
-Where it stops: decision 42 ran 3 + 3 + 2 rounds and a line search (about 4,000 matches). The loss
+Where it stops: the first fit ran 3 + 3 + 2 rounds and a line search (about 4,000 matches). The loss
 fell from 62 (the hand-tuned values) to about 29 on the calibration seeds; after that, steps the
 surface predicted at 10–13 came out at 27–43, and the line search's points differed by less than
 the noise of 64 seeds (central midfielders' sprint distance alone moved 2 tolerances between seed
@@ -80,21 +80,21 @@ DAMPING = 0.05  # Levenberg–Marquardt damping, per scaled knob, in loss units
 SHRINK = 0.6  # radius factor after a round whose step stayed within half the trust region
 # "Dithering": a 4-s window in play in which a player's path is over 10 m and his net move under
 # 2 m, counted as episodes (runs of such windows), per in-play player-hour, on smoothed tracking
-# (decision 41's sweep against IDSSE: 16.1 and 18.5 in the demo matches, 10.4–15.1 in IDSSE).
+# (the sweep against IDSSE: 16.1 and 18.5 in the demo matches, 10.4–15.1 in IDSSE).
 DITHER_S, DITHER_PATH_M, DITHER_NET_M = 4.0, 10.0, 2.0
 DITHER_TOLERANCE = 2.0  # per player-hour: about half the IDSSE range (our choice)
-# The shape of high-speed running (decision 43), from runs (1-s mean speed above HI_SPEED, as the
+# The shape of high-speed running, from runs (1-s mean speed above HI_SPEED, as the
 # estimator's signals and the highlights count them) of outfield players, smoothed positions:
 # the share that last at most SHORT_RUN_S, the share that start within CLOSE_RUN_S of the last
 # one's end (the stuff of back-to-back runs), and the share that turn back (within TURN_BACK_S,
 # heading more than 120° from the last run). Shares, not counts: the volume of running is set by
 # the Premier League targets above, and IDSSE is a lower-volume league (a first fit with IDSSE's
-# 33 runs per player-hour as a target could not have both). Before decision 43 (16 seeds): 72%,
+# 33 runs per player-hour as a target could not have both). Before this fit (16 seeds): 72%,
 # 30% and 11.5%, against IDSSE's 61%, 18% and 4.3%: short runs close together, the player
 # sprinting straight back after a turnover. Tolerances are our choice.
 SHORT_RUN_S, CLOSE_RUN_S, TURN_BACK_S = 2, 20, 10
 RUN_SHAPE_TOLERANCE = {"short_pct": 3.0, "close_pct": 2.0, "back_pct": 0.8}
-# Decision 46: goals a match and the share of shots from inside 6 m of the goal centre, Wyscout's
+# Goals a match and the share of shots from inside 6 m of the goal centre, Wyscout's
 # Premier League 2017/18 (380 matches, 8,451 open-play shots [Pappalardo2019]; computed offline,
 # the data is not in the repository); tolerances our choice (as shots', 15%; 1.5 points).
 WYSCOUT_PL = {"goals": (2.6, 0.39), "shots_close_pct": (3.7, 1.5)}
@@ -109,12 +109,12 @@ class Knob:
     radius: float  # half-width of the first round's design
 
 
-# The knobs tuned by hand before decision 42 (params.py says what each does). Work rate per
+# The knobs tuned by hand earlier (params.py says what each does). Work rate per
 # position moves high-speed running and sprint distance together; the efforts of the hardest
 # runs (tracking a runner, overlaps, recovery runs, counter-attack support) move sprint distance
 # more than high-speed running, which is how one position can have both on target;
 # DUEL_PER_TOUCH and TRANSITION_CHANCE the two counts (DEAD_SPEED, the walk back into shape at a
-# dead ball, was a knob in decision 42's first run: no effect on the running while the ball is
+# dead ball, was a knob in the first run: no effect on the running while the ball is
 # dead within ±0.06, so it was left out);
 # SHAPE_RUN_GAP (when a player runs back to his shape) and SHAPE_LAG_S (how fast the shape follows
 # the ball) set how often a shape run chases a target that swings back (dithering).
@@ -123,14 +123,14 @@ KNOBS += [
     Knob("TRACK_EFFORT", 0.70, 1.0, 0.04),
     Knob("OVERLAP_EFFORT", 0.70, 1.0, 0.04),
     # In danger a recovery run speeds up from SHAPE_RUN_SPEED to RECOVERY_EFFORT (roles), never
-    # down: decision 42's second run went to 0.808 with a bound of 0.70.
+    # down: the second run went to 0.808 with a bound of 0.70.
     Knob("RECOVERY_EFFORT", P.SHAPE_RUN_SPEED, 1.0, 0.04),
     Knob("COUNTER_SUPPORT_EFFORT", 0.70, 1.0, 0.04),
     Knob("DUEL_PER_TOUCH", 0.15, 0.90, 0.06),
     Knob("TRANSITION_CHANCE", 0.10, 0.60, 0.05),
     Knob("SHAPE_RUN_GAP", 5.0, 15.0, 1.0),
     Knob("SHAPE_LAG_S", 0.5, 3.5, 0.3),
-    # Decision 43, the shape of the running: how hard a player brakes as he arrives (constant
+    # The shape of the running: how hard a player brakes as he arrives (constant
     # deceleration, movement.step), how long he does not run back the way he sprinted, and the
     # speeds a shape run and a recovery run in danger start from at the smallest gap, and the
     # cover defender's speed (it had been a shape run's, and the role changes hands every touch).
@@ -139,14 +139,14 @@ KNOBS += [
     Knob("SHAPE_RUN_MIN", 0.30, 0.55, 0.04),
     Knob("RECOVERY_START", 0.40, P.SHAPE_RUN_SPEED, 0.05),
     Knob("COVER_SPEED", 0.35, P.SHAPE_RUN_SPEED, 0.05),
-    # Decision 46: the level of the dead-ball waits (ball in play), once the long stoppages with
+    # The level of the dead-ball waits (ball in play), once the long stoppages with
     # no cause had gone.
     Knob("DEAD_TIME_SCALE", 0.8, 1.6, 0.08),
     # ...and how often the team that lost the ball counter-presses, and the keeper claims a high
     # ball into his six-yard box.
     Knob("COUNTERPRESS_CHANCE", 0.0, 1.0, 0.1),
     Knob("GK_CLAIM_CHANCE", 0.0, 1.0, 0.1),
-    # The shooting chances (tuned by hand to the shots per match before decision 46, when the
+    # The shooting chances (tuned by hand to the shots per match earlier, when the
     # runs onside and in behind made more chances).
     Knob("SHOT_RATE", 0.10, 0.60, 0.04),
     Knob("SHOT_RATE_CLEAR", 0.40, 1.00, 0.06),
@@ -344,7 +344,7 @@ def match_moments(job: tuple[dict[str, float], int]) -> dict[str, float]:
     counts = event_counts(m.events)
     for key in ("duels", "transitions", "fouls", "shots", "passes", "goals"):
         out[key] = float(counts[key])
-    # shots from inside SHOT_CLOSE_M of the goal centre they aim at (decision 46)
+    # shots from inside SHOT_CLOSE_M of the goal centre they aim at
     attack = {t.id: 1.0 if t.attacks_positive_x_in_period_1 else -1.0 for t in m.metadata.teams}
     near = [math.hypot(GOAL_X - attack[e.team_id] * (1 if e.period == 1 else -1) * e.start.x,
                        e.start.y) < SHOT_CLOSE_M
@@ -425,7 +425,7 @@ def line_search(
     """Backtracking along a round's step: the round's centre and the points a ``fraction`` of
     the way along its step, each simulated on its own ``per_point`` seeds (no design, so it
     costs a fraction of a round); the best of them is the result. The surface's step is only as
-    good as its linear fit, and decision 42's rounds kept landing above their prediction."""
+    good as its linear fit, and the rounds kept landing above their prediction."""
     out = json.loads(json_in.read_text())
     last = next(h for h in reversed(out["history"]) if not h["rejected"])
     knobs = list(last["centre"])

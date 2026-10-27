@@ -1,17 +1,17 @@
 import { useState } from "react";
 import { type Item, type MatchData, type Signals, clockLabel, signalIndex, signalTime } from "./data";
 
-// "How it works" (decision 52): the third view, in plain words with the technical names in one
-// quiet line per part (decisions 53–54), all from the README and checked by the Verifier's copy
+// "How it works": the third view, in plain words with the technical names in one
+// quiet line per part, all from the README and checked by the Verifier's copy
 // test (copy.json "how*"). The battery chart uses the opening clip's player around his run, from
 // this match's own data, and shades the seconds above critical speed so the drain and the refill
-// show (with wear, decision 56: in the story match 35 of his 35 seconds above it that change the
-// battery lower it). Decision 60: the check's test results are gone, and the page cites its
+// show (with wear: in the story match 35 of his 35 seconds above it that change the
+// battery lower it). The check's test results are gone, and the page cites its
 // research with [n] markers and a References section (copy.json "howRef_<group>_<n>", each ending
 // in its DOI link).
 
 const REPO = "https://github.com/dimoralesb/running-battery#readme";
-const CS_KMH = 4.1 * 3.6; // the typical pro's critical speed, 4.1 m/s (engine prior, PLAN decision 13)
+const CS_KMH = 4.1 * 3.6; // the typical pro's critical speed, 4.1 m/s (engine prior)
 const WIDTH = 640;
 const PAD = { l: 40, r: 12, t: 22, b: 22 };
 
@@ -94,7 +94,7 @@ function BatteryChart({ data, item, name, text }: Props & { item: Item }) {
   );
 }
 
-// Decision 64: two charts from the same player's whole match. The first draws the battery three
+// Two charts from the same player's whole match. The first draws the battery three
 // ways for one typical pro (CS 4.1 m/s, D′ 180 m): the standard model (k 1, engine/params.py), our
 // slower refill (k 4) and ours with wear (α 1, 400 m, half kept at half-time), one step a second
 // from the exported speeds; the last stays within about 2 points of the page's battery, which is

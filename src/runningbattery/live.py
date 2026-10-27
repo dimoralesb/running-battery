@@ -1,4 +1,4 @@
-"""The live runner (decision 58): the estimator fed one tracking frame at a time, as a stadium feed
+"""The live runner: the estimator fed one tracking frame at a time, as a stadium feed
 would send them, with nothing from the future.
 
 ``python -m runningbattery.live <match folder> [--out live.jsonl] [--realtime] [--check]``

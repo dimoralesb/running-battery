@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { type MatchData, clockLabel, signalIndex } from "./data";
 
-// Every outfield player's battery, minute by minute (decision 64): one row per player in each team
+// Every outfield player's battery, minute by minute: one row per player in each team
 // (starters, then substitutes in the order they came on), one column per minute of play, read at
 // the minute's last second. One hue, stronger where the battery is lower; a player off the pitch
 // has no square. A readout line under it gives the square under the pointer.

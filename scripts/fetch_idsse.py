@@ -1,6 +1,6 @@
 """Download the IDSSE dataset [Bassek2025] (CC BY 4.0) into data/raw/idsse/.
 
-Calibration only: the raw files are git-ignored and never redistributed (PLAN §2.2).
+Calibration only: the raw files are git-ignored and never redistributed.
 File ids are figshare's (doi:10.6084/m9.figshare.28196177), as listed in floodlight's
 IDSSEDataset. Read the files with ``floodlight.io.dfl``.
 

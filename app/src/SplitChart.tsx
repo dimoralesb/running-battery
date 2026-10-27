@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { type Meta, type SituationBlock } from "./data";
 
-// High-speed running by situation (decision 30): each team's high-speed running per minute of each
+// High-speed running by situation: each team's high-speed running per minute of each
 // situation of play (G5), from possession and the ball's position only. One bar per team and
 // situation on one scale, values at the tips; hover a bar for its share and minutes. The
 // situations say where the running happened, never why (claims 38, 39).

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The public overlay (BUILD_PLAN "Sat 24", PLAN decision 26): app/ built as static files and
+# The public overlay: app/ built as static files and
 # deployed to Azure Static Web Apps, Free plan. The demo data in app/public/data/ is committed
 # from the machine that made the feeds (the same seed gives a different match elsewhere), so this
 # script never regenerates it. Settings come from .env; az login is the only credential, and the

@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { type Item, type MatchData, type Mode, clockLabel, signalIndex } from "./data";
 
-// The clip's details (decisions 29 and 34): shown when the clip is over, and growing with the
+// The clip's details: shown when the clip is over, and growing with the
 // run during the replay; the numbers, the run's speed second by second and the feed's lines
-// (decision 49: no verdicts, no blocked lines and no distance chart for the whole match on the
-// page; decision 50: no comparison with a published number).
+// (no verdicts, no blocked lines and no distance chart for the whole match on the
+// page, and no comparison with a published number).
 const WIDTH = 640;
 const HEIGHT = 170;
 const PAD = { l: 40, r: 12, t: 26, b: 22 };
@@ -47,7 +47,7 @@ function Stats({ data, item, now, replaying, text }: Omit<Props, "mode" | "name"
   const hsr = done.reduce<number>((t, x) => t + (x !== null && x > HI ? x : 0), 0);
   const cur = v[Math.floor(until) - a] ?? 0;
   const top = Math.max(cur, ...done.map((x) => x ?? 0)); // the second under way counts too
-  // Before the clip's first second has run, a dash, not 0 m (decision 50).
+  // Before the clip's first second has run, a dash, not 0 m.
   const or = (x: string, sub?: string): [string, string?] => (done.length ? [x, sub] : ["–"]);
   const rows: [string, string, string?][] = item.lapse
     ? [[text.statDistanceMatch, ...or(`${(dist / 1000).toFixed(2)} km`)]]
@@ -166,8 +166,8 @@ export function Replay({ data, item, now, mode, name, replaying, band, text, onS
         item.h && <article key="caption" className="line"><p>{item.caption}</p></article>,
         ...lines.map((e, k) => <article key={k} className="line"><p>{e.sentence}</p></article>),
       ].filter(Boolean).flatMap((el, k) =>
-        // What this kind of moment is, after the clip's first line (decision 38): the first
-        // line stays above the fold at 1440×900 (JOURNEY fix 1).
+        // What this kind of moment is, after the clip's first line: the first
+        // line stays above the fold at 1440×900.
         k === 0 && about ? [el, <p key="about" className="sub about">{about}</p>] : [el])}
       {item.player && !item.lapse && <SpeedChart data={data} item={item} now={now} name={name} text={text} onSeek={onSeek} />}
     </section>

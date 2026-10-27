@@ -94,7 +94,7 @@
     },
     "TrueParams": {
       "additionalProperties": false,
-      "description": "Hidden physiology of one player (synthesis §3.2.3–3.2.4).",
+      "description": "Hidden physiology of one player.",
       "properties": {
         "cs": {
           "exclusiveMinimum": 0,
@@ -306,7 +306,7 @@
         ]
       },
       "default": {},
-      "description": "Generator assumptions used for this match (position noise, tempo, fatigue effect sizes), so validation can report results across them (PLAN §2.6)",
+      "description": "Generator assumptions used for this match (position noise, tempo, fatigue effect sizes), so validation can report results across them",
       "title": "Settings",
       "type": "object"
     },

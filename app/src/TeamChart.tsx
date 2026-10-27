@@ -2,7 +2,7 @@ import { useState } from "react";
 import copy from "./copy.json";
 import { type Meta } from "./data";
 
-// High-speed running per minute (synthesis §9.1 idea 8, first called "tug of war"): both teams' high-speed running per ball-in-play minute
+// High-speed running per minute (first called "tug of war"): both teams' high-speed running per ball-in-play minute
 // in 5-min blocks, drawn as the blocks finish. Two series on one axis: a legend plus direct
 // labels at the line ends.
 const WIDTH = 640;

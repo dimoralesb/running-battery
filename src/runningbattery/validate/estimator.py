@@ -1,4 +1,4 @@
-"""Estimator vs hidden truth for one match (BUILD_PLAN §3, run 3; PLAN §2.4).
+"""Estimator vs hidden truth for one match (run 3).
 
 ``python -m runningbattery.validate.estimator data/synthetic/validation/v1001 [--player H08]``
 
@@ -9,9 +9,9 @@ player-second on the pitch:
   the two pools together: fast_fraction × fast + (1 − fast_fraction) × slow;
 - the tired flag (battery low) with the truth label ``tired`` (short-term tiredness only, PLAN
   §2.3 "Two truth labels"): precision and recall per player-second. The post-peak flag is scored
-  the same way for information only: it is not a tired signal (PLAN §7, decision 12). Late-match
-  wear (the tank) is a trend, scored with the whole-match load (BUILD_PLAN §3, run 3).
-- the typical-pro chance of a low battery (``low_chance``, decision 14) by **calibration**: in
+  the same way for information only: it is not a tired signal. Late-match
+  wear (the tank) is a trend, scored with the whole-match load (run 3).
+- the typical-pro chance of a low battery (``low_chance``) by **calibration**: in
   seconds where it says p, is the player tired (``tired``) about p of the time? A reliability
   table by probability bin, the Brier score and the expected calibration error (the mean gap
   between the chance and the observed share, weighted by the seconds in each bin). The share of

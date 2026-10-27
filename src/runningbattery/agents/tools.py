@@ -1,10 +1,10 @@
-"""Read-only match tools for the agents (PLAN §4; BUILD_PLAN "Wed 21"): the only way the agents
+"""Read-only match tools for the agents: the only way the agents
 see a match. ``agents.mcp_server`` serves them over MCP; the feed pipeline calls them directly.
 
 They read ``metadata.json``, ``events.jsonl``, ``tracking.jsonl`` (ball status, possession and
 positions at 1 Hz) and the estimator's ``signals.json``, never the truth file. Every number
 comes back as ``{"value", "unit", "source"}``: the source names the field it was computed from,
-so a sentence can be traced back to the data (PLAN §3.4).
+so a sentence can be traced back to the data.
 
 Times are ``(period, t)``, ``t`` in seconds since that period's kick-off, because the match
 clock repeats (first-half added time runs past 45:00 while the second half starts at 45:00).
@@ -57,11 +57,11 @@ LOW_CHANCE_NOTE = (
     "matches its expected calibration error is 0.001 (0.009 raw): seconds it puts at 0.1–0.2 "
     "and 0.3–0.4 were short-term tired 12% and 35% of the time. On players less fit than a "
     "typical professional it stays poorly calibrated (0.059). About the running, never the "
-    "player's own state. Source: PLAN §3.3, decision 15."
+    "player's own state."
 )
 BATTERY_NOTE = (
     "Share of a typical professional's short-term reserve (D′) that this running would leave; "
-    "the player's own CS and D′ are unknown. Source: PLAN §3.3, decision 14."
+    "the player's own CS and D′ are unknown."
 )
 MOMENT_KINDS = {
     "red_zone": ("His hardest minutes so far: 1-, 2- or 5-min high-speed running at ≥ 90% of his "
@@ -79,19 +79,19 @@ MOMENT_KINDS = {
                            ["13", "14", "9b"]),
     "tug_of_war": ("Team level: one team's high-speed running per ball-in-play minute over a "
                    "15-min block is well above the other's, or a gap that was there has closed "
-                   "(synthesis §9.1 idea 8) [Allen2026a; Allen2026b]", ["9a", "9b", "7", "30"]),
+                   " [Allen2026a; Allen2026b]", ["9a", "9b", "7", "30"]),
     "flat_out": ("A run at or near the player's top speed so far in the match (his fastest "
                  "second), measured [Kavanagh2024; Bradley2009]", ["36", "37", "10"]),
 }  # fmt: skip
 TEAM_KINDS = {"tug_of_war"}
 # A caught-on-the-break moment needs the counter to come within COUNTER_NEAR_M metres of him or
 # to end in a shot; the counter is the opponents' possession, followed for at most COUNTER_MAX_S
-# seconds and at least COUNTER_MIN_S (the clip shows it, decision 38). Our assumption.
+# seconds and at least COUNTER_MIN_S (the clip shows it). Our assumption.
 COUNTER_NEAR_M = 15.0
 COUNTER_MAX_S = 15.0
 COUNTER_MIN_S = 6.0
 # The overlay plays a clip on this long past its end (export.CLIP_AFTER). A caught-on-the-break
-# moment's battery is read there, at the end of the clip of his counter (decision 42: the line
+# moment's battery is read there, at the end of the clip of his counter (the line
 # gave his 72% at the turnover, the clip ended on 61% after he had run 45 m above 5.5 m/s).
 CLIP_AFTER_S = 2.0
 BLOCK_S = 900.0  # 15-min blocks, as the published end-of-match comparisons [Bradley2009]
@@ -100,26 +100,26 @@ GAP_CLOSED = 7.5  # % below which a gap counts as closed (our assumption)
 MIN_IN_PLAY_S = 300.0  # a block needs 5 min of ball in play to compare
 # Spells of hardest minutes less than EPISODE_GAP_S apart in a half are one time when we count
 # them ("for the second time"): the red-zone flag flickers as his 1-min running hovers near his
-# best so far (decision 39: H04 had 8 spells by 19:50, some 6 s apart, mostly one stretch, and the
+# best so far (H04 had 8 spells by 19:50, some 6 s apart, mostly one stretch, and the
 # feed said "for the eighth time"). Our assumption.
 EPISODE_GAP_S = 60.0
 FLAT_OUT_SHARE = 0.9  # a flat-out run: ≥ 90% of his top speed so far (our assumption)
 # Before the 75th minute a run that is neither his nor anyone's fastest so far needs 95%: the site's
-# 11:56 "92% of his top speed so far" showed nothing worth a clip (decision 39). After it, claim 36
+# 11:56 "92% of his top speed so far" showed nothing worth a clip. After it, claim 36
 # (top speed hardly drops) gives a 90% run its point.
 FLAT_OUT_EARLY_SHARE = 0.95
 FLAT_OUT_MIN_SPEED = 7.0  # m/s (25.2 km/h): about the sprint threshold [Bradley2009, p.162]
 # A "so far" claim (his hardest minutes so far, his top speed so far, the lowest point of his
 # match so far) needs SO_FAR_MIN_S on the pitch, as MIN_ON_S: before it, it is true of almost any
-# running (decision 41: "his hardest minutes so far" at 1:47 and 5:38, "his fastest of the match
+# running ("his hardest minutes so far" at 1:47 and 5:38, "his fastest of the match
 # so far" from a substitute 4 min after he came on). Our assumption.
 SO_FAR_MIN_S = 600
 # A new best (his own, or anyone's so far) must beat the old one by this much, so that it shows at
 # the 0.1 m/s we print: 7.92 against 7.88 m/s read as "7.9 and 7.9" and the LLM pass rewrote a
-# true "new personal best" into "not his fastest" (decision 37). Our assumption.
+# true "new personal best" into "not his fastest". Our assumption.
 NEW_BEST_MARGIN = 0.05  # m/s
 MAX_PLAUSIBLE_SPEED = 11.0  # m/s; faster seconds are tracking errors (our assumption)
-# Where each team's running happened (decision 30): situations of play from possession and the
+# Where each team's running happened: situations of play from possession and the
 # ball's position only, ball in play. Situations, not purposes: "pressing" or "recovery runs"
 # are what a player meant to do, which positions do not show (claims 35, 38; validate/purposes).
 TRANSITION_S = 10.0  # the first 10 s after the ball changes hands: transitions last 9.3–10.9 s
@@ -134,9 +134,9 @@ SITUATIONS = {
 }
 CHANGED_HANDS = ("after_losing", "after_winning")
 # A touch: an on-ball event of his (our definition; a carry is the run between a reception and
-# the next action, so it is not counted again). Claim 14 needs these counts (decision 25).
+# the next action, so it is not counted again). Claim 14 needs these counts.
 TOUCH_TYPES = ("pass", "reception", "shot", "clearance", "interception", "ball_recovery")
-# Claims offered only where they fit (decision 25): claim 1's figure is for a spell of about
+# Claims offered only where they fit: claim 1's figure is for a spell of about
 # 5 min [Leifsson2024, Table 1], claim 36 for a run after the 75th minute, claim 7 for the
 # last block of the match.
 LONG_SPELL_S = 240.0
@@ -296,7 +296,7 @@ class MatchData:
 
     def gap_at(self, period: int, t: float, j: int) -> float:
         """Player column ``j``'s distance to the ball at ``t``, between the 1-Hz samples
-        (decision 40: read at the whole second before, "8 s later" said 4 m for 6.6 m)."""
+        (read at the whole second before, "8 s later" said 4 m for 6.6 m)."""
         n = len(self.alive[period])
         k = int(min(max(math.floor(t), 0), max(n - 2, 0)))
         f = min(max(t - k, 0.0), 1.0) if n > 1 else 0.0
@@ -308,7 +308,7 @@ class MatchData:
 
     def nearest_ball(self, period: int, t0: float, t1: float, j: int) -> float:
         """Player column ``j``'s smallest distance to the ball from ``t0`` to ``t1``, at the full
-        frame rate (decision 41: the 1-Hz samples said "as close as 2 m" for 1.2 m). NaN if he
+        frame rate (the 1-Hz samples said "as close as 2 m" for 1.2 m). NaN if he
         is not seen."""
         if self._full is None:
             self._read_full_tracking()
@@ -661,7 +661,7 @@ class MatchTools:
         team: str | None = None,
     ) -> dict[str, Any]:  # fmt: skip
         """What else could explain the running at match time ``t`` (a clock label, or minutes on
-        the match clock) (PLAN §3.4 rule 2, claim 13)."""
+        the match clock) (claim 13)."""
         p, sec = parse_time(t, period)
         return self.context_at(p, sec, player, team)
 
@@ -739,7 +739,7 @@ class MatchTools:
             {"code": code, "text": REASONS[code].format(**kw)} for code, kw in reasons
         ]
         ctx["rule"] = ("Before 'tired', 'fatigue' or 'in the red': if a non-fatigue reason is "
-                       "listed, name it or use neutral words such as 'ran less' (PLAN §3.4 rule 2, "
+                       "listed, name it or use neutral words such as 'ran less' ("
                        "claim 13).")  # fmt: skip
         return ctx
 
@@ -808,7 +808,7 @@ class MatchTools:
     # --- find_moments ------------------------------------------------------------------------
 
     def find_moments(self, kind: str, limit: int = 10, player: str | None = None) -> dict:
-        """Story moments of synthesis §9.1, ranked (best first)."""
+        """Story moments, ranked (best first)."""
         if kind not in MOMENT_KINDS:
             return {"error": f"unknown kind {kind!r}", "kinds": list(MOMENT_KINDS)}
         found = getattr(self, f"_moments_{kind}")()
@@ -909,13 +909,13 @@ class MatchTools:
             )
             last = per == max(m.durations) and hi >= m.durations[per]
             claims = [c for c in MOMENT_KINDS["tug_of_war"][1] if c != "7" or last]
-            claims.insert(0, "4")  # where the running came (decision 30); claim 4's first sentence
+            claims.insert(0, "4")  # where the running came; claim 4's first sentence
             out.append(self._team_moment(lead, per, t, score, facts, why, claims))
         return out
 
     @staticmethod
     def _split_facts(sit: dict, lead: str, other: str) -> dict[str, Any]:
-        """Where a team moment's running happened (decision 30): the share that came in the first
+        """Where a team moment's running happened: the share that came in the first
         10 s after the ball changed hands (either way), in what share of the time, and metres per
         minute of each situation (G5). Measured: situations, never purposes (claims 38, 39)."""
 
@@ -977,7 +977,7 @@ class MatchTools:
             s, info = m.series[pid], m.players[pid]
             per, t = int(s.period[i]), float(s.t[i])
             # Fastest of anyone so far: against every outfield player's every second before this
-            # one, not only the earlier flat-out moments (decision 37: a run at 10:48 was called
+            # one, not only the earlier flat-out moments (a run at 10:48 was called
             # the fastest when another player had been faster outside any flat-out moment).
             before = [float(sp[tv < vid].max()) for tv, sp in speeds if (tv < vid).any()]
             fastest = peak >= max(before, default=0.0) + NEW_BEST_MARGIN
@@ -1149,7 +1149,7 @@ class MatchTools:
                     continue
                 if not (s.cols["post_peak"][i] or s.cols["red_zone"][i]):
                     continue
-                # "just after his hardest minutes so far" is a "so far" claim (decision 42: the
+                # "just after his hardest minutes so far" is a "so far" claim (the
                 # favourite's 9:14 turnover came 554 s into his match; no exception without one)
                 if i < SO_FAR_MIN_S:  # seconds on the pitch
                     continue
@@ -1162,7 +1162,7 @@ class MatchTools:
                 nearest = m.nearest_ball(e.period, e.t, max(counter_end, e.t + 1.0), j)
                 nearest = d0 if nearest != nearest else nearest
                 # A turnover the clip can show: the counter came his way or ended in a shot
-                # (decision 38: one clip showed him 34 m from a counter that went elsewhere).
+                # (one clip showed him 34 m from a counter that went elsewhere).
                 if nearest > COUNTER_NEAR_M and shot == 0.0 and not goal:
                     continue
                 facts = {
@@ -1212,7 +1212,7 @@ class MatchTools:
                 )  # fmt: skip
                 # Claim 4 ("losing the ball forces the hardest running of the game") is offered
                 # only if he did run hard after it: next to a player who jogged it read as being
-                # about him, and the clip showed otherwise (decision 37).
+                # about him, and the clip showed otherwise.
                 ran_hard = len(spd) > 0 and float(spd.max()) >= EP.HI_SPEED
                 claims = MOMENT_KINDS["exposed_on_turnover"][1]
                 claims = claims if ran_hard else [c for c in claims if c != "4"]
@@ -1315,7 +1315,7 @@ class MatchTools:
                     mates.append(float(m.hsr_per_s(pid)[w].sum()) / (w.stop - w.start) * 60.0)
             team_rate = float(np.mean(mates)) if mates else float("nan")
             if team_rate > 0 and rate_on <= team_rate:
-                continue  # no fresh legs: he did not out-run his team-mates (decision 39)
+                continue  # no fresh legs: he did not out-run his team-mates
             facts = {
                 "minutes_on": q(n / 60.0, "min", "signals.players[].series.t", 0),
                 "sub_hsr_per_min": q(rate_on, "m/min", HSR_SRC, 1),
@@ -1401,7 +1401,7 @@ class MatchTools:
 
     def _touch_facts(self, pid: str, i: int) -> dict[str, Any]:
         """His touches in the 5 min up to his i-th second on the pitch against his match so
-        far, as counts and per ball-in-play minute (claim 14 needs them; decision 25)."""
+        far, as counts and per ball-in-play minute (claim 14 needs them)."""
         m, s = self.m, self.m.series[pid]
         per, t = int(s.period[i]), float(s.t[i])
         alive = m.in_play(pid)[: i + 1]
@@ -1438,7 +1438,7 @@ class MatchTools:
         reg = verifier.register()
         for row in reg["claims"] + reg["global_rules"]:
             if row["id"] == str(claim_id):
-                return row | {"source": "agents/claims.json (synthesis §5)"}
+                return row | {"source": "agents/claims.json"}
         return {"error": f"no claim {claim_id!r}"}
 
     def verify(

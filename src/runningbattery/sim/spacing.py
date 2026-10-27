@@ -4,7 +4,7 @@ IDSSE [Bassek2025], measured the same way.
 ``uv run python -m runningbattery.sim.spacing --seeds 1-30 --idsse`` prints the table; ``sim.batch``
 adds the same table to its report. IDSSE needs the ``calib`` extra the first time (floodlight);
 its positions are then cached at 10 Hz next to the raw files, in the git-ignored
-``data/raw/idsse/`` (PLAN §2.2: nothing from IDSSE is committed).
+``data/raw/idsse/`` (nothing from IDSSE is committed).
 
 Input per period: positions (frames, players, 2) at 10 Hz, NaN when a player is off the pitch;
 the team of each player; whether the ball is alive in each frame; the pitch half-sizes. Per match

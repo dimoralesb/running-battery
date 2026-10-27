@@ -102,7 +102,7 @@ def _clipped_normal(rng: np.random.Generator, mean: float, sd: float, lo_hi) -> 
 
 
 def true_params(rng: np.random.Generator, prior: dict | None = None) -> TrueParams:
-    """Hidden physiology of one player (synthesis §3.2.3, §3.2.4, §3.6). ``prior`` overrides
+    """Hidden physiology of one player (§3.2.4, §3.6). ``prior`` overrides
     the CS, D′ and pool settings (``params.VARY_PLAYERS``); the draws are the same either way."""
     q = prior or {}
     cs_sd, cs_range = q.get("cs_sd", P.CS_SD), q.get("cs_range", P.CS_RANGE)
@@ -152,7 +152,7 @@ def _collapse(name: str) -> str:
 def distinct_names(
     teams: list[SimTeam], plans: list[SubPlan]
 ) -> tuple[list[SimTeam], list[SubPlan]]:
-    """No two players of a team share a first name or a surname's start (decision 42: "Sami
+    """No two players of a team share a first name or a surname's start ("Sami
     Yarrigg" and "Sami Yarrick" were the away team's two centre-backs). The later one (starters
     first, then substitutes, by id) takes the next unused first name or start in the lists. No
     random draws: names are labels only, so the match is the same frame for frame."""

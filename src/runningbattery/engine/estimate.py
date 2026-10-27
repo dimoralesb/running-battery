@@ -1,4 +1,4 @@
-"""Run the estimator on one match: positions in, ``MatchSignals`` out (PLAN §3).
+"""Run the estimator on one match: positions in, ``MatchSignals`` out.
 
 The estimator sees ``tracking.jsonl``, ``events.jsonl`` and ``metadata.json`` only (``io.Match``),
 never ``truth.json``. Club test values in the metadata are used in club mode only; broadcast
@@ -129,7 +129,7 @@ def compute(
     tr = tracks(match)
     cs, dp = capacities(match, tr.ids, mode, update, n_draws, P.PRIORS[prior])
     v = tr.speed
-    if drive == "power":  # decision 56 experiment: equivalent speed, metabolic power / steady cost
+    if drive == "power":  # an experiment: equivalent speed, metabolic power / steady cost
         v = metabolic_power(tr.speed, np.nan_to_num(tr.accel)) / (P.EC_POLY[-1] * P.KT)
     bat = run(v, tr.period, tr.whole_second, cs, dp, k, penalty_width, P.LOW_BATTERY, wear)
     return Estimate(settings, tr, bat, per_second(tr, bat, table))

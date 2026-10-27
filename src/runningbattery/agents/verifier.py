@@ -1,9 +1,9 @@
-"""The rule-based Verifier (PLAN §3.4; BUILD_PLAN "Wed 21"): fixed checks that run before any
+"""The rule-based Verifier: fixed checks that run before any
 LLM check, so unsupported claims are blocked even if the LLM Verifier slips.
 
 ``python -m runningbattery.agents.verifier "He is tired." [--mode analyst]``
 
-Each rule is tied to a row of the claims register (``claims.json``, from synthesis §5): a
+Each rule is tied to a row of the claims register (``claims.json``): a
 blocked claim (20–34), a qualified claim used without its qualifier (10, 11, 17, 19c, 19d), an
 analyst-only claim in fan mode (9c, 16, 18, 19, 19d), or a global rule (G1 baseline for every
 percentage, G2 estimate language, G9 typical-professional wording). A sentence passes only if no
@@ -17,9 +17,9 @@ from) two more checks run (v2, 2026-10-17):
 - **Numbers** (N1): every number in the sentence must be one of the facts (or a rounding, a
   percentage or km/h of one), the cited claim's own wording (except the examples in claims 11,
   12 and 13), or a window length ("5 min").
-- **Touches** (claim 14, decision 25): "fewer touches" needs the measured touch counts in the
+- **Touches** (claim 14): "fewer touches" needs the measured touch counts in the
   facts, and they must show fewer touches than his match so far.
-- **Claims offered** (decision 25): with ``claims_offered`` (the register ids the moment offers,
+- **Claims offered**: with ``claims_offered`` (the register ids the moment offers,
   ``find_moments``), a sentence citing any other claim is blocked: claim 1 only after a spell of
   about 5 min, claim 36 only after the 75th minute, claim 7 only in the last block.
 - **Team names** (G11): with ``team_names``, a word both names share ("Albion") must not stand
@@ -137,10 +137,10 @@ class Rule:
 
 
 RULES: tuple[Rule, ...] = (
-    # 11 (decision 41, 15:55 and 66:00 of the site's feed): "would leave a typical professional
+    # 11 (15:55 and 66:00 of the site's feed): "would leave a typical professional
     # at about 76% of their short-term reserve, though that may reflect the ball being in play
     # only 48%": claim 11 takes no reason after it (running already done is not explained by
-    # the ball being out; the Narrator's prompt says so). Decision 42 (the site's 27:59 and
+    # the ball being out; the Narrator's prompt says so). Then (the site's 27:59 and
     # 42:00): "…, which may be related to his team having just won the ball", "…, which may
     # relate to his team leading".
     Rule("11", "Claim 11 takes no reason after it: say what the running would leave a typical "
@@ -158,7 +158,7 @@ RULES: tuple[Rule, ...] = (
     Rule("33", "A percentage of the player himself; say what it would leave a typical "
          "professional", r"\b(he|she|he's|she's)\s*(is|'s|’s|was)?\s*(at|down to|on)\s+"
          r"(about\s+)?\d+\s*(%|percent)"),
-    # The same as a share (the decision 30 feeds: "he fell to about 0.64 of a typical
+    # The same as a share (earlier feeds: "he fell to about 0.64 of a typical
     # professional's short-term reserve; right now he's at about 0.68").
     Rule("33", "A share of the player himself; say what the running would leave a typical "
          "professional", r"\b(he|she|he's|she's)\s*(is|'s|’s|was)?\s*(at|down to|on|fell to|"
@@ -166,33 +166,33 @@ RULES: tuple[Rule, ...] = (
     Rule("33", "The player's battery; say what the running would leave a typical professional",
          r"\b(his|her|their)\s+battery\b", unless=r"typical professional"),
     # Found on the deployed site (2026-10-18): "so this may not be only fatigue" says he is partly
-    # fatigued; the LLM pass read it as a hedge in every run (decision 29).
+    # fatigued; the LLM pass read it as a hedge in every run.
     Rule("33", "Fatigue as part of the reason is a statement about the player's own state",
          r"\b(not|isn'?t|is not|wasn'?t)\s+(be\s+)?(only|just|entirely|purely|all|simply)\s+"
          r"(down to\s+)?(fatigue|tiredness|being tired)\b|\bpartly\s+(fatigue|tiredness|tired)\b|"
          r"\b(some|a bit of|an element of)\s+(fatigue|tiredness)\b"),
-    # G10 (decision 29): field names the LLM copied from the facts ("times_exposed_so_far = 3").
+    # G10: field names the LLM copied from the facts ("times_exposed_so_far = 3").
     Rule("G10", "A field name on screen; write plain English", r"\b[a-z]+(?:_[a-z0-9]+)+\b"),
-    # Found in the decision 30 feeds: the field name typical_pro_battery_now as "his typical-pro
+    # Found in earlier feeds: the field name typical_pro_battery_now as "his typical-pro
     # battery", the old names as "that hardest spell", and a reason pinned to the battery wording.
     Rule("33", "The player's battery, even \"typical-pro\"; say what the running would leave a "
          "typical professional", r"\b(his|her)\s+([\w-]+\s+){0,2}typical[- ]pro(fessional)?('s)?\s+"
-         r"(short-term\s+)?(battery|reserve)\b"),  # "reserve", "estimated": decision 37 feeds
-    Rule("G10", "Our name for the window is \"his hardest minutes\", never a spell (decision 30)",
+         r"(short-term\s+)?(battery|reserve)\b"),  # "reserve", "estimated": earlier feeds
+    Rule("G10", "Our name for the window is \"his hardest minutes\", never a spell",
          r"\b(hardest|intense|red-zone)\s+spell\b|\bhardest minutes\b[^.]*\bspell\b"),
     Rule("G9", "The typical-professional wording describes the running done; nothing explains "
          "it away", r"\breserve\b[^.]*\b(explains?|explained|because of|due to|down to)\b"),
-    # Found in the decision 30 feeds: "Forty-three percent of Albion's high-speed running…", a
+    # Found in earlier feeds: "Forty-three percent of Albion's high-speed running…", a
     # number spelled out, which the numbers check (N1) and the baseline rules (G1) cannot read.
     Rule("G1", "Write percentages in digits, so their baseline and number can be checked",
          r"\b(" + SPELLED + r")([- ](" + SPELLED + r"))?\s+(percent|per cent)\b"),
-    # Found on the site's feed (decision 30, 24:37): claim 4 pinned on a player who ran at
+    # Found on the site's feed (24:37): claim 4 pinned on a player who ran at
     # 1 m/s ("…and this is one of those moments for Marco Tarvsall").
     Rule("4", "Claim 4 is about transitions in general; it says nothing about this player's "
          "running (give his measured speed instead)",
          r"hardest running of the game\b[^.]*\b(for|by|from)\s+(him|[A-Z]\w+)\b|"
          r"\b(he|[A-Z]\w+)\s+(is|was)\s+(doing|making)\s+the hardest running\b"),
-    # G5 (decision 30): a share of the running in a situation needs the share of the time.
+    # G5: a share of the running in a situation needs the share of the time.
     Rule("G5", "A share of the running in a situation needs how much of the time it took (G5)",
          r"\d+\s*%[^.]*\bhigh-speed running\b[^.]*\b(came|happened|was done)\b[^.]*\bafter\b",
          unless=r"\bof the time\b|\btime the ball was in play\b|\bball-in-play time\b|"
@@ -277,7 +277,7 @@ RULES: tuple[Rule, ...] = (
          r"\blaziness\b|\bjogg(ed|ing) back\b|\bwalk(ed|ing) back\b|\bshould have (sprinted|"
          r"run|chased|tracked|gone)\b|\bwork-?shy\b|\bno effort\b|\bhalf-?hearted\w*\b|"
          r"\black of (effort|commitment|intensity)\b"),
-    # 39 (decision 30): pressing is a purpose. A positions-only rule for it scored precision 0.21
+    # 39: pressing is a purpose. A positions-only rule for it scored precision 0.21
     # against the generator's hidden purposes (validate/purposes.py), so say where the ball was.
     Rule("39", "Pressing is what a run meant to do, which positions do not show (claim 39); say "
          "where the ball was and who had it",
@@ -319,7 +319,7 @@ class Verdict:
 
 @cache
 def register() -> dict:
-    """The claims register (synthesis §5) as data."""
+    """The claims register as data."""
     return json.loads(REGISTER.read_text())
 
 
@@ -366,7 +366,7 @@ def _all_traced(text: str, context: dict) -> bool:
 
 def from_facts(text: str, facts: dict, wording: str = "") -> bool:
     """The sentence gives numbers, every one of them from the facts and not all of them in the
-    claim's ``wording``: a measured fact, whatever claim it was tagged with (decision 29)."""
+    claim's ``wording``: a measured fact, whatever claim it was tagged with."""
     bare = re.sub(WINDOW, " ", text, flags=FLAGS)
     found = [float(x.replace(",", ".")) for x in re.findall(NUMBER, bare)]
     own = numbers_in(wording)
@@ -388,7 +388,7 @@ def context_findings(text: str, context: dict, claim_id: str | None) -> list[Fin
                     "such as 'ran less' (rule 2, claim 13)",
                 )
             )
-    # A team moment (decision 30): fatigue words there read as the team's own state, even in a
+    # A team moment: fatigue words there read as the team's own state, even in a
     # general wording such as claim 4's "tired legs get exposed".
     if context.get("team_moment") and _found(FATIGUE, text) and not _found(NOT_FATIGUE, text):
         out.append(Finding("35", "A team moment: fatigue words read as the team's own state "
@@ -415,7 +415,7 @@ def context_findings(text: str, context: dict, claim_id: str | None) -> list[Fin
     if str(claim_id) == "2" and not _found(r"shaken off|recover", text):
         out.append(Finding("2", "Claim 2 is about recovery time; keep 'shaken off' or "
                            "'recover'"))  # fmt: skip
-    # G12 (decision 37, found on the site's feed): "Marco Tarvsall: losing the ball forces the
+    # G12 (found on the site's feed): "Marco Tarvsall: losing the ball forces the
     # hardest running of the game." A published finding opened with a player's name reads as
     # being about him (he had jogged). Measured templates ("fact") may open with his name.
     named = re.match(r"\s*[A-Z][\w'-]+(?: [A-Z][\w'-]+)+:\s", text)
@@ -423,8 +423,8 @@ def context_findings(text: str, context: dict, claim_id: str | None) -> list[Fin
         out.append(Finding("G12", "A published finding opened with a player's name reads as "
                            "being about him; give it as a general finding, his own numbers "
                            "apart"))  # fmt: skip
-    # G5 (decision 37 feed, 59:59): "Westerlyn Albion ran 234 m/min without the ball" is the
-    # team's high-speed running; without the word it reads as all running. Decision 38's feed
+    # G5 (an earlier feed, 59:59): "Westerlyn Albion ran 234 m/min without the ball" is the
+    # team's high-speed running; without the word it reads as all running. the feed
     # (31:38): "He averaged 23 m/min." for one player, so it holds for players too.
     if (
         "facts" in context
@@ -433,7 +433,7 @@ def context_findings(text: str, context: dict, claim_id: str | None) -> list[Fin
     ):
         out.append(Finding("G5", "Say which running the metres per minute are: high-speed "
                            "running (above 5.5 m/s)"))  # fmt: skip
-    # G5 (decision 39 feed, 52:00): "did 96% less running than his match average" was his
+    # G5 (an earlier feed, 52:00): "did 96% less running than his match average" was his
     # high-speed running; his running in all fell nowhere near 96%.
     elif (
         "facts" in context
@@ -443,21 +443,21 @@ def context_findings(text: str, context: dict, claim_id: str | None) -> list[Fin
     ):  # fmt: skip
         out.append(Finding("G5", "Say which running the percentage is about: high-speed "
                            "running (above 5.5 m/s)"))  # fmt: skip
-    # G10 (decision 38 feed, 45+1:04): "were level at 1–1" in a block where one team did 5% more;
-    # "level" is a difference of 0% (decision 31).
+    # G10 (an earlier feed, 45+1:04): "were level at 1–1" in a block where one team did 5% more;
+    # "level" is a difference of 0%.
     gap = (context.get("facts") or {}).get("vs_opponent")
     gap = gap.get("value") if isinstance(gap, dict) else gap
     if isinstance(gap, int | float) and abs(gap) >= 0.5 and re.search(r"\blevel\b", text):
         out.append(Finding("G10", f"\"Level\" means no difference; the teams were {abs(gap):.0f}% "
                            "apart in this block"))  # fmt: skip
-    # G10 (decision 43 feed, 74:59, the LLM pass's own rewrite): a closed gap "reached 33% earlier
+    # G10 (an earlier feed, 74:59, the LLM pass's own rewrite): a closed gap "reached 33% earlier
     # in the block"; the earlier gap is the widest of the blocks before this one.
     if "earlier_gap_vs_opponent" in (context.get("facts") or {}) and re.search(
         r"\bearlier\s+in\s+(the|this)\s+(block|period|spell|15)", text, FLAGS
     ):
         out.append(Finding("G10", "The earlier gap was in an earlier 15-min block, not in this "
                            "one"))  # fmt: skip
-    # G10 (decision 43 natural feed, 59:59, the LLM pass's own rewrite): "Westerlyn Town have
+    # G10 (an earlier natural feed, 59:59, the LLM pass's own rewrite): "Westerlyn Town have
     # closed the gap … against Ravensholt Harriers" when Westerlyn Town had been the ones ahead.
     lead = re.escape(context.get("subject") or "")
     if (
@@ -468,7 +468,7 @@ def context_findings(text: str, context: dict, claim_id: str | None) -> list[Fin
     ):  # fmt: skip
         out.append(Finding("G10", f"{context['subject']} had been ahead: the gap closed, they did "
                            "not close it"))  # fmt: skip
-    # G13 (decision 38, found on the site's feed, 86:33): "while his team sat on a 3–0 lead" at
+    # G13 (found on the site's feed, 86:33): "while his team sat on a 3–0 lead" at
     # 5–2, claim 13's example scoreline copied; each number was in the facts (lead 3, 0 touches).
     score = context.get("score") or (context.get("context") or {}).get("score")
     if isinstance(score, dict) and {"home", "away"} <= score.keys():
@@ -480,7 +480,7 @@ def context_findings(text: str, context: dict, claim_id: str | None) -> list[Fin
                 out.append(Finding("G13", f"The score was {was} (home–away); a scoreline is "
                                    "the score at that moment"))  # fmt: skip
                 break
-    # G14 (decision 38 feed, 75:59): "only 1% above the player he replaced over the same
+    # G14 (an earlier feed, 75:59): "only 1% above the player he replaced over the same
     # minutes"; the replaced player's rate is over his own minutes on the pitch.
     if re.search(r"\bhe replaced\b[^.;]*\bsame minutes\b", text) and not re.search(
         r"team-?mates", text
@@ -490,16 +490,16 @@ def context_findings(text: str, context: dict, claim_id: str | None) -> list[Fin
     offered = context.get("claims_offered")
     if offered is not None and claim_id and str(claim_id) not in offered:
         out.append(Finding(str(claim_id), f"Claim {claim_id} is not offered for this moment "
-                           f"(offered: {', '.join(offered) or 'none'}; decision 25)"))  # fmt: skip
+                           f"(offered: {', '.join(offered) or 'none'})"))  # fmt: skip
     facts = context.get("facts") or {}
     if "facts" in context and (str(claim_id) == "14" or _found(FEWER_TOUCHES, text)):
         if "touches_last_5min" not in facts:
             out.append(Finding("14", "Fewer touches needs the measured touch counts in the facts "
-                               "(claim 14, decision 25)"))  # fmt: skip
+                               "(claim 14)"))  # fmt: skip
         elif not facts.get("fewer_touches_than_usual"):
             out.append(Finding("14", "The touch counts do not show fewer touches than his match "
                                "so far (claim 14)"))  # fmt: skip
-    # 19c (decision 41, 38:26 of the site's feed): "the lowest point of his match so far" with
+    # 19c (38:26 of the site's feed): "the lowest point of his match so far" with
     # the battery at 0.620 and an earlier low of 0.618, both shown as 0.62.
     if (
         "facts" in context

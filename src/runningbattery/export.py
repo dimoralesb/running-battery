@@ -1,4 +1,4 @@
-"""Files for the web overlay (BUILD_PLAN "Fri 23"): one match folder in, compact files out.
+"""Files for the web overlay: one match folder in, compact files out.
 
 ``python -m runningbattery.export data/synthetic/demo/story --out app/public/data/story``
 
@@ -10,13 +10,13 @@
   for a typical professional and its 10–90% band, the typical-pro chance, high-speed running
   in the last minute, speed (decimetres per second), red-zone and post-peak flags (shares as
   whole percentages). ``match.json`` also has both teams' running per ball-in-play minute in
-  5-min blocks, and where it happened (decision 30): per 15-min block, metres above 5.5 m/s
+  5-min blocks, and where it happened: per 15-min block, metres above 5.5 m/s
   and ball-in-play seconds per situation of play (``tools.SITUATIONS``).
 - ``feed.json``: the agents' feed, copied as it is. ``match.json`` ``clips`` gives each feed
-  moment the part of the match its clip shows (decision 38, ``moment_clips``).
+  moment the part of the match its clip shows (``moment_clips``).
 - ``match.json`` ``shots``: every shot, the ball's arrival and its possession's start, so that a
-  clip runs on to the shot its play ends in (decision 46).
-- ``highlights.json``: the physical highlights (``agents.highlights``, decision 28), with their
+  clip runs on to the shot its play ends in.
+- ``highlights.json``: the physical highlights (``agents.highlights``), with their
   captions (checked by the Verifier's rules) and the run's times for the trail on the pitch.
 
 Reads what the agents read (``agents.tools.MatchData``), never the truth file.
@@ -45,21 +45,21 @@ from runningbattery.io import TRACKING
 POS_HZ = 5
 TEAM_BLOCK_S = 300.0  # 5-min blocks for the team-running chart
 MISSING = -32768
-# A feed moment's clip (decision 38): the overlay plays from CLIP_BEFORE seconds before the
+# A feed moment's clip: the overlay plays from CLIP_BEFORE seconds before the
 # window's start to CLIP_AFTER after its end (``clipFrom``, ``clipTo`` in App.tsx); a moment with
 # no window here keeps the overlay's default (DEFAULT_BEFORE / DEFAULT_AFTER around its second).
 CLIP_BEFORE, CLIP_AFTER = 3.0, 2.0
 DEFAULT_BEFORE, DEFAULT_AFTER = 8.0, 4.0
 SECOND_WIND_LOOKBACK_S = 120.0  # second wind: his runs in the 2 min that brought him back
 # ...and the clip of that run (and of fresh legs) runs on to the end of the play it was part of
-# (its possession's last event), at most PLAY_ON_S more (decision 46: a 3-s run made an 8-s clip
+# (its possession's last event), at most PLAY_ON_S more (a 3-s run made an 8-s clip
 # that stopped while the play went on).
 PLAY_ON_S = 8.0
 # His hardest minutes: the clip shows the running of the minute up to the moment, the runs above
-# 5.5 m/s within RED_ZONE_CLIP_MAX_S of each other that hold most of its metres (decision 41: the
+# 5.5 m/s within RED_ZONE_CLIP_MAX_S of each other that hold most of its metres (the
 # default window, 8 s before the moment, showed 12 of the 63 m that made it).
 RED_ZONE_MINUTE_S = 60.0
-# The whole minute since decision 42 (25 s before: A13's minute at 67:20 had its 91 m in five runs
+# The whole minute since then (25 s before: A13's minute at 67:20 had its 91 m in five runs
 # over 58 s, and the clip showed 45); the overlay fast-forwards between his runs (App.tsx).
 RED_ZONE_CLIP_MAX_S = 60.0
 RED_ZONE_TO_MOMENT_S = 10.0  # ...and runs on to the moment's second if it is this near, so that
@@ -76,7 +76,7 @@ def team_running(m: MatchData) -> list[dict]:
         a = 0.0
         while a < dur - 30.0:
             b = min(a + TEAM_BLOCK_S, dur)
-            if dur - b < 30.0:  # a short tail joins the last block (decision 42: the last 25 s
+            if dur - b < 30.0:  # a short tail joins the last block (the last 25 s
                 b = dur  # of a half were in none, and a team clip's numbers missed them)
             r = m.team_rates(per, a, b)
             out.append({"video_start": m.video_s(per, a), "video_end": m.video_s(per, b),
@@ -90,7 +90,7 @@ def team_running(m: MatchData) -> list[dict]:
 
 
 def team_situations(m: MatchData) -> list[dict]:
-    """Where each team's high-speed running happened (decision 30), per 15-min block
+    """Where each team's high-speed running happened, per 15-min block
     (``MatchData.blocks``): [metres above 5.5 m/s, ball-in-play seconds] per situation, team
     totals of the outfield players. Additive, so the overlay sums the blocks it needs."""
     out = []
@@ -162,7 +162,7 @@ def play_end(m: MatchData, v: float) -> float:
 
 
 def moment_clips(m: MatchData, feed: dict) -> dict[str, list[float] | None]:
-    """What each feed moment's clip shows (decision 38), as [start, end] in video_s, or None for
+    """What each feed moment's clip shows, as [start, end] in video_s, or None for
     a moment with no clip (its player does nothing above 5.5 m/s in it; the line stays in the
     full match's commentary). Moments measured over minutes get the part that shows them:
     caught on the break, the turnover to the end of the counter (``tools.counter_end_t``);
@@ -214,7 +214,7 @@ def moment_clips(m: MatchData, feed: dict) -> dict[str, list[float] | None]:
 def shots(m: MatchData) -> list[dict]:
     """Every shot with the ball's arrival (``end_t``) and its possession's first and last event,
     video_s:
-    a clip whose possession is still on at its end runs on to the shot (decision 46, data.ts
+    a clip whose possession is still on at its end runs on to the shot (data.ts
     ``toShot``; a clip had stopped a few seconds before the shot its play ended in)."""
     first: dict[tuple[int, int], float] = {}
     last: dict[tuple[int, int], float] = {}
@@ -269,7 +269,7 @@ def export(folder: Path, out: Path, feed_path: Path | None = None) -> dict:
         pct = lambda a: [round(round(float(x), 2) * 100) for x in a]  # noqa: E731
         # Each half's first second (video_s) and its index: the first half ends mid-second
         # (2765.7 s in the story match), so one count from ``start`` read the second half a
-        # second late (decision 44: 55% on screen, "about 54%" in the line).
+        # second late (55% on screen, "about 54%" in the line).
         firsts = [int(np.flatnonzero(s.period == per)[0]) for per in np.unique(s.period)]
         signals[pid] = {
             "start": m.video_s(int(s.period[0]), float(s.t[0])),

@@ -1,4 +1,4 @@
-"""Fit the calibration map of the typical-pro chance (decision 14; ``engine/params.py``
+"""Fit the calibration map of the typical-pro chance (``engine/params.py``
 ``LOW_CHANCE_MAP``).
 
 ``python -m runningbattery.validate.calibrate data/synthetic/dev``

@@ -1,10 +1,10 @@
-"""Tuning constants for the generator (BUILD_PLAN §4, "Thu 15" to "Sun 18").
+"""Tuning constants for the generator.
 
-Every number has a source ("synthesis §x" is docs/RESEARCH_SYNTHESIS.md) or is labelled "our
-assumption". Most "our assumption" values are knobs. The movement knobs were calibrated on
-2026-10-15 with fatigue off (``sim.batch``, 90–120 seeds): distance, >5.5 m/s and >7 m/s per
-position against synthesis §4.2, running by phase [Allen2026b, Table 5], and time in speed bands
-against IDSSE (``sim.idsse``). The match-flow knobs are tuned to the interim targets in
+Every number has a source (a citation key in docs/References.bib) or is labelled "our assumption".
+Most "our assumption" values are knobs. The movement knobs were calibrated on 2026-10-15 with
+fatigue off (``sim.batch``, 90–120 seeds): distance, >5.5 m/s and >7 m/s per position against the
+Premier League targets (``sim.batch``), running by phase [Allen2026b, Table 5], and time in speed
+bands against IDSSE (``sim.idsse``). The match-flow knobs are tuned to the interim targets in
 ``runningbattery.sim.summary.TARGETS``. On 2026-10-16 the fatigue model (``physiology.py``) and the
 shared match tempo were added and calibrated on 120–240 seeds with fatigue on (``sim.batch``,
 ``sim.fatigue_checks``), and the work rate and two run chances re-fitted: the totals of real
@@ -17,7 +17,7 @@ from runningbattery.schema import Position
 
 # --- Time and pitch -----------------------------------------------------------------------------
 
-FRAME_RATE_HZ = 10.0  # synthesis §7.1
+FRAME_RATE_HZ = 10.0  # the tracking rate of the real data we compare with
 DT = 1.0 / FRAME_RATE_HZ
 
 HALF_LENGTH = 52.5  # 105 x 68 m pitch [Bassek2025, Box 3]
@@ -39,9 +39,9 @@ FIRST_HALF_ADDED_SHARE = (0.25, 0.40)
 
 # --- Players ------------------------------------------------------------------------------------
 
-# Hidden "true" values, one shared prior for every outfield position (PLAN §7, decisions 3 and 13):
-# a typical professional. CS 4.1 ± 0.3 m/s (14.8 km/h), clipped at ±2 SD to 3.5–4.7. Derivation
-# (synthesis §3.2.3): professionals' VO₂max 57.6 ml/kg/min and an oxygen cost of running of about
+# Hidden "true" values, one shared prior for every outfield position:
+# a typical professional. CS 4.1 ± 0.3 m/s (14.8 km/h), clipped at ±2 SD to 3.5–4.7. Derivation:
+# professionals' VO₂max 57.6 ml/kg/min and an oxygen cost of running of about
 # 0.196 ml/kg/m (derived: oxygen use at the anaerobic threshold divided by its speed) [Modric2020,
 # Table 1]; CS lies at 70–90% of VO₂max [Jones2017, p.S67], i.e. 3.4 / 3.9 / 4.4 m/s at 70 / 80 /
 # 90% (derived); professionals are well trained, so 85% (our assumption): 4.16, rounded to 4.1.
@@ -49,50 +49,49 @@ FIRST_HALF_ADDED_SHARE = (0.25, 0.40)
 # widened to 0.3 for the uncertainty in the 70–90% (our assumption). Until 2026-10-17 the
 # generator drew from a university prior, CS 3.7 ± 0.25 m/s (now ``engine.params.PRIORS``).
 CS_MEAN, CS_SD, CS_RANGE = 4.1, 0.3, (3.5, 4.7)
-# D′ 180 m, range 100–300 [synthesis §3.2.3]; SD 54 m [Sutcliffe2025, Fig. 2].
+# D′ 180 m, range 100–300; SD 54 m [Sutcliffe2025, Fig. 2].
 D_PRIME_MEAN, D_PRIME_SD, D_PRIME_RANGE = 180.0, 54.0, (100.0, 300.0)
 # A0 ~ N(7.4, 0.5) m/s², range 6.6–8.4; S0 ~ N(9.3, 0.45) m/s, range 8.4–10.3 [Morin2021, Table 1].
 A0_MEAN, A0_SD, A0_RANGE = 7.4, 0.5, (6.6, 8.4)
 S0_MEAN, S0_SD, S0_RANGE = 9.3, 0.45, (8.4, 10.3)
-# Two-pool truth model [Chorley2022; Chorley2023, Eq. 6b–6c; synthesis §3.2.4], used by
+# Two-pool truth model [Chorley2022; Chorley2023, Eq. 6b–6c], used by
 # ``physiology.py``: the share of D′ in the fast pool and each pool's recharge time standing
-# still (synthesis §3.2.4 gives the slow pool's when walking; the two differ by about 4%,
+# still (the published value is the slow pool's when walking; the two differ by about 4%,
 # derived from Chorley2023, Eq. 6c).
 FAST_FRACTION_RANGE = (0.40, 0.50)
 TAU_FAST_RANGE = (15.0, 35.0)  # s
 TAU_SLOW_RANGE = (400.0, 500.0)  # s
 # Club test values = truth × (1 + e), e ~ N(0, SD), clipped at ±3 SD. Written only with
-# --club-tests (PLAN §3.2), but always drawn so a seed gives the same match either way.
+# --club-tests, but always drawn so a seed gives the same match either way.
 # A0 5.4% and S0 3.3% are the measurement noise of the profile [Morin2021, Table 1]. CS 5% and
-# D′ 15% are our assumption, larger for D′ because it depends strongly on the test method
-# (synthesis §3.2.3).
+# D′ 15% are our assumption, larger for D′ because it depends strongly on the test method.
 TEST_ERROR_SD = dict(cs=0.05, d_prime=0.15, a0=0.054, s0=0.033)
 
-# --- Motion model (synthesis §4.10) ------------------------------------------------------------
+# --- Motion model ------------------------------------------------------------
 
 # Equation of motion dv/dt = α(V·n − v) [Narizuka2023, Eq. 3], with α = A0/S0 per player and
-# V = S0 at full effort (synthesis §4.10, derived). Lower efforts use a lower V: our assumption.
+# V = S0 at full effort (derived). Lower efforts use a lower V: our assumption.
 # Speeding up is capped at a_max(v) = A0·(1 − v/S0) [Morin2021, p.2]. The model allows hard
-# reversals at speed, so braking gets its own cap of about 5–6 m/s² (synthesis §4.10, our
+# reversals at speed, so braking gets its own cap of about 5–6 m/s² (our
 # assumption). Turning (sideways acceleration) uses the same cap: our assumption.
 BRAKE_MAX = 5.5
 TURN_MAX = 5.5
-# Time to close the gap to a moving target: τ ≈ S0/A0 ≈ 1.25 s (synthesis §3.6, derived).
+# Time to close the gap to a moving target: τ ≈ S0/A0 ≈ 1.25 s (derived).
 ARRIVE_TAU = 1.25
-# Decision 43: on a run or a ball role, a player arrives at a constant deceleration, the speed
+# On a run or a ball role, a player arrives at a constant deceleration, the speed
 # he wants falling as sqrt(2·ARRIVE_DECEL·gap), not as gap / ARRIVE_TAU: he keeps his speed until
 # near the spot, then brakes. With gap / τ he began easing off 8–9 m out, so runs were short for
 # their peak (at 6.5–7 m/s, 2.2 s against IDSSE's 3.1) and hard braking rare (decelerations
 # beyond 3 m/s² 0.87% of player time against IDSSE's 1.37%). Fitted by sim.calibrate (≤ 0: the
 # old law). Calm movement keeps CALM_ARRIVE_TAU.
-ARRIVE_DECEL = 3.408  # 3.050 before decision 47 (sim.calibrate)
+ARRIVE_DECEL = 3.408  # 3.050 earlier (sim.calibrate)
 # Within ARRIVE_SETTLE_M of the spot he arrives as gap / ARRIVE_TAU (the two joined there): on the
 # braking curve alone the motion's lag overshot a spot a metre away (a goal huddle broke up). Our
 # assumption.
 ARRIVE_SETTLE_M = 2.0
 # Calm movement (holding the shape, repositioning, walking while the ball is dead) is not a
 # maximal effort: α is scaled by CALM_ALPHA and the arrival time is CALM_ARRIVE_TAU. Our
-# assumption, tuned to the IDSSE acceleration bands (PLAN §2.5).
+# assumption, tuned to the IDSSE acceleration bands.
 CALM_ALPHA = 0.5
 CALM_ARRIVE_TAU = 2.5
 # Push-apart: players do not stand on the same spot. Before each step, team-mates' targets
@@ -114,7 +113,7 @@ SEPARATION_MAX = 6.0  # m/s (21.6 km/h)
 # SEPARATION_TAU and SEPARATION_MAX tuned towards IDSSE [Bassek2025], where team-mates come
 # within 1 m in 0.20% of in-play player-frames (our measure, sim.spacing, 2026-10-15). Ours,
 # 120 seeds: 0.83% with no look-ahead, 0.45% judged at their positions 1 s on (which misses
-# paths that cross within the second), 0.17% at closest approach. Decision 39 (team-mates within
+# paths that cross within the second), 0.17% at closest approach. Then (team-mates within
 # 0.7 m in 5 clips of the site): SEPARATION_TEAM 1.8 → 2.0 m, SEPARATION_TAU 0.4 → 0.25 s,
 # SEPARATION_MAX 4 → 6 m/s and the look-ahead 1.0 → 1.2 s, with the push blended between the
 # line between them now and at closest approach and their speed along their path kept: 0.01%
@@ -138,35 +137,35 @@ HI_MIN_S = 1.0
 DRIFT_SPEED = 0.42  # holding the team shape
 DEAD_SPEED = 0.40  # walking back into shape while the ball is dead
 CHASE_SPEED = 0.90  # receiver, presser, interceptor, loose ball
-LOOSE_CHASERS = 1  # per team: the nearest player goes for a loose ball (was 2; decision 37)
+LOOSE_CHASERS = 1  # per team: the nearest player goes for a loose ball (was 2)
 RUN_SPEED = 0.88  # in-possession runs: in behind, overlap, into the box, support
 SHOW_SPEED = 0.70  # coming short to receive
 ONSIDE_SPEED = 0.60  # hurrying back from an offside position
-# Full effort is V = S0 (synthesis §4.10). The hardest runs use a share of it: runs in behind
+# Full effort is V = S0. The hardest runs use a share of it: runs in behind
 # and chasing a through ball (BEHIND_EFFORT), tracking a runner (TRACK_EFFORT), support runs on
 # a counter-attack (COUNTER_SUPPORT_EFFORT), overlaps (OVERLAP_EFFORT) and recovery runs from
 # far out of position (RECOVERY_EFFORT). Our assumption, tuned to sprint distance and top speed
-# per position (synthesis §4.2; [SilvaH2025, Table 1]).
+# per position ([SilvaH2025, Table 1]).
 BEHIND_EFFORT = 1.0
-# Since decision 42 these four are fitted with POSITION_EFFORT by sim.calibrate (the values by hand
+# These four are fitted with POSITION_EFFORT by sim.calibrate (the values by hand
 # before it: 0.95, 0.95, 0.86 and 0.92); RECOVERY_EFFORT stays at least SHAPE_RUN_SPEED.
-TRACK_EFFORT = 0.883  # 0.884 before decision 47 (sim.calibrate)
-COUNTER_SUPPORT_EFFORT = 0.730  # 0.701 before decision 47 (sim.calibrate)
-OVERLAP_EFFORT = 0.785  # 0.828 before decision 47 (sim.calibrate)
-RECOVERY_EFFORT = 0.886  # 0.860 before decision 47 (sim.calibrate)
+TRACK_EFFORT = 0.883  # 0.884 earlier (sim.calibrate)
+COUNTER_SUPPORT_EFFORT = 0.730  # 0.701 earlier (sim.calibrate)
+OVERLAP_EFFORT = 0.785  # 0.828 earlier (sim.calibrate)
+RECOVERY_EFFORT = 0.886  # 0.860 earlier (sim.calibrate)
 SPRINT_RUN_S = (3.0, 6.0)  # how long a sprint run may last, s. Our assumption.
 # A run that heads back within TURN_S seconds of being above HI_SPEED the other way (more than
 # 90° round) goes no faster than SHAPE_RUN_MIN until then: he turns first. Our assumption
-# (decision 41: a run in behind or an overlap, the ball lost, and a sprint straight back;
+# (a run in behind or an overlap, the ball lost, and a sprint straight back;
 # sprint-turns, above 6 m/s one way then the other within 4 s, were 0.75–2.60 per player-hour
-# against 0–1.04 in IDSSE). Decision 43: turn-backs (a high-speed run within 10 s of the last,
+# against 0–1.04 in IDSSE). Turn-backs (a high-speed run within 10 s of the last,
 # heading more than 120° from it) were 4.8 per player-hour against IDSSE's 1.4; fitted by
 # sim.calibrate since (3.5 before).
-TURN_S = 10.0  # the knob's upper bound (as before decision 46; sim.calibrate)
+TURN_S = 10.0  # the knob's upper bound (as earlier; sim.calibrate)
 # Work rate per position: the wanted speed of every run and ball role (not calm movement) is
 # multiplied by this, then capped at S0. Position differences come from role behaviour, not
-# from different physical settings (PLAN §7, decision 3). Our assumption, fitted to HID and
-# sprint distance per position (synthesis §4.2) on 90–240 seeds; re-fitted on 2026-10-15 after
+# from different physical settings. Our assumption, fitted to HID and
+# sprint distance per position on 90–240 seeds; re-fitted on 2026-10-15 after
 # the push-apart rule, its look-ahead, and the closest-approach look-ahead and dead-ball
 # structures (set pieces, goal huddle). Sprint distance is sensitive: 1% more effort gives
 # about 5–10% more distance above 7 m/s. One knob cannot fit both for wide midfielders (their
@@ -179,47 +178,47 @@ TURN_S = 10.0  # the knob's upper bound (as before decision 46; sim.calibrate)
 # Re-fitted on 2026-10-17 for the professional prior (CS 4.1 m/s, with the tank re-fitted): fewer
 # runs are skipped, so sprint rose (team +13%); FB +0.2%, DM −0.1%, CM +0.3%, AM −0.8% against the
 # values before, which brings HID within ±5% except FB (the one-knob trade-off) and the team's
-# sprint back to about +7% (120 and 240 seeds). Decision 38 (shots on clear chances, the ball
+# sprint back to about +7% (120 and 240 seeds). Then (shots on clear chances, the ball
 # rolling to its player): fewer turnovers cut midfield high-speed running 1-3 points, so DM, CM
-# and AM rose 0.3, 0.9 and 0.5% (60 seeds). Decision 39 (the stronger push-apart, keepers held
+# and AM rose 0.3, 0.9 and 0.5% (60 seeds). Then (the stronger push-apart, keepers held
 # within GK_MAX_OFF): midfielders' high-speed running fell 3-4 points (DM −7.2%, CM −6.8%, 60
 # seeds), so MID_SUPPORT_CHANCE and MID_PRESS_CHANCE rose and CB, FB, DM, CM and AM 0.4, 0.4,
 # 0.6, 0.7 and 1.6% (120 and 240 seeds): high-speed running per position within ±5%, sprint
-# distance FB +13%, DM and CM +10%, team +7% (240 seeds). Decision 40 (set-piece jobs paced
+# distance FB +13%, DM and CM +10%, team +7% (240 seeds). Then (set-piece jobs paced
 # to the restart, below 5 m/s; no sprint carried on after the whistle): high-speed running per
 # position fell about 2 points, all of it while the ball was dead (in play, per minute, it did
 # not move), FB −6.1% and CM −5.7% (120 seeds), so FB and CM rose 0.9 and 0.6%. With box
 # carries aimed at goal too (same decision): high-speed running per position within ±5% (FB
 # −4.2, DM −4.4, CM −4.6, AM −4.2%), sprint distance FB +17%, DM +8%, CM +11%, team +7% (240
-# seeds). Decision 41 (trackers follow the runner and stop with the pass; no sprint straight back,
+# seeds). Then (trackers follow the runner and stop with the pass; no sprint straight back,
 # TURN_S): the decoy runs tracked to an empty spot had been a third of centre-backs' high-speed
 # running (CB −33%, FB −14%, DM, CM and AM −8 to −10%), so CB, FB, DM, CM, AM and CF rose 13.9,
 # 4.5, 0.8, 0.3, 1.6 and 2.2% (CB and FB at 1.10, the most WALL_SPEED allows below), with
 # COUNTER_DROP_* and defenders following runs into space: high-speed running per position within
 # ±5.3% (CB −1.5, FB −4.0, DM −5.3, CM −3.3, AM −0.5%), sprint distance FB +16%, DM +9%, CM +12%,
-# team +7% (120 seeds; decision 40 on the same seeds +16, +8, +13 and +6%). Decision 42: no more
+# team +7% (120 seeds; earlier on the same seeds +16, +8, +13 and +6%). No more
 # tuning by hand. sim.calibrate fits these with the efforts of the hardest runs (TRACK_EFFORT and
 # the three after it), DUEL_PER_TOUCH, TRANSITION_CHANCE, SHAPE_RUN_GAP and SHAPE_LAG_S to the
 # per-position targets, running by phase, event counts and the IDSSE speed bands and dithering
 # (least squares on a fitted response surface, trust-region steps; 3,700 matches on seeds from
 # 10001, never the 1–120 check seeds). The keepers' work rate rose most (0.99 → 1.156): low
-# passes cut out since decision 41 took a sixth of the balls they came for, and the rest were
+# passes cut out since then took a sixth of the balls they came for, and the rest were
 # shorter (their high-speed running 27 → 18 m a match); with the dead-ball jog capped after the
 # work rate, CB and FB are no longer held at 1.10.
 POSITION_EFFORT = {
-    Position.GK: 1.036,  # 0.991 before decision 47
-    Position.CB: 1.136,  # 1.091 before decision 47
-    Position.FB: 1.145,  # 1.122 before decision 47
-    Position.DM: 1.037,  # 1.025 before decision 47
-    Position.CM: 1.092,  # 1.066 before decision 47
-    Position.AM: 1.350,  # 1.331 before decision 47
-    Position.WM: 1.160,  # 1.131 before decision 47
-    Position.CF: 1.120,  # 1.165 before decision 47
+    Position.GK: 1.036,  # 0.991 earlier
+    Position.CB: 1.136,  # 1.091 earlier
+    Position.FB: 1.145,  # 1.122 earlier
+    Position.DM: 1.037,  # 1.025 earlier
+    Position.CM: 1.092,  # 1.066 earlier
+    Position.AM: 1.350,  # 1.331 earlier
+    Position.WM: 1.160,  # 1.131 earlier
+    Position.CF: 1.120,  # 1.165 earlier
 }
 # Defenders (CB, FB) who track an opponent running in behind: the nearest TRACKERS follow him,
 # TRACK_GOAL_SIDE metres goal-side of where he is now, while the pass is in flight or he has the
 # ball; they stop when his run ends, the pass reaches someone else, or the ball runs loose or is
-# won. Our assumption (decision 41): before, the tracker sprinted for 3–6 s to a fixed point
+# won. Our assumption: before, the tracker sprinted for 3–6 s to a fixed point
 # goal-side of where the runner was heading, whatever happened to the pass, then sprinted
 # straight back out (sprint-turns 0.75–2.60 per player-hour against 0–1.04 in IDSSE).
 TRACKERS = 1
@@ -231,50 +230,50 @@ CARRY_MOMENTUM = 0.85
 # (recovery run, covering, pushing up, support) until the gap is back under SHAPE_RUN_END. Its
 # speed grows with the gap at the start, from SHAPE_RUN_MIN to SHAPE_RUN_SPEED at SHAPE_RUN_FULL
 # metres; a recovery run (not goal-side of the ball) in danger (DANGER_U) grows from
-# RECOVERY_START to RECOVERY_EFFORT (SHAPE_RUN_SPEED before decision 43: a 10-m gap meant a
+# RECOVERY_START to RECOVERY_EFFORT (SHAPE_RUN_SPEED earlier: a 10-m gap meant a
 # sprint, and the run was over in a second or two). Forwards (AM, WM, CF) are not in it
-# (FORWARD_RECOVERY): out of possession they drop at the shape-run speeds (decision 43: their
+# (FORWARD_RECOVERY): out of possession they drop at the shape-run speeds (their
 # high-speed runs back without the ball were 1.5–2.7 times IDSSE's: WM 27.6 against 10.5, AM
 # 22.8 against 8.3, CF 14.2 against 6.0 per 90 player-minutes). Out of possession, a run mostly
 # up the pitch, back up to the line, goes no faster than SHAPE_RUN_MIN unless the team is
-# pressing (decision 41: a defender who had dropped deep sprinted back out at 7 m/s). Our
+# pressing (a defender who had dropped deep sprinted back out at 7 m/s). Our
 # assumption.
-SHAPE_RUN_GAP = 14.210  # 14.302 before decision 47 (sim.calibrate)
+SHAPE_RUN_GAP = 14.210  # 14.302 earlier (sim.calibrate)
 # On the opponents' counter-attack (a transition), or caught upfield of the ball out of
 # possession, a defender (CB, FB) starts his shape run from COUNTER_DROP_GAP metres, at
-# COUNTER_DROP_SPEED of S0 or more. Our assumption (decision 41): with decoy runs no longer
+# COUNTER_DROP_SPEED of S0 or more. Our assumption: with decoy runs no longer
 # tracked to an empty spot, centre-backs' high-speed running was 30% short; this, and following
 # runs into space (roles.TRACKED), is where real centre-backs do theirs.
 COUNTER_DROP_GAP = 3.0
 COUNTER_DROP_SPEED = 0.80
 SHAPE_RUN_FULL = 25.0
 SHAPE_RUN_END = 3.0
-SHAPE_RUN_MIN = 0.455  # 0.489 before decision 47 (sim.calibrate)
+SHAPE_RUN_MIN = 0.455  # 0.489 earlier (sim.calibrate)
 SHAPE_RUN_SPEED = 0.84
 SHAPE_RUN_MAX_S = 8.0
-RECOVERY_START = 0.663  # 0.674 before decision 47 (sim.calibrate)
+RECOVERY_START = 0.663  # 0.674 earlier (sim.calibrate)
 FORWARD_RECOVERY = False
 # A defender this close to where a pass will arrive closes the receiver down. Our assumption.
 CLOSE_DOWN_REACH = 15.0
 # Closing down aims this far goal-side of the opponent, not at the opponent. Our assumption.
 PRESS_GAP = 1.5
 # Cover: the second defender stands COVER_DEPTH behind the carrier on his line to goal and
-# COVER_SIDE across it, towards the middle: diagonally behind the presser (decision 46; it had
+# COVER_SIDE across it, towards the middle: diagonally behind the presser (it had
 # been on the line itself). The presser and the cover keep their jobs unless another defender is
-# ROLE_KEEP_M nearer the carrier (decision 46: they swapped every frame). Our assumptions.
+# ROLE_KEEP_M nearer the carrier (they swapped every frame). Our assumptions.
 COVER_DEPTH = 8.0
 COVER_SIDE = 4.0
 ROLE_KEEP_M = 2.0
-# The cover defender's top wanted speed (roles.targets; SHAPE_RUN_SPEED before decision 43; the
-# fit keeps it near: lower values cut 1–2 s sprints but cost the high-speed running). Since
-# decision 46 he runs at it only when far from his spot (Roles.cover_pace, a shape run's law).
-COVER_SPEED = 0.750  # 0.793 before decision 47 (sim.calibrate)
+# The cover defender's top wanted speed (roles.targets; SHAPE_RUN_SPEED earlier; the
+# fit keeps it near: lower values cut 1–2 s sprints but cost the high-speed running). He
+# runs at it only when far from his spot (Roles.cover_pace, a shape run's law).
+COVER_SPEED = 0.750  # 0.793 earlier (sim.calibrate)
 # Chances that a run starts when a team-mate gets the ball (per touch), and how long it lasts.
 # Our assumption. OVERLAP_CHANCE was 0.75 with fatigue off: a tired full-back who skips an
 # overlap does not get it offered again, so with fatigue on more are offered (2026-10-16).
 SHOW_CHANCE = 0.35  # one team-mate comes short to offer a pass
 OVERLAP_CHANCE = 0.9  # full-back overlaps a wide player on the ball, middle or final third
-# Decision 45 (our assumptions): an overlap goes OVERLAP_AHEAD metres past the carrier (onside),
+# Then (our assumptions): an overlap goes OVERLAP_AHEAD metres past the carrier (onside),
 # outside him when OVERLAP_LANE metres are left to the touchline, else UNDERLAP_IN metres inside
 # him (it had aimed 1 m inside a winger on the touchline: his own spot); a runner's target stays
 # RUN_SPACE metres from his team-mates' targets (6.5% of our high-speed runs ended within 2.5 m
@@ -283,7 +282,7 @@ OVERLAP_AHEAD = 12.0
 OVERLAP_LANE = 3.0
 UNDERLAP_IN = 6.0
 RUN_SPACE = 4.0
-# Decision 46 (Roles.space_runs, our assumptions): a runner's target also keeps RUN_SPACE from
+# Then (Roles.space_runs, our assumptions): a runner's target also keeps RUN_SPACE from
 # where each team-mate will be RUN_SPACE_AHEAD_S on; a runner (path over TANDEM_MIN_M) alongside
 # a team-mate who runs the same way faster than TANDEM_SPEED moves into his own lane.
 RUN_SPACE_AHEAD_S = 0.5
@@ -292,14 +291,14 @@ TANDEM_SPEED = 3.0
 BOX_RUN_CHANCE = 0.85  # each forward breaks into the box when the ball is wide in the final third
 # a forward near the offside line runs in behind as a forward pass is played; 0.25 before decision
 # 37 limited the run to forward passes and short of the keeper and the penalty spot, raised to
-# keep forwards' and centre-backs' sprint distance (synthesis §4.2) on 60 seeds
+# keep forwards' and centre-backs' sprint distance on 60 seeds
 BEHIND_CHANCE = 0.9
 SUPPORT_RUNNERS = 2  # midfielders (not the DM) who sprint up in support in a positive transition
 # On a positive transition, each forward ahead of the ball sprints towards goal with this
 # chance (positive transitions hold the most sprinting [Bortnik2022, Fig. 3]), COUNTER_DEPTH
-# metres ahead, held onside until the pass (BEHIND_TIMING_S; decision 46: they had gone beyond
+# metres ahead, held onside until the pass (BEHIND_TIMING_S; they had gone beyond
 # the offside line, and passers avoided them, OFFSIDE_PASS_WEIGHT). Our assumption, tuned to
-# forwards' sprint distance (synthesis §4.2); 0.55 before decision 37 stopped these runs short
+# forwards' sprint distance; 0.55 earlier stopped these runs short
 # of the keeper and the penalty spot.
 COUNTER_RUN_CHANCE = 0.6
 COUNTER_DEPTH = (15.0, 30.0)
@@ -307,43 +306,43 @@ COUNTER_DEPTH = (15.0, 30.0)
 # starts only on a pass at least BEHIND_PASS_FORWARD metres forward (the receiver can then play
 # it on), and aims no deeper than BEHIND_KEEPER_GAP metres short of the opponents' goalkeeper
 # nor nearer goal than BEHIND_GOAL_GAP (the penalty spot): the space is between the back line
-# and the keeper (decision 37). Our assumption.
+# and the keeper. Our assumption.
 BEHIND_DEPTH = (15.0, 30.0)
 BEHIND_KEEPER_GAP = 2.0
 BEHIND_GOAL_GAP = 11.0
 BEHIND_PASS_FORWARD = 5.0
-# Decision 46: a run in behind (on a turnover, or for the receiver of a forward pass) holds the
+# A run in behind (on a turnover, or for the receiver of a forward pass) holds the
 # offside line until a team-mate on the ball is about to release it, then goes this long before
 # the pass (our assumption: about the time to reach running speed from a jog), and ends if the
 # pass goes elsewhere. They had run up to 13 m beyond the line while the carrier ran with the ball.
 BEHIND_TIMING_S = 0.5
 # A runner held onside aims where the line will be LINE_LEAD_S on when it drops (its speed
 # smoothed over LINE_VEL_TAU), so that he runs with the defenders instead of easing off as if
-# arriving at a spot. Our assumptions (decision 46).
+# arriving at a spot. Our assumptions.
 LINE_LEAD_S = 1.0
 LINE_VEL_TAU = 0.5
 # A forward whose shape target is held onside (within LINE_HOLD_M of the line) keeps pace with
-# the line when it drops faster than LINE_HOLD_SPEED m/s. Our assumptions (decision 46).
+# the line when it drops faster than LINE_HOLD_SPEED m/s. Our assumptions.
 LINE_HOLD_SPEED = 1.5
 LINE_HOLD_M = 0.5
 # Attackers whose shape spots are beyond the line stand behind it in their order within a lane
 # LINE_LANE_M wide, the furthest up on it and the others LINE_DEPTH_KEEP of their depth behind him.
-# Our assumption (decision 46).
+# Our assumption.
 LINE_DEPTH_KEEP = 0.5
 LINE_LANE_M = 10.0
 RUN_S = (2.0, 4.5)  # length of a triggered run, s
 # Exploit space: when a team-mate has the ball outside their own third, one free forward may
 # run EXPLOIT_LENGTH metres into space towards goal at RUN_SPEED (Move to Receive / Exploit
 # Space [Ju2022, Table 1]). Our assumption, tuned to the purpose mix and in-possession running;
-# 0.25 before decision 37, raised with BEHIND_CHANCE for attacking midfielders' running.
+# 0.25 earlier, raised with BEHIND_CHANCE for attacking midfielders' running.
 EXPLOIT_CHANCE = 0.35
 EXPLOIT_LENGTH = (12.0, 22.0)
 # Support in settled play: when a team-mate carries the ball in the middle or final third more
 # than MID_SUPPORT_GAP metres ahead of a free midfielder (DM, CM, AM), that midfielder may run
 # up to about MID_SUPPORT_BEHIND metres behind the ball at RUN_SPEED (Support Play [Ju2022,
-# Table 1]). Our assumption, tuned to midfielders' distance (synthesis §4.2); 0.55 with fatigue
-# off, raised with fatigue on like OVERLAP_CHANCE (2026-10-16); 0.65 before decision 37, which
-# cut midfielders' close-down runs; 0.85 before decision 39 (see POSITION_EFFORT).
+# Table 1]). Our assumption, tuned to midfielders' distance; 0.55 with fatigue
+# off, raised with fatigue on like OVERLAP_CHANCE (2026-10-16); 0.65 earlier, which
+# cut midfielders' close-down runs; 0.85 earlier (see POSITION_EFFORT).
 MID_SUPPORT_CHANCE = 0.95
 MID_SUPPORT_GAP = 15.0
 MID_SUPPORT_BEHIND = 10.0
@@ -352,15 +351,15 @@ MID_SUPPORT_BEHIND = 10.0
 # purpose mix (forwards close down most [Ju2022, p.978–980]).
 # Nobody presses a carrier a team-mate is already within PRESS_COVERED metres of, and a
 # close-down run ends when the ball reaches a new carrier (it followed the old one; decision
-# 37). Our assumption. The chances were 0.4 and 0.3 (MID_PRESS_CHANCE) before decision 37,
+# 37). Our assumption. The chances were 0.4 and 0.3 (MID_PRESS_CHANCE) earlier,
 # raised so that forwards and midfielders keep their high-speed running.
-# Counter-press (decision 46, Roles.counter_press): after losing the ball in open play, with
+# Counter-press (Roles.counter_press): after losing the ball in open play, with
 # COUNTERPRESS_CHANCE (sim.calibrate), the COUNTERPRESS_N outfield players nearest the ball within
 # COUNTERPRESS_REACH metres close down whoever has it for COUNTERPRESS_S seconds. Our
 # assumptions, after the "five-second rule" of counter-pressing teams; negative transitions last
 # 9.3 ± 3.4 s [Bortnik2022, Tables 1–2]. Real players run about two-thirds of their high-speed
 # metres without the ball within 10 m of it (IDSSE, 7 matches); ours ran a tenth.
-COUNTERPRESS_CHANCE = 0.473  # 0.490 before decision 47 (sim.calibrate)
+COUNTERPRESS_CHANCE = 0.473  # 0.490 earlier (sim.calibrate)
 COUNTERPRESS_N = 2
 COUNTERPRESS_REACH = 15.0
 COUNTERPRESS_S = (3.0, 5.0)
@@ -369,7 +368,7 @@ PRESS_REACH = 20.0
 PRESS_COVERED = 5.0
 # Central midfielders (DM, CM) close down a carrier in the middle third on their side of
 # halfway with this chance (Close Down/Press is one of the CMP actions [Ju2022, p.978–980]).
-# Our assumption, tuned to their HID (synthesis §4.2); 0.7 before decision 39 (see
+# Our assumption, tuned to their HID; 0.7 earlier (see
 # POSITION_EFFORT).
 MID_PRESS_CHANCE = 0.8
 # Recovery runs reach full effort only when there is danger: the ball in the team's own half
@@ -409,7 +408,7 @@ TEMPO_CLIP_SD = 3.0
 # --- Substitutions (match.py, rosters.py) ------------------------------------------------------
 
 # Up to five substitutes, in at most three stoppages in play plus half-time [IFAB2025, Law 3].
-# How many a team uses: our assumption (no five-substitute-era data, synthesis §8.2, point 8).
+# How many a team uses: our assumption (no five-substitute-era data, point 8).
 SUBS_CHOICES = (3, 4, 5)
 SUBS_WEIGHTS = (0.2, 0.35, 0.45)
 # Substitution windows on the match clock, min: entry times 57, 71 and 81 min in the
@@ -444,7 +443,7 @@ SUB_WEIGHT = {
 # replaced player leave at the nearest point unless the referee says otherwise; at the halfway
 # line, the engine slot the two share moves on without a jump (our simplification). Half-time
 # substitutes line up for the kick-off. The substitute is fresh, with their own hidden values.
-# Our assumption (decision 41: the substitute appeared on the replaced player's spot,
+# Our assumption (the substitute appeared on the replaced player's spot,
 # mid-pitch). Substitutes do more high-intensity running per minute than whole-match players
 # (+15 to +27% [Bradley2013, Table IV; Bradley 2014 via Hills2018]); here that comes only from
 # their fresh state, no extra work rate (our assumption, checked in sim.fatigue_checks).
@@ -455,10 +454,10 @@ SUB_MAX_S = 60.0
 # A stoppage with a substitution lasts lognormal(median, sigma) seconds from the ball going dead
 # (or its own draw, if longer): IDSSE's 29 such stoppages (no goal in them), 7 matches
 # [Bassek2025]: median 59.3 s, 10th–90th percentile 40–104 s (sigma between 0.30 and 0.44 from
-# the two). Decision 46: ours lasted 24 s; the long waits came from a stoppage with no cause.
+# the two). Ours lasted 24 s; the long waits came from a stoppage with no cause.
 SUB_STOPPAGE = (59.3, 0.37)
 
-# --- Hidden physiology and fatigue (physiology.py; PLAN §2.3, layer 3) ---------------------------
+# --- Hidden physiology and fatigue (physiology.py) ---------------------------
 
 # The pools refill at rest over the half-time interval, at most 15 min [IFAB2025, Law 7].
 HALF_TIME_S = 900.0
@@ -470,7 +469,7 @@ HALF_TIME_S = 900.0
 # [Mohr2005]. At half-time the tank gets back TANK_HALF_TIME_REFILL of what it lost. Our
 # assumption, both calibrated together: high-intensity running about 21% lower in the last
 # 15 min than in the first 15 [Bradley2009, Fig. 2], while running above 5.5 m/s and sprinting
-# are about the same in both halves [Bradley2009, p.162] (PLAN §2.5: within ±10%). A smaller
+# are about the same in both halves [Bradley2009, p.162] (within ±10%). A smaller
 # refill puts more of the decline into the second half; a larger one, less into the last 15 min.
 # Re-fitted on 2026-10-17 for the professional prior (CS 4.1 m/s; was 2000 m and 0.5 with CS
 # 3.7): a higher CS leaves fewer metres above it and the pools rarely run low, so the tank now
@@ -509,13 +508,13 @@ HARD_RUN_SPEED = 4.0
 # After a peak period efforts are 23% shorter, 32% briefer and 3% slower, and carries fewer,
 # shorter and slower [Fang2024, Table 2, Fig. 1], but most of that is there with no fatigue at all
 # (sim.fatigue_checks, no-fatigue control), so the gains are small. Our assumption. Passing is
-# left alone (PLAN §7, decision 5).
+# left alone.
 SHORTEN = 0.3
 SLOW = 0.03
 CARRY_SLOW = 0.3
 # Late in a match players still make their decisive sprints: sprinting is about the same in
 # both halves [Bradley2009, p.162] while high-intensity running falls [Fig. 2], and fatigue shows
-# in the 4–5.5 m/s volume, accelerations and recovery time between efforts (synthesis §3.5). So
+# in the 4–5.5 m/s volume, accelerations and recovery time between efforts. So
 # the tank does not cut runs wanted at DECISIVE_EFFORT of S0 or more (runs in behind, tracking a
 # runner, support on a counter-attack); the pools do (sprinting drops after peak periods
 # [Leifsson2024, Table 1]). Our assumption.
@@ -549,7 +548,7 @@ CAPACITY_MAX_LOSS = 0.05
 TIRED_BELOW = 0.75
 LATE_TANK_BELOW = 0.75
 
-# --- Validation spread (PLAN §2.6, point 3) ---------------------------------------------------
+# --- Validation spread ---------------------------------------------------
 
 # With ``vary`` (the validation batch, ``--vary``) each match draws its own assumptions, uniform
 # in these ranges, so the estimator is judged across them, not at one setting [Qin2025, §2.2;
@@ -560,7 +559,7 @@ LATE_TANK_BELOW = 0.75
 VARY = {
     "tank_m": (600.0, 1200.0),
     "tank_half_time_refill": (0.45, 0.85),
-    # +40 to +85% slower slow-pool refill at a tank of 0.7 [Chorley2022; synthesis §3.2.4]
+    # +40 to +85% slower slow-pool refill at a tank of 0.7 [Chorley2022]
     "slow_tau_per_tank": (1.33, 2.83),
     "dip": (0.05, 0.15),
     "dip_s": (300.0, 900.0),
@@ -574,7 +573,7 @@ VARY = {
     "noise_sigma_m": (0.03, 0.10),
 }
 # Players in a varied match come from a wider prior than the estimator's (CS 4.1 ± 0.3 m/s,
-# 3.5–4.7; D′ 180 ± 54 m, 100–300; PLAN §3.2), so some true values lie outside it: SDs × 1.5 and
+# 3.5–4.7; D′ 180 ± 54 m, 100–300), so some true values lie outside it: SDs × 1.5 and
 # wider ranges (CS ± 3.2 prior SDs, as for the university prior before 2026-10-17: 3.7 ± 0.8),
 # and wider pool settings. Our assumption.
 VARY_PLAYERS = {
@@ -587,13 +586,13 @@ VARY_PLAYERS = {
     "tau_slow_range": (350.0, 600.0),
 }
 
-# --- Position noise (synthesis §3.1) -------------------------------------------------------------
+# --- Position noise -------------------------------------------------------------
 
 # White Gaussian noise, σ per axis. Optical tracking against VICON is off by 0.06–0.18 m
 # [Bassek2025, p.7], but that includes slow, systematic error, which does not show up in speed
 # and acceleration (our reading). σ = 0.05 m of white noise matches IDSSE's acceleration bands
-# through our pipeline; 0.1 m (synthesis §3.1) put four bands 3–5.5 percentage points off (our
-# calibration, 2026-10-15). Sensitivity runs use 0.05, 0.1, 0.3 and 1.0 m (BUILD_PLAN §3).
+# through our pipeline; 0.1 m put four bands 3–5.5 percentage points off (our
+# calibration, 2026-10-15). Sensitivity runs use 0.05, 0.1, 0.3 and 1.0 m.
 # Drawn after the match from the same generator, so the match itself never changes with it.
 NOISE_SIGMA = 0.05
 # Dropouts: a player is missing from a few frames now and then. The IDSSE validation found no
@@ -639,26 +638,26 @@ SHAPE_OUT_OF_POSSESSION = dict(
 PRESS_LINE_PUSH = 12.0  # m, how much higher the block stands in a high press
 # Without the ball the front players stay this many metres higher than the block's shape: they
 # are the first line of the press and do not drop all the way. Our assumption, tuned to
-# forwards' distance (synthesis §4.2) and their purpose mix (forwards close down more and
+# forwards' distance and their purpose mix (forwards close down more and
 # cover less than defenders [Ju2022, p.978–980]).
 OUT_OF_POSSESSION_HOLD = {Position.CF: 8.0, Position.AM: 6.0, Position.WM: 3.0}
 # A team switches between its in- and out-of-possession shapes gradually: the weight of the
 # in-possession shape moves towards 1 (ball won) with time constant SHAPE_SWITCH_S[0] and
 # towards 0 (ball lost) with SHAPE_SWITCH_S[1]. Losing the ball is answered faster. Our
-# assumption, tuned to the distance per position (synthesis §4.2).
+# assumption, tuned to the distance per position.
 SHAPE_SWITCH_S = (4.0, 1.5)
 # The shape follows a lagged copy of the ball: its reference point closes the gap to the ball
 # with time constant SHAPE_LAG_S, so a long pass moves the block over a few seconds, not in one
-# jump. Our assumption, tuned to the IDSSE jogging share (PLAN §2.5); 1.5 before decision 42
+# jump. Our assumption, tuned to the IDSSE jogging share; 1.5 earlier
 # fitted it (sim.calibrate) with SHAPE_RUN_GAP to the IDSSE dithering, shape runs that chase a
 # target swinging back with the ball.
-SHAPE_LAG_S = 0.759  # 0.949 before decision 47 (sim.calibrate)
+SHAPE_LAG_S = 0.759  # 0.949 earlier (sim.calibrate)
 # Small repositioning: every WANDER_S seconds each player picks a new spot about WANDER_SD
 # metres (SD per axis) from their shape or set-piece position, in play and while the ball is
 # dead. Our assumption, tuned to dead-ball running, 63 m/min [Allen2026b, Table 5, derived],
 # and the IDSSE walking share.
 # Central midfielders adjust the most, centre-backs and forwards the least: the size is per
-# position, tuned to the distance per position (synthesis §4.2).
+# position, tuned to the distance per position.
 WANDER_SD = {
     Position.GK: 0.95,
     Position.CB: 1.6,
@@ -671,13 +670,13 @@ WANDER_SD = {
 }
 WANDER_S = (4.0, 10.0)
 
-# Goalkeeper. Our assumption, tuned to the goalkeeper's distance, 4,720 m (synthesis §4.2), and
+# Goalkeeper. Our assumption, tuned to the goalkeeper's distance, 4,720 m, and
 # the IDSSE goalkeeper speed bands. Without the ball the keeper stands on the line from the goal
 # centre to the ball, GK_DEPTH metres off the goal line: GK_DEPTH[0] when the ball is within
 # GK_DEPTH_FROM metres of goal, plus GK_DEPTH_SLOPE per metre further out, at most GK_DEPTH[1].
 # With the ball the keeper stays GK_BEHIND_LINE metres behind the back line, at most
 # GK_MAX_OFF metres from the goal line. A pass or cross landing within GK_CLAIM_REACH metres of
-# the goal centre makes the keeper come for it. Since decision 39 no target of his, a claim or a
+# the goal centre makes the keeper come for it. No target of his, a claim or a
 # loose ball he chases is further than GK_MAX_OFF from his goal line (24 m before; his clips showed
 # him 25-26 m out while his team defended), and WANDER_SD[GK] rose from 0.8 to 0.95 m, which
 # keeps his distance: high-speed running 28 m a match (240 seeds; 37 m before).
@@ -687,7 +686,7 @@ GK_DEPTH_SLOPE = 0.2
 GK_BEHIND_LINE = 20.0
 GK_MAX_OFF = 22.5
 # Within GK_BRAKE_M of that limit a keeper moves as on a run (``movement.step``), not with the
-# calm drift's slow braking, so that he stops at it (decision 41: 25 m off his line while
+# calm drift's slow braking, so that he stops at it (25 m off his line while
 # defending, in a clip). Our assumption.
 GK_BRAKE_M = 3.0
 GK_CLAIM_REACH = 26.0
@@ -712,7 +711,7 @@ PASS_BASE_SUCCESS = 0.93
 # running at INTERCEPT_SPEED after INTERCEPT_REACT_S (our assumption). A ball that arrives more
 # than BALL_REACH metres from the player who is to take it rolls on to him at BALL_ROLL_SPEED
 # (as a loose ball does, about 8 m/s), at most BALL_ROLL_MAX times, instead of jumping to his
-# feet (decision 38: the ball moved 4-7 m in 0.1 s at receptions and interceptions). Our
+# feet (the ball moved 4-7 m in 0.1 s at receptions and interceptions). Our
 # assumption.
 INTERCEPT_SPEED = 6.0  # m/s
 INTERCEPT_REACT_S = 0.3
@@ -749,7 +748,7 @@ MISCONTROL = 0.03  # chance a reception bounces loose
 # A pass in flight that comes within CUT_OUT_REACH metres of an outfield opponent while low (under
 # CUT_OUT_Z metres, from CUT_OUT_EDGE_S after the kick to CUT_OUT_EDGE_S before it arrives) is
 # cut out: intercepted if he is within CUT_OUT_CONTROL of its path (in his own penalty area,
-# cleared), otherwise deflected loose, a few metres on. Our assumption (decision 41: a pass's
+# cleared), otherwise deflected loose, a few metres on. Our assumption (a pass's
 # outcome was fixed at the kick, and 6.7% of completed passes rolled past an opponent within
 # 0.6 m).
 CUT_OUT_REACH = 0.6  # m
@@ -764,10 +763,10 @@ CUT_OUT_EDGE_S = 0.3
 # An aerial duel's challenger, picked at the kick (AERIAL_DUEL_RADIUS), contests the ball only if
 # he is within DUEL_REACH of it when it arrives. About 1.5 m, a stride and a leg's reach: 1.3 m,
 # so that tracking noise on two players keeps it under 1.5. The challenger runs at the pace that
-# gets him there (``roles.targets``). Our assumption (decision 41: duels were decided from up to
+# gets him there (``roles.targets``). Our assumption (duels were decided from up to
 # 4 m, aerial ones up to 7 m, with no contact). DUEL_PER_TOUCH was 0.18 before it: fewer
 # challengers reach the ball, so more go in (duels per match, summary.TARGETS).
-DUEL_PER_TOUCH = 0.364  # 0.400 before decision 47 (sim.calibrate)
+DUEL_PER_TOUCH = 0.364  # 0.400 earlier (sim.calibrate)
 DUEL_ENGAGE = 4.0  # m
 DUEL_HOLD_S = 1.5
 DUEL_APPROACH = 0.65  # share of S0: going in for the ball is not a sprint
@@ -782,35 +781,35 @@ PRESSURE_RADIUS = 5.0  # m; the nearest opponent within this distance logs a pre
 # are our assumption, tuned to about 24 shots per match [Bassek2025, p.6].
 SHOT_RANGE = 30.0  # m from the goal centre
 # chance of shooting on release, lane blocked, at the goal line; falls with distance
-SHOT_RATE = 0.335  # 0.395 before decision 47 (sim.calibrate)
+SHOT_RATE = 0.335  # 0.395 earlier (sim.calibrate)
 SHOT_RATE_SCALE = 16.0  # m
 # A shooting lane is blocked when an outfield opponent is goal-side of the ball within
 # SHOT_LANE_HALF metres of the line from the ball to the goal centre. With a clear lane the
 # chance is SHOT_RATE_CLEAR up to SHOT_CLOSE metres out, falling with SHOT_CLEAR_SCALE beyond;
 # inside SHOT_CLOSE metres it is at least SHOT_CLOSE_MIN even when blocked. A player with a clear
 # lane who does not shoot carries on at goal for SHOT_CARRY_ON_S seconds and decides again, at
-# most SHOT_CARRY_ON_MAX times, instead of passing back (decision 38: a player through on goal
-# passed backwards); still clear after the last of them, he shoots (decision 42: 3 of 18 clear
+# most SHOT_CARRY_ON_MAX times, instead of passing back (a player through on goal
+# passed backwards); still clear after the last of them, he shoots (3 of 18 clear
 # chances in the demo matches ended in a pass back after two carry-ons). Our assumption, tuned
 # with SHOT_RATE to the shots per match above.
 # The goalkeeper claims a high ball (a cross, a corner, a long ball) landing in his six-yard box
 # (SIX_YARD_*: 5.5 m deep, 5.5 m either side of the posts [IFAB2025, Law 1]) with chance
 # GK_CLAIM_CHANCE (sim.calibrate, against Wyscout's Premier League 2017/18: 2.6 goals a match,
-# 3.7% of shots from inside 6 m [Pappalardo2019]). Decision 46: no keeper claimed, and corners
+# 3.7% of shots from inside 6 m [Pappalardo2019]). No keeper claimed, and corners
 # and crosses into the six-yard box gave 14% of our shots from inside 6 m and 4-6 goals a match.
 # A carrier through on goal (within GK_RUSH_RANGE metres of the goal centre, his lane clear,
 # match.lane_blocked) has the keeper come out to meet him, GK_RUSH_GAP metres short of him at
 # CHASE_SPEED; reaching him, the keeper goes for the ball once and wins it with GK_SMOTHER_WINS.
-# Our assumptions (decision 46: the keeper stayed on his line and the carrier ran on into
+# Our assumptions (the keeper stayed on his line and the carrier ran on into
 # point-blank range).
 GK_RUSH_RANGE = 20.0
 GK_RUSH_GAP = 1.0
 GK_SMOTHER_WINS = 0.5
 SIX_YARD_DEPTH = 5.5
 SIX_YARD_HALF_WIDTH = 9.16
-GK_CLAIM_CHANCE = 0.748  # 0.755 before decision 47 (sim.calibrate)
+GK_CLAIM_CHANCE = 0.748  # 0.755 earlier (sim.calibrate)
 SHOT_LANE_HALF = 8.0  # m
-SHOT_RATE_CLEAR = 0.907  # 0.997 before decision 47 (sim.calibrate)
+SHOT_RATE_CLEAR = 0.907  # 0.997 earlier (sim.calibrate)
 SHOT_CLEAR_SCALE = 33.0  # m: about 0.7 at 18 m and 0.55 at 25 m
 SHOT_CLOSE = 8.0  # m
 SHOT_CLOSE_MIN = 0.8
@@ -834,7 +833,7 @@ BOX_MARKERS = [1, 2, 3, 4, 5, 6]
 # (CORNER_PACK_SHOULDER metres out). The pack is the crowd in the box: with a pack of three and
 # its markers, corners alone gave team-mates within 1 m in 2.5% of dead-ball player-frames, more
 # than the 1–2% we aim for in all (SEPARATION_DEAD; sim.spacing, 30 seeds). Our assumption.
-# Decision 46: the near- and far-post attackers start on the six-yard line or beyond, not 3–4.5 m
+# The near- and far-post attackers start on the six-yard line or beyond, not 3–4.5 m
 # from the goal line (deliveries to them gave tap-ins; Wyscout's Premier League has 3.7% of
 # shots inside 6 m, ours had 14%); the pack a metre further out.
 CORNER_SPOTS = [(6, 47.0, 3.5), (9, 46.0, -5.0), (2, 43.5, -6.0), (7, 36.0, -4.0)]
@@ -868,7 +867,7 @@ CLEAR_OUT = 0.45  # chance the clearance goes out of play
 # 5.5 m [IFAB2025, Law 1]), an out clearance goes behind with CLEAR_OUT_CORNER, CLEAR_DEFLECT
 # metres wider than the clearer stands (off the posts), at most CLEAR_DEFLECT_Z metres high;
 # every other out clearance goes over the touchline ahead of him, for a throw-in. Our
-# assumption (decision 40): before it, 40% of out clearances were aimed behind from anywhere
+# assumption: before it, 40% of out clearances were aimed behind from anywhere
 # in the box, up to 25 m wide (a keeper's clearance from 15 m out went over his own line).
 # CLEAR_OUT_CORNER tuned to the corners per match (summary.TARGETS).
 CLEAR_CORNER_DEPTH = 5.5
@@ -898,7 +897,7 @@ RESTART_MARGIN = 0.5
 RESTART_ARC_STEP = 0.3
 # The taker stands this far behind the ball: outside the line at a throw-in or corner, away from
 # the goal they attack otherwise, 0.3 m at a throw-in (roles.py). Our assumption; 1.0 m before
-# decision 39, which put takers more than 1 m over the line.
+# Which put takers more than 1 m over the line.
 TAKER_BEHIND = 0.5
 # Wall: at a free kick within WALL_RANGE metres of the goal centre, the defending team lines up
 # WALL_SIZE[0] players (WALL_SIZE[1] within WALL_NEAR metres) side by side, WALL_GAP metres apart,
@@ -906,16 +905,16 @@ TAKER_BEHIND = 0.5
 WALL_RANGE = 30.0
 WALL_NEAR = 22.0
 WALL_SIZE = (3, 4)
-WALL_GAP = 0.75  # 0.6 before decision 39 (wall players within 0.7 m of each other)
+WALL_GAP = 0.75  # 0.6 earlier (wall players within 0.7 m of each other)
 # Set-piece jobs while the ball is dead (wall players, the attackers and markers of a set piece,
 # the taker) go to their spots at the pace that gets them there once SET_PIECE_DUE of the dead
 # time has gone, leaving the rest to settle (``Roles.dead_pace``; at a corner, about 13 of
 # 32 s): from a walk, SET_PIECE_WALK of S0 (about 2 m/s),
 # up to a jog, WALL_SPEED of S0, clearly below HI_SPEED for every player (the top of S0_RANGE;
 # the match tempo and the story's press apply in play only, and fatigue only slows).
-# The goal huddle runs at WALL_SPEED. Our assumption (decision 40): before it every job jogged
+# The goal huddle runs at WALL_SPEED. Our assumption: before it every job jogged
 # at 0.5 of S0 whatever the time to the restart (a corner waits about 32 s, DEAD_TIME), up to
-# 5.52 m/s once decision 39 raised POSITION_EFFORT. Since decision 42 WALL_SPEED caps every job
+# 5.52 m/s once POSITION_EFFORT was raised. WALL_SPEED caps every job
 # while the ball is dead, and a substitute's jog on, after the work rate: at most
 # 0.45 × 10.3 = 4.64 m/s, whatever POSITION_EFFORT is (it had capped the work rate of CB and FB
 # at 1.10, a bound the calibration, sim.calibrate, should not have).
@@ -924,7 +923,7 @@ SET_PIECE_WALK = 0.2
 SET_PIECE_DUE = 0.4
 # When the ball goes dead, a player faster than HI_SPEED brakes at BRAKE_MAX down to it (no
 # sprint carried on after the whistle), then eases to his wanted speed as usual. Our
-# assumption (decision 40).
+# assumption.
 DEAD_BRAKE_ABOVE = HI_SPEED
 # Attackers stay at least 1 m from a wall of three or more [IFAB2025, Law 13]: their targets and
 # the push keep them WALL_CLEAR from it (1 m plus a margin, our assumption).
@@ -940,20 +939,20 @@ HUDDLE_RUN = 20.0
 HUDDLE_HOLD_S = 10.0
 HUDDLE_MAX_S = 40.0
 HUDDLE_BACK_S = 20.0
-# Decision 46: a long stoppage drawn with no cause (10% of dead balls, 30–90 s more, for an
+# A long stoppage drawn with no cause (10% of dead balls, 30–90 s more, for an
 # "injury, VAR, substitution" that nothing in the match showed: a goal kick taken after 94 s) is
 # gone. The causes the match shows wait instead: a goal (DEAD_TIME kick_off), a substitution
 # (match.subs_waiting) and a booking, CARD_DELAY_S more: IDSSE's stoppages with a card last
 # 47.5 s (median, 31 of them) against 26.2 s for a free kick with none (119), 7 matches
 # [Bassek2025]. DEAD_TIME_SCALE sets the waits' level against ball in play (sim.calibrate).
 CARD_DELAY_S = 21.0
-DEAD_TIME_SCALE = 1.107  # 1.057 before decision 47 (sim.calibrate)
+DEAD_TIME_SCALE = 1.107  # 1.057 earlier (sim.calibrate)
 
 # Transitions: about 50 ± 11 per match, about 10 s each; positive 10.9 ± 3.9 s, negative
 # 9.3 ± 3.4 s [Bortnik2022, Tables 1–2]. The chance that an open-play turnover starts one is
 # our assumption, tuned to the count. The drawn length is longer than 10 s because many end
 # early (turnover, ball out); tuned so the realised length is about 10 s (our assumption).
-TRANSITION_CHANCE = 0.234  # 0.246 before decision 47 (sim.calibrate)
+TRANSITION_CHANCE = 0.234  # 0.246 earlier (sim.calibrate)
 TRANSITION_S = (15.0, 4.5, 5.0, 27.0)  # drawn length: mean, SD, min, max
 # High press: chance the defending team presses when the opponent has the ball in its own
 # third; lasts at most about 10 s (high-press spells 9.8 ± 3.7 s [Bortnik2022, Table 2]).

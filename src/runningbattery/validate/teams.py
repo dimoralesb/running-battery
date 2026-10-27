@@ -1,5 +1,5 @@
 """Team-level fatigue and running effort: what can and cannot be read from positions
-(PLAN decisions 23–24; claims 35 and 38).
+(claims 35 and 38).
 
 ``python -m runningbattery.validate.teams data/synthetic/dev [--json out.json]``
 

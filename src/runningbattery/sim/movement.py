@@ -2,7 +2,7 @@
 
 Each player heads for a target point at a wanted speed (set by their role, see ``roles.py``).
 The motion model is dv/dt = α(V·n − v) [Narizuka2023, Eq. 3]: n points at the target, α = A0/S0
-and V = S0 at full effort (synthesis §4.10). Speeding up is capped by the player's own profile,
+and V = S0 at full effort. Speeding up is capped by the player's own profile,
 a_max(v) = A0·(1 − v/S0) [Morin2021, p.2]; braking by ``BRAKE_MAX``, turning by ``TURN_MAX``, and
 speed by S0. At full effort straight ahead the model and the cap agree: α(S0 − v) = a_max(v).
 Calm movement (holding the shape, repositioning, the ball dead) uses a gentler α and arrival
@@ -380,10 +380,10 @@ def step(
 
     ``speed_cap`` is the wanted speed V (at most S0). Near the target V falls, so players arrive
     without overshooting: on a run or a ball role along a constant deceleration b
-    (``ARRIVE_DECEL``, decision 43: he keeps his speed until near the spot, then brakes) down to
+    (``ARRIVE_DECEL``: he keeps his speed until near the spot, then brakes) down to
     ``ARRIVE_SETTLE_M`` from it, then as gap / τ (``ARRIVE_TAU``: the motion's lag overshot a
     spot a metre away on the braking curve alone), calm
-    movement to gap / τ (``CALM_ARRIVE_TAU``; ``ARRIVE_TAU`` for all before decision 43).
+    movement to gap / τ (``CALM_ARRIVE_TAU``; ``ARRIVE_TAU`` for all earlier).
     ``calm`` (bool) marks players not on a run or a ball role: they use the gentler
     ``CALM_ALPHA`` and ``CALM_ARRIVE_TAU``. ``push``
     (from ``push_apart``) is added to the wanted velocity, before the caps; it never raises the

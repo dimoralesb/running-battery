@@ -200,7 +200,7 @@ def test_ball_in_play_and_possession(summaries):
         assert all(lo <= v <= hi for v in summaries[s][0].possession_pct.values())
 
 
-# Shots: an accepted gap since decision 46 (README "Accepted gaps"): the onside runs and runs in
+# Shots: an accepted gap since then (README "Accepted gaps"): the onside runs and runs in
 # behind make more chances, and the fit (SHOT_RATE, SHOT_RATE_CLEAR) left 29 a match on 120 seeds
 # against 24.4 [Bassek2025] and Wyscout's Premier League 23.4 (10th-90th percentile of matches
 # 17-30). It reports XPASS once the gap closes.
@@ -481,8 +481,8 @@ def test_push_apart_judges_team_mates_at_closest_approach():
 
 def test_ball_moves_to_its_player(sim1):
     """The ball never jumps to a player's feet: in play it moves at most 40 m/s between frames (a
-    hard shot or pass is about 30), at receptions, interceptions and won tackles too (decision 38:
-    it moved 4-7 m in 0.1 s)."""
+    hard shot or pass is about 30), at receptions, interceptions and won tackles too (it
+    had moved 4-7 m in 0.1 s)."""
     for pf in sim1.periods:
         speed = np.hypot(*np.diff(pf.ball[:, :2], axis=0).T) * P.FRAME_RATE_HZ
         alive = pf.alive[1:] & pf.alive[:-1]
@@ -491,7 +491,7 @@ def test_ball_moves_to_its_player(sim1):
 
 def test_clear_chances_end_in_shots(sim1):
     """Inside 25 m with no outfield defender goal-side within 8 m of the line to goal, players
-    shoot (some after carrying on at goal) rather than pass back (decision 38: 13 of 23 such
+    shoot (some after carrying on at goal) rather than pass back (13 of 23 such
     chances in the story match were backward passes)."""
     home_up = sim1.metadata.teams[0].attacks_positive_x_in_period_1
     clear, shots = 0, 0
@@ -652,7 +652,7 @@ def test_free_kick_near_goal_drops_the_defence():
 def test_attackers_keep_clear_of_the_wall():
     """Attackers stay at least 1 m from a wall of three or more [IFAB2025, Law 13]: from every
     wall member standing in place (within 0.3 m of its spot), in every frame."""
-    # 45 s: a wall member may come from 38 m away at the set-piece walk (decision 46's match
+    # 45 s: a wall member may come from 38 m away at the set-piece walk (the match
     # state: the striker, about 35 s; the check is every frame he is in place).
     engine, _ = _held_restart("free_kick", (P.HALF_LENGTH - 23.0, 1.0), 45.0)
     wall = engine.roles.wall(True)
@@ -684,7 +684,7 @@ def test_goal_huddle():
     held = close[round((huddle.t_end - P.HUDDLE_HOLD_S - 5.0) * P.FRAME_RATE_HZ) :][
         : round(P.HUDDLE_HOLD_S * P.FRAME_RATE_HZ)
     ]
-    # together for most of the hold (decision 46's refit: 0.75, the last to arrive settling
+    # together for most of the hold (the refit: 0.75, the last to arrive settling
     # from 1.11 m into the 0.85-m ring; 0.8 before)
     assert held.mean() > 0.7, held.mean()
     at = frames[round((huddle.t_end - 5.0 - 1.0) * P.FRAME_RATE_HZ)]
@@ -698,9 +698,8 @@ def test_dead_ball_jobs_pace_to_the_restart_and_brake():
     ``DEAD_BRAKE_ABOVE``), and nobody is above HI_SPEED after 1.5 s. Set-piece jobs pace
     themselves to the restart (``Roles.dead_pace``): a walk with time to spare, the jog when
     there is none; with a corner 30 s away they go up slower than with it 8 s away, and still
-    reach their spots in time. The jog cap stays clearly below HI_SPEED for every player
-    (decision 40)."""
-    cap = P.WALL_SPEED * P.S0_RANGE[1]  # after the work rate (decision 42)
+    reach their spots in time. The jog cap stays clearly below HI_SPEED for every player."""
+    cap = P.WALL_SPEED * P.S0_RANGE[1]  # after the work rate
     assert cap < P.HI_SPEED - 0.4, cap
     engine = _engine()
     engine.roles.effort[:] = 1.3  # whatever the work rate
@@ -742,7 +741,7 @@ def test_clearances_go_behind_only_close_to_goal():
     """An out clearance goes behind for a corner only from within CLEAR_CORNER_DEPTH of the
     goal line, as a short deflection (CLEAR_DEFLECT wider, off the posts); from further out
     it goes over the touchline ahead of the clearer. About CLEAR_OUT of them go out either way
-    (decision 40: a keeper's clearance from 15 m went over his own line)."""
+    (a keeper's clearance from 15 m went over his own line)."""
     engine = _engine()
     d = 3  # team 0's left-back
     for depth in (2.0, 12.0):
@@ -767,7 +766,7 @@ def test_clearances_go_behind_only_close_to_goal():
 
 def test_carries_in_the_box_head_for_goal():
     """Inside the opponents' penalty area a carry aims at the goal, not straight upfield, so a
-    player who receives near the goal line does not run to the byline (decision 40: a cross
+    player who receives near the goal line does not run to the byline (a cross
     taken 3 m out ended 6 m wide, passed back)."""
     engine = _engine()
     c = 10  # team 0's centre-forward
@@ -965,7 +964,7 @@ def test_replay_stills(folders, tmp_path):
 
 
 def test_story_controls_press_until_the_hour_and_sub_the_exposed_full_back():
-    """Story controls (PLAN §2.3; sim.story): the press is on for the pressing team only, until
+    """Story controls (sim.story): the press is on for the pressing team only, until
     press_until_min; the story substitution takes the exposed full-back's slot, like for like,
     and keeps the number of substitutions."""
     from runningbattery.sim.rosters import make_teams, plan_substitutions
@@ -1005,7 +1004,7 @@ def _play(engine, t0: float, seconds: float) -> tuple[np.ndarray, list]:
 
 
 def test_trackers_follow_the_runner_and_stop_with_the_pass():
-    """Decision 41: a defender tracking a runner in behind aims goal-side of where the runner is
+    """A defender tracking a runner in behind aims goal-side of where the runner is
     now, not of where he was heading, and stops once the pass reaches someone else."""
     from runningbattery.sim.match import Flight
     from runningbattery.sim.roles import Run
@@ -1036,7 +1035,7 @@ def test_trackers_follow_the_runner_and_stop_with_the_pass():
 
 
 def test_no_sprint_straight_back():
-    """Decision 41: within TURN_S of being above HI_SPEED one way, a run the other way goes no
+    """Within TURN_S of being above HI_SPEED one way, a run the other way goes no
     faster than SHAPE_RUN_MIN; after it, at its planned speed."""
     from runningbattery.sim.roles import Run
 
@@ -1057,7 +1056,7 @@ def test_no_sprint_straight_back():
 
 
 def test_duels_need_the_players_within_reach():
-    """Decision 41: a ground duel (or foul) needs the challenger within DUEL_REACH of the carrier
+    """A ground duel (or foul) needs the challenger within DUEL_REACH of the carrier
     and the ball; from DUEL_ENGAGE he goes in for it and holds the carrier up. An aerial
     challenger not under the ball at arrival does not contest it."""
     from runningbattery.sim.match import Flight
@@ -1097,7 +1096,7 @@ def test_duels_need_the_players_within_reach():
 
 
 def test_low_passes_are_cut_out_on_the_way():
-    """Decision 41: a low pass that rolls within CUT_OUT_CONTROL of an outfield opponent is
+    """A low pass that rolls within CUT_OUT_CONTROL of an outfield opponent is
     intercepted there; within CUT_OUT_REACH, deflected loose; further off, it arrives."""
     from runningbattery.sim.match import Flight
 
@@ -1130,7 +1129,7 @@ def test_low_passes_are_cut_out_on_the_way():
 
 
 def test_substitutes_come_on_at_the_halfway_line():
-    """Decision 41: at a stoppage the replaced player walks to the halfway line by the benches'
+    """At a stoppage the replaced player walks to the halfway line by the benches'
     touchline and leaves there, and the restart waits for him; the substitute comes on at that
     spot and jogs to his place. The slot they share never jumps."""
     from dataclasses import replace
@@ -1160,7 +1159,7 @@ def test_substitutes_come_on_at_the_halfway_line():
 
 
 def test_team_mates_have_distinct_names():
-    """Decision 42: no two players of a team (substitutes included) share a first name or a
+    """No two players of a team (substitutes included) share a first name or a
     surname's start ("Sami Yarrigg" and "Sami Yarrick" were one team's centre-backs); names are
     labels only, drawn as before, so the match does not change."""
     from runningbattery.sim.rosters import FIRST_NAMES, SURNAME_START
@@ -1180,7 +1179,7 @@ def test_team_mates_have_distinct_names():
 
 
 def test_overlaps_need_room_and_end_with_the_carriers_pass():
-    """Decision 45: with the winger on the touchline the overlap aimed 1 m inside him, his own
+    """With the winger on the touchline the overlap aimed 1 m inside him, his own
     spot, and the full-back kept running after the winger passed. Now it goes outside the carrier
     with a lane along the touchline and UNDERLAP_IN inside him without one (also with the defence
     level with him), and a run about the carrier ends when he plays the ball."""
@@ -1210,7 +1209,7 @@ def test_overlaps_need_room_and_end_with_the_carriers_pass():
 
 
 def test_a_run_does_not_aim_at_a_team_mates_spot():
-    """Decision 45: a runner's target stays RUN_SPACE from his team-mates' targets (6.5% of our
+    """A runner's target stays RUN_SPACE from his team-mates' targets (6.5% of our
     high-speed runs ended within 2.5 m of a team-mate, IDSSE's 3.8%); a presser keeps his."""
     from runningbattery.sim.roles import Run
 
@@ -1222,7 +1221,7 @@ def test_a_run_does_not_aim_at_a_team_mates_spot():
     spot = np.array([5.0, 5.0])
     tgt[mate], tgt[runner] = spot, spot + [1.0, 0.0]
     roles.runs[runner] = Run(RunPurpose.MOVE_TO_RECEIVE, 20.0, P.RUN_SPEED, target=tgt[runner])
-    engine.pos[mate], engine.vel[:] = spot, 0.0  # where the team-mate stands, too (decision 46)
+    engine.pos[mate], engine.vel[:] = spot, 0.0  # where the team-mate stands, too
     purpose = np.full(22, -1, dtype=np.int8)
     purpose[runner] = PURPOSES_CODE[RunPurpose.MOVE_TO_RECEIVE]
     out = roles.space_runs(tgt, np.zeros(22, dtype=bool), purpose)
@@ -1236,7 +1235,7 @@ def test_a_run_does_not_aim_at_a_team_mates_spot():
 
 
 def test_a_run_in_behind_holds_the_line_until_the_pass():
-    """Decision 46: a run in behind aims no further than the offside line (plus where a dropping
+    """A run in behind aims no further than the offside line (plus where a dropping
     line will be) while a team-mate carries the ball, and goes BEHIND_TIMING_S before he passes
     (a forward had run 13 m offside while the carrier ran with the ball for 6 s)."""
     from runningbattery.sim.roles import Run
@@ -1261,7 +1260,7 @@ def test_a_run_in_behind_holds_the_line_until_the_pass():
 
 
 def test_a_run_for_the_next_pass_ends_when_it_goes_elsewhere():
-    """Decision 46: runs in behind, into space, in support and into the box are for the next
+    """Runs in behind, into space, in support and into the box are for the next
     pass; they end when it goes to someone else square or back (a fifth ran on for 2 s), go on
     with a forward pass (the attack goes on), and runners into the box go on to attack a cross."""
     from runningbattery.sim.roles import Run
@@ -1283,7 +1282,7 @@ def test_a_run_for_the_next_pass_ends_when_it_goes_elsewhere():
 
 
 def test_a_run_up_into_shape_ends_when_the_shape_goes_back():
-    """Decision 46: with the ball, a push-up ends once the shape spot it runs to is behind him
+    """With the ball, a push-up ends once the shape spot it runs to is behind him
     (40% of push-ups ran on for 2 s after a pass back)."""
     from runningbattery.sim.roles import Run
 
@@ -1304,7 +1303,7 @@ def test_a_run_up_into_shape_ends_when_the_shape_goes_back():
 
 
 def test_the_cover_stands_diagonally_and_the_jobs_stick():
-    """Decision 46: the cover defender stands COVER_SIDE across from the carrier's line to goal,
+    """The cover defender stands COVER_SIDE across from the carrier's line to goal,
     towards the middle, not in the presser's lane; the presser keeps his job until another
     defender is ROLE_KEEP_M nearer the carrier (they swapped every frame and ran side by side)."""
     engine = _engine()
@@ -1336,7 +1335,7 @@ def test_the_cover_stands_diagonally_and_the_jobs_stick():
 
 
 def test_runners_keep_out_of_a_team_mates_lane():
-    """Decision 46: a runner alongside a team-mate running the same way moves his target across,
+    """A runner alongside a team-mate running the same way moves his target across,
     to RUN_SPACE from that lane (two defenders going back ran side by side 2 m apart)."""
     from runningbattery.sim.roles import Run
 
@@ -1361,7 +1360,7 @@ def test_runners_keep_out_of_a_team_mates_lane():
 
 
 def test_dead_balls_wait_only_for_a_cause():
-    """Decision 46: no long stoppage without a cause (a goal kick had waited 94 s); a booking adds
+    """No long stoppage without a cause (a goal kick had waited 94 s); a booking adds
     CARD_DELAY_S."""
     engine = _engine()
     spot = engine.pos[5].copy()
@@ -1376,7 +1375,7 @@ def test_dead_balls_wait_only_for_a_cause():
 
 
 def test_the_cover_runs_only_when_far_from_his_spot():
-    """Decision 46: the cover defender's pace rises with his gap like a shape run's (at
+    """The cover defender's pace rises with his gap like a shape run's (at
     COVER_SPEED whatever the gap, he sprinted 1–2 s at every new carrier)."""
     engine = _engine()
     roles = engine.roles
@@ -1388,7 +1387,7 @@ def test_the_cover_runs_only_when_far_from_his_spot():
 
 
 def test_the_team_that_lost_the_ball_counter_presses():
-    """Decision 46: after a turnover in open play the nearest players of the team that lost it
+    """After a turnover in open play the nearest players of the team that lost it
     (COUNTERPRESS_N, within COUNTERPRESS_REACH) hunt the ball, whoever has it; not after a
     restart."""
     engine = _engine()
@@ -1411,7 +1410,7 @@ def test_the_team_that_lost_the_ball_counter_presses():
 
 
 def test_the_keeper_claims_a_high_ball_into_his_six_yard_box():
-    """Decision 46: a high ball dropping into the six-yard box is the keeper's with
+    """A high ball dropping into the six-yard box is the keeper's with
     GK_CLAIM_CHANCE (nobody claimed one: 14% of our shots came from inside 6 m, Wyscout's Premier
     League 3.7%)."""
     engine = _engine()
@@ -1431,7 +1430,7 @@ def test_the_keeper_claims_a_high_ball_into_his_six_yard_box():
 
 
 def test_the_keeper_comes_out_to_a_carrier_through_on_goal():
-    """Decision 46: a carrier within GK_RUSH_RANGE with a clear lane has the keeper come out to
+    """A carrier within GK_RUSH_RANGE with a clear lane has the keeper come out to
     meet him (he stayed on his line and the carrier walked in)."""
     engine = _engine()
     roles = engine.roles
@@ -1448,7 +1447,7 @@ def test_the_keeper_comes_out_to_a_carrier_through_on_goal():
 
 
 def test_opponents_do_not_press_or_crowd_a_keeper_on_the_ball():
-    """Decision 47: when the goalkeeper holds the ball, opponents neither press nor cover him, and
+    """When the goalkeeper holds the ball, opponents neither press nor cover him, and
     their shape spots stay outside his penalty area and at least 10 m in front of him (while
     shape_w decayed after a save, attackers' shape targets stayed inside the six-yard box)."""
     engine = _engine()
@@ -1470,7 +1469,7 @@ def test_opponents_do_not_press_or_crowd_a_keeper_on_the_ball():
 
 
 def test_out_of_possession_upfield_shape_runs_do_not_sprint():
-    """Decision 47: out of possession and not pressing, midfielders and forwards whose shape spot
+    """Out of possession and not pressing, midfielders and forwards whose shape spot
     is upfield move into shape at no more than SHAPE_RUN_MIN (not sprinting away from the goal they
     defend)."""
     engine = _engine()
@@ -1485,7 +1484,7 @@ def test_out_of_possession_upfield_shape_runs_do_not_sprint():
 
 
 def test_cover_does_not_overwrite_a_second_presser_and_pressers_space_out():
-    """Decision 47: when a second player closes the carrier down (counter-press or build-up press),
+    """When a second player closes the carrier down (counter-press or build-up press),
     the cover role goes to another team-mate instead of overwriting his CLOSE_DOWN run, and the
     two pressers' targets stand 3 m apart."""
     from runningbattery.sim.roles import Run

@@ -1,10 +1,10 @@
-"""The Verifier suite (BUILD_PLAN §3, run 7; v2 2026-10-17) and its report.
+"""The Verifier suite (v2, 2026-10-17) and its report.
 
 ``python -m runningbattery.agents.verifier_suite [--llm] [--json docs/verifier_report.json]``
 
 Five sets:
 - ``VALID`` (37) and ``BLOCKED`` (40): v1 plus claims 35–39, the register's wordings and
-  the blocked claims of synthesis §5.3; the rules must get all of them right
+  the blocked claims; the rules must get all of them right
   (tests/test_verifier.py).
 - ``PARAPHRASES`` (23): blocked claims in other words, written before the rules were run on
   them and never used to tune the rules. What the rules miss here is what the LLM pass is for.
@@ -27,7 +27,7 @@ from pathlib import Path
 
 from runningbattery.agents.verifier import verify
 
-# (sentence, mode): the register's own wordings (synthesis §5.1–5.2), the alternatives it offers
+# (sentence, mode): the register's own wordings, the alternatives it offers
 # for blocked claims (§5.3), and measured facts stated as facts.
 VALID = [
     ("After a player's hardest 5 minutes, high-speed running in the next minute is typically "
@@ -86,12 +86,12 @@ VALID = [
     ("His fastest second of the match: 8.6 m/s (31 km/h), 97% of his top speed so far.", "fan"),
     ("He ran back at 5.8 m/s (21 km/h), 70% of his top speed today, and the gap grew from 4 to "
      "9 m.", "fan"),
-    # Added 2026-10-19 with claim 39 (decision 30): where the running happened, measured.
+    # Added 2026-10-19 with claim 39: where the running happened, measured.
     ("Without the ball, with it in the opponents' third, Albion did 146 m of high-speed running "
      "per minute of that situation.", "fan"),
 ]  # fmt: skip
 
-# (sentence, mode, the claim it must be blocked under): synthesis §5.3 and the unbaselined %.
+# (sentence, mode, the claim it must be blocked under): the blocked claims and the unbaselined %.
 BLOCKED = [
     ("He misplaced that pass because he was tired.", "fan", "20"),
     ("Fatigue caused that wayward pass.", "fan", "20"),
@@ -160,7 +160,7 @@ PARAPHRASES = [
     ("He didn't fancy chasing that one.", "fan", "38"),
     ("He's not putting the yards in to get back.", "fan", "38"),
     ("A lack of desire to track his runner cost them there.", "fan", "38"),
-    # Added 2026-10-19 with claim 39 (decision 30), before its rule was written.
+    # Added 2026-10-19 with claim 39, before its rule was written.
     ("Albion's front three hunted the ball down deep in Ravensholt's half.", "fan", "39"),
     ("They swarmed the man on the ball to win it back high up the pitch.", "fan", "39"),
 ]  # fmt: skip
@@ -261,7 +261,7 @@ CONTEXT = [
     ("This is the lowest point of his match so far, by our estimate.", "analyst", HIGH, "19c",
      False),
     # Found in the third feeds (2026-10-17): claim 14 used with no touch counts in the facts.
-    # Decision 25 adds them to not_tired_tactical moments; "fewer touches" needs them.
+    # They are now added to not_tired_tactical moments; "fewer touches" needs them.
     ("Fewer touches, partly because the ball was out of play more.", "fan", FACTS, "14", False),
     ("Fewer touches, partly because the ball was out of play more.", "fan", TOUCHES, "14", True),
     ("He had 2 touches in the last 5 minutes against about 6 per 5 minutes in his match so far, "
@@ -269,10 +269,10 @@ CONTEXT = [
     ("Fewer touches, partly because the ball was out of play more.", "fan", MORE_TOUCHES, "14",
      False),
     # Found in the fourth feeds (2026-10-18). The LLM blocked the post-peak window's neutral
-    # name (decision 12) as physiology, 7 times in three feeds (prompt revision 3 after this).
-    # Reworded with the name itself on 2026-10-18 (decision 29: "catching breath after a red-zone
+    # name as physiology, 7 times in three feeds (prompt revision 3 after this).
+    # Reworded with the name itself on 2026-10-18 ("catching breath after a red-zone
     # spell" became "just after an intense spell"; prompt revision 4), and again on 2026-10-19
-    # (decision 30: "just after his hardest minutes so far"; prompt revision 5).
+    # ("just after his hardest minutes so far"; prompt revision 5).
     ("This is the third time his team have lost the ball just after his hardest minutes so far.",
      "fan",
      {"facts": {"times_exposed_so_far": {"value": 3, "unit": "turnovers"}}}, None, True),
@@ -287,7 +287,7 @@ CONTEXT = [
                 "vs_match_average": {"value": 5.0, "unit": "%"}},
       "context": {"in_play_last_5min": 0.42}}, None, False),
     # Found in the fifth feeds (2026-10-18): a rules false block, "the player he replaced" was
-    # not read as a baseline (BASELINE fixed). Reworded for decision 38 (a player's metres per
+    # not read as a baseline (BASELINE fixed). Reworded (a player's metres per
     # minute say high-speed, G5): it tests the baseline.
     ("Since coming on he has done 9.3 m/min of high-speed running, about 5% below the player he "
      "replaced (9.8 m/min).",
@@ -296,7 +296,7 @@ CONTEXT = [
                            "vs_replaced_player": {"value": -5.0, "unit": "%"}}}, None, True),
     # Found in the sixth feeds (2026-10-18): a rules false block, the LLM's non-breaking hyphen
     # ("team‑mates", U+2011) hid the baseline (the rules now read it as "-"); reworded for
-    # decision 38 (G5 for players) …
+    # G5 for players …
     ("He has done 9.8 m/min of high-speed running, 25% below the player he replaced but 49% above "
      "his team‑mates over the same minutes.", "analyst",
      {"facts": {"sub_hsr_per_min": {"value": 9.8, "unit": "m/min"},
@@ -317,7 +317,7 @@ CONTEXT = [
      {"non_fatigue_reasons": [{"code": "team_in_possession",
                                "text": "his team had the ball 75% of the last 5 min"}],
       "facts": {"typical_pro_battery_now": {"value": 0.83, "unit": "share"}}}, "11", False),
-    # Found in the seventh feeds (2026-10-18, decision 29): a rules false block, a baseline in
+    # Found in the seventh feeds (2026-10-18): a rules false block, a baseline in
     # words ("of the last five minutes") …
     ("The ball was in play only 25% of the last five minutes.", "fan",
      {"facts": {"in_play_last_5min": {"value": 0.25, "unit": "share"}}}, None, True),
@@ -330,7 +330,7 @@ CONTEXT = [
      "(times_exposed_so_far = 3).", "analyst",
      {"facts": {"times_exposed_so_far": {"value": 3, "unit": "turnovers"}}}, None, False),
     # Found in the eighth feeds (2026-10-18). Claim 3's wording ended "our estimate says he had
-    # less in the tank for this one", his own state (decision 14); the LLM blocked it once and
+    # less in the tank for this one", his own state; the LLM blocked it once and
     # passed this at 24:37 on the site's feed. The wording now stops at the finding.
     ("In the Premier League players make about a third fewer high-speed recovery runs after a "
      "peak, and our estimate says he may have had less in the tank here.", "fan",
@@ -342,14 +342,14 @@ CONTEXT = [
      {"facts": {"spell_duration": {"value": 197, "unit": "s"},
                 "minutes_after_spell": {"value": 5.0, "unit": "min"},
                 "last_2min_hsr_per_min": {"value": 10.9, "unit": "m/min"}}}, None, False),
-    # Claims used where they do not fit (decision 25): claim 36 at 12:29, claim 7 at 45+2.
+    # Claims used where they do not fit: claim 36 at 12:29, claim 7 at 45+2.
     ("Top speed hardly drops over a match: in the Premier League, players' fastest runs late on "
      "are almost as fast as their fastest early on.", "fan",
      {"facts": {}, "claims_offered": ["37", "10"]}, "36", False),
     ("In the last 15 minutes, players typically do about a fifth less hard running than at "
      "kick-off, with longer breaks between efforts.", "fan",
      {"facts": {}, "claims_offered": ["9a", "9b", "7", "30"]}, "7", True),
-    # Added 2026-10-19 with the running split (decision 30), on a team moment: claim 4's "tired
+    # Added 2026-10-19 with the running split, on a team moment: claim 4's "tired
     # legs" would be about the team (35); the split as a measured fact; "most" for 43% (F1, the
     # LLM pass only); and a purpose read from it (39).
     ("Losing the ball forces the hardest running of the game. This is where tired legs get "
@@ -361,7 +361,7 @@ CONTEXT = [
      "ball changed hands.", "fan", SPLIT, None, False),
     ("Albion did 433 m of high-speed running per minute in the 10 seconds after losing the ball, "
      "pressing to win it back.", "fan", SPLIT, None, False),
-    # Found in the decision 30 feeds (2026-10-19). A share of the running without the share of
+    # Found in earlier feeds (2026-10-19). A share of the running without the share of
     # the time (G5; the rules had blocked it as a % without a baseline) …
     ("43% of Albion's high-speed running in that block came in the first 10 s after the ball "
      "changed hands.", "fan", SPLIT, None, False),
@@ -396,7 +396,7 @@ CONTEXT = [
      "for Marco Tarvsall.", "fan",
      {"facts": {"mean_speed_next_8s": {"value": 3.1, "unit": "m/s"}},
       "claims_offered": ["4", "3", "11"]}, "4", False),
-    # … and again on the decision 37 feed (14:20), as a name and a colon, while he jogged (top
+    # … and again on an earlier feed (14:20), as a name and a colon, while he jogged (top
     # 4.6 m/s); both passes let it through, and the G12 rule was written from it. The finding
     # on its own is fine.
     ("Marco Tarvsall: losing the ball forces the hardest running of the game.", "fan",
@@ -426,7 +426,7 @@ CONTEXT = [
       "facts": {"team_hsr_per_min_without_ball": {"value": 234, "unit": "m/min"},
                 "team_hsr_per_min_with_ball": {"value": 214, "unit": "m/min"},
                 "block": "45:00–60:00"}}, None, True),
-    # Found on the site's feed (decision 38, 86:33): claim 13's example scoreline copied word
+    # Found on the site's feed (86:33): claim 13's example scoreline copied word
     # for word at 2–5 (his team three up); each number was in the facts (a lead of 3, 0 touches)
     # and both passes let it through. G13 was written from it. The true scoreline is fine.
     ("His running dropped while his team sat on a 3–0 lead, so this may be tactical rather than "
@@ -441,7 +441,7 @@ CONTEXT = [
       "non_fatigue_reasons": [{"code": "big_lead", "text": "a big lead (2–5)"}],
       "facts": {"touches_last_5min": {"value": 0, "unit": "touches"}},
       "claims_offered": ["13", "14", "9b"]}, "13", True),
-    # Found on the site's feed (decision 38): a player's metres per minute without saying they
+    # Found on the site's feed: a player's metres per minute without saying they
     # are high-speed running (31:38; G5 read only team moments), and "level" for two teams 5%
     # apart, in an LLM rewrite that also slipped in the score (45+1:04; G10 now reads "level"
     # against the gap). Both passes let them through; the worded-out versions are fine.
@@ -519,7 +519,7 @@ CONTEXT = [
       "facts": {"team_hsr_share_after_ball_changed_hands": {"value": 45, "unit": "%"},
                 "time_share_after_ball_changed_hands": {"value": 34, "unit": "%"},
                 "block": "60:00–75:00"}}, None, True),
-    # Found in the decision 31 feed: the LLM read G11 into a team named through its player and
+    # Found in an earlier feed: the LLM read G11 into a team named through its player and
     # rewrote it as "Marco Tarvsall has been involved in a turnover" (24:37, a video moment); the
     # register's G11 now says such a name is clear.
     ("This is the third time Marco Tarvsall's team have lost the ball just after his hardest "
@@ -545,7 +545,7 @@ CONTEXT = [
      "was 13.4 m/min.", "analyst",
      {"facts": {"minutes_after_hardest_minutes": {"value": 9.0, "unit": "min"},
                 "last_2min_hsr_per_min": {"value": 13.4, "unit": "m/min"}}}, None, True),
-    # Found on the site's feed (decision 39, 52:00): a percentage of "running" that is his
+    # Found on the site's feed (52:00): a percentage of "running" that is his
     # high-speed running (G5 now reads percentages too); worded out it is fine.
     ("Marco Tarvsall did 96% less running than his match average in the last 5 min.", "fan",
      {"facts": {"vs_match_average": {"value": -96, "unit": "%"}}}, None, False),

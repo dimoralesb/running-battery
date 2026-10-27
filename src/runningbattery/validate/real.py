@@ -1,4 +1,4 @@
-"""Real-data conclusion check (BUILD_PLAN §3, run 4; PLAN §2.6, point 1).
+"""Real-data conclusion check (run 4).
 
 ``python -m runningbattery.validate.real data/synthetic/dev [--json out.json]``
 

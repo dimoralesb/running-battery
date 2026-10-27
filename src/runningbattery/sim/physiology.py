@@ -1,13 +1,13 @@
-"""Hidden physiology: each player's "true" fatigue, the ground truth (PLAN §2.3, layer 3).
+"""Hidden physiology: each player's "true" fatigue, the ground truth.
 
 Written to ``truth.json`` only; the estimator never sees it. Updated every frame (10 Hz) from
 each player's own speed v, with their drawn CS, D′ and pool settings (``rosters.true_params``):
 
-- **Two pools** [Chorley2023, Eq. 8a–8b; synthesis §3.2.4]. D′ is split into a fast pool
+- **Two pools** [Chorley2023, Eq. 8a–8b]. D′ is split into a fast pool
   (``fast_fraction`` of it) and a slow pool. Above CS both drain by (v − CS) metres per second,
   shared in proportion to what each holds (Eq. 8a). Below CS each refills towards full with its
   own time constant, which grows as v nears CS (Eq. 6b–6c, with %D = (CS − v)/CS × 100; speed in
-  place of power is our adaptation, synthesis §3.2.2), scaled so that standing still it is the
+  place of power is our adaptation), scaled so that standing still it is the
   player's ``tau_fast`` or ``tau_slow``. The slow pool refills more slowly as the tank empties
   (``SLOW_TAU_PER_TANK``). The pools also refill over half-time (``HALF_TIME_S``).
 - **Tank**: whole-match energy, 1 when fresh, falling by 1 per ``TANK_M`` metres run above CS;
@@ -135,7 +135,7 @@ class Physiology:
         self.update_multipliers()
 
     def settings(self) -> dict[str, float]:
-        """The effect sizes used, for ``truth.json``'s ``settings`` (PLAN §2.6, point 3)."""
+        """The effect sizes used, for ``truth.json``'s ``settings``."""
         return dict(self.s)
 
     # --- State -------------------------------------------------------------------------------

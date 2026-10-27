@@ -1,4 +1,4 @@
-"""The two "never cut" charts (BUILD_PLAN §3–4): ``docs/figures/*.png`` for the README.
+"""The two "never cut" charts: ``docs/figures/*.png`` for the README.
 
 ``python -m runningbattery.validate.figures``
 
@@ -40,7 +40,7 @@ SURFACE, INK, MUTED, GRID = "#fcfcfb", "#0b0b0b", "#52514e", "#e4e3df"
 BLUE, ORANGE, AQUA = "#2a78d6", "#eb6834", "#1baf7a"
 
 # Published HSR (> 5.5 m/s) after the most intense 1-, 2- and 5-min spell, minutes 1–5, % vs the
-# match average without the peak [Leifsson2024, Table 1; synthesis §3.4.1].
+# match average without the peak [Leifsson2024, Table 1].
 LEIFSSON = {
     "60": (-29, -6, -3, -2, -2),
     "120": (-35, -11, 0, -2, -3),

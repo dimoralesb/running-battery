@@ -35,7 +35,7 @@ const LAPSE_SPEED = 120; // most ground covered: the whole match in under a minu
 const AUTO_DETAILS_MS = 6000; // "Play highlights": the details stay this long before the next clip
 const FOCUS_BEFORE = 8; // full match: a feed moment is in focus from 8 s before to 6 s after
 const FOCUS_AFTER = 6;
-// The code, linked from the top bar (decision 63).
+// The code, linked from the top bar.
 const REPO_URL = "https://github.com/dimoralesb/running-battery";
 
 /** GitHub's mark (Octicons "mark-github", MIT), in the text colour. */
@@ -50,18 +50,17 @@ const GitHubMark = () => (
 // ?moment=<kind or moment id> (with &player=), or ?item=<n>, then &step=watch|details|replay
 // (plays it, opens it finished with its details, or plays the replay) and &auto=1 (play the
 // clips one after another); &tab=stats scrolls to the whole match's numbers (section 4).
-// JOURNEY.md "Deep links" lists the screen and tab each one opens.
 const QUERY = new URLSearchParams(window.location.search);
-// Dark by default (DESIGN.md); ?theme=light or Settings › Theme for light.
+// Dark by default; ?theme=light or Settings › Theme for light.
 const THEME = QUERY.get("theme") === "light" ? "light" : "dark";
 
-// "How it works" (decision 52) explains the battery, the agents, the data and a live match.
+// "How it works" explains the battery, the agents, the data and a live match.
 type View = "highlights" | "full" | "how";
 // Each clip plays once (watch), then shows its details on its last frame; Replay plays it
-// again with the details growing (decision 34; at the clip speed since decision 37).
+// again with the details growing (at the clip speed since then).
 type Step = "watch" | "details" | "replay";
-// The tabs beside the pitch (decision 36); one open at a time. The teams' running over the whole
-// match (decision 46: a statistic, not a clip) is section 4 under them since decision 50.
+// The tabs beside the pitch; one open at a time. The teams' running over the whole
+// match (a statistic, not a clip) is section 4 under them since then.
 type Tab = "clips" | "team" | "details" | "settings";
 const TABS: [Tab, string][] = [
   ["clips", copy.tabClips], ["team", copy.tabTeam], ["details", copy.tabDetails], ["settings", copy.tabSettings],
@@ -72,7 +71,7 @@ export function fill(text: string, values: Record<string, string | number>): str
   return text.replace(/\{(\w+)\}/g, (_, k) => String(values[k] ?? ""));
 }
 
-/** The clip the page opens on: the first recovery run (decision 50, the user's pick); a match
+/** The clip the page opens on: the first recovery run; a match
  * without one on its first moment. */
 function opening(list: Item[]): Item | undefined {
   return list.find((i) => i.source === "highlight" && i.kind === "recovery_run")
@@ -132,12 +131,12 @@ export default function App() {
   const [cur, setCur] = useState<Item | null>(null);
   const [step, setStep] = useState<Step>("watch");
   const [auto, setAuto] = useState(QUERY.get("auto") === "1");
-  // The page opens on its first clip, stopped, with a Play button (decision 49: a clip that
+  // The page opens on its first clip, stopped, with a Play button (a clip that
   // played at once left no time to see what the page is); a link that names a clip plays it.
   const [poised, setPoised] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">(THEME);
   const [tab, setTab] = useState<Tab>("details");
-  // Tab rules (JOURNEY.md): a clip's end borrows the Details tab and the next clip hands back
+  // Tab rules: a clip's end borrows the Details tab and the next clip hands back
   // the tab the viewer was on; a tab the viewer picks during a clip is never changed for them.
   const back = useRef<Tab | null>(null);
   const picked = useRef(false);
@@ -227,7 +226,7 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matchId]);
 
-  // A highlight clip, and a hardest-minutes clip (the running of his minute, decision 42),
+  // A highlight clip, and a hardest-minutes clip (the running of his minute),
   // fast-forwards between the player's high-speed runs (quietGaps).
   const gaps = useMemo(() => {
     if (view !== "highlights" || !data || !cur || cur.lapse || !cur.player
@@ -244,9 +243,8 @@ export default function App() {
   }, [playing]);
   // Only a link that names a clip opens the page scrolled to the pitch (after the first render:
   // reveal), and a section-4 "Watch … in the full match" link brings it up from below. No click on
-  // a clip moves the page: not Play, Replay, Previous or Next (decision 51), and not a card or
-  // "Play highlights" either (decision 57, the user: "when clicking on a clip, the page should not
-  // move").
+  // a clip moves the page: not Play, Replay, Previous or Next, and not a card or
+  // "Play highlights" either.
   const stageRef = useRef<HTMLDivElement>(null);
   const toStage = () => stageRef.current?.scrollIntoView({ block: "start" });
   const reveal = useRef(false);
@@ -255,7 +253,7 @@ export default function App() {
     reveal.current = false;
     toStage();
   }, [cur?.id, poised]);
-  // &tab=stats (a video link from before decision 50) opens on the whole match's numbers.
+  // &tab=stats (a video link from earlier) opens on the whole match's numbers.
   const wholeRef = useRef<HTMLElement>(null);
   useEffect(() => {
     if (data && QUERY.get("tab") === "stats") wholeRef.current?.scrollIntoView({ block: "start" });
@@ -362,7 +360,7 @@ export default function App() {
 
   // Both teams' running in the 15-minute block so far (a team moment's lower third): the finished
   // 5-minute blocks of it, weighted by ball-in-play time, so that it gives the numbers of the
-  // block the line compares (decision 42: it showed the last 5 minutes, 195 against 202, under
+  // block the line compares (it showed the last 5 minutes, 195 against 202, under
   // a line that had the first team 29% ahead over the 15).
   const block = teamBlock(data, now);
   const blockLabel = block
@@ -400,7 +398,7 @@ export default function App() {
   const stepName = step === "watch" ? copy.stepWatch : step === "replay" ? copy.stepReplay : copy.stepDetails;
   const band = mode === "analyst" && cur?.player ? reading(data, players[cur.player], now) : null;
 
-  // A moment card (decision 49): the clip's time, what it is, whose, and the battery a typical pro
+  // A moment card: the clip's time, what it is, whose, and the battery a typical pro
   // would have at its end.
   const card = (it: Item) => {
     const r = reading(data, it.player ? players[it.player] : undefined, clipTo(it, data));
@@ -577,7 +575,7 @@ export default function App() {
 
           <section className="panel" role="tabpanel">
             {shown === "clips" && (
-              // The full match's moments and highlights (decision 50: cards, as step 1).
+              // The full match's moments and highlights (cards, as step 1).
               <div className="clips">
                 <h3>{copy.momentsTitle}</h3>
                 <p className="sub">{copy.momentsSub}</p>

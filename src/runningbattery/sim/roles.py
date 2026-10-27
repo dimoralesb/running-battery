@@ -12,7 +12,7 @@ Every frame each player gets a target point, a wanted speed and a run purpose (o
      otherwise covering. In possession, back players push up the pitch and the others run up in
      support. Going back into shape in possession is not a labelled run.
      A recovery run goes up to full effort only when there is danger (``DANGER_U``), and not
-     for forwards, who drop at the shape-run speeds (``FORWARD_RECOVERY``, decision 43). On the
+     for forwards, who drop at the shape-run speeds (``FORWARD_RECOVERY``). On the
      opponents' counter-attack, or caught upfield of the ball, defenders drop from a smaller gap
      (``COUNTER_DROP_*``); back up to a line that is not moving, they jog.
    - *Triggered runs* start when a team-mate gets the ball or plays a pass: coming short to
@@ -21,7 +21,7 @@ Every frame each player gets a target point, a wanted speed and a run purpose (o
      A defender goes with a runner in behind or into space towards goal, goal-side of him,
      while the run is still on (``track``). Out of possession, a forward or central midfielder
      may close down a new carrier.
-     Runs re-decide as play changes (decision 46): a run for the next pass (in behind, into
+     Runs re-decide as play changes: a run for the next pass (in behind, into
      space, in support, into the box) ends when that pass goes elsewhere, square or back
      (``on_pass``), a run
      in behind holds the offside line until a team-mate is about to pass (``timed``), and a run
@@ -198,17 +198,17 @@ class Roles:
         )
 
     def space_runs(self, tgt: np.ndarray, anchored: np.ndarray, purpose: np.ndarray) -> np.ndarray:
-        """A run never aims at a team-mate (decision 45: 6.5% of high-speed runs ended within
-        2.5 m of a team-mate, IDSSE's 3.8%), nor runs in his lane (decision 46). For each runner
+        """A run never aims at a team-mate (6.5% of high-speed runs ended within
+        2.5 m of a team-mate, IDSSE's 3.8%), nor runs in his lane. For each runner
         and the cover defender:
 
         - his target closer than ``RUN_SPACE`` to a team-mate's target, or to where a team-mate
-          will be ``RUN_SPACE_AHEAD_S`` on, moves straight away from it to that distance (since
-          decision 46 also from where they are: a team-mate still on his way to his spot had
+          will be ``RUN_SPACE_AHEAD_S`` on, moves straight away from it to that distance (also
+          from where they are: a team-mate still on his way to his spot had
           the runner stop beside him);
         - running alongside a team-mate going the same way (within ``RUN_SPACE`` across, at
           more than ``TANDEM_SPEED`` along his path), his target moves across to ``RUN_SPACE``
-          from that lane, half of it each when both are running (decision 46: two defenders
+          from that lane, half of it each when both are running (two defenders
           going back at once ran side by side 2 m apart, kept apart only by ``push_apart``).
 
         Players closing down or intercepting the ball keep their spots: a pair pressing one
@@ -290,15 +290,15 @@ class Roles:
             side = np.sign(e.to_uv(team, e.pos[i])[1] - e.to_uv(team, e.ball_xy[:2])[1]) or 1.0
             offset = np.array([-rng.uniform(2.0, 6.0), side * rng.uniform(6.0, 12.0)])
             if float(e.to_uv(team, e.pos[i])[0]) > ball_u + 8.0:
-                continue  # already well ahead of the ball: no backward support run (decision 47)
-            # for the whole counter (decision 46: a 3-6 s timer cut the long runs of a counter,
+                continue  # already well ahead of the ball: no backward support run
+            # for the whole counter (a 3-6 s timer cut the long runs of a counter,
             # 0.8 runs of 5 s or more per 90 player-minutes with the ball against IDSSE's 2.2)
             t_end = e.transition[1]
             run = Run(RunPurpose.SUPPORT_PLAY, t_end, P.COUNTER_SUPPORT_EFFORT, offset_uv=offset)
             run.onside = True
             self.start(i, run, t)
         # Forwards ahead of the ball break towards goal, on the offside line until the pass
-        # (decision 46: they ran up to 13 m beyond it while the carrier ran with the ball).
+        # (they ran up to 13 m beyond it while the carrier ran with the ball).
         for j, i in enumerate(idx):
             i = int(i)
             if self.is_forward[i] and uv[j, 0] > ball_u - 5.0 and self.free(i):
@@ -315,8 +315,8 @@ class Roles:
     def counter_press(self, team: int, t: float) -> None:
         """The team that has just lost the ball in open play hunts it (the counter-press): with
         chance COUNTERPRESS_CHANCE, its COUNTERPRESS_N outfield players nearest the ball, within
-        COUNTERPRESS_REACH of it, close down whoever has it for COUNTERPRESS_S (decision 46:
-        real players run two-thirds of their high-speed metres without the ball within 10 m of
+        COUNTERPRESS_REACH of it, close down whoever has it for COUNTERPRESS_S
+        (real players run two-thirds of their high-speed metres without the ball within 10 m of
         it, IDSSE; ours ran a tenth, and the team that lost the ball only went back into shape).
         """
         e = self.e
@@ -331,7 +331,7 @@ class Roles:
             i = int(i)
             run = Run(RunPurpose.CLOSE_DOWN, t + rng.uniform(*P.COUNTERPRESS_S), P.CHASE_SPEED)
             if self.is_defender[i] and e.to_uv(team, e.ball_xy[:2])[0] > 0.0:
-                continue  # defenders do not counter-press in the opponents' half (decision 47)
+                continue  # defenders do not counter-press in the opponents' half
             side = (
                 0.0
                 if k == 0
@@ -402,7 +402,7 @@ class Roles:
         # Overlap: the full-back on the ball's side, behind it, runs past the wide player, outside
         # him when there is a lane along the touchline (OVERLAP_LANE), else UNDERLAP_IN inside
         # him (an underlap); with the defence level with the carrier his onside target is level
-        # with him, in that lane. Decision 45: the target was min(HALF_WIDTH − 2 − |v|, 5) m out,
+        # with him, in that lane. The target was min(HALF_WIDTH − 2 − |v|, 5) m out,
         # so with the winger on the touchline 1 m inside him, his own spot (the story match's
         # 9:58: a 38 m sprint that ended at the winger's shoulder).
         if wide and c_u > -P.THIRD and rng.random() < self.overlap_chance:
@@ -495,9 +495,9 @@ class Roles:
         self.runs.pop(receiver, None)
         # A run about the passer (coming short to him, or an overlap when the pass does not go
         # forward) has lost its point once he plays the ball: it ends, and the next touch decides
-        # again (decision 45: a third of overlaps went on for 2 s after a pass back).
+        # again (a third of overlaps went on for 2 s after a pass back).
         # So has a run for the next pass (in behind, into space, in support) when the pass goes
-        # elsewhere square or back (decision 46: a fifth of them ran on for 2 s); a forward pass
+        # elsewhere square or back (a fifth of them ran on for 2 s); a forward pass
         # carries the attack on, and the run with it, and a cross is the one the runners into the
         # box were making for, and they go on to attack it.
         team = int(e.team_of[passer])
@@ -512,7 +512,7 @@ class Roles:
         if not open_play or not forward:
             return  # a square or backward pass: the receiver cannot play a forward in behind
         # Offside is judged when the receiver plays the ball, not now: the runner holds the line
-        # (onside) and goes as that pass comes (``targets``). Decision 46: these runs went in
+        # (onside) and goes as that pass comes (``targets``). These runs went in
         # behind at once and were offside for the receiver's pass, 83% of our runs in behind
         # ended over 3 m offside (IDSSE: 0.2% of high-speed runs).
         line = e.offside_line(team, e.pos[passer])
@@ -567,7 +567,7 @@ class Roles:
         his runner is still running for it (or it is going to him); for a run while his team has
         the ball (no pass), while a team-mate of the runner carries it and the run is still on
         (``TRACKED``).
-        Not once the pass reached someone else, or the ball is loose or won (decision 41)."""
+        Not once the pass reached someone else, or the ball is loose or won."""
         e = self.e
         r = run.follow
         other = self.runs.get(r)
@@ -605,7 +605,7 @@ class Roles:
             # Attackers hold their shape just onside; runs and roles below may not. Pressed
             # against the line they keep their order within their lane: the furthest up within
             # LINE_LANE_M across stands on it and the others LINE_DEPTH_KEEP of their depth
-            # behind him (decision 46: flattened onto the line, an attacking midfielder's spot
+            # behind him (flattened onto the line, an attacking midfielder's spot
             # was his striker's, and they ran into each other).
             idx = e.members(holder)[1:]
             uv = e.to_uv(holder, tgt[idx])
@@ -615,8 +615,8 @@ class Roles:
             uv[:, 0] = np.minimum(uv[:, 0], onside - P.LINE_DEPTH_KEEP * (top - uv[:, 0]))
             tgt[idx] = e.to_uv(holder, uv)
             # When the goalkeeper holds the ball (or a pass/save is on its way to him), opponents
-            # do not hold their shape inside his penalty area or within 10 m of him (decision 47:
-            # while shape_w decayed after a save or back-pass, forwards' shape spots stayed inside
+            # do not hold their shape inside his penalty area or within 10 m of him
+            # (while shape_w decayed after a save or back-pass, forwards' shape spots stayed inside
             # the six-yard box).
             gk_ball = (e.mode == "touch" and self.is_gk[e.touch.player]) or (
                 e.mode == "flight" and e.flight.to >= 0 and self.is_gk[e.flight.to]
@@ -651,14 +651,14 @@ class Roles:
     def onside_aim(self, team: int) -> float:
         """How far up the pitch (u) a runner held onside may aim: the line less ONSIDE_MARGIN,
         plus where a dropping line will be LINE_LEAD_S on, so that he runs with it instead of
-        easing off as if arriving at a spot (decision 46: real forwards' high-speed running with
+        easing off as if arriving at a spot (real forwards' high-speed running with
         the ball is half within 5 m of the line, onside; ours was beyond it, or stood on it)."""
         return self.onside_u(team) + max(float(self.line_vel[team]), 0.0) * P.LINE_LEAD_S
 
     def timed(self, run: Run, team: int, t: float) -> bool:
         """A run in behind waiting on the line goes ``BEHIND_TIMING_S`` before a team-mate on
-        the ball releases it, so that he is on the move, and just onside, as the pass is played
-        (decision 46). If the pass goes elsewhere, the run ends (``on_pass``)."""
+        the ball releases it, so that he is on the move, and just onside, as the pass is played.
+        If the pass goes elsewhere, the run ends (``on_pass``)."""
         e = self.e
         if run.purpose != RunPurpose.RUN_IN_BEHIND or e.mode != "touch":
             return False
@@ -670,7 +670,7 @@ class Roles:
         gap_xy = shape - e.pos
         gap = np.hypot(*gap_xy.T)
         # How far each team's outfield players are below their shape targets (up the pitch, in
-        # the team's frame): the line stepping up, when it is most of them (decision 41).
+        # the team's frame): the line stepping up, when it is most of them.
         line_u = [float(np.median(e.to_uv(k, gap_xy[e.members(k)[1:]])[:, 0])) for k in (0, 1)]
         # On the opponents' counter-attack, or caught upfield of the ball, the defenders drop at
         # once (COUNTER_DROP_GAP).
@@ -720,7 +720,7 @@ class Roles:
                     and not pressing
                 ):
                     # Out of possession, only the back line stepping up together sprints upfield
-                    # into shape (decision 47: midfielders and forwards sprinted upfield away from
+                    # into shape (midfielders and forwards sprinted upfield away from
                     # their own goal while the opponents' keeper held the ball or on a turnover).
                     speed = min(speed, P.SHAPE_RUN_MIN)
                 elif gap_u > 0.5 * gap[i] and gap_u - line_u[team] > P.SHAPE_RUN_GAP:
@@ -756,7 +756,7 @@ class Roles:
         ``THROW_IN_DISTANCE``), plus ``RESTART_MARGIN``. A player inside, or with a target inside,
         heads for the edge on their own side, at most ``RESTART_ARC_STEP`` round towards his
         target; at a free kick or corner, a player whose straight path would cross the circle walks
-        round its edge instead. Decision 47: stepping straight out, a wall member who had come in
+        round its edge instead. Stepping straight out, a wall member who had come in
         fast and ended 0.5 m inside stood on the edge 2 m from his spot for the rest of the wait."""
         e = self.e
         r = e.restart
@@ -790,14 +790,14 @@ class Roles:
         # Round the edge: a point a little further round, towards the target's side.
         at = np.arctan2(side[:, 1], side[:, 0])
         turn = np.angle(np.exp(1j * (np.arctan2(*(goal - r.spot).T[::-1]) - at)))
-        # Straight across: either way round, but the same way every frame (decision 41: the
+        # Straight across: either way round, but the same way every frame (the
         # sign flipped and a player walking off stood at the edge for a minute).
         turn = np.where(np.abs(turn) > np.pi - P.RESTART_ARC_STEP, P.RESTART_ARC_STEP, turn)
         at = at + np.clip(turn, -P.RESTART_ARC_STEP, P.RESTART_ARC_STEP)
         round_edge = r.spot + keep * np.stack([np.cos(at), np.sin(at)], axis=1)
         out = np.where(d[:, None] > 1e-6, round_edge, out)  # on the ball: towards his own goal
         # Off the pitch (a restart by a touchline), the nearest point of the edge that is on it
-        # (decision 47: clipped back onto the touchline, a player stood 7 m from a free kick).
+        # (clipped back onto the touchline, a player stood 7 m from a free kick).
         lim = np.array([P.HALF_LENGTH, P.HALF_WIDTH]) - movement.EDGE
         off = np.any(np.abs(out) > lim, axis=1) & step_out & (d > 1e-6)
         if off.any():
@@ -909,7 +909,7 @@ class Roles:
     def cover_pace(self, i: int, spot: np.ndarray) -> float:
         """The cover defender's wanted speed (share of S0): a shape run's, rising with the gap
         from SHAPE_RUN_MIN (at SHAPE_RUN_GAP or less) to COVER_SPEED (at SHAPE_RUN_FULL).
-        Decision 46: at COVER_SPEED whatever the gap, a defender a few metres from his spot made
+        At COVER_SPEED whatever the gap, a defender a few metres from his spot made
         a 1–2 s sprint at every new carrier, then eased off at the pass (the cover role made
         a quarter of our 1–2 s runs; IDSSE has 61% of runs that short, we had 72%)."""
         gap = float(np.hypot(*(spot - self.e.pos[i])))
@@ -919,7 +919,7 @@ class Roles:
     def cover_spot(self, team: int, c: int, i: int) -> np.ndarray:
         """The cover defender's spot: COVER_DEPTH behind the carrier ``c`` on his line to goal
         and COVER_SIDE across, towards the middle (towards the side ``i`` comes from when the
-        carrier is central), diagonally behind the presser, not in his lane (decision 46: on the
+        carrier is central), diagonally behind the presser, not in his lane (on the
         line itself, the presser and the cover ran at the carrier side by side)."""
         e = self.e
         cv = e.to_uv(team, e.pos[c])
@@ -962,7 +962,7 @@ class Roles:
         purpose = np.full(22, NO_PURPOSE, dtype=np.int8)
         calm = np.ones(22, dtype=bool)
         anchored = np.zeros(22, dtype=bool)
-        jog = np.zeros(22, dtype=bool)  # at most WALL_SPEED after the work rate (decision 42)
+        jog = np.zeros(22, dtype=bool)  # at most WALL_SPEED after the work rate
 
         if mode != "dead" and holder is not None:
             self.start_shape_runs(t, shape, holder)
@@ -996,8 +996,8 @@ class Roles:
                 gap_xy = shape[i] - e.pos[i]
                 gap = float(np.hypot(*gap_xy))
                 # With the ball, a run up into shape ends once the shape has gone back past it
-                # (the test that starts one, ``start_shape_runs``): decision 46, 40% of push-ups
-                # ran on for 2 s after a pass back.
+                # (the test that starts one, ``start_shape_runs``); 40% of push-ups had
+                # run on for 2 s after a pass back.
                 back = team == holder and e.to_uv(team, gap_xy)[0] < 0.5 * gap
                 if gap < P.SHAPE_RUN_END or back:
                     del self.runs[i]
@@ -1048,7 +1048,7 @@ class Roles:
                 n_press = 2 if e.press is not None and e.press[0] == opp_team else 1
                 idx = e.members(opp_team)[1:]
                 # Nearest first; the players who had a job last frame keep it unless another is
-                # ROLE_KEEP_M nearer (decision 46: handed out afresh every frame, the presser and
+                # ROLE_KEEP_M nearer (handed out afresh every frame, the presser and
                 # the cover swapped every half second and ran side by side).
                 d = np.hypot(*(e.pos[idx] - e.pos[c]).T)
                 d = d - P.ROLE_KEEP_M * np.isin(idx, self.pressers)
@@ -1070,7 +1070,7 @@ class Roles:
                     role(int(i), press, P.CHASE_SPEED, RunPurpose.CLOSE_DOWN)
                 role(cover_i, cover, self.cover_pace(cover_i, cover), RunPurpose.COVERING)
                 # A carrier through on goal (within GK_RUSH_RANGE, nobody goal-side in his lane):
-                # the keeper comes out to meet him, GK_RUSH_GAP short of him (decision 46: he stayed
+                # the keeper comes out to meet him, GK_RUSH_GAP short of him (he stayed
                 # on his line and the carrier walked in).
                 gk = int(e.members(opp_team)[0])
                 if d_goal < P.GK_RUSH_RANGE and not e.lane_blocked(1 - opp_team, e.pos[c]):
@@ -1118,7 +1118,7 @@ class Roles:
                 j = int(np.argmin(d))
                 closer = int(defenders[j])
                 spot = self.goal_side(opp_team, f.end, P.PRESS_GAP)
-                if f.challenger >= 0:  # the pace that gets him under it in time (decision 41)
+                if f.challenger >= 0:  # the pace that gets him under it in time
                     ch = f.challenger
                     way = f.end - e.pos[ch]
                     aim = e.pos[ch] + way * max(P.ARRIVE_TAU / max(f.t1 - t, P.DT), 1.0)
@@ -1199,8 +1199,8 @@ class Roles:
                 gk_uv = e.to_uv(k, tgt[gk])
                 gk_uv[0] = min(gk_uv[0], -GOAL_U + P.GK_MAX_OFF)
                 tgt[gk] = e.to_uv(k, gk_uv)
-                # At his limit he stops there, not with a calm drift's slow braking (decision 41:
-                # moving out at 2.4 m/s he drifted 2.5 m past it).
+                # At his limit he stops there, not with a calm drift's slow braking
+                # (moving out at 2.4 m/s he drifted 2.5 m past it).
                 if e.to_uv(k, e.pos[gk])[0] > -GOAL_U + P.GK_MAX_OFF - P.GK_BRAKE_M:
                     calm[gk] = False
         keep = P.SEPARATION_DEAD if mode == "dead" else P.SEPARATION_TEAM

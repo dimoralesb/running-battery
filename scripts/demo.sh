@@ -1,9 +1,9 @@
 #!/usr/bin/env sh
-# The two demo matches (PLAN decision 21): generate, estimate, and write their feeds (no
-# favourite player since decision 42: each feed describes its match's most relevant moments).
+# The two demo matches: generate, estimate, and write their feeds (no
+# favourite player since then: each feed describes its match's most relevant moments).
 # Synthetic data only. Add --offline to skip Foundry (templates and rules, deterministic).
 # The committed feeds of the demo are in docs/feeds/ (LLM output differs from run to run), and
-# the committed overlay data in app/public/data/ (decision 26): the same seed gives a different
+# the committed overlay data in app/public/data/: the same seed gives a different
 # match on another machine, so regenerate only to replace both together.
 set -e
 D=data/synthetic/demo

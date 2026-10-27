@@ -1,4 +1,4 @@
-"""The battery: a D′ balance per player (PLAN §3.2–3.3, decisions 2 and 9).
+"""The battery: a D′ balance per player.
 
 Above CS the balance drains by (v − CS) metres per second; below CS it refills towards D′ with
 recharge time τ = k·D′/(CS − v), clipped to 30–900 s [Skiba2021; Jones2017, p.S76; Bellenger2025].
@@ -7,14 +7,14 @@ half-time the balance refills standing still for ``HALF_TIME_S``.
 
 **One-way correction.** If the balance would go below zero, the player has shown that D′ is
 larger: D′ is raised by the shortfall and the balance stays at zero. D′ is never lowered and CS
-never moves (PLAN §3.2).
+never moves.
 
 **Per-player update (broadcast mode).** Each player gets ``N_DRAWS`` (CS, D′) draws from the
 shared prior. Every draw runs its own battery, with the one-way correction. A draw whose D′ had to
 be raised is contradicted by the running: its weight is exp(−½ (raise / (width · D′))²), a soft
 penalty rather than a cut-off. The battery shown is the weighted median of the draws, with a
 weighted 10–90% band, and the weighted share of the draws below ``LOW_BATTERY``: the chance that a
-typical player of the prior's population would be that low after this running (decision 14).
+typical player of the prior's population would be that low after this running.
 Weights only use the running so far, so the battery at minute 30 does not
 know what the player does at minute 60 (it works live).
 
@@ -125,7 +125,7 @@ def run(
     penalty and the battery is the weighted median with a 10–90% band, and ``low_chance`` the
     weighted share of the draws whose balance is below ``low`` of their D′. ``wear`` (alpha,
     scale m, half-time keep) slows the refill as metres above CS pile up; alpha 0 is the battery as
-    built (decision 56 experiment).
+    built (an experiment).
     """
     alpha, scale, keep = wear
     banded = cs.shape[1] > 1

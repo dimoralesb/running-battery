@@ -5,7 +5,7 @@ check (``validate.moments``): do the moments the feed shows happen in real footb
 
 writes ``<out>/<match id>/`` (``metadata.json``, ``tracking.jsonl``, ``events.jsonl``; no truth)
 from ``sim.idsse.to_match`` and the DFL event file. The output folder is git-ignored: IDSSE is
-CC BY 4.0 and, until PLAN says otherwise, used offline only (PLAN §2.2).
+CC BY 4.0 and, until PLAN says otherwise, used offline only.
 
 Anonymised as it is written: teams are "home" and "away", players H01–H11 and A01–A11 (starters,
 goalkeeper first, then by position) and H12… for substitutes in the order they came on, with

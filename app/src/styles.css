@@ -1,5 +1,5 @@
-/* The look is DESIGN.md ("Charge Plate", locked 2026-10-20; decision 36): the token block below
-   is copied from it verbatim, so every change starts there. Dark by default, light on
+/* The look ("Charge Plate", locked 2026-10-20): the token block below holds every
+   colour, type and spacing value. Dark by default, light on
    data-theme="light"; the pitch and the broadcast plates are the same in both themes. */
 /* Running Battery · Charge Plate tokens. Dark is the default (:root); light is opt-in. */
 :root {
@@ -103,7 +103,7 @@
   --away: #eb6834;
 }
 
-/* Layout (DESIGN.md "Space, shape, depth"; JOURNEY.md height budget): one centred column as wide
+/* Layout: one centred column as wide
    as the pitch, the pitch as tall as fits above the lower third, the play bar and the tab bar at
    1440×900. The pitch's viewBox is 109 × 72 (ratio 1.514). */
 * { box-sizing: border-box; }
@@ -139,7 +139,7 @@ select { background: var(--surface); border: 1px solid var(--border); border-rad
 .dot.away, .chip.away { background: var(--away); }
 .chip { width: 8px; height: 16px; display: inline-block; flex: none; }
 
-/* Decision 49: an overview first. The top bar (the brand line with its tagline; view, match and
+/* An overview first. The top bar (the brand line with its tagline; view, match and
    audience), the moment cards (1), then the clip (2) beside what it shows (3). */
 .top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end;
   gap: var(--space-3) var(--space-5); padding-bottom: var(--space-3); border-bottom: 1px solid var(--border-subtle); }
@@ -151,8 +151,8 @@ select { background: var(--surface); border: 1px solid var(--border); border-rad
 .repo-link { display: inline-flex; align-items: center; gap: var(--space-2); padding-bottom: 6px;
   color: var(--text-secondary); font-size: var(--text-sm); font-weight: 600; text-decoration: none; }
 .repo-link:hover, .repo-link:focus-visible { color: var(--text); }
-/* Phone (decision 52, was decision 50's two columns): one row per control, its label inline, so
-   View's three choices fit. The GitHub link moves to the brand row's right end (decision 63). */
+/* Phone (was the two columns): one row per control, its label inline, so
+   View's three choices fit. The GitHub link moves to the brand row's right end. */
 @media (max-width: 520px) {
   .top { position: relative; }
   .top .brand { padding-right: 5.5em; }
@@ -169,7 +169,7 @@ h2 { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--
 .step-n { display: inline-grid; place-items: center; width: 22px; height: 22px; flex: none; border-radius: 50%;
   background: var(--text); color: var(--background); font-size: var(--text-xs); font-weight: 700; }
 .moments-strip { margin-top: var(--space-4); }
-/* How to read the page (decision 50): one line under each step's heading. */
+/* How to read the page: one line under each step's heading. */
 .step-sub { margin: calc(-1 * var(--space-1)) 0 var(--space-3); }
 .step-head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); }
 .step-head h2 { margin: 0; }
@@ -248,7 +248,7 @@ h2 { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--
 .player .shirt { font-family: var(--font); font-size: 1.6px; text-anchor: middle; fill: var(--on-team);
   font-weight: 700; font-variant-numeric: tabular-nums; pointer-events: none; }
 .player.dim { opacity: 0.35; }
-.player.est { opacity: 0.5; } /* lost by the tracking for a moment, drawn between (decision 38) */
+.player.est { opacity: 0.5; } /* lost by the tracking for a moment, drawn between */
 .player.dim.est { opacity: 0.2; }
 .player .focus { fill: none; stroke: var(--on-pitch); stroke-width: 0.5; }
 .player .redzone { fill: none; stroke: var(--warning); stroke-width: 0.6; }
@@ -277,7 +277,7 @@ h2 { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--
   animation: lt-in var(--dur-standard) var(--ease-out); }
 @keyframes lt-in { from { opacity: 0; transform: translateY(8px); } }
 .lt-who { min-width: 0; }
-/* Laptop: the two columns stay side by side (DESIGN.md "Two columns"); a long name breaks inside
+/* Laptop: the two columns stay side by side; a long name breaks inside
    its column instead of pushing the battery under it and the details below the fold. */
 @media (min-width: 701px) {
   .lower-third { flex-wrap: nowrap; }
@@ -313,7 +313,7 @@ h2 { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--
   .lt-pct { font-size: var(--text-3xl); }
 }
 
-/* The battery: one shell drawn one way at every size (DESIGN.md). */
+/* The battery: one shell drawn one way at every size. */
 .gauge { display: inline-flex; align-items: center; color: inherit; flex: none; }
 .gauge-shell { position: relative; width: 168px; height: 44px; border: 2px solid currentColor;
   border-radius: var(--radius-shell); }
@@ -377,7 +377,7 @@ h2 { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--
   font-size: var(--text-sm); color: var(--text-secondary); }
 .fastest li { display: flex; align-items: baseline; gap: var(--space-2); }
 .fastest .dot { transform: translateY(-1px); }
-/* The full match's Clips tab (decision 50): moment cards as step 1's, smaller; a card per kind. */
+/* The full match's Clips tab: moment cards as step 1's, smaller; a card per kind. */
 .clips h3:first-child { margin-top: 0; }
 .mini-cards { list-style: none; margin: var(--space-2) 0 var(--space-4); padding: 0; display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: var(--space-2); }
@@ -389,7 +389,7 @@ h2 { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--
 .hl-kind ol { margin: 0; padding: 0; list-style: none; }
 .hl-item { width: 100%; display: grid; grid-template-columns: 8px minmax(0, 1fr) auto auto; gap: var(--space-2);
   align-items: center; text-align: left; padding: 2px 0; min-height: 28px; color: var(--text); font-size: var(--text-sm); }
-.hl-item.off { color: var(--text-secondary); } /* its clip was removed by hand (decision 48): no link */
+.hl-item.off { color: var(--text-secondary); } /* its clip was removed by hand: no link */
 .hl-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* Team sheet. */
@@ -442,7 +442,7 @@ h2 { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--
 .feed-head h3 { margin: 0; }
 .blocked-list { border-left: 2px solid var(--border); padding-left: var(--space-3); margin: var(--space-2) 0; }
 
-/* The whole match (decision 46, section 4 since decision 50): one row per 15-minute block, the
+/* The whole match (section 4 since then): one row per 15-minute block, the
    team charts beside them from 1100 px. */
 .whole-match { margin-top: var(--space-6); padding-top: var(--space-5); border-top: 1px solid var(--border-subtle);
   scroll-margin-top: var(--space-3); }
@@ -516,7 +516,7 @@ h2 { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--
 .chart .legend li { display: inline-flex; align-items: center; gap: var(--space-1); }
 .chart .legend svg { width: 26px; cursor: default; }
 .chart .readout { margin-top: 2px; font-size: var(--text-xs); color: var(--text-secondary); min-height: 1.4em; }
-/* Decision 64: every player's battery, minute by minute (section 4, full width). */
+/* Every player's battery, minute by minute (section 4, full width). */
 .battery-map { grid-column: 1 / -1; }
 .map-scroll { overflow-x: auto; }
 .battery-map svg { width: 100%; max-width: 1100px; cursor: default; }
@@ -560,7 +560,7 @@ h2 { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--
 .small { font-size: var(--text-xs); }
 @media (max-width: 520px) { .split-row { grid-template-columns: minmax(0, 1fr); gap: 2px; } }
 
-/* How it works (decision 52): the third view; plain sentences, then the numbers. */
+/* How it works: the third view; plain sentences, then the numbers. */
 .how { margin-top: var(--space-5); }
 .how > h2 { font-size: var(--text-xl); }
 .how p.how-tech { margin-top: var(--space-3); font-size: var(--text-xs); color: var(--text-secondary); }

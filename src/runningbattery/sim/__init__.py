@@ -1,1 +1,1 @@
-"""Synthetic match generator (BUILD_PLAN §1)."""
+"""Synthetic match generator."""

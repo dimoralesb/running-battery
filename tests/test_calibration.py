@@ -1,5 +1,5 @@
 """Calibration tools: the batch statistics (speed and acceleration bands, effort counts, team
-totals, running by phase, JSON report) and the IDSSE comparison (PLAN §2.5). The IDSSE tests
+totals, running by phase, JSON report) and the IDSSE comparison. The IDSSE tests
 skip when the data was never downloaded and derived here
 (``python -m runningbattery.sim.idsse``)."""
 
@@ -152,7 +152,7 @@ def test_player_kinematics_smooths_each_spell():
 
 
 def test_idsse_bands_close_to_synthetic(stats, idsse):
-    """PLAN §2.5: time in each speed band within ±3 percentage points of IDSSE, from our noisy
+    """Time in each speed band within ±3 percentage points of IDSSE, from our noisy
     tracking through the same pipeline."""
     rep = build_report(stats, idsse)
     assert len(rep["idsse_matches"]) == len(idsse)
@@ -166,7 +166,7 @@ def test_idsse_bands_close_to_synthetic(stats, idsse):
 
 
 def test_calibrate_fits_the_surface_and_steps_inside_its_bounds():
-    """Decision 42 (``sim.calibrate``): the least-squares surface recovers a known linear model
+    """Then (``sim.calibrate``): the least-squares surface recovers a known linear model
     from noisy rows, the Levenberg–Marquardt step stays in the trust region and the knobs'
     bounds, and with room to move it is the least-squares step, give or take the damping."""
     from runningbattery.sim import calibrate as C
@@ -209,7 +209,7 @@ def test_dithering_counts_back_and_forth_in_play():
 
 
 def test_run_shape_counts_short_close_and_turn_back_runs():
-    """``calibrate.run_shape`` (decision 43): from 1-s mean speeds, a 2-s run then a 4-s run back
+    """``calibrate.run_shape``: from 1-s mean speeds, a 2-s run then a 4-s run back
     the other way 5 s later is two runs, one short, one close to the last and one turn-back; a
     player off the pitch (NaN) adds nothing."""
     from runningbattery.sim import calibrate as C

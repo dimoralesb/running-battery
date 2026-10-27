@@ -11,7 +11,7 @@ interface Props {
 const fill = (t: string, v: Record<string, string | number>) =>
   t.replace(/\{(\w+)\}/g, (_, k) => String(v[k] ?? ""));
 
-/** Full match: the agents' lines as they come, newest first (decision 49: no verdicts or blocked
+/** Full match: the agents' lines as they come, newest first (no verdicts or blocked
  * lines on the page; the Verifier is in the README). */
 export function Feed({ feed, now, mode, text, onSeek }: Props) {
   const mine = feed.entries.filter((e) => e.mode === mode && e.video_s <= now + 0.5);

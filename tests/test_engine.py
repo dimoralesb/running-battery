@@ -1,4 +1,4 @@
-"""Fatigue estimator (BUILD_PLAN "Mon 19"): battery maths on constructed speed series, the
+"""Fatigue estimator: battery maths on constructed speed series, the
 per-player update's band, the no-truth rule, and substitutes. Constructed inputs only, because
 the same seed gives a different match on another machine."""
 
@@ -70,7 +70,7 @@ def test_refills_with_tau_k_dprime_over_gap():
 
 
 def test_wear_slows_the_refill_by_its_factor():
-    """Decision 56: after 50 m above CS the refill time is τ × (1 + α (1 − e^(−50/scale))); with
+    """After 50 m above CS the refill time is τ × (1 + α (1 − e^(−50/scale))); with
     the defaults (α 1, scale 400 m) that is ×1.1175, so 200 s standing leaves 0.25·e^(−1/1.1175)."""
     drain = np.full(25 * HZ, 6.0)
     rest = np.zeros(200 * HZ)
@@ -104,7 +104,7 @@ def test_tau_clipped_and_k_scales_it():
 
 def test_one_way_correction_raises_d_prime_only():
     """Running 300 m above CS with D′ 200 m: the battery stops at zero and D′ rises by the
-    100 m shortfall; it is never lowered and CS does not move (PLAN §3.2)."""
+    100 m shortfall; it is never lowered and CS does not move."""
     res = _battery(np.full(150 * HZ, 6.0))
     assert res.median[-1, 0] == 0.0
     assert res.d_prime[0, 1] == pytest.approx(300.0)
@@ -123,7 +123,7 @@ def test_half_time_rest_refills():
 
 
 def test_metabolic_power_constant_speed_and_clamp():
-    """On grass at constant speed P = 3.6 × 1.29 × v: 25.5 W/kg at 5.5 m/s (synthesis §3.3)."""
+    """On grass at constant speed P = 3.6 × 1.29 × v: 25.5 W/kg at 5.5 m/s."""
     assert metabolic_power(np.array(5.5), np.array(0.0)) == pytest.approx(25.5, abs=0.05)
     hard = metabolic_power(np.array(3.0), np.array(20.0))
     assert hard == metabolic_power(np.array(3.0), np.array(P.ES_LIMIT * P.G))

@@ -4,9 +4,9 @@
 fetch_idsse.py``; needs the ``calib`` extra for floodlight) and writes, for each match, a small
 file of derived numbers next to the raw data: seconds in each speed and acceleration band,
 effort counts, and per-player totals. ``sim.batch --idsse`` compares our matches with them
-(PLAN §2.5: time in each speed band within ±3 percentage points).
+(time in each speed band within ±3 percentage points).
 
-IDSSE is CC BY 4.0 and for calibration only (PLAN §2.2): the raw files and the derived files
+IDSSE is CC BY 4.0 and for calibration only: the raw files and the derived files
 both stay in the git-ignored ``data/raw/idsse/``, and nothing from them goes into the demo.
 
 The pipeline is the one our own tracking gets in ``sim.batch``:
@@ -176,7 +176,7 @@ def position_means(matches: list[dict], min_minutes: float = 85.0) -> dict[str, 
     return out
 
 
-# --- IDSSE as an ``io.Match`` for the estimator (BUILD_PLAN §3, run 4) ------------------------
+# --- IDSSE as an ``io.Match`` for the estimator (run 4) ------------------------
 
 START_S = 10.0  # a player first tracked within 10 s of the kick-off is a starter (our choice)
 
@@ -205,7 +205,7 @@ def to_match(folder: Path) -> Converted:
     every later first appearance is a substitution, paired with the player of the same team who
     left closest in time. A player who left with no one to pair is reported in ``sent_off``;
     the metadata keeps them on the pitch, standing still, so leave them out of whole-match
-    measures. Calibration only: built in memory, never written into the repo (PLAN §2.2)."""
+    measures. Calibration only: built in memory, never written into the repo."""
     from floodlight.io.dfl import read_position_data_xml
 
     xy, possession, ballstatus, teamsheets, _ = read_position_data_xml(
