@@ -67,7 +67,12 @@ def tau(speed: np.ndarray, cs: np.ndarray, d_prime: np.ndarray, k: float) -> np.
 
 
 def step(
-    bal: np.ndarray, dp: np.ndarray, v: np.ndarray, cs: np.ndarray, k: float, dt: float,
+    bal: np.ndarray,
+    dp: np.ndarray,
+    v: np.ndarray,
+    cs: np.ndarray,
+    k: float,
+    dt: float,
     slow: np.ndarray | float = 1.0,
 ) -> tuple[np.ndarray, np.ndarray]:
     """One time step of the balance ``bal`` (m) with the one-way correction; returns the new

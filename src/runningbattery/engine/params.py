@@ -176,9 +176,17 @@ LOW_CHANCE_MAP: tuple[tuple[float, float], ...] | None = (
     (0.671, 0.211),
     (0.766, 0.246),
 )
-LOW_CHANCE_MAP_FOR = {"mode": "broadcast", "update": "draws", "prior": "pro", "k": K,
-                      "drive": DRIVE, "wear": (WEAR_ALPHA, WEAR_SCALE_M, WEAR_HALF_KEEP)}
-LOW_CHANCE_MAP_SOURCE = "isotonic fit on dev seeds 1–60 (pro prior, k 4, wear 1.0 / 400 m), 2026-10-27"
+LOW_CHANCE_MAP_FOR = {
+    "mode": "broadcast",
+    "update": "draws",
+    "prior": "pro",
+    "k": K,
+    "drive": DRIVE,
+    "wear": (WEAR_ALPHA, WEAR_SCALE_M, WEAR_HALF_KEEP),
+}
+LOW_CHANCE_MAP_SOURCE = (
+    "isotonic fit on dev seeds 1–60 (pro prior, k 4, wear 1.0 / 400 m), 2026-10-27"
+)
 
 # Events listed with a tired spell, for the agents: the player's defensive actions (PLAN §3.3:
 # duel, pressure; recovery runs are not events) and the player's own ball losses.

@@ -15,7 +15,14 @@ import numpy as np
 from runningbattery.engine import params as P
 from runningbattery.engine.battery import BatteryResult, prior_draws, run
 from runningbattery.engine.preprocess import Tracks, tracks
-from runningbattery.engine.signals import Seconds, metabolic_power, per_second, red_zone, spells, tired
+from runningbattery.engine.signals import (
+    Seconds,
+    metabolic_power,
+    per_second,
+    red_zone,
+    spells,
+    tired,
+)
 from runningbattery.io import Match
 from runningbattery.schema import (
     Capacity,
@@ -69,13 +76,24 @@ def capacities(
     return draws[..., 0], draws[..., 1]
 
 
-def chance_map(mode: Mode, update: Update, prior: str, k: float, drive: str = P.DRIVE,
-               wear: tuple[float, float, float] = (P.WEAR_ALPHA, P.WEAR_SCALE_M, P.WEAR_HALF_KEEP)
-               ) -> tuple | None:
+def chance_map(
+    mode: Mode,
+    update: Update,
+    prior: str,
+    k: float,
+    drive: str = P.DRIVE,
+    wear: tuple[float, float, float] = (P.WEAR_ALPHA, P.WEAR_SCALE_M, P.WEAR_HALF_KEEP),
+) -> tuple | None:
     """The calibration map of the typical-pro chance, if it was fitted for these settings."""
     want = P.LOW_CHANCE_MAP_FOR
     same = (mode, update, prior, k, drive, tuple(wear)) == (
-        want["mode"], want["update"], want["prior"], want["k"], want["drive"], tuple(want["wear"]))
+        want["mode"],
+        want["update"],
+        want["prior"],
+        want["k"],
+        want["drive"],
+        tuple(want["wear"]),
+    )
     return P.LOW_CHANCE_MAP if same else None
 
 

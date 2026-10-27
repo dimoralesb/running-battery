@@ -135,7 +135,8 @@ export function HowItWorks({ data, item, name, text }: Props) {
         <div>
           <h3>{text.howLiveTitle}</h3>
           <p className="sub">{text.howLiveIntro}</p>
-          <ol className="how-steps">{list("howLive_").map((p) => <li key={p}>{p}</li>)}</ol>
+          <ul className="how-list">{list("howLive_").map((p) => <li key={p}>{p}</li>)}</ul>
+          <p className="how-tech">{text.howLiveTech}</p>
         </div>
       </section>
 

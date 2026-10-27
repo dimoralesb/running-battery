@@ -69,6 +69,17 @@ Overlay (one page, the URL's parameters set where it opens)
 
 ## Page specs
 
+### Decision 58 (user, 2026-10-27): During a live match, as run and measured
+
+How it works' "During a live match (not built yet)" read as a plan; the user: "They want something
+that can be used." With the live runner built (PLAN decision 58), the part is titled "During a live
+match" and lists what was run and measured (`howLive_1`–`howLive_6`, a bullet list, not steps):
+the battery within 0.4 points of the replay's, speeds 0.5 s later, 1.5 ms per second of play, 128
+of 134 stretches of hardest minutes flagged live, about 25 s per moment for the commentary, and
+what is not connected yet (a provider's live feed, a broadcaster's graphics). `howLiveTech` gives
+the natural match's figures, the command and the filter. Two lines reworded after the copy test
+(G10: a file path read as a field name; "spell" for the hardest minutes).
+
 ### Decision 57 (user, 2026-10-27): no second-wind clips; a click never moves the page
 
 The user: "Just hide second wind. Those moments are not that relevant" and "when clicking on a

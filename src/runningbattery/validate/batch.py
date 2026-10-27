@@ -170,14 +170,28 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--jobs", type=int)
     # Decision 56 experiment: the battery driven by equivalent speed, and wear slowing its refill.
     parser.add_argument("--drive", choices=["speed", "power"], default=EP.DRIVE)
-    parser.add_argument("--wear", type=float, nargs=3, metavar=("ALPHA", "SCALE_M", "HALF_KEEP"),
-                        default=(EP.WEAR_ALPHA, EP.WEAR_SCALE_M, EP.WEAR_HALF_KEEP))
+    parser.add_argument(
+        "--wear",
+        type=float,
+        nargs=3,
+        metavar=("ALPHA", "SCALE_M", "HALF_KEEP"),
+        default=(EP.WEAR_ALPHA, EP.WEAR_SCALE_M, EP.WEAR_HALF_KEEP),
+    )
     parser.add_argument("--json", type=Path, help="also write the pooled results here")
     args = parser.parse_args(argv)
     folders = sorted(p for p in args.folder.iterdir() if p.is_dir())[: args.matches]
-    out = run(folders, args.jobs, mode=args.mode, k=args.k, prior=args.prior, drive=args.drive,
-              wear=tuple(args.wear))
-    print(f"mode {args.mode}, k {args.k:g}, prior {args.prior}, drive {args.drive}, wear {args.wear}")
+    out = run(
+        folders,
+        args.jobs,
+        mode=args.mode,
+        k=args.k,
+        prior=args.prior,
+        drive=args.drive,
+        wear=tuple(args.wear),
+    )
+    print(
+        f"mode {args.mode}, k {args.k:g}, prior {args.prior}, drive {args.drive}, wear {args.wear}"
+    )
     print(format_pooled(out))
     if args.json:
         args.json.write_text(json.dumps(out, indent=1))

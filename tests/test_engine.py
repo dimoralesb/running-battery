@@ -37,8 +37,9 @@ HZ = round(P.FRAME_RATE_HZ)
 NO_WEAR = (0.0, P.WEAR_SCALE_M, P.WEAR_HALF_KEEP)
 
 
-def _battery(speed: np.ndarray, cs: float = 4.0, dp: float = 200.0, k: float = P.K, period=None,
-             wear=NO_WEAR):
+def _battery(
+    speed: np.ndarray, cs: float = 4.0, dp: float = 200.0, k: float = P.K, period=None, wear=NO_WEAR
+):
     """Run one player's battery at 10 Hz with one (CS, D′); returns the result. Without wear by
     default, so the battery maths below hold exactly; wear has its own tests."""
     speed = np.asarray(speed, dtype=float)[:, None]

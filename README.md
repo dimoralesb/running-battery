@@ -40,6 +40,7 @@ flowchart TD
 2. **Estimator** (`engine/`): from positions alone, per player and second, the running (high-speed distance, his hardest minutes so far, energy) and what it would leave a typical professional (a battery with a 10–90% band, and a calibrated chance of falling below half of it). The battery drains above critical speed and refills below it, more slowly the more hard running there has been in the match (wear, decision 56).
 3. **Agents** (`agents/`): an MCP server with seven read-only tools, four agents on Foundry, and a Verifier that checks every sentence against a register of published claims.
 4. **Overlay** (`app/`): the replay, the batteries, the charts and the verified feed, as static files on Azure.
+5. **Live runner** (`live.py`, decision 58): the estimator fed one tracking frame at a time, with a one-way speed filter and the engine's own battery step. On the story match its battery stays within 0.4 points of the replay's on average (95% of player-seconds within 1.4), speeds come 0.5 s later, each second of play takes 1.5 ms, and 128 of the replay's 134 stretches of hardest minutes are flagged live within 30 s (natural match: 0.3 points, 71 of 78). Fed the replay's speeds, it gives the replay's battery exactly (`tests/test_live.py`). Not connected to a provider's feed or a broadcaster's graphics.
 
 ## Agents
 
@@ -539,7 +540,10 @@ used offline for calibration only.
 - Player fitness (critical speed, D′) can't be measured from tracking; the professional prior is
   derived from published tests [Modric2020, Table 1; Jones2017], and no professional D′ has been
   published (synthesis §3.2.3).
-- The overlay replays files; the live stream (Event Hubs) was cut (BUILD_PLAN §5).
+- The overlay replays files. The live runner (`python -m runningbattery.live`, decision 58) takes a
+  match frame by frame without looking ahead, but is not connected to a tracking provider's feed or a
+  broadcaster's graphics, and the commentary runs per match, not per moment as it arrives (the
+  Event Hubs stream was cut, BUILD_PLAN §5).
 - The same seed gives a slightly different match on another machine (floating point), so the
   overlay ships the exported demo data (`app/public/data/`) rather than regenerating it.
 
@@ -557,6 +561,7 @@ uv run python -m runningbattery.sim --seed 2028 --story press-fade --out $D   # 
 uv run python -m runningbattery.engine $D                                     # signals.json
 uv run --extra agents python -m runningbattery.agents.feed $D --offline --out $D/feed.json
 uv run python -m runningbattery.export $D --out app/public/data/story --feed $D/feed.json
+uv run python -m runningbattery.live $D --check    # the same match frame by frame, as if live
 cd app && npm run dev                              # http://localhost:5173/?match=story
 ```
 
