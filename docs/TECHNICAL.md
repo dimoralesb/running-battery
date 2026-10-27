@@ -16,6 +16,15 @@ ran and its numbers, the synthetic data, and how to run each part. Citation keys
 
 ## The battery
 
+The research gives us the D′ balance model [Skiba2012; Skiba2021], speed in place of power for
+runners [Jones2017; Bellenger2025], the finding that the standard refill is too fast in runners
+[Bellenger2025], slower recovery after repeated efforts [Chorley2022], and the typical
+professional's values [Modric2020; Sutcliffe2025]. The rest is ours: running it on match tracking
+for every player instead of on one tested athlete, 200 typical-professional draws weighted by the running
+instead of the player's own values, one fixed slower refill factor for everyone, the wear formula
+and its fitted settings, the calibrated chance, and the test against a simulator with a known true
+state.
+
 The battery is a D′ balance [Skiba2012; Skiba2021; Jones2017] driven by speed. Above critical
 speed (CS) it loses v − CS metres each second. Below it, it refills towards D′ with recharge time
 τ = k·D′ / (CS − v), clipped to 30–900 s. The standard form (k = 1) refilled about five times too

@@ -1,20 +1,19 @@
 # Running Battery
 
-How much hard running each football player has done, and what that running would leave a typical professional.
-
-**Live demo:** https://happy-bay-06ca1e90f.3.azurestaticapps.net/?match=story
-
-![Running Battery: a clip on the pitch with the player's battery, and the numbers and commentary beside it](docs/figures/overlay.png)
+How much hard running each football player has done, and how much short-term reserve a typical professional would have left after the same running.
 
 Running Battery reads player tracking data (the position of every player and the ball, 10 times a
-second) and measures each player's hard running, second by second. A battery shows what the same
-running would leave a typical professional. Four AI agents on Microsoft Foundry turn those numbers
-into commentary for fans or analysts, and a check blocks any sentence the measurements or the
+second) and measures each player's hard running, second by second. Each player's battery shows that
+reserve as a percentage. Four AI agents on Microsoft Foundry turn those numbers into commentary for fans or analysts, and a check blocks any sentence the measurements or the
 research don't support. It is our entry for the Microsoft x Premier League "Inside the Game"
 hackathon.
 
 The matches on the site are synthetic. We built a match simulator on published sports science, so
 we know each player's true state and can test the battery against it.
+
+**Live demo:** https://happy-bay-06ca1e90f.3.azurestaticapps.net/?match=story
+
+![Running Battery: a clip on the pitch with the player's battery, and the numbers and commentary beside it](docs/figures/overlay.png)
 
 ## What you see
 
@@ -85,6 +84,19 @@ others.
 We run the battery for 200 typical professionals drawn from those values and show the middle one;
 analysts also see the range that holds the middle 80%. On screen it always reads as "running that
 would leave a typical pro at X%", never as how tired the player is.
+
+## What we added
+
+The model and the typical professional's values come from the research above. We added four
+things. The research applies the model to one athlete whose fitness has been tested; we apply it
+to every player in a match, from their positions alone. Since we can't test the players, we run it
+for 200 typical professionals and show the middle one, and the draws the running contradicts count
+less. We made the refill slow down as the match's hard running builds up, with a formula and
+settings we fitted on simulated matches. And we test the battery on simulated matches where each
+player's true state is known, which real matches can't offer.
+
+The commentary is ours too: agents that only see measured numbers, and a check that blocks any
+sentence the measurements or our list of research findings don't support.
 
 ## What we tested
 
