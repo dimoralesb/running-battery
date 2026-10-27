@@ -356,6 +356,15 @@ Audience sit side by side with their labels above, and Match takes the next row 
 inline (the top controls 200 → 92 px). How to read the page: one line under each step's heading,
 `.sub` (`--text-sm`, `--text-secondary`), as step 1's.
 
+## Decision 52 (user, 2026-10-27): How it works
+
+The third view keeps the page's tokens: headings at `--text-lg`, text at 70ch, parts split by a
+hairline and `--space-6`, two equal columns from 1100 px. The agents' flow is a row of `--surface`
+boxes with hairline edges and "→" between them (the last, "This page", edged in `--text`); on a
+phone it stacks with "↓". The battery chart is two stacked panels in the chart style (speed with
+the dashed critical speed, then the battery), the clip's run shaded. On a phone every top control
+takes a row with its label inline.
+
 ## Decision 51 (user, 2026-10-27): the Clips tab and a picked player
 
 The full match's Clips tab uses the card look: moments as step 1's cards, smaller (min 120 px, the

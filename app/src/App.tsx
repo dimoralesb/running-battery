@@ -23,6 +23,7 @@ import {
 import { BrandMark, LowerThird, TeamSheet, reading } from "./Battery";
 import { Feed } from "./Feed";
 import { Highlights, reel } from "./Highlights";
+import { HowItWorks } from "./HowItWorks";
 import { Legend, Pitch } from "./Pitch";
 import { Replay } from "./Replay";
 import { Stats } from "./Stats";
@@ -44,7 +45,8 @@ const QUERY = new URLSearchParams(window.location.search);
 // Dark by default (DESIGN.md); ?theme=light or Settings › Theme for light.
 const THEME = QUERY.get("theme") === "light" ? "light" : "dark";
 
-type View = "highlights" | "full";
+// "How it works" (decision 52) explains the battery, the agents, the data and a live match.
+type View = "highlights" | "full" | "how";
 // Each clip plays once (watch), then shows its details on its last frame; Replay plays it
 // again with the details growing (decision 34; at the clip speed since decision 37).
 type Step = "watch" | "details" | "replay";
@@ -58,6 +60,13 @@ const TEXT: Record<string, string> = copy;
 
 export function fill(text: string, values: Record<string, string | number>): string {
   return text.replace(/\{(\w+)\}/g, (_, k) => String(values[k] ?? ""));
+}
+
+/** The clip the page opens on: the first recovery run (decision 50, the user's pick); a match
+ * without one on its first moment. */
+function opening(list: Item[]): Item | undefined {
+  return list.find((i) => i.source === "highlight" && i.kind === "recovery_run")
+    ?? list.find((i) => i.momentId) ?? list[0];
 }
 
 /** The URL's clip, if it names one. */
@@ -101,7 +110,8 @@ export default function App() {
   const [matchId, setMatchId] = useState(QUERY.get("match") ?? MATCHES[0].id);
   const [data, setData] = useState<MatchData | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [view, setView] = useState<View>(QUERY.get("view") === "full" ? "full" : "highlights");
+  const [view, setView] = useState<View>(
+    QUERY.get("view") === "full" ? "full" : QUERY.get("view") === "how" ? "how" : "highlights");
   const [now, setNow] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(5);
@@ -181,12 +191,14 @@ export default function App() {
         setNow(hasT ? t : d.feed.moments[0]?.video_s ?? 0);
         setSelected(QUERY.get("player") ?? d.feed.entries.find((e) => e.player)?.player?.id ?? null);
         const list = queue(d, mode, reel(d.highlights, d.duration));
-        // The page opens on the first recovery run (decision 50, the user's pick); a match
-        // without one on its first moment.
-        const defaultItem = list.find((i) => i.source === "highlight" && i.kind === "recovery_run")
-          ?? list.find((i) => i.momentId) ?? list[0];
-        const it = view === "highlights" ? itemFromUrl(d, list) ?? defaultItem : undefined;
-        if (it) {
+        const defaultItem = opening(list);
+        const it = view !== "full" ? itemFromUrl(d, list) ?? defaultItem : undefined;
+        if (it && view === "how") {
+          start(it, "watch", d); // the opening clip waits, stopped, for the Highlights view
+          setPlaying(false);
+          setPoised(true);
+          setView("how");
+        } else if (it) {
           const st = QUERY.get("step");
           reveal.current = true;
           start(it, st === "replay" || st === "details" ? st : "watch", d);
@@ -353,6 +365,11 @@ export default function App() {
     );
   };
 
+  const toHow = () => {
+    setView("how");
+    setAuto(false);
+    setPlaying(false);
+  };
   const toFull = () => {
     setView("full");
     setAuto(false);
@@ -366,7 +383,9 @@ export default function App() {
       borrowDetails();
     }
   };
-  const toHighlights = () => (cur ? start(cur, "watch") : items[0] && start(items[0], "watch"));
+  // From How it works the clip waits where it was; from the full match it plays from its start.
+  const toHighlights = () => (view === "how" && cur ? setView("highlights")
+    : cur ? start(cur, "watch") : items[0] && start(items[0], "watch"));
   const stepName = step === "watch" ? copy.stepWatch : step === "replay" ? copy.stepReplay : copy.stepDetails;
   const band = mode === "analyst" && cur?.player ? reading(data, players[cur.player], now) : null;
 
@@ -402,6 +421,7 @@ export default function App() {
   // The Clips tab is the full match's (its moments and highlights); the cards are the clips.
   const tabs = TABS.filter(([t]) => view === "full" || t !== "clips");
   const shown = view === "highlights" && tab === "clips" ? "details" : tab;
+  const first = opening(items); // How it works charts the opening clip's run
 
   return (
     <div className="app">
@@ -413,8 +433,8 @@ export default function App() {
         </div>
         <div className="top-controls">
           <Choice label={copy.settingsView} value={view}
-                  options={[["highlights", copy.viewHighlights], ["full", copy.viewFull]]}
-                  onPick={(v) => (v === "full" ? toFull() : toHighlights())} />
+                  options={[["highlights", copy.viewHighlights], ["full", copy.viewFull], ["how", copy.viewHow]]}
+                  onPick={(v) => (v === "full" ? toFull() : v === "how" ? toHow() : toHighlights())} />
           <label className="field">
             <span className="field-label">{copy.settingsMatch}</span>
             <select value={matchId} onChange={(e) => setMatchId(e.target.value)}>
@@ -428,6 +448,9 @@ export default function App() {
         </div>
       </header>
 
+      {view === "how" ? (
+        <HowItWorks data={data} item={first} name={first ? who(first) ?? "" : ""} text={TEXT} />
+      ) : (<>
       <section className="moments-strip" aria-labelledby="step1">
         <div className="step-head">
           <h2 id="step1"><span className="step-n" aria-hidden="true">1</span>{copy.step1}</h2>
@@ -656,6 +679,7 @@ export default function App() {
           toStage();
         }} />
       </section>
+      </>)}
 
       <footer className="footer">{copy.disclaimer}</footer>
     </div>

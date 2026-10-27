@@ -8,7 +8,7 @@ All match data is **synthetic**: we built a generator whose players get tired ac
 
 **Try it:** https://happy-bay-06ca1e90f.3.azurestaticapps.net/?match=story (the story match, fan mode).
 It opens on the **Highlights**: a card for each clip of the match, then the first clip, stopped until you press Play; each clip plays once as it happened, beside its details (the numbers and the commentary); "Replay" plays it again (a progress bar, Play/Pause and ½× 1× 2× work like a video player's), and "Full match" is the whole replay.
-Add `?match=natural`, `&mode=analyst`, `&view=full&t=<seconds>`, `&hl=<kind>&step=details` (or `&step=replay` for the replay), `&tab=stats` (the teams' running, 15 minutes at a time) or `&theme=dark` to the address.
+Add `?match=natural`, `&mode=analyst`, `&view=full&t=<seconds>`, `&hl=<kind>&step=details` (or `&step=replay` for the replay), `&tab=stats` (the teams' running, 15 minutes at a time), `&view=how` (How it works: the battery, the agents, the data and a live match) or `&theme=dark` to the address.
 
 ![Running Battery broadcast overlay](docs/figures/overlay.png)
 
@@ -157,7 +157,9 @@ match's best physical moments and the feed's moments. The page opens on a clip s
 first recovery run, decision 50), with "Play the clip" on the pitch (decision 49: a clip that played at once left no time to see what
 the page is); a card or a link that names a clip starts it and brings the pitch into view, and
 Play never moves the page (decision 51). During a clip, clicking any other player shows his battery
-and its percentage on the pitch.
+and its percentage on the pitch. A third view, **How it works** (decision 52), explains the battery
+(with the opening clip's run and its drain and refill), the agents and the Verifier's test results,
+the data it needs, and how it could run during a live match (not built).
 Each clip plays once, as it happened, at
 normal speed, with only that player's path on the pitch (the others dimmed), in white, fading
 towards its start with an arrowhead where he is. A moment measured over minutes shows the part

@@ -148,15 +148,14 @@ select { background: var(--surface); border: 1px solid var(--border); border-rad
 .top .tagline { font-size: var(--text-sm); margin-top: 2px; }
 .top-controls { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-2) var(--space-5); }
 .top-controls .field { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; margin: 0; }
-/* Phone (decision 50): View and Audience side by side, Match on a row of its own with its label inline. */
+/* Phone (decision 52, was decision 50's two columns): one row per control, its label inline, so
+   View's three choices fit. */
 @media (max-width: 520px) {
-  .top-controls { width: 100%; display: grid; grid-template-columns: auto auto; justify-content: start;
-    gap: var(--space-1) var(--space-5); }
-  .top-controls > :nth-child(1) { order: 1; }
-  .top-controls > :nth-child(3) { order: 2; }
-  .top-controls > :nth-child(2) { order: 3; grid-column: 1 / -1; flex-direction: row; align-items: center;
-    gap: var(--space-2); }
-  .top-controls select { min-width: 0; }
+  .top-controls { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-1); }
+  .top-controls .field { flex-direction: row; align-items: center; gap: var(--space-2); }
+  .top-controls .field-label { flex: none; width: 4.6em; }
+  .top-controls .choice button { padding-right: var(--space-3); }
+  .top-controls select { min-width: 0; flex: 1; }
 }
 h2 { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-2);
   font-size: var(--text-lg); font-weight: 700; line-height: var(--leading-tight); }
@@ -529,3 +528,45 @@ h2 { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--
 .split-tip { flex-direction: column; gap: 2px; margin-top: var(--space-2); }
 .small { font-size: var(--text-xs); }
 @media (max-width: 520px) { .split-row { grid-template-columns: minmax(0, 1fr); gap: 2px; } }
+
+/* How it works (decision 52): the third view; plain sentences, then the numbers. */
+.how { margin-top: var(--space-5); }
+.how > h2 { font-size: var(--text-xl); }
+.how-intro { color: var(--text-secondary); max-width: 70ch; }
+.how-part { margin-top: var(--space-6); padding-top: var(--space-5); border-top: 1px solid var(--border-subtle); }
+.how-part:first-of-type { border-top: 0; padding-top: 0; }
+.how h3 { font-size: var(--text-lg); margin: 0 0 var(--space-2); }
+.how p { max-width: 70ch; line-height: var(--leading-body); }
+.how p + p { margin-top: var(--space-2); }
+.how-two { display: grid; gap: var(--space-5); }
+@media (min-width: 1100px) {
+  .how-two { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-6); align-items: start; }
+}
+.how-part.how-two > :first-child, .how-two > div > h3:first-child { margin-top: 0; }
+.how-chart { margin: 0; }
+.how-chart svg + svg { margin-top: var(--space-1); }
+.flow { list-style: none; margin: var(--space-4) 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2);
+  align-items: stretch; counter-reset: none; }
+.flow li { position: relative; flex: 1 1 130px; padding: var(--space-2) var(--space-3); background: var(--surface);
+  border: 1px solid var(--border-subtle); font-size: var(--text-sm); font-weight: 600; line-height: 1.3;
+  margin-right: var(--space-4); }
+.flow li:not(:last-child)::after { content: "→"; position: absolute; right: calc(-1 * var(--space-4) - 2px);
+  top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-weight: 400; }
+.flow li:last-child { margin-right: 0; border-color: var(--text); }
+@media (max-width: 520px) {
+  .flow { flex-direction: column; gap: var(--space-4); }
+  .flow li { flex: none; margin-right: 0; }
+  .flow li:not(:last-child)::after { content: "↓"; right: auto; left: var(--space-3); top: auto;
+    bottom: calc(-1 * var(--space-4) - 1px); transform: none; }
+}
+.table-wrap { overflow-x: auto; }
+.how-table { border-collapse: collapse; font-size: var(--text-sm); width: 100%; }
+.how-table th, .how-table td { padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--border-subtle);
+  text-align: left; vertical-align: top; }
+.how-table thead th { color: var(--text-secondary); font-weight: 500; }
+.how-table td { font-size: var(--text-lg); font-weight: 700; }
+.how-list, .how-steps { margin: var(--space-2) 0 var(--space-3); padding-left: var(--space-5); display: grid; gap: var(--space-1); }
+.how-steps li::marker { font-weight: 700; }
+.how p.how-more { max-width: none; }
+.how-more { margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--border-subtle); }
+.how-more a { color: var(--text); text-underline-offset: 3px; }

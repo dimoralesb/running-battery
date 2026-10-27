@@ -69,6 +69,23 @@ Overlay (one page, the URL's parameters set where it opens)
 
 ## Page specs
 
+### Decision 52 (user, 2026-10-27): How it works
+
+The user wanted "more technical information … how the battery works, how the agents work, what
+data do we need, how this can be implemented in live matches"; chosen from a proposal: a third
+View (over a section 5 at the bottom or a tab beside the clip), plain sentences plus the numbers.
+
+- **View:** Highlights · Full match · **How it works** (`viewHow`; `?view=how`). Entering it pauses
+  the clip; Highlights brings the clip back where it was, stopped. Full width, no cards, pitch or
+  section 4.
+- **Content** (copy.json `how*`, all through the Verifier's copy test; the numbers are the README's):
+  the battery (drain above a typical pro's critical speed, refill below it, 200 typical-pro draws,
+  why a typical pro, only the running so far) with a chart of the opening clip's player, speed over
+  battery, from 90 s before the run to 8 minutes after it, within its half; the agents (a flow of
+  eight boxes, the Verifier and its test table); the data it needs; a live match, labelled not
+  built; a link to the README (it needs the repository public).
+- **Phone:** the top controls are one row each with the label inline (View's three choices fit).
+
 ### Decision 51 (user, 2026-10-27): Play stays put, any player's battery, the Clips tab
 
 Where the specs below (decisions 49 and 50 included) differ, this section wins:
