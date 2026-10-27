@@ -1,9 +1,10 @@
 import { type Item, type MatchData, clockLabel, signalIndex } from "./data";
 
-// "How it works" (decision 52): the third view, written for someone with no context (decision 53:
-// everyday words, the technical names in one quiet line per part), all from the README and checked
-// by the Verifier's copy test (copy.json "how*").
-// The battery chart uses the opening clip's player, around his run, from this match's own data.
+// "How it works" (decision 52): the third view, in plain words with the technical names in one
+// quiet line per part (decisions 53–54), all from the README and checked by the Verifier's copy
+// test (copy.json "how*"). The battery chart uses the opening clip's player around his run, from
+// this match's own data, and shades the seconds above critical speed so the drain and the refill
+// show (decision 54: in the story match 38 of his 39 seconds above it lower the battery).
 
 const REPO = "https://github.com/dimoralesb/running-battery#readme";
 const CS_KMH = 4.1 * 3.6; // the typical pro's critical speed, 4.1 m/s (engine prior, PLAN decision 13)
@@ -21,8 +22,8 @@ const fill = (t: string, v: Record<string, string | number>) =>
   t.replace(/\{(\w+)\}/g, (_, k) => String(v[k] ?? ""));
 
 /** His speed and the typical-pro battery, second by second, from 90 s before the clip's run to
- * 8 minutes after it, within its half: the drain in the run and the refill after it (the story
- * match's 3:50 run takes the battery from 90% to 60%, back to 86% by 11:30). */
+ * 8 minutes after it, within its half (the story match's 3:50 run takes the battery from 90% to
+ * 60%, back to 86% by 11:30); both panels shade his seconds above critical speed. */
 function BatteryChart({ data, item, name, text }: Props & { item: Item }) {
   const s = data.signals[item.player!];
   const half = data.meta.periods.filter((p) => p.video_start <= item.start).at(-1) ?? data.meta.periods[0];
@@ -36,6 +37,14 @@ function BatteryChart({ data, item, name, text }: Props & { item: Item }) {
     battery.push(i !== null ? s.battery[i] : null);
   }
   const n = speed.length;
+  // His spells above critical speed, as [first, last] second indices.
+  const above: [number, number][] = [];
+  speed.forEach((v, k) => {
+    if (v === null || v <= CS_KMH) return;
+    const last = above[above.length - 1];
+    if (last && last[1] === k - 1) last[1] = k;
+    else above.push([k, k]);
+  });
   const x = (k: number) => PAD.l + (k / Math.max(n - 1, 1)) * (WIDTH - PAD.l - PAD.r);
   const path = (vs: (number | null)[], y: (v: number) => number) =>
     vs.map((v, k) => (v === null ? "" : `${k && vs[k - 1] !== null ? "L" : "M"}${x(k).toFixed(1)},${y(v).toFixed(1)}`)).join("");
@@ -53,10 +62,9 @@ function BatteryChart({ data, item, name, text }: Props & { item: Item }) {
         {extra !== undefined && (
           <line x1={PAD.l} x2={WIDTH - PAD.r} y1={y(extra)} y2={y(extra)} className="threshold" />
         )}
-        {item.segments.map(([s0, s1]) => (
-          <rect key={s0} x={x(Math.max(s0 - a, 0))} y={PAD.t}
-                width={Math.max(x(Math.min(s1 - a, n - 1)) - x(Math.max(s0 - a, 0)), 1)}
-                height={h - PAD.t - PAD.b} className="zone run" />
+        {above.map(([k0, k1]) => (
+          <rect key={k0} x={x(k0)} y={PAD.t} width={Math.max(x(k1 + 1) - x(k0), 1.5)}
+                height={h - PAD.t - PAD.b} className="zone" />
         ))}
         <path d={path(vs, y)} className={`line ${item.team}`} />
         {[0, Math.floor((n - 1) / 2), n - 1].map((k) => (
@@ -93,7 +101,6 @@ export function HowItWorks({ data, item, name, text }: Props) {
   return (
     <main className="how">
       <h2>{text.howTitle}</h2>
-      <p className="how-intro">{text.howIntro}</p>
 
       <section className="how-part how-two">
         <div>

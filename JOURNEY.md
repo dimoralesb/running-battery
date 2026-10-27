@@ -69,6 +69,21 @@ Overlay (one page, the URL's parameters set where it opens)
 
 ## Page specs
 
+### Decision 54 (user, 2026-10-27): plain, not simplified; show the battery working
+
+The user: "You don't need to dumb it down either with … 'think of a phone battery'. Also, I would
+like to see how the battery works instead"; remove the "Why not the player himself?" paragraph and
+only say that we can't measure how tired a player actually is; the "only looks back" paragraph is
+not needed; use the humanizer skill. Where decision 53 differs, this wins:
+
+- **Text:** plain statements, no analogies (no phone battery, no "AI helpers"); no intro line; the
+  battery part is two paragraphs (what drains and refills it; we can't measure how tired or fit a
+  player actually is, so it is a typical professional's, the middle of 200) and the model line.
+  Run through the humanizer (no dashes, no staged contrasts, no "Label:" steps in the live list).
+- **Chart:** both panels shade his seconds above 15 km/h (the typical pro's critical speed), so the
+  battery is seen falling in them and refilling between (story match: 38 of his 39 seconds above
+  it lower the battery, most seconds below raise it). The clip's run is no longer shaded.
+
 ### Decision 53 (user, 2026-10-27): How it works in everyday words
 
 The user: "The page should be written for non experts … Explain the technical things in simple
