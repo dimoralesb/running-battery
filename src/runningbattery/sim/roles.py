@@ -796,6 +796,19 @@ class Roles:
         at = at + np.clip(turn, -P.RESTART_ARC_STEP, P.RESTART_ARC_STEP)
         round_edge = r.spot + keep * np.stack([np.cos(at), np.sin(at)], axis=1)
         out = np.where(d[:, None] > 1e-6, round_edge, out)  # on the ball: towards his own goal
+        # Off the pitch (a restart by a touchline), the nearest point of the edge that is on it
+        # (decision 47: clipped back onto the touchline, a player stood 7 m from a free kick).
+        lim = np.array([P.HALF_LENGTH, P.HALF_WIDTH]) - movement.EDGE
+        off = np.any(np.abs(out) > lim, axis=1) & step_out & (d > 1e-6)
+        if off.any():
+            steps = np.arange(1, 37) * np.pi / 36
+            shift = np.stack([steps, -steps], axis=1).ravel()  # nearest first, either way round
+            ang = at[off, None] + shift[None]
+            ring = r.spot + keep * np.stack([np.cos(ang), np.sin(ang)], axis=2)
+            on = np.all(np.abs(ring) <= lim, axis=2)
+            first = np.argmax(on, axis=1)
+            pick = ring[np.arange(len(first)), first]
+            out[off] = np.where(on.any(axis=1)[:, None], pick, out[off])
         new = np.where(step_out[:, None], out, np.where(crosses[:, None], round_edge, goal))
         tgt[idx] = movement.clip_to_pitch(new)
 

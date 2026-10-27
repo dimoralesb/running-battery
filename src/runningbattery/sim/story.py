@@ -39,8 +39,9 @@ demo seed, ahead in 3 of the first hour's 4 blocks, 1 seed of 6 above 46%). Deci
 and rule; ``press_chance`` 0.7 → 0.9, ``press_effort`` 1.04 → 1.02 and ``press_run_boost``
 1.25 → 1.75 (28% at most on the demo seed, ahead in 2 of the first hour's 4 blocks, 0 seeds of 6
 above 46%); with the wall fix after it (a player inside the restart circle steps out towards his
-spot), the search again: ``press_chance`` 0.9 → 0.6 and ``press_effort`` 1.02 → 1.06 (37% at most
-on the demo seed, ahead in 3 of the first hour's 4 blocks, 1 seed of 6 above 46%).
+spot, and onto the pitch by a touchline), the search again: ``press_chance`` 0.9 → 0.7 and
+``press_effort`` 1.02 → 1.04 (28% at most on the demo seed, ahead in 3 of the first hour's 4
+blocks, 1 seed of 6 above 46%).
 """
 
 from __future__ import annotations
@@ -54,10 +55,10 @@ from runningbattery.sim.rosters import SimTeam, SubPlan
 class Story:
     name: str
     press_team: int = 0  # 0 home, 1 away
-    press_chance: float = 0.6  # decision 47: scripted search (module docstring)
+    press_chance: float = 0.7  # decision 47: scripted search (module docstring)
     press_until_min: float = 60.0
     press_run_boost: float = 1.75  # decision 47: scripted search (module docstring)
-    press_effort: float = 1.06  # decision 47: scripted search (module docstring)
+    press_effort: float = 1.04  # decision 47: scripted search (module docstring)
     exposed_slot: int = 3  # engine index: home slot 4 (H04), the left-back (FORMATION_4231)
     counter_bias: float = 4.0
     counter_reach: float = 20.0

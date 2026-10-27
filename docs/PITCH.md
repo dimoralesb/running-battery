@@ -32,15 +32,15 @@ above 5.5 m/s (19.8 km/h), each player's hardest minutes so far, and each team's
 running per ball-in-play minute, split by situation (the first 10 s after losing or winning the
 ball, settled on the ball, without it). Estimated: what that running would leave a typical
 professional, with a 10–90% band and a calibrated chance of falling below half of it (expected
-calibration error 0.009 to 0.003 on held-out matches).
+calibration error 0.009 to 0.002 on held-out matches).
 
 **What we tested and don't claim.** We built a match generator whose players have a hidden
 fitness and fatigue state, and tested the sentences fans would like to read against it. From
-positions, the best detector of tired players reaches precision 0.17 at recall 0.1, so we say what the running would cost a typical professional and never name a player's own
-state. Home-minus-away differences pick the side with more short-term fatigue 52–62% of the time,
-hardly better than a coin toss. Speed tells a skipped run from no run asked with an AUC of 0.37, worse than chance, so we give
+positions, the best detector of tired players reaches precision 0.20 at recall 0.1, so we say what the running would cost a typical professional and never name a player's own
+state. Home-minus-away differences pick the side with more short-term fatigue 42–57% of the time,
+no better than chance. Speed tells a skipped run from no run asked with an AUC of 0.37, worse than chance, so we give
 the speed and never the intent. Reading a run's purpose failed too: a positions-only rule built on
-a published definition matched the generator's hidden runs with precision 0.55, so the split
+a published definition matched the generator's hidden runs with precision 0.56, so the split
 shows where the running happened, never why. The Verifier
 blocks all four.
 
@@ -67,11 +67,11 @@ rules alone never block a valid sentence, and rules plus the LLM catch most unsu
 |---|---|
 | 46 claims (14 supported, 14 qualified, 18 blocked) | `src/runningbattery/agents/claims.json`; synthesis §5 |
 | 5.5 m/s (19.8 km/h) high-speed threshold | README "The overlay"; `engine/params.py` |
-| 10–90% band, calibrated chance; ECE 0.009 to 0.003 | PLAN decision 15; README "Validation" |
-| Precision 0.17 at recall 0.1 for the best positions-only detector | README "What we tested"; `validate/ceiling.py`, dev seeds 1–60 |
-| Home-minus-away right 52–62% of the time | PLAN decision 23; `validate/teams.py`, 60 matches |
+| 10–90% band, calibrated chance; ECE 0.009 to 0.002 | PLAN decision 15; README "Validation" |
+| Precision 0.20 at recall 0.1 for the best positions-only detector | README "What we tested"; `validate/ceiling.py`, dev seeds 1–60 |
+| Home-minus-away right 42–57% of the time | PLAN decision 23; `validate/teams.py`, 60 matches |
 | AUC 0.37, skipped run vs no run asked | PLAN decision 24; `validate/teams.py` |
-| A run's purpose (closing down, on Ju2022's definition): precision 0.55 | PLAN decision 30; `validate/purposes.py`, 74,137 runs |
+| A run's purpose (closing down, on Ju2022's definition): precision 0.56 | PLAN decision 30; `validate/purposes.py`, 73,863 runs |
 | 10 s after a change of possession | our threshold; transitions last 9.3–10.9 s [Bortnik2022, Table 2] |
 | Seven read-only MCP tools | `src/runningbattery/agents/mcp_server.py` |
 | gpt-5-mini on Foundry | PLAN decision 18 |

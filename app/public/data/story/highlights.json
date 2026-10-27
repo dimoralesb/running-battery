@@ -2,13 +2,13 @@
  {
   "kind": "top_speed",
   "label": "Top speed",
-  "value": 5.51,
+  "value": 6.6,
   "player": {
-   "id": "H11",
-   "name": "Nico Sorrnell",
-   "shirt": 9,
-   "team": "home",
-   "position": "CF"
+   "id": "A08",
+   "name": "Jonah Wendrigg",
+   "shirt": 10,
+   "team": "away",
+   "position": "AM"
   },
   "period": 1,
   "t": 3.0,
@@ -20,6 +20,220 @@
    [
     3.0,
     4.0
+   ]
+  ],
+  "caption": "Jonah Wendrigg hits 6.6 m/s (24 km/h); the average match top speed for an attacking midfielder is about 8.4 m/s.",
+  "facts": {
+   "top_speed": {
+    "value": 6.6,
+    "unit": "m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "top_speed_kmh": {
+    "value": 24,
+    "unit": "km/h",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "published_match_top_speed_for_position": {
+    "value": 8.4,
+    "unit": "m/s, mean match top speed for his position",
+    "source": "SilvaH2025, Table 1"
+   }
+  },
+  "sources": [
+   "SilvaH2025",
+   "SilvaH2025, Table 1",
+   "signals.players[].series.speed (1-s mean)"
+  ]
+ },
+ {
+  "kind": "longest_run",
+  "label": "Longest run",
+  "value": 6.6,
+  "player": {
+   "id": "A08",
+   "name": "Jonah Wendrigg",
+   "shirt": 10,
+   "team": "away",
+   "position": "AM"
+  },
+  "period": 1,
+  "t": 3.0,
+  "clock": "0:03",
+  "video_s": 3.0,
+  "start_video_s": 3.0,
+  "end_video_s": 4.0,
+  "segments": [
+   [
+    3.0,
+    4.0
+   ]
+  ],
+  "caption": "Jonah Wendrigg runs 7 m above 5.5 m/s (19.8 km/h) in one go in the opponents' half while the opponents had the ball, about 0 times a typical high-speed run.",
+  "facts": {
+   "metres": {
+    "value": 7,
+    "unit": "m above 5.5 m/s in one run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds": {
+    "value": 1,
+    "unit": "s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "top_speed": {
+    "value": 6.6,
+    "unit": "m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "typical_run": {
+    "value": 19,
+    "unit": "m, mean high-speed run",
+    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
+   },
+   "times_typical": {
+    "value": 0,
+    "unit": "times a typical run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "where": "in the opponents' half",
+   "ball": "the opponents"
+  },
+  "sources": [
+   "Fang2024",
+   "DiSalvo2007",
+   "Fang2024, Table 2; DiSalvo2007, p.224",
+   "signals.players[].series.speed (1-s mean)"
+  ]
+ },
+ {
+  "kind": "top_speed",
+  "label": "Top speed",
+  "value": 5.51,
+  "player": {
+   "id": "A11",
+   "name": "Nico Jorrlowe",
+   "shirt": 9,
+   "team": "away",
+   "position": "CF"
+  },
+  "period": 1,
+  "t": 19.0,
+  "clock": "0:19",
+  "video_s": 19.0,
+  "start_video_s": 19.0,
+  "end_video_s": 20.0,
+  "segments": [
+   [
+    19.0,
+    20.0
+   ]
+  ],
+  "caption": "Nico Jorrlowe hits 5.5 m/s (20 km/h); the average match top speed for a striker is about 8.3 m/s.",
+  "facts": {
+   "top_speed": {
+    "value": 5.5,
+    "unit": "m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "top_speed_kmh": {
+    "value": 20,
+    "unit": "km/h",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "published_match_top_speed_for_position": {
+    "value": 8.3,
+    "unit": "m/s, mean match top speed for his position",
+    "source": "SilvaH2025, Table 1"
+   }
+  },
+  "sources": [
+   "SilvaH2025",
+   "SilvaH2025, Table 1",
+   "signals.players[].series.speed (1-s mean)"
+  ]
+ },
+ {
+  "kind": "longest_run",
+  "label": "Longest run",
+  "value": 5.51,
+  "player": {
+   "id": "A11",
+   "name": "Nico Jorrlowe",
+   "shirt": 9,
+   "team": "away",
+   "position": "CF"
+  },
+  "period": 1,
+  "t": 19.0,
+  "clock": "0:19",
+  "video_s": 19.0,
+  "start_video_s": 19.0,
+  "end_video_s": 20.0,
+  "segments": [
+   [
+    19.0,
+    20.0
+   ]
+  ],
+  "caption": "Nico Jorrlowe runs 6 m above 5.5 m/s (19.8 km/h) in one go in his own half while the opponents had the ball, about 0 times a typical high-speed run.",
+  "facts": {
+   "metres": {
+    "value": 6,
+    "unit": "m above 5.5 m/s in one run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds": {
+    "value": 1,
+    "unit": "s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "top_speed": {
+    "value": 5.5,
+    "unit": "m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "typical_run": {
+    "value": 19,
+    "unit": "m, mean high-speed run",
+    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
+   },
+   "times_typical": {
+    "value": 0,
+    "unit": "times a typical run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "where": "in his own half",
+   "ball": "the opponents"
+  },
+  "sources": [
+   "Fang2024",
+   "DiSalvo2007",
+   "Fang2024, Table 2; DiSalvo2007, p.224",
+   "signals.players[].series.speed (1-s mean)"
+  ]
+ },
+ {
+  "kind": "top_speed",
+  "label": "Top speed",
+  "value": 5.55,
+  "player": {
+   "id": "H11",
+   "name": "Nico Sorrnell",
+   "shirt": 9,
+   "team": "home",
+   "position": "CF"
+  },
+  "period": 1,
+  "t": 23.0,
+  "clock": "0:23",
+  "video_s": 23.0,
+  "start_video_s": 23.0,
+  "end_video_s": 24.0,
+  "segments": [
+   [
+    23.0,
+    24.0
    ]
   ],
   "caption": "Nico Sorrnell hits 5.5 m/s (20 km/h); the average match top speed for a striker is about 8.3 m/s.",
@@ -47,56 +261,9 @@
   ]
  },
  {
-  "kind": "top_speed",
-  "label": "Top speed",
-  "value": 6.53,
-  "player": {
-   "id": "A08",
-   "name": "Jonah Wendrigg",
-   "shirt": 10,
-   "team": "away",
-   "position": "AM"
-  },
-  "period": 1,
-  "t": 3.0,
-  "clock": "0:03",
-  "video_s": 3.0,
-  "start_video_s": 3.0,
-  "end_video_s": 4.0,
-  "segments": [
-   [
-    3.0,
-    4.0
-   ]
-  ],
-  "caption": "Jonah Wendrigg hits 6.5 m/s (24 km/h); the average match top speed for an attacking midfielder is about 8.4 m/s.",
-  "facts": {
-   "top_speed": {
-    "value": 6.5,
-    "unit": "m/s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "top_speed_kmh": {
-    "value": 24,
-    "unit": "km/h",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "published_match_top_speed_for_position": {
-    "value": 8.4,
-    "unit": "m/s, mean match top speed for his position",
-    "source": "SilvaH2025, Table 1"
-   }
-  },
-  "sources": [
-   "SilvaH2025",
-   "SilvaH2025, Table 1",
-   "signals.players[].series.speed (1-s mean)"
-  ]
- },
- {
   "kind": "longest_run",
   "label": "Longest run",
-  "value": 5.51,
+  "value": 5.55,
   "player": {
    "id": "H11",
    "name": "Nico Sorrnell",
@@ -105,15 +272,15 @@
    "position": "CF"
   },
   "period": 1,
-  "t": 3.0,
-  "clock": "0:03",
-  "video_s": 3.0,
-  "start_video_s": 3.0,
-  "end_video_s": 4.0,
+  "t": 23.0,
+  "clock": "0:23",
+  "video_s": 23.0,
+  "start_video_s": 23.0,
+  "end_video_s": 24.0,
   "segments": [
    [
-    3.0,
-    4.0
+    23.0,
+    24.0
    ]
   ],
   "caption": "Nico Sorrnell runs 6 m above 5.5 m/s (19.8 km/h) in one go in the opponents' half with his team on the ball, about 0 times a typical high-speed run.",
@@ -154,251 +321,37 @@
   ]
  },
  {
-  "kind": "longest_run",
-  "label": "Longest run",
-  "value": 6.53,
-  "player": {
-   "id": "A08",
-   "name": "Jonah Wendrigg",
-   "shirt": 10,
-   "team": "away",
-   "position": "AM"
-  },
-  "period": 1,
-  "t": 3.0,
-  "clock": "0:03",
-  "video_s": 3.0,
-  "start_video_s": 3.0,
-  "end_video_s": 4.0,
-  "segments": [
-   [
-    3.0,
-    4.0
-   ]
-  ],
-  "caption": "Jonah Wendrigg runs 7 m above 5.5 m/s (19.8 km/h) in one go in the opponents' half while the opponents had the ball, about 0 times a typical high-speed run.",
-  "facts": {
-   "metres": {
-    "value": 7,
-    "unit": "m above 5.5 m/s in one run",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds": {
-    "value": 1,
-    "unit": "s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "top_speed": {
-    "value": 6.5,
-    "unit": "m/s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "typical_run": {
-    "value": 19,
-    "unit": "m, mean high-speed run",
-    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
-   },
-   "times_typical": {
-    "value": 0,
-    "unit": "times a typical run",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "where": "in the opponents' half",
-   "ball": "the opponents"
-  },
-  "sources": [
-   "Fang2024",
-   "DiSalvo2007",
-   "Fang2024, Table 2; DiSalvo2007, p.224",
-   "signals.players[].series.speed (1-s mean)"
-  ]
- },
- {
   "kind": "top_speed",
   "label": "Top speed",
-  "value": 5.57,
+  "value": 6.26,
   "player": {
-   "id": "A11",
-   "name": "Nico Jorrlowe",
-   "shirt": 9,
-   "team": "away",
-   "position": "CF"
-  },
-  "period": 1,
-  "t": 22.0,
-  "clock": "0:22",
-  "video_s": 22.0,
-  "start_video_s": 22.0,
-  "end_video_s": 23.0,
-  "segments": [
-   [
-    22.0,
-    23.0
-   ]
-  ],
-  "caption": "Nico Jorrlowe hits 5.6 m/s (20 km/h); the average match top speed for a striker is about 8.3 m/s.",
-  "facts": {
-   "top_speed": {
-    "value": 5.6,
-    "unit": "m/s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "top_speed_kmh": {
-    "value": 20,
-    "unit": "km/h",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "published_match_top_speed_for_position": {
-    "value": 8.3,
-    "unit": "m/s, mean match top speed for his position",
-    "source": "SilvaH2025, Table 1"
-   }
-  },
-  "sources": [
-   "SilvaH2025",
-   "SilvaH2025, Table 1",
-   "signals.players[].series.speed (1-s mean)"
-  ]
- },
- {
-  "kind": "longest_run",
-  "label": "Longest run",
-  "value": 5.57,
-  "player": {
-   "id": "A11",
-   "name": "Nico Jorrlowe",
-   "shirt": 9,
-   "team": "away",
-   "position": "CF"
-  },
-  "period": 1,
-  "t": 22.0,
-  "clock": "0:22",
-  "video_s": 22.0,
-  "start_video_s": 22.0,
-  "end_video_s": 23.0,
-  "segments": [
-   [
-    22.0,
-    23.0
-   ]
-  ],
-  "caption": "Nico Jorrlowe runs 6 m above 5.5 m/s (19.8 km/h) in one go in the opponents' half while the opponents had the ball, about 0 times a typical high-speed run.",
-  "facts": {
-   "metres": {
-    "value": 6,
-    "unit": "m above 5.5 m/s in one run",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds": {
-    "value": 1,
-    "unit": "s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "top_speed": {
-    "value": 5.6,
-    "unit": "m/s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "typical_run": {
-    "value": 19,
-    "unit": "m, mean high-speed run",
-    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
-   },
-   "times_typical": {
-    "value": 0,
-    "unit": "times a typical run",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "where": "in the opponents' half",
-   "ball": "the opponents"
-  },
-  "sources": [
-   "Fang2024",
-   "DiSalvo2007",
-   "Fang2024, Table 2; DiSalvo2007, p.224",
-   "signals.players[].series.speed (1-s mean)"
-  ]
- },
- {
-  "kind": "top_speed",
-  "label": "Top speed",
-  "value": 6.93,
-  "player": {
-   "id": "H04",
-   "name": "Marco Tarvsall",
-   "shirt": 3,
-   "team": "home",
-   "position": "FB"
-  },
-  "period": 1,
-  "t": 52.0,
-  "clock": "0:52",
-  "video_s": 52.0,
-  "start_video_s": 51.0,
-  "end_video_s": 53.0,
-  "segments": [
-   [
-    51.0,
-    53.0
-   ]
-  ],
-  "caption": "Marco Tarvsall hits 6.9 m/s (25 km/h); the average match top speed for a full-back is about 8.8 m/s.",
-  "facts": {
-   "top_speed": {
-    "value": 6.9,
-    "unit": "m/s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "top_speed_kmh": {
-    "value": 25,
-    "unit": "km/h",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "published_match_top_speed_for_position": {
-    "value": 8.8,
-    "unit": "m/s, mean match top speed for his position",
-    "source": "SilvaH2025, Table 1"
-   }
-  },
-  "sources": [
-   "SilvaH2025",
-   "SilvaH2025, Table 1",
-   "signals.players[].series.speed (1-s mean)"
-  ]
- },
- {
-  "kind": "top_speed",
-  "label": "Top speed",
-  "value": 5.91,
-  "player": {
-   "id": "A10",
-   "name": "Kofi Morrsall",
-   "shirt": 7,
+   "id": "A09",
+   "name": "Ivan Dorrlowe",
+   "shirt": 11,
    "team": "away",
    "position": "WM"
   },
   "period": 1,
-  "t": 52.0,
-  "clock": "0:52",
-  "video_s": 52.0,
-  "start_video_s": 52.0,
-  "end_video_s": 53.0,
+  "t": 84.0,
+  "clock": "1:24",
+  "video_s": 84.0,
+  "start_video_s": 84.0,
+  "end_video_s": 85.0,
   "segments": [
    [
-    52.0,
-    53.0
+    84.0,
+    85.0
    ]
   ],
-  "caption": "Kofi Morrsall hits 5.9 m/s (21 km/h); the average match top speed for a wide midfielder is about 8.5 m/s.",
+  "caption": "Ivan Dorrlowe hits 6.3 m/s (23 km/h); the average match top speed for a wide midfielder is about 8.5 m/s.",
   "facts": {
    "top_speed": {
-    "value": 5.9,
+    "value": 6.3,
     "unit": "m/s",
     "source": "signals.players[].series.speed (1-s mean)"
    },
    "top_speed_kmh": {
-    "value": 21,
+    "value": 23,
     "unit": "km/h",
     "source": "signals.players[].series.speed (1-s mean)"
    },
@@ -417,40 +370,147 @@
  {
   "kind": "longest_run",
   "label": "Longest run",
-  "value": 13.65,
+  "value": 6.26,
   "player": {
-   "id": "H04",
-   "name": "Marco Tarvsall",
-   "shirt": 3,
-   "team": "home",
-   "position": "FB"
+   "id": "A09",
+   "name": "Ivan Dorrlowe",
+   "shirt": 11,
+   "team": "away",
+   "position": "WM"
   },
   "period": 1,
-  "t": 52.0,
-  "clock": "0:52",
-  "video_s": 52.0,
-  "start_video_s": 51.0,
-  "end_video_s": 53.0,
+  "t": 84.0,
+  "clock": "1:24",
+  "video_s": 84.0,
+  "start_video_s": 84.0,
+  "end_video_s": 85.0,
   "segments": [
    [
-    51.0,
-    53.0
+    84.0,
+    85.0
    ]
   ],
-  "caption": "Marco Tarvsall runs 14 m above 5.5 m/s (19.8 km/h) in one go in the opponents' half with his team on the ball, about 1 times a typical high-speed run.",
+  "caption": "Ivan Dorrlowe runs 6 m above 5.5 m/s (19.8 km/h) in one go in the opponents' half with his team on the ball, about 0 times a typical high-speed run.",
   "facts": {
    "metres": {
-    "value": 14,
+    "value": 6,
     "unit": "m above 5.5 m/s in one run",
     "source": "signals.players[].series.speed (1-s mean)"
    },
    "seconds": {
-    "value": 2,
+    "value": 1,
     "unit": "s",
     "source": "signals.players[].series.speed (1-s mean)"
    },
    "top_speed": {
-    "value": 6.9,
+    "value": 6.3,
+    "unit": "m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "typical_run": {
+    "value": 19,
+    "unit": "m, mean high-speed run",
+    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
+   },
+   "times_typical": {
+    "value": 0,
+    "unit": "times a typical run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "where": "in the opponents' half",
+   "ball": "his team"
+  },
+  "sources": [
+   "Fang2024",
+   "DiSalvo2007",
+   "Fang2024, Table 2; DiSalvo2007, p.224",
+   "signals.players[].series.speed (1-s mean)"
+  ]
+ },
+ {
+  "kind": "top_speed",
+  "label": "Top speed",
+  "value": 7.84,
+  "player": {
+   "id": "A04",
+   "name": "Luca Bremock",
+   "shirt": 3,
+   "team": "away",
+   "position": "FB"
+  },
+  "period": 1,
+  "t": 94.0,
+  "clock": "1:34",
+  "video_s": 94.0,
+  "start_video_s": 92.0,
+  "end_video_s": 96.0,
+  "segments": [
+   [
+    92.0,
+    96.0
+   ]
+  ],
+  "caption": "Luca Bremock hits 7.8 m/s (28 km/h); the average match top speed for a full-back is about 8.8 m/s.",
+  "facts": {
+   "top_speed": {
+    "value": 7.8,
+    "unit": "m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "top_speed_kmh": {
+    "value": 28,
+    "unit": "km/h",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "published_match_top_speed_for_position": {
+    "value": 8.8,
+    "unit": "m/s, mean match top speed for his position",
+    "source": "SilvaH2025, Table 1"
+   }
+  },
+  "sources": [
+   "SilvaH2025",
+   "SilvaH2025, Table 1",
+   "signals.players[].series.speed (1-s mean)"
+  ]
+ },
+ {
+  "kind": "longest_run",
+  "label": "Longest run",
+  "value": 28.17,
+  "player": {
+   "id": "A04",
+   "name": "Luca Bremock",
+   "shirt": 3,
+   "team": "away",
+   "position": "FB"
+  },
+  "period": 1,
+  "t": 95.0,
+  "clock": "1:35",
+  "video_s": 95.0,
+  "start_video_s": 92.0,
+  "end_video_s": 96.0,
+  "segments": [
+   [
+    92.0,
+    96.0
+   ]
+  ],
+  "caption": "Luca Bremock runs 28 m above 5.5 m/s (19.8 km/h) in one go in the opponents' half with his team on the ball, about 1 times a typical high-speed run.",
+  "facts": {
+   "metres": {
+    "value": 28,
+    "unit": "m above 5.5 m/s in one run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds": {
+    "value": 4,
+    "unit": "s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "top_speed": {
+    "value": 7.8,
     "unit": "m/s",
     "source": "signals.players[].series.speed (1-s mean)"
    },
@@ -475,9 +535,9 @@
   ]
  },
  {
-  "kind": "longest_run",
-  "label": "Longest run",
-  "value": 5.91,
+  "kind": "top_speed",
+  "label": "Top speed",
+  "value": 6.44,
   "player": {
    "id": "A10",
    "name": "Kofi Morrsall",
@@ -486,91 +546,31 @@
    "position": "WM"
   },
   "period": 1,
-  "t": 52.0,
-  "clock": "0:52",
-  "video_s": 52.0,
-  "start_video_s": 52.0,
-  "end_video_s": 53.0,
+  "t": 97.0,
+  "clock": "1:37",
+  "video_s": 97.0,
+  "start_video_s": 97.0,
+  "end_video_s": 99.0,
   "segments": [
    [
-    52.0,
-    53.0
+    97.0,
+    99.0
    ]
   ],
-  "caption": "Kofi Morrsall runs 6 m above 5.5 m/s (19.8 km/h) in one go in his own half with his team on the ball, about 0 times a typical high-speed run.",
-  "facts": {
-   "metres": {
-    "value": 6,
-    "unit": "m above 5.5 m/s in one run",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds": {
-    "value": 1,
-    "unit": "s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "top_speed": {
-    "value": 5.9,
-    "unit": "m/s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "typical_run": {
-    "value": 19,
-    "unit": "m, mean high-speed run",
-    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
-   },
-   "times_typical": {
-    "value": 0,
-    "unit": "times a typical run",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "where": "in his own half",
-   "ball": "his team"
-  },
-  "sources": [
-   "Fang2024",
-   "DiSalvo2007",
-   "Fang2024, Table 2; DiSalvo2007, p.224",
-   "signals.players[].series.speed (1-s mean)"
-  ]
- },
- {
-  "kind": "top_speed",
-  "label": "Top speed",
-  "value": 7.61,
-  "player": {
-   "id": "H07",
-   "name": "Ben Morrbury",
-   "shirt": 8,
-   "team": "home",
-   "position": "CM"
-  },
-  "period": 1,
-  "t": 72.0,
-  "clock": "1:12",
-  "video_s": 72.0,
-  "start_video_s": 71.0,
-  "end_video_s": 73.0,
-  "segments": [
-   [
-    71.0,
-    73.0
-   ]
-  ],
-  "caption": "Ben Morrbury hits 7.6 m/s (27 km/h); the average match top speed for a central midfielder is about 8.4 m/s.",
+  "caption": "Kofi Morrsall hits 6.4 m/s (23 km/h); the average match top speed for a wide midfielder is about 8.5 m/s.",
   "facts": {
    "top_speed": {
-    "value": 7.6,
+    "value": 6.4,
     "unit": "m/s",
     "source": "signals.players[].series.speed (1-s mean)"
    },
    "top_speed_kmh": {
-    "value": 27,
+    "value": 23,
     "unit": "km/h",
     "source": "signals.players[].series.speed (1-s mean)"
    },
    "published_match_top_speed_for_position": {
-    "value": 8.4,
+    "value": 8.5,
     "unit": "m/s, mean match top speed for his position",
     "source": "SilvaH2025, Table 1"
    }
@@ -584,90 +584,30 @@
  {
   "kind": "longest_run",
   "label": "Longest run",
-  "value": 14.28,
+  "value": 12.33,
   "player": {
-   "id": "H07",
-   "name": "Ben Morrbury",
-   "shirt": 8,
-   "team": "home",
-   "position": "CM"
-  },
-  "period": 1,
-  "t": 72.0,
-  "clock": "1:12",
-  "video_s": 72.0,
-  "start_video_s": 71.0,
-  "end_video_s": 73.0,
-  "segments": [
-   [
-    71.0,
-    73.0
-   ]
-  ],
-  "caption": "Ben Morrbury runs 14 m above 5.5 m/s (19.8 km/h) in one go from his own half into the opponents' half while the opponents had the ball, about 1 times a typical high-speed run.",
-  "facts": {
-   "metres": {
-    "value": 14,
-    "unit": "m above 5.5 m/s in one run",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds": {
-    "value": 2,
-    "unit": "s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "top_speed": {
-    "value": 7.6,
-    "unit": "m/s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "typical_run": {
-    "value": 19,
-    "unit": "m, mean high-speed run",
-    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
-   },
-   "times_typical": {
-    "value": 1,
-    "unit": "times a typical run",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "where": "from his own half into the opponents' half",
-   "ball": "the opponents"
-  },
-  "sources": [
-   "Fang2024",
-   "DiSalvo2007",
-   "Fang2024, Table 2; DiSalvo2007, p.224",
-   "signals.players[].series.speed (1-s mean)"
-  ]
- },
- {
-  "kind": "longest_run",
-  "label": "Longest run",
-  "value": 12.79,
-  "player": {
-   "id": "A09",
-   "name": "Ivan Dorrlowe",
-   "shirt": 11,
+   "id": "A10",
+   "name": "Kofi Morrsall",
+   "shirt": 7,
    "team": "away",
    "position": "WM"
   },
   "period": 1,
-  "t": 73.0,
-  "clock": "1:13",
-  "video_s": 73.0,
-  "start_video_s": 72.0,
-  "end_video_s": 74.0,
+  "t": 98.0,
+  "clock": "1:38",
+  "video_s": 98.0,
+  "start_video_s": 97.0,
+  "end_video_s": 99.0,
   "segments": [
    [
-    72.0,
-    74.0
+    97.0,
+    99.0
    ]
   ],
-  "caption": "Ivan Dorrlowe runs 13 m above 5.5 m/s (19.8 km/h) in one go in the opponents' half with his team on the ball, about 1 times a typical high-speed run.",
+  "caption": "Kofi Morrsall runs 12 m above 5.5 m/s (19.8 km/h) in one go in the opponents' half with his team on the ball, about 1 times a typical high-speed run.",
   "facts": {
    "metres": {
-    "value": 13,
+    "value": 12,
     "unit": "m above 5.5 m/s in one run",
     "source": "signals.players[].series.speed (1-s mean)"
    },
@@ -704,27 +644,27 @@
  {
   "kind": "top_speed",
   "label": "Top speed",
-  "value": 6.96,
+  "value": 7.03,
   "player": {
-   "id": "H03",
-   "name": "Yusuf Cadock",
-   "shirt": 4,
+   "id": "H07",
+   "name": "Ben Morrbury",
+   "shirt": 8,
    "team": "home",
-   "position": "CB"
+   "position": "CM"
   },
   "period": 1,
-  "t": 75.0,
-  "clock": "1:15",
-  "video_s": 75.0,
-  "start_video_s": 75.0,
-  "end_video_s": 77.0,
+  "t": 103.0,
+  "clock": "1:43",
+  "video_s": 103.0,
+  "start_video_s": 102.0,
+  "end_video_s": 104.0,
   "segments": [
    [
-    75.0,
-    77.0
+    102.0,
+    104.0
    ]
   ],
-  "caption": "Yusuf Cadock hits 7.0 m/s (25 km/h); the average match top speed for a centre-back is about 8.1 m/s.",
+  "caption": "Ben Morrbury hits 7.0 m/s (25 km/h); the average match top speed for a central midfielder is about 8.4 m/s.",
   "facts": {
    "top_speed": {
     "value": 7.0,
@@ -733,6 +673,113 @@
    },
    "top_speed_kmh": {
     "value": 25,
+    "unit": "km/h",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "published_match_top_speed_for_position": {
+    "value": 8.4,
+    "unit": "m/s, mean match top speed for his position",
+    "source": "SilvaH2025, Table 1"
+   }
+  },
+  "sources": [
+   "SilvaH2025",
+   "SilvaH2025, Table 1",
+   "signals.players[].series.speed (1-s mean)"
+  ]
+ },
+ {
+  "kind": "longest_run",
+  "label": "Longest run",
+  "value": 13.23,
+  "player": {
+   "id": "H07",
+   "name": "Ben Morrbury",
+   "shirt": 8,
+   "team": "home",
+   "position": "CM"
+  },
+  "period": 1,
+  "t": 103.0,
+  "clock": "1:43",
+  "video_s": 103.0,
+  "start_video_s": 102.0,
+  "end_video_s": 104.0,
+  "segments": [
+   [
+    102.0,
+    104.0
+   ]
+  ],
+  "caption": "Ben Morrbury runs 13 m above 5.5 m/s (19.8 km/h) in one go in his own half with his team on the ball, about 1 times a typical high-speed run.",
+  "facts": {
+   "metres": {
+    "value": 13,
+    "unit": "m above 5.5 m/s in one run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds": {
+    "value": 2,
+    "unit": "s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "top_speed": {
+    "value": 7.0,
+    "unit": "m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "typical_run": {
+    "value": 19,
+    "unit": "m, mean high-speed run",
+    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
+   },
+   "times_typical": {
+    "value": 1,
+    "unit": "times a typical run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "where": "in his own half",
+   "ball": "his team"
+  },
+  "sources": [
+   "Fang2024",
+   "DiSalvo2007",
+   "Fang2024, Table 2; DiSalvo2007, p.224",
+   "signals.players[].series.speed (1-s mean)"
+  ]
+ },
+ {
+  "kind": "top_speed",
+  "label": "Top speed",
+  "value": 6.62,
+  "player": {
+   "id": "H03",
+   "name": "Yusuf Cadock",
+   "shirt": 4,
+   "team": "home",
+   "position": "CB"
+  },
+  "period": 1,
+  "t": 115.0,
+  "clock": "1:55",
+  "video_s": 115.0,
+  "start_video_s": 115.0,
+  "end_video_s": 116.0,
+  "segments": [
+   [
+    115.0,
+    116.0
+   ]
+  ],
+  "caption": "Yusuf Cadock hits 6.6 m/s (24 km/h); the average match top speed for a centre-back is about 8.1 m/s.",
+  "facts": {
+   "top_speed": {
+    "value": 6.6,
+    "unit": "m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "top_speed_kmh": {
+    "value": 24,
     "unit": "km/h",
     "source": "signals.players[].series.speed (1-s mean)"
    },
@@ -751,77 +798,30 @@
  {
   "kind": "top_speed",
   "label": "Top speed",
-  "value": 7.16,
+  "value": 7.06,
   "player": {
-   "id": "H05",
-   "name": "Dario Fennock",
-   "shirt": 2,
+   "id": "H07",
+   "name": "Ben Morrbury",
+   "shirt": 8,
    "team": "home",
-   "position": "FB"
+   "position": "CM"
   },
   "period": 1,
-  "t": 75.0,
-  "clock": "1:15",
-  "video_s": 75.0,
-  "start_video_s": 74.0,
-  "end_video_s": 77.0,
+  "t": 115.0,
+  "clock": "1:55",
+  "video_s": 115.0,
+  "start_video_s": 115.0,
+  "end_video_s": 117.0,
   "segments": [
    [
-    74.0,
-    77.0
+    115.0,
+    117.0
    ]
   ],
-  "caption": "Dario Fennock hits 7.2 m/s (26 km/h); the average match top speed for a full-back is about 8.8 m/s.",
+  "caption": "Ben Morrbury hits 7.1 m/s (25 km/h); the average match top speed for a central midfielder is about 8.4 m/s.",
   "facts": {
    "top_speed": {
-    "value": 7.2,
-    "unit": "m/s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "top_speed_kmh": {
-    "value": 26,
-    "unit": "km/h",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "published_match_top_speed_for_position": {
-    "value": 8.8,
-    "unit": "m/s, mean match top speed for his position",
-    "source": "SilvaH2025, Table 1"
-   }
-  },
-  "sources": [
-   "SilvaH2025",
-   "SilvaH2025, Table 1",
-   "signals.players[].series.speed (1-s mean)"
-  ]
- },
- {
-  "kind": "top_speed",
-  "label": "Top speed",
-  "value": 6.98,
-  "player": {
-   "id": "A09",
-   "name": "Ivan Dorrlowe",
-   "shirt": 11,
-   "team": "away",
-   "position": "WM"
-  },
-  "period": 1,
-  "t": 75.0,
-  "clock": "1:15",
-  "video_s": 75.0,
-  "start_video_s": 75.0,
-  "end_video_s": 77.0,
-  "segments": [
-   [
-    75.0,
-    77.0
-   ]
-  ],
-  "caption": "Ivan Dorrlowe hits 7.0 m/s (25 km/h); the average match top speed for a wide midfielder is about 8.5 m/s.",
-  "facts": {
-   "top_speed": {
-    "value": 7.0,
+    "value": 7.1,
     "unit": "m/s",
     "source": "signals.players[].series.speed (1-s mean)"
    },
@@ -831,7 +831,7 @@
     "source": "signals.players[].series.speed (1-s mean)"
    },
    "published_match_top_speed_for_position": {
-    "value": 8.5,
+    "value": 8.4,
     "unit": "m/s, mean match top speed for his position",
     "source": "SilvaH2025, Table 1"
    }
@@ -843,32 +843,259 @@
   ]
  },
  {
-  "kind": "top_speed",
-  "label": "Top speed",
-  "value": 7.55,
+  "kind": "longest_run",
+  "label": "Longest run",
+  "value": 13.33,
   "player": {
-   "id": "A10",
-   "name": "Kofi Morrsall",
-   "shirt": 7,
+   "id": "H07",
+   "name": "Ben Morrbury",
+   "shirt": 8,
+   "team": "home",
+   "position": "CM"
+  },
+  "period": 1,
+  "t": 116.0,
+  "clock": "1:56",
+  "video_s": 116.0,
+  "start_video_s": 115.0,
+  "end_video_s": 117.0,
+  "segments": [
+   [
+    115.0,
+    117.0
+   ]
+  ],
+  "caption": "Ben Morrbury runs 13 m above 5.5 m/s (19.8 km/h) in one go in his own half while the opponents had the ball, about 1 times a typical high-speed run.",
+  "facts": {
+   "metres": {
+    "value": 13,
+    "unit": "m above 5.5 m/s in one run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds": {
+    "value": 2,
+    "unit": "s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "top_speed": {
+    "value": 7.1,
+    "unit": "m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "typical_run": {
+    "value": 19,
+    "unit": "m, mean high-speed run",
+    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
+   },
+   "times_typical": {
+    "value": 1,
+    "unit": "times a typical run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "where": "in his own half",
+   "ball": "the opponents"
+  },
+  "sources": [
+   "Fang2024",
+   "DiSalvo2007",
+   "Fang2024, Table 2; DiSalvo2007, p.224",
+   "signals.players[].series.speed (1-s mean)"
+  ]
+ },
+ {
+  "kind": "longest_run",
+  "label": "Longest run",
+  "value": 12.61,
+  "player": {
+   "id": "A09",
+   "name": "Ivan Dorrlowe",
+   "shirt": 11,
    "team": "away",
    "position": "WM"
   },
   "period": 1,
-  "t": 75.0,
-  "clock": "1:15",
-  "video_s": 75.0,
-  "start_video_s": 71.0,
-  "end_video_s": 76.0,
+  "t": 116.0,
+  "clock": "1:56",
+  "video_s": 116.0,
+  "start_video_s": 115.0,
+  "end_video_s": 117.0,
   "segments": [
    [
-    71.0,
-    76.0
+    115.0,
+    117.0
    ]
   ],
-  "caption": "Kofi Morrsall hits 7.5 m/s (27 km/h); the average match top speed for a wide midfielder is about 8.5 m/s.",
+  "caption": "Ivan Dorrlowe runs 13 m above 5.5 m/s (19.8 km/h) in one go in the opponents' half with his team on the ball, about 1 times a typical high-speed run.",
+  "facts": {
+   "metres": {
+    "value": 13,
+    "unit": "m above 5.5 m/s in one run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds": {
+    "value": 2,
+    "unit": "s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "top_speed": {
+    "value": 6.6,
+    "unit": "m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "typical_run": {
+    "value": 19,
+    "unit": "m, mean high-speed run",
+    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
+   },
+   "times_typical": {
+    "value": 1,
+    "unit": "times a typical run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "where": "in the opponents' half",
+   "ball": "his team"
+  },
+  "sources": [
+   "Fang2024",
+   "DiSalvo2007",
+   "Fang2024, Table 2; DiSalvo2007, p.224",
+   "signals.players[].series.speed (1-s mean)"
+  ]
+ },
+ {
+  "kind": "top_speed",
+  "label": "Top speed",
+  "value": 7.08,
+  "player": {
+   "id": "A07",
+   "name": "Hugo Raskver",
+   "shirt": 8,
+   "team": "away",
+   "position": "CM"
+  },
+  "period": 1,
+  "t": 131.0,
+  "clock": "2:11",
+  "video_s": 131.0,
+  "start_video_s": 131.0,
+  "end_video_s": 132.0,
+  "segments": [
+   [
+    131.0,
+    132.0
+   ]
+  ],
+  "caption": "Hugo Raskver hits 7.1 m/s (25 km/h); the average match top speed for a central midfielder is about 8.4 m/s.",
   "facts": {
    "top_speed": {
-    "value": 7.5,
+    "value": 7.1,
+    "unit": "m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "top_speed_kmh": {
+    "value": 25,
+    "unit": "km/h",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "published_match_top_speed_for_position": {
+    "value": 8.4,
+    "unit": "m/s, mean match top speed for his position",
+    "source": "SilvaH2025, Table 1"
+   }
+  },
+  "sources": [
+   "SilvaH2025",
+   "SilvaH2025, Table 1",
+   "signals.players[].series.speed (1-s mean)"
+  ]
+ },
+ {
+  "kind": "longest_run",
+  "label": "Longest run",
+  "value": 12.89,
+  "player": {
+   "id": "H08",
+   "name": "Felix Raskmere",
+   "shirt": 10,
+   "team": "home",
+   "position": "AM"
+  },
+  "period": 1,
+  "t": 131.0,
+  "clock": "2:11",
+  "video_s": 131.0,
+  "start_video_s": 130.0,
+  "end_video_s": 132.0,
+  "segments": [
+   [
+    130.0,
+    132.0
+   ]
+  ],
+  "caption": "Felix Raskmere runs 13 m above 5.5 m/s (19.8 km/h) in one go in the opponents' half with his team on the ball, about 1 times a typical high-speed run.",
+  "facts": {
+   "metres": {
+    "value": 13,
+    "unit": "m above 5.5 m/s in one run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds": {
+    "value": 2,
+    "unit": "s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "top_speed": {
+    "value": 6.6,
+    "unit": "m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "typical_run": {
+    "value": 19,
+    "unit": "m, mean high-speed run",
+    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
+   },
+   "times_typical": {
+    "value": 1,
+    "unit": "times a typical run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "where": "in the opponents' half",
+   "ball": "his team"
+  },
+  "sources": [
+   "Fang2024",
+   "DiSalvo2007",
+   "Fang2024, Table 2; DiSalvo2007, p.224",
+   "signals.players[].series.speed (1-s mean)"
+  ]
+ },
+ {
+  "kind": "top_speed",
+  "label": "Top speed",
+  "value": 7.42,
+  "player": {
+   "id": "H10",
+   "name": "Eli Dorrcott",
+   "shirt": 7,
+   "team": "home",
+   "position": "WM"
+  },
+  "period": 1,
+  "t": 132.0,
+  "clock": "2:12",
+  "video_s": 132.0,
+  "start_video_s": 131.0,
+  "end_video_s": 134.0,
+  "segments": [
+   [
+    131.0,
+    134.0
+   ]
+  ],
+  "caption": "Eli Dorrcott hits 7.4 m/s (27 km/h); the average match top speed for a wide midfielder is about 8.5 m/s.",
+  "facts": {
+   "top_speed": {
+    "value": 7.4,
     "unit": "m/s",
     "source": "signals.players[].series.speed (1-s mean)"
    },
@@ -892,40 +1119,40 @@
  {
   "kind": "longest_run",
   "label": "Longest run",
-  "value": 35.44,
+  "value": 20.59,
   "player": {
-   "id": "A10",
-   "name": "Kofi Morrsall",
+   "id": "H10",
+   "name": "Eli Dorrcott",
    "shirt": 7,
-   "team": "away",
+   "team": "home",
    "position": "WM"
   },
   "period": 1,
-  "t": 75.0,
-  "clock": "1:15",
-  "video_s": 75.0,
-  "start_video_s": 71.0,
-  "end_video_s": 76.0,
+  "t": 133.0,
+  "clock": "2:13",
+  "video_s": 133.0,
+  "start_video_s": 131.0,
+  "end_video_s": 134.0,
   "segments": [
    [
-    71.0,
-    76.0
+    131.0,
+    134.0
    ]
   ],
-  "caption": "Kofi Morrsall runs 35 m above 5.5 m/s (19.8 km/h) in one go from his own half into the opponents' half with his team on the ball, about 2 times a typical high-speed run.",
+  "caption": "Eli Dorrcott runs 21 m above 5.5 m/s (19.8 km/h) in one go in the opponents' half with his team on the ball, about 1 times a typical high-speed run.",
   "facts": {
    "metres": {
-    "value": 35,
+    "value": 21,
     "unit": "m above 5.5 m/s in one run",
     "source": "signals.players[].series.speed (1-s mean)"
    },
    "seconds": {
-    "value": 5,
+    "value": 3,
     "unit": "s",
     "source": "signals.players[].series.speed (1-s mean)"
    },
    "top_speed": {
-    "value": 7.5,
+    "value": 7.4,
     "unit": "m/s",
     "source": "signals.players[].series.speed (1-s mean)"
    },
@@ -935,11 +1162,11 @@
     "source": "Fang2024, Table 2; DiSalvo2007, p.224"
    },
    "times_typical": {
-    "value": 2,
+    "value": 1,
     "unit": "times a typical run",
     "source": "signals.players[].series.speed (1-s mean)"
    },
-   "where": "from his own half into the opponents' half",
+   "where": "in the opponents' half",
    "ball": "his team"
   },
   "sources": [
@@ -950,138 +1177,32 @@
   ]
  },
  {
-  "kind": "top_speed",
-  "label": "Top speed",
-  "value": 7.72,
-  "player": {
-   "id": "H02",
-   "name": "Hugo Elmock",
-   "shirt": 5,
-   "team": "home",
-   "position": "CB"
-  },
-  "period": 1,
-  "t": 76.0,
-  "clock": "1:16",
-  "video_s": 76.0,
-  "start_video_s": 75.0,
-  "end_video_s": 77.0,
-  "segments": [
-   [
-    75.0,
-    77.0
-   ]
-  ],
-  "caption": "Hugo Elmock hits 7.7 m/s (28 km/h); the average match top speed for a centre-back is about 8.1 m/s.",
-  "facts": {
-   "top_speed": {
-    "value": 7.7,
-    "unit": "m/s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "top_speed_kmh": {
-    "value": 28,
-    "unit": "km/h",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "published_match_top_speed_for_position": {
-    "value": 8.1,
-    "unit": "m/s, mean match top speed for his position",
-    "source": "SilvaH2025, Table 1"
-   }
-  },
-  "sources": [
-   "SilvaH2025",
-   "SilvaH2025, Table 1",
-   "signals.players[].series.speed (1-s mean)"
-  ]
- },
- {
   "kind": "longest_run",
   "label": "Longest run",
-  "value": 14.51,
+  "value": 17.62,
   "player": {
-   "id": "H02",
-   "name": "Hugo Elmock",
-   "shirt": 5,
-   "team": "home",
-   "position": "CB"
+   "id": "A11",
+   "name": "Nico Jorrlowe",
+   "shirt": 9,
+   "team": "away",
+   "position": "CF"
   },
   "period": 1,
-  "t": 76.0,
-  "clock": "1:16",
-  "video_s": 76.0,
-  "start_video_s": 75.0,
-  "end_video_s": 77.0,
+  "t": 140.0,
+  "clock": "2:20",
+  "video_s": 140.0,
+  "start_video_s": 138.0,
+  "end_video_s": 141.0,
   "segments": [
    [
-    75.0,
-    77.0
+    138.0,
+    141.0
    ]
   ],
-  "caption": "Hugo Elmock runs 15 m above 5.5 m/s (19.8 km/h) in one go in his own half, about 1 times a typical high-speed run.",
+  "caption": "Nico Jorrlowe runs 18 m above 5.5 m/s (19.8 km/h) in one go back towards his own goal while the opponents had the ball, about 1 times a typical high-speed run.",
   "facts": {
    "metres": {
-    "value": 15,
-    "unit": "m above 5.5 m/s in one run",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds": {
-    "value": 2,
-    "unit": "s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "top_speed": {
-    "value": 7.7,
-    "unit": "m/s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "typical_run": {
-    "value": 19,
-    "unit": "m, mean high-speed run",
-    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
-   },
-   "times_typical": {
-    "value": 1,
-    "unit": "times a typical run",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "where": "in his own half"
-  },
-  "sources": [
-   "Fang2024",
-   "DiSalvo2007",
-   "Fang2024, Table 2; DiSalvo2007, p.224",
-   "signals.players[].series.speed (1-s mean)"
-  ]
- },
- {
-  "kind": "longest_run",
-  "label": "Longest run",
-  "value": 20.11,
-  "player": {
-   "id": "H05",
-   "name": "Dario Fennock",
-   "shirt": 2,
-   "team": "home",
-   "position": "FB"
-  },
-  "period": 1,
-  "t": 76.0,
-  "clock": "1:16",
-  "video_s": 76.0,
-  "start_video_s": 74.0,
-  "end_video_s": 77.0,
-  "segments": [
-   [
-    74.0,
-    77.0
-   ]
-  ],
-  "caption": "Dario Fennock runs 20 m above 5.5 m/s (19.8 km/h) in one go back towards his own goal, about 1 times a typical high-speed run.",
-  "facts": {
-   "metres": {
-    "value": 20,
+    "value": 18,
     "unit": "m above 5.5 m/s in one run",
     "source": "signals.players[].series.speed (1-s mean)"
    },
@@ -1091,7 +1212,7 @@
     "source": "signals.players[].series.speed (1-s mean)"
    },
    "top_speed": {
-    "value": 7.2,
+    "value": 6.1,
     "unit": "m/s",
     "source": "signals.players[].series.speed (1-s mean)"
    },
@@ -1105,7 +1226,8 @@
     "unit": "times a typical run",
     "source": "signals.players[].series.speed (1-s mean)"
    },
-   "where": "back towards his own goal"
+   "where": "back towards his own goal",
+   "ball": "the opponents"
   },
   "sources": [
    "Fang2024",
@@ -1117,27 +1239,27 @@
  {
   "kind": "busiest_minute",
   "label": "Busiest minute",
-  "value": 42.2,
+  "value": 41.6,
   "player": {
-   "id": "A10",
-   "name": "Kofi Morrsall",
-   "shirt": 7,
-   "team": "away",
-   "position": "WM"
+   "id": "H08",
+   "name": "Felix Raskmere",
+   "shirt": 10,
+   "team": "home",
+   "position": "AM"
   },
   "period": 1,
-  "t": 76.0,
-  "clock": "1:16",
-  "video_s": 76.0,
-  "start_video_s": 17.0,
-  "end_video_s": 77.0,
+  "t": 148.0,
+  "clock": "2:28",
+  "video_s": 148.0,
+  "start_video_s": 89.0,
+  "end_video_s": 149.0,
   "segments": [
    [
-    17.0,
-    77.0
+    89.0,
+    149.0
    ]
   ],
-  "caption": "Kofi Morrsall covers 42 m above 5.5 m/s (19.8 km/h) in one minute, against a published average best minute of 62 m.",
+  "caption": "Felix Raskmere covers 42 m above 5.5 m/s (19.8 km/h) in one minute, against a published average best minute of 62 m.",
   "facts": {
    "metres_in_one_minute": {
     "value": 42,
@@ -1157,9 +1279,9 @@
   ]
  },
  {
-  "kind": "back_to_back",
-  "label": "Back-to-back runs",
-  "value": 4.0,
+  "kind": "top_speed",
+  "label": "Top speed",
+  "value": 8.85,
   "player": {
    "id": "A09",
    "name": "Ivan Dorrlowe",
@@ -1168,150 +1290,68 @@
    "position": "WM"
   },
   "period": 1,
-  "t": 89.0,
-  "clock": "1:29",
-  "video_s": 89.0,
-  "start_video_s": 72.0,
-  "end_video_s": 90.0,
+  "t": 149.0,
+  "clock": "2:29",
+  "video_s": 149.0,
+  "start_video_s": 147.0,
+  "end_video_s": 151.0,
   "segments": [
    [
-    72.0,
-    74.0
-   ],
-   [
-    75.0,
-    77.0
-   ],
-   [
-    84.0,
-    85.0
-   ],
-   [
-    89.0,
-    90.0
+    147.0,
+    151.0
    ]
   ],
-  "caption": "Ivan Dorrlowe makes 4 high-speed runs in 18 seconds, never more than 7 seconds apart; a wide midfielder usually gets about 51 seconds between them.",
+  "caption": "Ivan Dorrlowe hits 8.8 m/s (32 km/h); the average match top speed for a wide midfielder is about 8.5 m/s.",
   "facts": {
-   "runs": {
-    "value": 4,
-    "unit": "high-speed runs",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds": {
-    "value": 18,
-    "unit": "s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "metres": {
-    "value": 38,
-    "unit": "m above 5.5 m/s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "longest_gap": {
-    "value": 7,
-    "unit": "s between runs",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "usual_gap_for_position": {
-    "value": 51,
-    "unit": "s, usual time between high-speed runs for his position",
-    "source": "Bradley2009, Table I"
-   }
-  },
-  "sources": [
-   "Bradley2009",
-   "Bradley2009, Table I",
-   "signals.players[].series.speed (1-s mean)"
-  ]
- },
- {
-  "kind": "longest_run",
-  "label": "Longest run",
-  "value": 19.56,
-  "player": {
-   "id": "H08",
-   "name": "Felix Raskmere",
-   "shirt": 10,
-   "team": "home",
-   "position": "AM"
-  },
-  "period": 1,
-  "t": 105.0,
-  "clock": "1:45",
-  "video_s": 105.0,
-  "start_video_s": 103.0,
-  "end_video_s": 106.0,
-  "segments": [
-   [
-    103.0,
-    106.0
-   ]
-  ],
-  "caption": "Felix Raskmere runs 20 m above 5.5 m/s (19.8 km/h) in one go in the opponents' half while the opponents had the ball, about 1 times a typical high-speed run.",
-  "facts": {
-   "metres": {
-    "value": 20,
-    "unit": "m above 5.5 m/s in one run",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds": {
-    "value": 3,
-    "unit": "s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
    "top_speed": {
-    "value": 7.3,
+    "value": 8.8,
     "unit": "m/s",
     "source": "signals.players[].series.speed (1-s mean)"
    },
-   "typical_run": {
-    "value": 19,
-    "unit": "m, mean high-speed run",
-    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
-   },
-   "times_typical": {
-    "value": 1,
-    "unit": "times a typical run",
+   "top_speed_kmh": {
+    "value": 32,
+    "unit": "km/h",
     "source": "signals.players[].series.speed (1-s mean)"
    },
-   "where": "in the opponents' half",
-   "ball": "the opponents"
+   "published_match_top_speed_for_position": {
+    "value": 8.5,
+    "unit": "m/s, mean match top speed for his position",
+    "source": "SilvaH2025, Table 1"
+   }
   },
   "sources": [
-   "Fang2024",
-   "DiSalvo2007",
-   "Fang2024, Table 2; DiSalvo2007, p.224",
+   "SilvaH2025",
+   "SilvaH2025, Table 1",
    "signals.players[].series.speed (1-s mean)"
   ]
  },
  {
   "kind": "busiest_minute",
   "label": "Busiest minute",
-  "value": 40.1,
+  "value": 45.0,
   "player": {
-   "id": "H05",
-   "name": "Dario Fennock",
-   "shirt": 2,
+   "id": "H07",
+   "name": "Ben Morrbury",
+   "shirt": 8,
    "team": "home",
-   "position": "FB"
+   "position": "CM"
   },
   "period": 1,
-  "t": 120.0,
-  "clock": "2:00",
-  "video_s": 120.0,
-  "start_video_s": 61.0,
-  "end_video_s": 121.0,
+  "t": 149.0,
+  "clock": "2:29",
+  "video_s": 149.0,
+  "start_video_s": 90.0,
+  "end_video_s": 150.0,
   "segments": [
    [
-    61.0,
-    121.0
+    90.0,
+    150.0
    ]
   ],
-  "caption": "Dario Fennock covers 40 m above 5.5 m/s (19.8 km/h) in one minute, against a published average best minute of 62 m.",
+  "caption": "Ben Morrbury covers 45 m above 5.5 m/s (19.8 km/h) in one minute, against a published average best minute of 62 m.",
   "facts": {
    "metres_in_one_minute": {
-    "value": 40,
+    "value": 45,
     "unit": "m above 5.5 m/s in one minute",
     "source": "signals.players[].series.hsr_1min"
    },
@@ -1328,29 +1368,89 @@
   ]
  },
  {
-  "kind": "busiest_minute",
-  "label": "Busiest minute",
-  "value": 47.4,
+  "kind": "longest_run",
+  "label": "Longest run",
+  "value": 31.91,
   "player": {
-   "id": "A10",
-   "name": "Kofi Morrsall",
-   "shirt": 7,
+   "id": "A09",
+   "name": "Ivan Dorrlowe",
+   "shirt": 11,
    "team": "away",
    "position": "WM"
   },
   "period": 1,
-  "t": 120.0,
-  "clock": "2:00",
-  "video_s": 120.0,
-  "start_video_s": 61.0,
-  "end_video_s": 121.0,
+  "t": 150.0,
+  "clock": "2:30",
+  "video_s": 150.0,
+  "start_video_s": 147.0,
+  "end_video_s": 151.0,
   "segments": [
    [
-    61.0,
-    121.0
+    147.0,
+    151.0
    ]
   ],
-  "caption": "Kofi Morrsall covers 47 m above 5.5 m/s (19.8 km/h) in one minute, against a published average best minute of 62 m.",
+  "caption": "Ivan Dorrlowe runs 32 m above 5.5 m/s (19.8 km/h) in one go in his own half with his team on the ball, about 2 times a typical high-speed run.",
+  "facts": {
+   "metres": {
+    "value": 32,
+    "unit": "m above 5.5 m/s in one run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds": {
+    "value": 4,
+    "unit": "s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "top_speed": {
+    "value": 8.8,
+    "unit": "m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "typical_run": {
+    "value": 19,
+    "unit": "m, mean high-speed run",
+    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
+   },
+   "times_typical": {
+    "value": 2,
+    "unit": "times a typical run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "where": "in his own half",
+   "ball": "his team"
+  },
+  "sources": [
+   "Fang2024",
+   "DiSalvo2007",
+   "Fang2024, Table 2; DiSalvo2007, p.224",
+   "signals.players[].series.speed (1-s mean)"
+  ]
+ },
+ {
+  "kind": "busiest_minute",
+  "label": "Busiest minute",
+  "value": 47.3,
+  "player": {
+   "id": "A09",
+   "name": "Ivan Dorrlowe",
+   "shirt": 11,
+   "team": "away",
+   "position": "WM"
+  },
+  "period": 1,
+  "t": 151.0,
+  "clock": "2:31",
+  "video_s": 151.0,
+  "start_video_s": 92.0,
+  "end_video_s": 152.0,
+  "segments": [
+   [
+    92.0,
+    152.0
+   ]
+  ],
+  "caption": "Ivan Dorrlowe covers 47 m above 5.5 m/s (19.8 km/h) in one minute, against a published average best minute of 62 m.",
   "facts": {
    "metres_in_one_minute": {
     "value": 47,
@@ -1370,56 +1470,9 @@
   ]
  },
  {
-  "kind": "top_speed",
-  "label": "Top speed",
-  "value": 8.29,
-  "player": {
-   "id": "A04",
-   "name": "Luca Bremock",
-   "shirt": 3,
-   "team": "away",
-   "position": "FB"
-  },
-  "period": 1,
-  "t": 124.0,
-  "clock": "2:04",
-  "video_s": 124.0,
-  "start_video_s": 122.0,
-  "end_video_s": 126.0,
-  "segments": [
-   [
-    122.0,
-    126.0
-   ]
-  ],
-  "caption": "Luca Bremock hits 8.3 m/s (30 km/h); the average match top speed for a full-back is about 8.8 m/s.",
-  "facts": {
-   "top_speed": {
-    "value": 8.3,
-    "unit": "m/s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "top_speed_kmh": {
-    "value": 30,
-    "unit": "km/h",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "published_match_top_speed_for_position": {
-    "value": 8.8,
-    "unit": "m/s, mean match top speed for his position",
-    "source": "SilvaH2025, Table 1"
-   }
-  },
-  "sources": [
-   "SilvaH2025",
-   "SilvaH2025, Table 1",
-   "signals.players[].series.speed (1-s mean)"
-  ]
- },
- {
-  "kind": "top_speed",
-  "label": "Top speed",
-  "value": 8.14,
+  "kind": "back_to_back",
+  "label": "Back-to-back runs",
+  "value": 3.0,
   "player": {
    "id": "A07",
    "name": "Hugo Raskver",
@@ -1428,232 +1481,276 @@
    "position": "CM"
   },
   "period": 1,
-  "t": 124.0,
-  "clock": "2:04",
-  "video_s": 124.0,
-  "start_video_s": 123.0,
-  "end_video_s": 126.0,
+  "t": 152.0,
+  "clock": "2:32",
+  "video_s": 152.0,
+  "start_video_s": 110.0,
+  "end_video_s": 153.0,
   "segments": [
    [
-    123.0,
-    126.0
-   ]
-  ],
-  "caption": "Hugo Raskver hits 8.1 m/s (29 km/h); the average match top speed for a central midfielder is about 8.4 m/s.",
-  "facts": {
-   "top_speed": {
-    "value": 8.1,
-    "unit": "m/s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "top_speed_kmh": {
-    "value": 29,
-    "unit": "km/h",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "published_match_top_speed_for_position": {
-    "value": 8.4,
-    "unit": "m/s, mean match top speed for his position",
-    "source": "SilvaH2025, Table 1"
-   }
-  },
-  "sources": [
-   "SilvaH2025",
-   "SilvaH2025, Table 1",
-   "signals.players[].series.speed (1-s mean)"
-  ]
- },
- {
-  "kind": "top_speed",
-  "label": "Top speed",
-  "value": 8.11,
-  "player": {
-   "id": "A06",
-   "name": "Dario Cadsall",
-   "shirt": 6,
-   "team": "away",
-   "position": "DM"
-  },
-  "period": 1,
-  "t": 125.0,
-  "clock": "2:05",
-  "video_s": 125.0,
-  "start_video_s": 123.0,
-  "end_video_s": 127.0,
-  "segments": [
+    110.0,
+    112.0
+   ],
    [
-    123.0,
-    127.0
-   ]
-  ],
-  "caption": "Dario Cadsall hits 8.1 m/s (29 km/h); the average match top speed for a defensive midfielder is about 8.4 m/s.",
-  "facts": {
-   "top_speed": {
-    "value": 8.1,
-    "unit": "m/s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "top_speed_kmh": {
-    "value": 29,
-    "unit": "km/h",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "published_match_top_speed_for_position": {
-    "value": 8.4,
-    "unit": "m/s, mean match top speed for his position",
-    "source": "SilvaH2025, Table 1"
-   }
-  },
-  "sources": [
-   "SilvaH2025",
-   "SilvaH2025, Table 1",
-   "signals.players[].series.speed (1-s mean)"
-  ]
- },
- {
-  "kind": "longest_run",
-  "label": "Longest run",
-  "value": 29.11,
-  "player": {
-   "id": "A04",
-   "name": "Luca Bremock",
-   "shirt": 3,
-   "team": "away",
-   "position": "FB"
-  },
-  "period": 1,
-  "t": 125.0,
-  "clock": "2:05",
-  "video_s": 125.0,
-  "start_video_s": 122.0,
-  "end_video_s": 126.0,
-  "segments": [
+    131.0,
+    132.0
+   ],
    [
-    122.0,
-    126.0
+    152.0,
+    153.0
    ]
   ],
-  "caption": "Luca Bremock runs 29 m above 5.5 m/s (19.8 km/h) in one go in the opponents' half with his team on the ball, about 2 times a typical high-speed run.",
+  "caption": "Hugo Raskver makes 3 high-speed runs in 43 seconds, never more than 20 seconds apart; a central midfielder usually gets about 62 seconds between them.",
   "facts": {
-   "metres": {
-    "value": 29,
-    "unit": "m above 5.5 m/s in one run",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds": {
-    "value": 4,
-    "unit": "s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "top_speed": {
-    "value": 8.3,
-    "unit": "m/s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "typical_run": {
-    "value": 19,
-    "unit": "m, mean high-speed run",
-    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
-   },
-   "times_typical": {
-    "value": 2,
-    "unit": "times a typical run",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "where": "in the opponents' half",
-   "ball": "his team"
-  },
-  "sources": [
-   "Fang2024",
-   "DiSalvo2007",
-   "Fang2024, Table 2; DiSalvo2007, p.224",
-   "signals.players[].series.speed (1-s mean)"
-  ]
- },
- {
-  "kind": "longest_run",
-  "label": "Longest run",
-  "value": 22.77,
-  "player": {
-   "id": "A07",
-   "name": "Hugo Raskver",
-   "shirt": 8,
-   "team": "away",
-   "position": "CM"
-  },
-  "period": 1,
-  "t": 125.0,
-  "clock": "2:05",
-  "video_s": 125.0,
-  "start_video_s": 123.0,
-  "end_video_s": 126.0,
-  "segments": [
-   [
-    123.0,
-    126.0
-   ]
-  ],
-  "caption": "Hugo Raskver runs 23 m above 5.5 m/s (19.8 km/h) in one go in the opponents' half with his team on the ball, about 1 times a typical high-speed run.",
-  "facts": {
-   "metres": {
-    "value": 23,
-    "unit": "m above 5.5 m/s in one run",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds": {
+   "runs": {
     "value": 3,
+    "unit": "high-speed runs",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds": {
+    "value": 43,
     "unit": "s",
     "source": "signals.players[].series.speed (1-s mean)"
    },
+   "metres": {
+    "value": 24,
+    "unit": "m above 5.5 m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "longest_gap": {
+    "value": 20,
+    "unit": "s between runs",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "usual_gap_for_position": {
+    "value": 62,
+    "unit": "s, usual time between high-speed runs for his position",
+    "source": "Bradley2009, Table I"
+   }
+  },
+  "sources": [
+   "Bradley2009",
+   "Bradley2009, Table I",
+   "signals.players[].series.speed (1-s mean)"
+  ]
+ },
+ {
+  "kind": "back_to_back",
+  "label": "Back-to-back runs",
+  "value": 4.0,
+  "player": {
+   "id": "H11",
+   "name": "Nico Sorrnell",
+   "shirt": 9,
+   "team": "home",
+   "position": "CF"
+  },
+  "period": 1,
+  "t": 155.0,
+  "clock": "2:35",
+  "video_s": 155.0,
+  "start_video_s": 129.0,
+  "end_video_s": 156.0,
+  "segments": [
+   [
+    129.0,
+    130.0
+   ],
+   [
+    133.0,
+    134.0
+   ],
+   [
+    150.0,
+    151.0
+   ],
+   [
+    154.0,
+    156.0
+   ]
+  ],
+  "caption": "Nico Sorrnell makes 4 high-speed runs in 27 seconds, never more than 16 seconds apart; a striker usually gets about 73 seconds between them.",
+  "facts": {
+   "runs": {
+    "value": 4,
+    "unit": "high-speed runs",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds": {
+    "value": 27,
+    "unit": "s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "metres": {
+    "value": 31,
+    "unit": "m above 5.5 m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "longest_gap": {
+    "value": 16,
+    "unit": "s between runs",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "usual_gap_for_position": {
+    "value": 73,
+    "unit": "s, usual time between high-speed runs for his position",
+    "source": "Bradley2009, Table I"
+   }
+  },
+  "sources": [
+   "Bradley2009",
+   "Bradley2009, Table I",
+   "signals.players[].series.speed (1-s mean)"
+  ]
+ },
+ {
+  "kind": "top_speed",
+  "label": "Top speed",
+  "value": 8.08,
+  "player": {
+   "id": "H07",
+   "name": "Ben Morrbury",
+   "shirt": 8,
+   "team": "home",
+   "position": "CM"
+  },
+  "period": 1,
+  "t": 168.0,
+  "clock": "2:48",
+  "video_s": 168.0,
+  "start_video_s": 166.0,
+  "end_video_s": 170.0,
+  "segments": [
+   [
+    166.0,
+    170.0
+   ]
+  ],
+  "caption": "Ben Morrbury hits 8.1 m/s (29 km/h); the average match top speed for a central midfielder is about 8.4 m/s.",
+  "facts": {
    "top_speed": {
     "value": 8.1,
     "unit": "m/s",
     "source": "signals.players[].series.speed (1-s mean)"
    },
-   "typical_run": {
-    "value": 19,
-    "unit": "m, mean high-speed run",
-    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
-   },
-   "times_typical": {
-    "value": 1,
-    "unit": "times a typical run",
+   "top_speed_kmh": {
+    "value": 29,
+    "unit": "km/h",
     "source": "signals.players[].series.speed (1-s mean)"
    },
-   "where": "in the opponents' half",
-   "ball": "his team"
+   "published_match_top_speed_for_position": {
+    "value": 8.4,
+    "unit": "m/s, mean match top speed for his position",
+    "source": "SilvaH2025, Table 1"
+   }
   },
   "sources": [
-   "Fang2024",
-   "DiSalvo2007",
-   "Fang2024, Table 2; DiSalvo2007, p.224",
+   "SilvaH2025",
+   "SilvaH2025, Table 1",
+   "signals.players[].series.speed (1-s mean)"
+  ]
+ },
+ {
+  "kind": "back_to_back",
+  "label": "Back-to-back runs",
+  "value": 6.01,
+  "player": {
+   "id": "H08",
+   "name": "Felix Raskmere",
+   "shirt": 10,
+   "team": "home",
+   "position": "AM"
+  },
+  "period": 1,
+  "t": 168.0,
+  "clock": "2:48",
+  "video_s": 168.0,
+  "start_video_s": 130.0,
+  "end_video_s": 169.0,
+  "segments": [
+   [
+    130.0,
+    132.0
+   ],
+   [
+    134.0,
+    135.0
+   ],
+   [
+    147.0,
+    149.0
+   ],
+   [
+    155.0,
+    156.0
+   ],
+   [
+    164.0,
+    165.0
+   ],
+   [
+    167.0,
+    169.0
+   ]
+  ],
+  "caption": "Felix Raskmere makes 6 high-speed runs in 39 seconds, never more than 12 seconds apart; an attacking midfielder usually gets about 62 seconds between them.",
+  "facts": {
+   "runs": {
+    "value": 6,
+    "unit": "high-speed runs",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds": {
+    "value": 39,
+    "unit": "s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "metres": {
+    "value": 54,
+    "unit": "m above 5.5 m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "longest_gap": {
+    "value": 12,
+    "unit": "s between runs",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "usual_gap_for_position": {
+    "value": 62,
+    "unit": "s, usual time between high-speed runs for his position",
+    "source": "Bradley2009, Table I"
+   }
+  },
+  "sources": [
+   "Bradley2009",
+   "Bradley2009, Table I",
    "signals.players[].series.speed (1-s mean)"
   ]
  },
  {
   "kind": "longest_run",
   "label": "Longest run",
-  "value": 29.3,
+  "value": 29.08,
   "player": {
-   "id": "A06",
-   "name": "Dario Cadsall",
-   "shirt": 6,
-   "team": "away",
-   "position": "DM"
+   "id": "H07",
+   "name": "Ben Morrbury",
+   "shirt": 8,
+   "team": "home",
+   "position": "CM"
   },
   "period": 1,
-  "t": 126.0,
-  "clock": "2:06",
-  "video_s": 126.0,
-  "start_video_s": 123.0,
-  "end_video_s": 127.0,
+  "t": 169.0,
+  "clock": "2:49",
+  "video_s": 169.0,
+  "start_video_s": 166.0,
+  "end_video_s": 170.0,
   "segments": [
    [
-    123.0,
-    127.0
+    166.0,
+    170.0
    ]
   ],
-  "caption": "Dario Cadsall runs 29 m above 5.5 m/s (19.8 km/h) in one go in the opponents' half with his team on the ball, about 2 times a typical high-speed run.",
+  "caption": "Ben Morrbury runs 29 m above 5.5 m/s (19.8 km/h) in one go back towards his own goal while the opponents had the ball, about 2 times a typical high-speed run.",
   "facts": {
    "metres": {
     "value": 29,
@@ -1680,8 +1777,8 @@
     "unit": "times a typical run",
     "source": "signals.players[].series.speed (1-s mean)"
    },
-   "where": "in the opponents' half",
-   "ball": "his team"
+   "where": "back towards his own goal",
+   "ball": "the opponents"
   },
   "sources": [
    "Fang2024",
@@ -1693,27 +1790,27 @@
  {
   "kind": "busiest_minute",
   "label": "Busiest minute",
-  "value": 56.7,
+  "value": 57.2,
   "player": {
-   "id": "A09",
-   "name": "Ivan Dorrlowe",
-   "shirt": 11,
-   "team": "away",
-   "position": "WM"
+   "id": "H07",
+   "name": "Ben Morrbury",
+   "shirt": 8,
+   "team": "home",
+   "position": "CM"
   },
   "period": 1,
-  "t": 134.0,
-  "clock": "2:14",
-  "video_s": 134.0,
-  "start_video_s": 75.0,
-  "end_video_s": 135.0,
+  "t": 169.0,
+  "clock": "2:49",
+  "video_s": 169.0,
+  "start_video_s": 110.0,
+  "end_video_s": 170.0,
   "segments": [
    [
-    75.0,
-    135.0
+    110.0,
+    170.0
    ]
   ],
-  "caption": "Ivan Dorrlowe covers 57 m above 5.5 m/s (19.8 km/h) in one minute, against a published average best minute of 62 m.",
+  "caption": "Ben Morrbury covers 57 m above 5.5 m/s (19.8 km/h) in one minute, against a published average best minute of 62 m.",
   "facts": {
    "metres_in_one_minute": {
     "value": 57,
@@ -1733,32 +1830,139 @@
   ]
  },
  {
-  "kind": "recovery_run",
-  "label": "Recovery run",
-  "value": 20.18,
+  "kind": "busiest_minute",
+  "label": "Busiest minute",
+  "value": 54.6,
   "player": {
-   "id": "A09",
-   "name": "Ivan Dorrlowe",
-   "shirt": 11,
-   "team": "away",
-   "position": "WM"
+   "id": "H08",
+   "name": "Felix Raskmere",
+   "shirt": 10,
+   "team": "home",
+   "position": "AM"
   },
   "period": 1,
-  "t": 135.0,
-  "clock": "2:15",
-  "video_s": 135.0,
-  "start_video_s": 133.0,
-  "end_video_s": 136.0,
+  "t": 169.0,
+  "clock": "2:49",
+  "video_s": 169.0,
+  "start_video_s": 110.0,
+  "end_video_s": 170.0,
   "segments": [
    [
-    133.0,
-    136.0
+    110.0,
+    170.0
    ]
   ],
-  "caption": "Ivan Dorrlowe runs 20 m above 5.5 m/s back towards his own goal, up to 7.2 m/s (26 km/h), starting 2 seconds after his team lost the ball.",
+  "caption": "Felix Raskmere covers 55 m above 5.5 m/s (19.8 km/h) in one minute, against a published average best minute of 62 m.",
+  "facts": {
+   "metres_in_one_minute": {
+    "value": 55,
+    "unit": "m above 5.5 m/s in one minute",
+    "source": "signals.players[].series.hsr_1min"
+   },
+   "published_best_minute": {
+    "value": 62,
+    "unit": "m, mean best minute",
+    "source": "Leifsson2024, Table 1"
+   }
+  },
+  "sources": [
+   "Leifsson2024",
+   "Leifsson2024, Table 1",
+   "signals.players[].series.hsr_1min"
+  ]
+ },
+ {
+  "kind": "back_to_back",
+  "label": "Back-to-back runs",
+  "value": 3.0,
+  "player": {
+   "id": "H05",
+   "name": "Dario Fennock",
+   "shirt": 2,
+   "team": "home",
+   "position": "FB"
+  },
+  "period": 1,
+  "t": 181.0,
+  "clock": "3:01",
+  "video_s": 181.0,
+  "start_video_s": 156.0,
+  "end_video_s": 182.0,
+  "segments": [
+   [
+    156.0,
+    158.0
+   ],
+   [
+    168.0,
+    171.0
+   ],
+   [
+    181.0,
+    182.0
+   ]
+  ],
+  "caption": "Dario Fennock makes 3 high-speed runs in 26 seconds, never more than 10 seconds apart; a full-back usually gets about 74 seconds between them.",
+  "facts": {
+   "runs": {
+    "value": 3,
+    "unit": "high-speed runs",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds": {
+    "value": 26,
+    "unit": "s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "metres": {
+    "value": 37,
+    "unit": "m above 5.5 m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "longest_gap": {
+    "value": 10,
+    "unit": "s between runs",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "usual_gap_for_position": {
+    "value": 74,
+    "unit": "s, usual time between high-speed runs for his position",
+    "source": "Bradley2009, Table I"
+   }
+  },
+  "sources": [
+   "Bradley2009",
+   "Bradley2009, Table I",
+   "signals.players[].series.speed (1-s mean)"
+  ]
+ },
+ {
+  "kind": "recovery_run",
+  "label": "Recovery run",
+  "value": 17.81,
+  "player": {
+   "id": "H06",
+   "name": "Adam Jorraway",
+   "shirt": 6,
+   "team": "home",
+   "position": "DM"
+  },
+  "period": 1,
+  "t": 213.0,
+  "clock": "3:33",
+  "video_s": 213.0,
+  "start_video_s": 211.0,
+  "end_video_s": 214.0,
+  "segments": [
+   [
+    211.0,
+    214.0
+   ]
+  ],
+  "caption": "Adam Jorraway runs 18 m above 5.5 m/s back towards his own goal, up to 6.1 m/s (22 km/h), starting 2 seconds after his team lost the ball.",
   "facts": {
    "metres": {
-    "value": 20,
+    "value": 18,
     "unit": "m above 5.5 m/s in one run",
     "source": "signals.players[].series.speed (1-s mean)"
    },
@@ -1768,7 +1972,7 @@
     "source": "signals.players[].series.speed (1-s mean)"
    },
    "top_speed": {
-    "value": 7.2,
+    "value": 6.1,
     "unit": "m/s",
     "source": "signals.players[].series.speed (1-s mean)"
    },
@@ -1778,7 +1982,7 @@
     "source": "Fang2024, Table 2; DiSalvo2007, p.224"
    },
    "top_speed_kmh": {
-    "value": 26,
+    "value": 22,
     "unit": "km/h",
     "source": "signals.players[].series.speed (1-s mean)"
    },
@@ -1788,7 +1992,7 @@
     "source": "tracking.possession_team"
    },
    "metres_back": {
-    "value": 10,
+    "value": 11,
     "unit": "m back towards his own goal",
     "source": "tracking positions"
    }
@@ -1803,102 +2007,237 @@
   ]
  },
  {
-  "kind": "back_to_back",
-  "label": "Back-to-back runs",
-  "value": 3.0,
+  "kind": "recovery_run",
+  "label": "Recovery run",
+  "value": 25.22,
   "player": {
-   "id": "H09",
-   "name": "Kofi Kestaway",
-   "shirt": 11,
-   "team": "home",
-   "position": "WM"
+   "id": "A04",
+   "name": "Luca Bremock",
+   "shirt": 3,
+   "team": "away",
+   "position": "FB"
   },
   "period": 1,
-  "t": 139.0,
-  "clock": "2:19",
-  "video_s": 139.0,
-  "start_video_s": 117.0,
-  "end_video_s": 140.0,
+  "t": 223.0,
+  "clock": "3:43",
+  "video_s": 223.0,
+  "start_video_s": 220.0,
+  "end_video_s": 224.0,
   "segments": [
    [
-    117.0,
-    120.0
-   ],
-   [
-    137.0,
-    138.0
-   ],
-   [
-    139.0,
-    140.0
+    220.0,
+    224.0
    ]
   ],
-  "caption": "Kofi Kestaway makes 3 high-speed runs in 23 seconds, never more than 17 seconds apart; a wide midfielder usually gets about 51 seconds between them.",
+  "caption": "Luca Bremock runs 25 m above 5.5 m/s back towards his own goal, up to 6.6 m/s (24 km/h), starting 3 seconds after his team lost the ball.",
   "facts": {
-   "runs": {
-    "value": 3,
-    "unit": "high-speed runs",
+   "metres": {
+    "value": 25,
+    "unit": "m above 5.5 m/s in one run",
     "source": "signals.players[].series.speed (1-s mean)"
    },
    "seconds": {
-    "value": 23,
+    "value": 4,
     "unit": "s",
     "source": "signals.players[].series.speed (1-s mean)"
    },
-   "metres": {
-    "value": 29,
-    "unit": "m above 5.5 m/s",
+   "top_speed": {
+    "value": 6.6,
+    "unit": "m/s",
     "source": "signals.players[].series.speed (1-s mean)"
    },
-   "longest_gap": {
-    "value": 17,
-    "unit": "s between runs",
+   "typical_run": {
+    "value": 19,
+    "unit": "m, mean high-speed run",
+    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
+   },
+   "top_speed_kmh": {
+    "value": 24,
+    "unit": "km/h",
     "source": "signals.players[].series.speed (1-s mean)"
    },
-   "usual_gap_for_position": {
-    "value": 51,
-    "unit": "s, usual time between high-speed runs for his position",
-    "source": "Bradley2009, Table I"
+   "seconds_after_loss": {
+    "value": 3,
+    "unit": "s after his team lost the ball",
+    "source": "tracking.possession_team"
+   },
+   "metres_back": {
+    "value": 19,
+    "unit": "m back towards his own goal",
+    "source": "tracking positions"
    }
   },
   "sources": [
-   "Bradley2009",
-   "Bradley2009, Table I",
+   "Fang2024",
+   "DiSalvo2007",
+   "Fang2024, Table 2; DiSalvo2007, p.224",
+   "signals.players[].series.speed (1-s mean)",
+   "tracking positions",
+   "tracking.possession_team"
+  ]
+ },
+ {
+  "kind": "longest_run",
+  "label": "Longest run",
+  "value": 30.56,
+  "player": {
+   "id": "A02",
+   "name": "Sami Yarrigg",
+   "shirt": 5,
+   "team": "away",
+   "position": "CB"
+  },
+  "period": 1,
+  "t": 224.0,
+  "clock": "3:44",
+  "video_s": 224.0,
+  "start_video_s": 220.0,
+  "end_video_s": 225.0,
+  "segments": [
+   [
+    220.0,
+    225.0
+   ]
+  ],
+  "caption": "Sami Yarrigg runs 31 m above 5.5 m/s (19.8 km/h) in one go back towards his own goal while the opponents had the ball, about 2 times a typical high-speed run.",
+  "facts": {
+   "metres": {
+    "value": 31,
+    "unit": "m above 5.5 m/s in one run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds": {
+    "value": 5,
+    "unit": "s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "top_speed": {
+    "value": 6.8,
+    "unit": "m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "typical_run": {
+    "value": 19,
+    "unit": "m, mean high-speed run",
+    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
+   },
+   "times_typical": {
+    "value": 2,
+    "unit": "times a typical run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "where": "back towards his own goal",
+   "ball": "the opponents"
+  },
+  "sources": [
+   "Fang2024",
+   "DiSalvo2007",
+   "Fang2024, Table 2; DiSalvo2007, p.224",
    "signals.players[].series.speed (1-s mean)"
   ]
  },
  {
   "kind": "recovery_run",
   "label": "Recovery run",
-  "value": 18.94,
+  "value": 30.56,
   "player": {
-   "id": "A06",
-   "name": "Dario Cadsall",
-   "shirt": 6,
+   "id": "A02",
+   "name": "Sami Yarrigg",
+   "shirt": 5,
    "team": "away",
-   "position": "DM"
+   "position": "CB"
   },
   "period": 1,
-  "t": 139.0,
-  "clock": "2:19",
-  "video_s": 139.0,
-  "start_video_s": 137.0,
-  "end_video_s": 140.0,
+  "t": 224.0,
+  "clock": "3:44",
+  "video_s": 224.0,
+  "start_video_s": 220.0,
+  "end_video_s": 225.0,
   "segments": [
    [
-    137.0,
-    140.0
+    220.0,
+    225.0
    ]
   ],
-  "caption": "Dario Cadsall runs 19 m above 5.5 m/s back towards his own goal, up to 6.7 m/s (24 km/h), starting 6 seconds after his team lost the ball.",
+  "caption": "Sami Yarrigg runs 31 m above 5.5 m/s back towards his own goal, up to 6.8 m/s (25 km/h), starting 3 seconds after his team lost the ball.",
   "facts": {
    "metres": {
-    "value": 19,
+    "value": 31,
     "unit": "m above 5.5 m/s in one run",
     "source": "signals.players[].series.speed (1-s mean)"
    },
    "seconds": {
+    "value": 5,
+    "unit": "s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "top_speed": {
+    "value": 6.8,
+    "unit": "m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "typical_run": {
+    "value": 19,
+    "unit": "m, mean high-speed run",
+    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
+   },
+   "top_speed_kmh": {
+    "value": 25,
+    "unit": "km/h",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds_after_loss": {
     "value": 3,
+    "unit": "s after his team lost the ball",
+    "source": "tracking.possession_team"
+   },
+   "metres_back": {
+    "value": 22,
+    "unit": "m back towards his own goal",
+    "source": "tracking positions"
+   }
+  },
+  "sources": [
+   "Fang2024",
+   "DiSalvo2007",
+   "Fang2024, Table 2; DiSalvo2007, p.224",
+   "signals.players[].series.speed (1-s mean)",
+   "tracking positions",
+   "tracking.possession_team"
+  ]
+ },
+ {
+  "kind": "recovery_run",
+  "label": "Recovery run",
+  "value": 25.31,
+  "player": {
+   "id": "A05",
+   "name": "Marco Elmbury",
+   "shirt": 2,
+   "team": "away",
+   "position": "FB"
+  },
+  "period": 1,
+  "t": 225.0,
+  "clock": "3:45",
+  "video_s": 225.0,
+  "start_video_s": 222.0,
+  "end_video_s": 226.0,
+  "segments": [
+   [
+    222.0,
+    226.0
+   ]
+  ],
+  "caption": "Marco Elmbury runs 25 m above 5.5 m/s back towards his own goal, up to 6.7 m/s (24 km/h), starting 5 seconds after his team lost the ball.",
+  "facts": {
+   "metres": {
+    "value": 25,
+    "unit": "m above 5.5 m/s in one run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds": {
+    "value": 4,
     "unit": "s",
     "source": "signals.players[].series.speed (1-s mean)"
    },
@@ -1918,12 +2257,12 @@
     "source": "signals.players[].series.speed (1-s mean)"
    },
    "seconds_after_loss": {
-    "value": 6,
+    "value": 5,
     "unit": "s after his team lost the ball",
     "source": "tracking.possession_team"
    },
    "metres_back": {
-    "value": 13,
+    "value": 19,
     "unit": "m back towards his own goal",
     "source": "tracking positions"
    }
@@ -1938,9 +2277,9 @@
   ]
  },
  {
-  "kind": "recovery_run",
-  "label": "Recovery run",
-  "value": 20.75,
+  "kind": "top_speed",
+  "label": "Top speed",
+  "value": 7.85,
   "player": {
    "id": "A08",
    "name": "Jonah Wendrigg",
@@ -1949,899 +2288,26 @@
    "position": "AM"
   },
   "period": 1,
-  "t": 139.0,
-  "clock": "2:19",
-  "video_s": 139.0,
-  "start_video_s": 137.0,
-  "end_video_s": 140.0,
+  "t": 228.0,
+  "clock": "3:48",
+  "video_s": 228.0,
+  "start_video_s": 223.0,
+  "end_video_s": 231.0,
   "segments": [
    [
-    137.0,
-    140.0
+    223.0,
+    231.0
    ]
   ],
-  "caption": "Jonah Wendrigg runs 21 m above 5.5 m/s back towards his own goal, up to 7.3 m/s (26 km/h), starting 6 seconds after his team lost the ball.",
-  "facts": {
-   "metres": {
-    "value": 21,
-    "unit": "m above 5.5 m/s in one run",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds": {
-    "value": 3,
-    "unit": "s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "top_speed": {
-    "value": 7.3,
-    "unit": "m/s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "typical_run": {
-    "value": 19,
-    "unit": "m, mean high-speed run",
-    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
-   },
-   "top_speed_kmh": {
-    "value": 26,
-    "unit": "km/h",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds_after_loss": {
-    "value": 6,
-    "unit": "s after his team lost the ball",
-    "source": "tracking.possession_team"
-   },
-   "metres_back": {
-    "value": 13,
-    "unit": "m back towards his own goal",
-    "source": "tracking positions"
-   }
-  },
-  "sources": [
-   "Fang2024",
-   "DiSalvo2007",
-   "Fang2024, Table 2; DiSalvo2007, p.224",
-   "signals.players[].series.speed (1-s mean)",
-   "tracking positions",
-   "tracking.possession_team"
-  ]
- },
- {
-  "kind": "recovery_run",
-  "label": "Recovery run",
-  "value": 22.5,
-  "player": {
-   "id": "A10",
-   "name": "Kofi Morrsall",
-   "shirt": 7,
-   "team": "away",
-   "position": "WM"
-  },
-  "period": 1,
-  "t": 139.0,
-  "clock": "2:19",
-  "video_s": 139.0,
-  "start_video_s": 137.0,
-  "end_video_s": 140.0,
-  "segments": [
-   [
-    137.0,
-    140.0
-   ]
-  ],
-  "caption": "Kofi Morrsall runs 22 m above 5.5 m/s back towards his own goal, up to 8.0 m/s (29 km/h), starting 6 seconds after his team lost the ball.",
-  "facts": {
-   "metres": {
-    "value": 22,
-    "unit": "m above 5.5 m/s in one run",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds": {
-    "value": 3,
-    "unit": "s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "top_speed": {
-    "value": 8.0,
-    "unit": "m/s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "typical_run": {
-    "value": 19,
-    "unit": "m, mean high-speed run",
-    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
-   },
-   "top_speed_kmh": {
-    "value": 29,
-    "unit": "km/h",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds_after_loss": {
-    "value": 6,
-    "unit": "s after his team lost the ball",
-    "source": "tracking.possession_team"
-   },
-   "metres_back": {
-    "value": 15,
-    "unit": "m back towards his own goal",
-    "source": "tracking positions"
-   }
-  },
-  "sources": [
-   "Fang2024",
-   "DiSalvo2007",
-   "Fang2024, Table 2; DiSalvo2007, p.224",
-   "signals.players[].series.speed (1-s mean)",
-   "tracking positions",
-   "tracking.possession_team"
-  ]
- },
- {
-  "kind": "busiest_minute",
-  "label": "Busiest minute",
-  "value": 50.1,
-  "player": {
-   "id": "A06",
-   "name": "Dario Cadsall",
-   "shirt": 6,
-   "team": "away",
-   "position": "DM"
-  },
-  "period": 1,
-  "t": 140.0,
-  "clock": "2:20",
-  "video_s": 140.0,
-  "start_video_s": 81.0,
-  "end_video_s": 141.0,
-  "segments": [
-   [
-    81.0,
-    141.0
-   ]
-  ],
-  "caption": "Dario Cadsall covers 50 m above 5.5 m/s (19.8 km/h) in one minute, against a published average best minute of 62 m.",
-  "facts": {
-   "metres_in_one_minute": {
-    "value": 50,
-    "unit": "m above 5.5 m/s in one minute",
-    "source": "signals.players[].series.hsr_1min"
-   },
-   "published_best_minute": {
-    "value": 62,
-    "unit": "m, mean best minute",
-    "source": "Leifsson2024, Table 1"
-   }
-  },
-  "sources": [
-   "Leifsson2024",
-   "Leifsson2024, Table 1",
-   "signals.players[].series.hsr_1min"
-  ]
- },
- {
-  "kind": "recovery_run",
-  "label": "Recovery run",
-  "value": 25.89,
-  "player": {
-   "id": "A11",
-   "name": "Nico Jorrlowe",
-   "shirt": 9,
-   "team": "away",
-   "position": "CF"
-  },
-  "period": 1,
-  "t": 140.0,
-  "clock": "2:20",
-  "video_s": 140.0,
-  "start_video_s": 137.0,
-  "end_video_s": 141.0,
-  "segments": [
-   [
-    137.0,
-    141.0
-   ]
-  ],
-  "caption": "Nico Jorrlowe runs 26 m above 5.5 m/s back towards his own goal, up to 7.1 m/s (26 km/h), starting 6 seconds after his team lost the ball.",
-  "facts": {
-   "metres": {
-    "value": 26,
-    "unit": "m above 5.5 m/s in one run",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds": {
-    "value": 4,
-    "unit": "s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "top_speed": {
-    "value": 7.1,
-    "unit": "m/s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "typical_run": {
-    "value": 19,
-    "unit": "m, mean high-speed run",
-    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
-   },
-   "top_speed_kmh": {
-    "value": 26,
-    "unit": "km/h",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds_after_loss": {
-    "value": 6,
-    "unit": "s after his team lost the ball",
-    "source": "tracking.possession_team"
-   },
-   "metres_back": {
-    "value": 18,
-    "unit": "m back towards his own goal",
-    "source": "tracking positions"
-   }
-  },
-  "sources": [
-   "Fang2024",
-   "DiSalvo2007",
-   "Fang2024, Table 2; DiSalvo2007, p.224",
-   "signals.players[].series.speed (1-s mean)",
-   "tracking positions",
-   "tracking.possession_team"
-  ]
- },
- {
-  "kind": "back_to_back",
-  "label": "Back-to-back runs",
-  "value": 5.01,
-  "player": {
-   "id": "A04",
-   "name": "Luca Bremock",
-   "shirt": 3,
-   "team": "away",
-   "position": "FB"
-  },
-  "period": 1,
-  "t": 155.0,
-  "clock": "2:35",
-  "video_s": 155.0,
-  "start_video_s": 122.0,
-  "end_video_s": 156.0,
-  "segments": [
-   [
-    122.0,
-    126.0
-   ],
-   [
-    133.0,
-    134.0
-   ],
-   [
-    138.0,
-    139.0
-   ],
-   [
-    144.0,
-    146.0
-   ],
-   [
-    155.0,
-    156.0
-   ]
-  ],
-  "caption": "Luca Bremock makes 5 high-speed runs in 34 seconds, never more than 9 seconds apart; a full-back usually gets about 74 seconds between them.",
-  "facts": {
-   "runs": {
-    "value": 5,
-    "unit": "high-speed runs",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds": {
-    "value": 34,
-    "unit": "s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "metres": {
-    "value": 59,
-    "unit": "m above 5.5 m/s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "longest_gap": {
-    "value": 9,
-    "unit": "s between runs",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "usual_gap_for_position": {
-    "value": 74,
-    "unit": "s, usual time between high-speed runs for his position",
-    "source": "Bradley2009, Table I"
-   }
-  },
-  "sources": [
-   "Bradley2009",
-   "Bradley2009, Table I",
-   "signals.players[].series.speed (1-s mean)"
-  ]
- },
- {
-  "kind": "busiest_minute",
-  "label": "Busiest minute",
-  "value": 65.4,
-  "player": {
-   "id": "A04",
-   "name": "Luca Bremock",
-   "shirt": 3,
-   "team": "away",
-   "position": "FB"
-  },
-  "period": 1,
-  "t": 156.0,
-  "clock": "2:36",
-  "video_s": 156.0,
-  "start_video_s": 97.0,
-  "end_video_s": 157.0,
-  "segments": [
-   [
-    97.0,
-    157.0
-   ]
-  ],
-  "caption": "Luca Bremock covers 65 m above 5.5 m/s (19.8 km/h) in one minute, against a published average best minute of 62 m.",
-  "facts": {
-   "metres_in_one_minute": {
-    "value": 65,
-    "unit": "m above 5.5 m/s in one minute",
-    "source": "signals.players[].series.hsr_1min"
-   },
-   "published_best_minute": {
-    "value": 62,
-    "unit": "m, mean best minute",
-    "source": "Leifsson2024, Table 1"
-   }
-  },
-  "sources": [
-   "Leifsson2024",
-   "Leifsson2024, Table 1",
-   "signals.players[].series.hsr_1min"
-  ]
- },
- {
-  "kind": "top_speed",
-  "label": "Top speed",
-  "value": 8.96,
-  "player": {
-   "id": "H03",
-   "name": "Yusuf Cadock",
-   "shirt": 4,
-   "team": "home",
-   "position": "CB"
-  },
-  "period": 1,
-  "t": 175.0,
-  "clock": "2:55",
-  "video_s": 175.0,
-  "start_video_s": 173.0,
-  "end_video_s": 178.0,
-  "segments": [
-   [
-    173.0,
-    178.0
-   ]
-  ],
-  "caption": "Yusuf Cadock hits 9.0 m/s (32 km/h); the average match top speed for a centre-back is about 8.1 m/s.",
+  "caption": "Jonah Wendrigg hits 7.8 m/s (28 km/h); the average match top speed for an attacking midfielder is about 8.4 m/s.",
   "facts": {
    "top_speed": {
-    "value": 9.0,
+    "value": 7.8,
     "unit": "m/s",
     "source": "signals.players[].series.speed (1-s mean)"
    },
    "top_speed_kmh": {
-    "value": 32,
-    "unit": "km/h",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "published_match_top_speed_for_position": {
-    "value": 8.1,
-    "unit": "m/s, mean match top speed for his position",
-    "source": "SilvaH2025, Table 1"
-   }
-  },
-  "sources": [
-   "SilvaH2025",
-   "SilvaH2025, Table 1",
-   "signals.players[].series.speed (1-s mean)"
-  ]
- },
- {
-  "kind": "longest_run",
-  "label": "Longest run",
-  "value": 38.21,
-  "player": {
-   "id": "H03",
-   "name": "Yusuf Cadock",
-   "shirt": 4,
-   "team": "home",
-   "position": "CB"
-  },
-  "period": 1,
-  "t": 177.0,
-  "clock": "2:57",
-  "video_s": 177.0,
-  "start_video_s": 173.0,
-  "end_video_s": 178.0,
-  "segments": [
-   [
-    173.0,
-    178.0
-   ]
-  ],
-  "caption": "Yusuf Cadock runs 38 m above 5.5 m/s (19.8 km/h) in one go back towards his own goal while the opponents had the ball, about 2 times a typical high-speed run.",
-  "facts": {
-   "metres": {
-    "value": 38,
-    "unit": "m above 5.5 m/s in one run",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds": {
-    "value": 5,
-    "unit": "s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "top_speed": {
-    "value": 9.0,
-    "unit": "m/s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "typical_run": {
-    "value": 19,
-    "unit": "m, mean high-speed run",
-    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
-   },
-   "times_typical": {
-    "value": 2,
-    "unit": "times a typical run",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "where": "back towards his own goal",
-   "ball": "the opponents"
-  },
-  "sources": [
-   "Fang2024",
-   "DiSalvo2007",
-   "Fang2024, Table 2; DiSalvo2007, p.224",
-   "signals.players[].series.speed (1-s mean)"
-  ]
- },
- {
-  "kind": "longest_run",
-  "label": "Longest run",
-  "value": 34.12,
-  "player": {
-   "id": "A07",
-   "name": "Hugo Raskver",
-   "shirt": 8,
-   "team": "away",
-   "position": "CM"
-  },
-  "period": 1,
-  "t": 177.0,
-  "clock": "2:57",
-  "video_s": 177.0,
-  "start_video_s": 173.0,
-  "end_video_s": 178.0,
-  "segments": [
-   [
-    173.0,
-    178.0
-   ]
-  ],
-  "caption": "Hugo Raskver runs 34 m above 5.5 m/s (19.8 km/h) in one go from his own half into the opponents' half with his team on the ball, about 2 times a typical high-speed run.",
-  "facts": {
-   "metres": {
-    "value": 34,
-    "unit": "m above 5.5 m/s in one run",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds": {
-    "value": 5,
-    "unit": "s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "top_speed": {
-    "value": 7.0,
-    "unit": "m/s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "typical_run": {
-    "value": 19,
-    "unit": "m, mean high-speed run",
-    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
-   },
-   "times_typical": {
-    "value": 2,
-    "unit": "times a typical run",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "where": "from his own half into the opponents' half",
-   "ball": "his team"
-  },
-  "sources": [
-   "Fang2024",
-   "DiSalvo2007",
-   "Fang2024, Table 2; DiSalvo2007, p.224",
-   "signals.players[].series.speed (1-s mean)"
-  ]
- },
- {
-  "kind": "back_to_back",
-  "label": "Back-to-back runs",
-  "value": 5.01,
-  "player": {
-   "id": "A11",
-   "name": "Nico Jorrlowe",
-   "shirt": 9,
-   "team": "away",
-   "position": "CF"
-  },
-  "period": 1,
-  "t": 177.0,
-  "clock": "2:57",
-  "video_s": 177.0,
-  "start_video_s": 137.0,
-  "end_video_s": 178.0,
-  "segments": [
-   [
-    137.0,
-    141.0
-   ],
-   [
-    156.0,
-    158.0
-   ],
-   [
-    172.0,
-    173.0
-   ],
-   [
-    174.0,
-    176.0
-   ],
-   [
-    177.0,
-    178.0
-   ]
-  ],
-  "caption": "Nico Jorrlowe makes 5 high-speed runs in 41 seconds, never more than 15 seconds apart; a striker usually gets about 73 seconds between them.",
-  "facts": {
-   "runs": {
-    "value": 5,
-    "unit": "high-speed runs",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds": {
-    "value": 41,
-    "unit": "s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "metres": {
-    "value": 63,
-    "unit": "m above 5.5 m/s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "longest_gap": {
-    "value": 15,
-    "unit": "s between runs",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "usual_gap_for_position": {
-    "value": 73,
-    "unit": "s, usual time between high-speed runs for his position",
-    "source": "Bradley2009, Table I"
-   }
-  },
-  "sources": [
-   "Bradley2009",
-   "Bradley2009, Table I",
-   "signals.players[].series.speed (1-s mean)"
-  ]
- },
- {
-  "kind": "busiest_minute",
-  "label": "Busiest minute",
-  "value": 61.9,
-  "player": {
-   "id": "H06",
-   "name": "Adam Jorraway",
-   "shirt": 6,
-   "team": "home",
-   "position": "DM"
-  },
-  "period": 1,
-  "t": 177.0,
-  "clock": "2:57",
-  "video_s": 177.0,
-  "start_video_s": 118.0,
-  "end_video_s": 178.0,
-  "segments": [
-   [
-    118.0,
-    178.0
-   ]
-  ],
-  "caption": "Adam Jorraway covers 62 m above 5.5 m/s (19.8 km/h) in one minute, against a published average best minute of 62 m.",
-  "facts": {
-   "metres_in_one_minute": {
-    "value": 62,
-    "unit": "m above 5.5 m/s in one minute",
-    "source": "signals.players[].series.hsr_1min"
-   },
-   "published_best_minute": {
-    "value": 62,
-    "unit": "m, mean best minute",
-    "source": "Leifsson2024, Table 1"
-   }
-  },
-  "sources": [
-   "Leifsson2024",
-   "Leifsson2024, Table 1",
-   "signals.players[].series.hsr_1min"
-  ]
- },
- {
-  "kind": "recovery_run",
-  "label": "Recovery run",
-  "value": 38.21,
-  "player": {
-   "id": "H03",
-   "name": "Yusuf Cadock",
-   "shirt": 4,
-   "team": "home",
-   "position": "CB"
-  },
-  "period": 1,
-  "t": 177.0,
-  "clock": "2:57",
-  "video_s": 177.0,
-  "start_video_s": 173.0,
-  "end_video_s": 178.0,
-  "segments": [
-   [
-    173.0,
-    178.0
-   ]
-  ],
-  "caption": "Yusuf Cadock runs 38 m above 5.5 m/s back towards his own goal, up to 9.0 m/s (32 km/h), starting 5 seconds after his team lost the ball.",
-  "facts": {
-   "metres": {
-    "value": 38,
-    "unit": "m above 5.5 m/s in one run",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds": {
-    "value": 5,
-    "unit": "s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "top_speed": {
-    "value": 9.0,
-    "unit": "m/s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "typical_run": {
-    "value": 19,
-    "unit": "m, mean high-speed run",
-    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
-   },
-   "top_speed_kmh": {
-    "value": 32,
-    "unit": "km/h",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds_after_loss": {
-    "value": 5,
-    "unit": "s after his team lost the ball",
-    "source": "tracking.possession_team"
-   },
-   "metres_back": {
-    "value": 31,
-    "unit": "m back towards his own goal",
-    "source": "tracking positions"
-   }
-  },
-  "sources": [
-   "Fang2024",
-   "DiSalvo2007",
-   "Fang2024, Table 2; DiSalvo2007, p.224",
-   "signals.players[].series.speed (1-s mean)",
-   "tracking positions",
-   "tracking.possession_team"
-  ]
- },
- {
-  "kind": "busiest_minute",
-  "label": "Busiest minute",
-  "value": 62.8,
-  "player": {
-   "id": "A07",
-   "name": "Hugo Raskver",
-   "shirt": 8,
-   "team": "away",
-   "position": "CM"
-  },
-  "period": 1,
-  "t": 178.0,
-  "clock": "2:58",
-  "video_s": 178.0,
-  "start_video_s": 119.0,
-  "end_video_s": 179.0,
-  "segments": [
-   [
-    119.0,
-    179.0
-   ]
-  ],
-  "caption": "Hugo Raskver covers 63 m above 5.5 m/s (19.8 km/h) in one minute, against a published average best minute of 62 m.",
-  "facts": {
-   "metres_in_one_minute": {
-    "value": 63,
-    "unit": "m above 5.5 m/s in one minute",
-    "source": "signals.players[].series.hsr_1min"
-   },
-   "published_best_minute": {
-    "value": 62,
-    "unit": "m, mean best minute",
-    "source": "Leifsson2024, Table 1"
-   }
-  },
-  "sources": [
-   "Leifsson2024",
-   "Leifsson2024, Table 1",
-   "signals.players[].series.hsr_1min"
-  ]
- },
- {
-  "kind": "busiest_minute",
-  "label": "Busiest minute",
-  "value": 64.9,
-  "player": {
-   "id": "A11",
-   "name": "Nico Jorrlowe",
-   "shirt": 9,
-   "team": "away",
-   "position": "CF"
-  },
-  "period": 1,
-  "t": 178.0,
-  "clock": "2:58",
-  "video_s": 178.0,
-  "start_video_s": 119.0,
-  "end_video_s": 179.0,
-  "segments": [
-   [
-    119.0,
-    179.0
-   ]
-  ],
-  "caption": "Nico Jorrlowe covers 65 m above 5.5 m/s (19.8 km/h) in one minute, against a published average best minute of 62 m.",
-  "facts": {
-   "metres_in_one_minute": {
-    "value": 65,
-    "unit": "m above 5.5 m/s in one minute",
-    "source": "signals.players[].series.hsr_1min"
-   },
-   "published_best_minute": {
-    "value": 62,
-    "unit": "m, mean best minute",
-    "source": "Leifsson2024, Table 1"
-   }
-  },
-  "sources": [
-   "Leifsson2024",
-   "Leifsson2024, Table 1",
-   "signals.players[].series.hsr_1min"
-  ]
- },
- {
-  "kind": "recovery_run",
-  "label": "Recovery run",
-  "value": 23.7,
-  "player": {
-   "id": "A03",
-   "name": "Theo Ashick",
-   "shirt": 4,
-   "team": "away",
-   "position": "CB"
-  },
-  "period": 1,
-  "t": 349.0,
-  "clock": "5:49",
-  "video_s": 349.0,
-  "start_video_s": 346.0,
-  "end_video_s": 350.0,
-  "segments": [
-   [
-    346.0,
-    350.0
-   ]
-  ],
-  "caption": "Theo Ashick runs 24 m above 5.5 m/s back towards his own goal, up to 6.3 m/s (23 km/h), starting 8 seconds after his team lost the ball.",
-  "facts": {
-   "metres": {
-    "value": 24,
-    "unit": "m above 5.5 m/s in one run",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds": {
-    "value": 4,
-    "unit": "s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "top_speed": {
-    "value": 6.3,
-    "unit": "m/s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "typical_run": {
-    "value": 19,
-    "unit": "m, mean high-speed run",
-    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
-   },
-   "top_speed_kmh": {
-    "value": 23,
-    "unit": "km/h",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds_after_loss": {
-    "value": 8,
-    "unit": "s after his team lost the ball",
-    "source": "tracking.possession_team"
-   },
-   "metres_back": {
-    "value": 17,
-    "unit": "m back towards his own goal",
-    "source": "tracking positions"
-   }
-  },
-  "sources": [
-   "Fang2024",
-   "DiSalvo2007",
-   "Fang2024, Table 2; DiSalvo2007, p.224",
-   "signals.players[].series.speed (1-s mean)",
-   "tracking positions",
-   "tracking.possession_team"
-  ]
- },
- {
-  "kind": "top_speed",
-  "label": "Top speed",
-  "value": 9.02,
-  "player": {
-   "id": "H08",
-   "name": "Felix Raskmere",
-   "shirt": 10,
-   "team": "home",
-   "position": "AM"
-  },
-  "period": 1,
-  "t": 427.0,
-  "clock": "7:07",
-  "video_s": 427.0,
-  "start_video_s": 425.0,
-  "end_video_s": 429.0,
-  "segments": [
-   [
-    425.0,
-    429.0
-   ]
-  ],
-  "caption": "Felix Raskmere hits 9.0 m/s (32 km/h); the average match top speed for an attacking midfielder is about 8.4 m/s.",
-  "facts": {
-   "top_speed": {
-    "value": 9.0,
-    "unit": "m/s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "top_speed_kmh": {
-    "value": 32,
+    "value": 28,
     "unit": "km/h",
     "source": "signals.players[].series.speed (1-s mean)"
    },
@@ -2860,40 +2326,40 @@
  {
   "kind": "longest_run",
   "label": "Longest run",
-  "value": 34.4,
+  "value": 52.59,
   "player": {
-   "id": "H09",
-   "name": "Kofi Kestaway",
-   "shirt": 11,
-   "team": "home",
-   "position": "WM"
+   "id": "A08",
+   "name": "Jonah Wendrigg",
+   "shirt": 10,
+   "team": "away",
+   "position": "AM"
   },
   "period": 1,
-  "t": 511.0,
-  "clock": "8:31",
-  "video_s": 511.0,
-  "start_video_s": 507.0,
-  "end_video_s": 512.0,
+  "t": 230.0,
+  "clock": "3:50",
+  "video_s": 230.0,
+  "start_video_s": 223.0,
+  "end_video_s": 231.0,
   "segments": [
    [
-    507.0,
-    512.0
+    223.0,
+    231.0
    ]
   ],
-  "caption": "Kofi Kestaway runs 34 m above 5.5 m/s (19.8 km/h) in one go back towards his own goal while the opponents had the ball, about 2 times a typical high-speed run.",
+  "caption": "Jonah Wendrigg runs 53 m above 5.5 m/s (19.8 km/h) in one go back towards his own goal while the opponents had the ball, about 3 times a typical high-speed run.",
   "facts": {
    "metres": {
-    "value": 34,
+    "value": 53,
     "unit": "m above 5.5 m/s in one run",
     "source": "signals.players[].series.speed (1-s mean)"
    },
    "seconds": {
-    "value": 5,
+    "value": 8,
     "unit": "s",
     "source": "signals.players[].series.speed (1-s mean)"
    },
    "top_speed": {
-    "value": 8.1,
+    "value": 7.8,
     "unit": "m/s",
     "source": "signals.players[].series.speed (1-s mean)"
    },
@@ -2903,7 +2369,7 @@
     "source": "Fang2024, Table 2; DiSalvo2007, p.224"
    },
    "times_typical": {
-    "value": 2,
+    "value": 3,
     "unit": "times a typical run",
     "source": "signals.players[].series.speed (1-s mean)"
    },
@@ -2920,40 +2386,40 @@
  {
   "kind": "recovery_run",
   "label": "Recovery run",
-  "value": 34.4,
+  "value": 52.59,
   "player": {
-   "id": "H09",
-   "name": "Kofi Kestaway",
-   "shirt": 11,
-   "team": "home",
-   "position": "WM"
+   "id": "A08",
+   "name": "Jonah Wendrigg",
+   "shirt": 10,
+   "team": "away",
+   "position": "AM"
   },
   "period": 1,
-  "t": 511.0,
-  "clock": "8:31",
-  "video_s": 511.0,
-  "start_video_s": 507.0,
-  "end_video_s": 512.0,
+  "t": 230.0,
+  "clock": "3:50",
+  "video_s": 230.0,
+  "start_video_s": 223.0,
+  "end_video_s": 231.0,
   "segments": [
    [
-    507.0,
-    512.0
+    223.0,
+    231.0
    ]
   ],
-  "caption": "Kofi Kestaway runs 34 m above 5.5 m/s back towards his own goal, up to 8.1 m/s (29 km/h), starting 3 seconds after his team lost the ball.",
+  "caption": "Jonah Wendrigg runs 53 m above 5.5 m/s back towards his own goal, up to 7.8 m/s (28 km/h), starting 6 seconds after his team lost the ball.",
   "facts": {
    "metres": {
-    "value": 34,
+    "value": 53,
     "unit": "m above 5.5 m/s in one run",
     "source": "signals.players[].series.speed (1-s mean)"
    },
    "seconds": {
-    "value": 5,
+    "value": 8,
     "unit": "s",
     "source": "signals.players[].series.speed (1-s mean)"
    },
    "top_speed": {
-    "value": 8.1,
+    "value": 7.8,
     "unit": "m/s",
     "source": "signals.players[].series.speed (1-s mean)"
    },
@@ -2963,17 +2429,17 @@
     "source": "Fang2024, Table 2; DiSalvo2007, p.224"
    },
    "top_speed_kmh": {
-    "value": 29,
+    "value": 28,
     "unit": "km/h",
     "source": "signals.players[].series.speed (1-s mean)"
    },
    "seconds_after_loss": {
-    "value": 3,
+    "value": 6,
     "unit": "s after his team lost the ball",
     "source": "tracking.possession_team"
    },
    "metres_back": {
-    "value": 14,
+    "value": 46,
     "unit": "m back towards his own goal",
     "source": "tracking positions"
    }
@@ -2990,40 +2456,40 @@
  {
   "kind": "top_speed",
   "label": "Top speed",
-  "value": 8.3,
+  "value": 8.49,
   "player": {
-   "id": "A11",
-   "name": "Nico Jorrlowe",
-   "shirt": 9,
+   "id": "A08",
+   "name": "Jonah Wendrigg",
+   "shirt": 10,
    "team": "away",
-   "position": "CF"
+   "position": "AM"
   },
   "period": 1,
-  "t": 708.0,
-  "clock": "11:48",
-  "video_s": 708.0,
-  "start_video_s": 705.0,
-  "end_video_s": 709.0,
+  "t": 251.0,
+  "clock": "4:11",
+  "video_s": 251.0,
+  "start_video_s": 249.0,
+  "end_video_s": 253.0,
   "segments": [
    [
-    705.0,
-    709.0
+    249.0,
+    253.0
    ]
   ],
-  "caption": "Nico Jorrlowe hits 8.3 m/s (30 km/h); the average match top speed for a striker is about 8.3 m/s.",
+  "caption": "Jonah Wendrigg hits 8.5 m/s (31 km/h); the average match top speed for an attacking midfielder is about 8.4 m/s.",
   "facts": {
    "top_speed": {
-    "value": 8.3,
+    "value": 8.5,
     "unit": "m/s",
     "source": "signals.players[].series.speed (1-s mean)"
    },
    "top_speed_kmh": {
-    "value": 30,
+    "value": 31,
     "unit": "km/h",
     "source": "signals.players[].series.speed (1-s mean)"
    },
    "published_match_top_speed_for_position": {
-    "value": 8.3,
+    "value": 8.4,
     "unit": "m/s, mean match top speed for his position",
     "source": "SilvaH2025, Table 1"
    }
@@ -3035,226 +2501,9 @@
   ]
  },
  {
-  "kind": "back_to_back",
-  "label": "Back-to-back runs",
-  "value": 6.01,
-  "player": {
-   "id": "A10",
-   "name": "Kofi Morrsall",
-   "shirt": 7,
-   "team": "away",
-   "position": "WM"
-  },
-  "period": 1,
-  "t": 902.0,
-  "clock": "15:02",
-  "video_s": 902.0,
-  "start_video_s": 836.0,
-  "end_video_s": 903.0,
-  "segments": [
-   [
-    836.0,
-    838.0
-   ],
-   [
-    854.0,
-    856.0
-   ],
-   [
-    862.0,
-    865.0
-   ],
-   [
-    882.0,
-    883.0
-   ],
-   [
-    899.0,
-    900.0
-   ],
-   [
-    901.0,
-    903.0
-   ]
-  ],
-  "caption": "Kofi Morrsall makes 6 high-speed runs in 67 seconds, never more than 17 seconds apart; a wide midfielder usually gets about 51 seconds between them.",
-  "facts": {
-   "runs": {
-    "value": 6,
-    "unit": "high-speed runs",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds": {
-    "value": 67,
-    "unit": "s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "metres": {
-    "value": 71,
-    "unit": "m above 5.5 m/s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "longest_gap": {
-    "value": 17,
-    "unit": "s between runs",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "usual_gap_for_position": {
-    "value": 51,
-    "unit": "s, usual time between high-speed runs for his position",
-    "source": "Bradley2009, Table I"
-   }
-  },
-  "sources": [
-   "Bradley2009",
-   "Bradley2009, Table I",
-   "signals.players[].series.speed (1-s mean)"
-  ]
- },
- {
-  "kind": "recovery_run",
-  "label": "Recovery run",
-  "value": 29.69,
-  "player": {
-   "id": "A05",
-   "name": "Marco Elmbury",
-   "shirt": 2,
-   "team": "away",
-   "position": "FB"
-  },
-  "period": 1,
-  "t": 917.0,
-  "clock": "15:17",
-  "video_s": 917.0,
-  "start_video_s": 913.0,
-  "end_video_s": 918.0,
-  "segments": [
-   [
-    913.0,
-    918.0
-   ]
-  ],
-  "caption": "Marco Elmbury runs 30 m above 5.5 m/s back towards his own goal, up to 6.2 m/s (22 km/h), starting 3 seconds after his team lost the ball.",
-  "facts": {
-   "metres": {
-    "value": 30,
-    "unit": "m above 5.5 m/s in one run",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds": {
-    "value": 5,
-    "unit": "s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "top_speed": {
-    "value": 6.2,
-    "unit": "m/s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "typical_run": {
-    "value": 19,
-    "unit": "m, mean high-speed run",
-    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
-   },
-   "top_speed_kmh": {
-    "value": 22,
-    "unit": "km/h",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds_after_loss": {
-    "value": 3,
-    "unit": "s after his team lost the ball",
-    "source": "tracking.possession_team"
-   },
-   "metres_back": {
-    "value": 24,
-    "unit": "m back towards his own goal",
-    "source": "tracking positions"
-   }
-  },
-  "sources": [
-   "Fang2024",
-   "DiSalvo2007",
-   "Fang2024, Table 2; DiSalvo2007, p.224",
-   "signals.players[].series.speed (1-s mean)",
-   "tracking positions",
-   "tracking.possession_team"
-  ]
- },
- {
-  "kind": "recovery_run",
-  "label": "Recovery run",
-  "value": 32.59,
-  "player": {
-   "id": "A02",
-   "name": "Sami Yarrigg",
-   "shirt": 5,
-   "team": "away",
-   "position": "CB"
-  },
-  "period": 1,
-  "t": 1014.0,
-  "clock": "16:54",
-  "video_s": 1014.0,
-  "start_video_s": 1010.0,
-  "end_video_s": 1015.0,
-  "segments": [
-   [
-    1010.0,
-    1015.0
-   ]
-  ],
-  "caption": "Sami Yarrigg runs 33 m above 5.5 m/s back towards his own goal, up to 7.1 m/s (25 km/h), starting 5 seconds after his team lost the ball.",
-  "facts": {
-   "metres": {
-    "value": 33,
-    "unit": "m above 5.5 m/s in one run",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds": {
-    "value": 5,
-    "unit": "s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "top_speed": {
-    "value": 7.1,
-    "unit": "m/s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "typical_run": {
-    "value": 19,
-    "unit": "m, mean high-speed run",
-    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
-   },
-   "top_speed_kmh": {
-    "value": 25,
-    "unit": "km/h",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds_after_loss": {
-    "value": 5,
-    "unit": "s after his team lost the ball",
-    "source": "tracking.possession_team"
-   },
-   "metres_back": {
-    "value": 20,
-    "unit": "m back towards his own goal",
-    "source": "tracking positions"
-   }
-  },
-  "sources": [
-   "Fang2024",
-   "DiSalvo2007",
-   "Fang2024, Table 2; DiSalvo2007, p.224",
-   "signals.players[].series.speed (1-s mean)",
-   "tracking positions",
-   "tracking.possession_team"
-  ]
- },
- {
-  "kind": "longest_run",
-  "label": "Longest run",
-  "value": 37.03,
+  "kind": "top_speed",
+  "label": "Top speed",
+  "value": 8.95,
   "player": {
    "id": "H08",
    "name": "Felix Raskmere",
@@ -3263,78 +2512,18 @@
    "position": "AM"
   },
   "period": 1,
-  "t": 1017.0,
-  "clock": "16:57",
-  "video_s": 1017.0,
-  "start_video_s": 1013.0,
-  "end_video_s": 1018.0,
+  "t": 252.0,
+  "clock": "4:12",
+  "video_s": 252.0,
+  "start_video_s": 249.0,
+  "end_video_s": 254.0,
   "segments": [
    [
-    1013.0,
-    1018.0
+    249.0,
+    254.0
    ]
   ],
-  "caption": "Felix Raskmere runs 37 m above 5.5 m/s (19.8 km/h) in one go in the opponents' half with his team on the ball, about 2 times a typical high-speed run.",
-  "facts": {
-   "metres": {
-    "value": 37,
-    "unit": "m above 5.5 m/s in one run",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds": {
-    "value": 5,
-    "unit": "s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "top_speed": {
-    "value": 8.6,
-    "unit": "m/s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "typical_run": {
-    "value": 19,
-    "unit": "m, mean high-speed run",
-    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
-   },
-   "times_typical": {
-    "value": 2,
-    "unit": "times a typical run",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "where": "in the opponents' half",
-   "ball": "his team"
-  },
-  "sources": [
-   "Fang2024",
-   "DiSalvo2007",
-   "Fang2024, Table 2; DiSalvo2007, p.224",
-   "signals.players[].series.speed (1-s mean)"
-  ]
- },
- {
-  "kind": "top_speed",
-  "label": "Top speed",
-  "value": 8.91,
-  "player": {
-   "id": "H07",
-   "name": "Ben Morrbury",
-   "shirt": 8,
-   "team": "home",
-   "position": "CM"
-  },
-  "period": 1,
-  "t": 1028.0,
-  "clock": "17:08",
-  "video_s": 1028.0,
-  "start_video_s": 1026.0,
-  "end_video_s": 1030.0,
-  "segments": [
-   [
-    1026.0,
-    1030.0
-   ]
-  ],
-  "caption": "Ben Morrbury hits 8.9 m/s (32 km/h); the average match top speed for a central midfielder is about 8.4 m/s.",
+  "caption": "Felix Raskmere hits 8.9 m/s (32 km/h); the average match top speed for an attacking midfielder is about 8.4 m/s.",
   "facts": {
    "top_speed": {
     "value": 8.9,
@@ -3359,9 +2548,121 @@
   ]
  },
  {
-  "kind": "busiest_minute",
-  "label": "Busiest minute",
-  "value": 106.8,
+  "kind": "back_to_back",
+  "label": "Back-to-back runs",
+  "value": 3.01,
+  "player": {
+   "id": "A08",
+   "name": "Jonah Wendrigg",
+   "shirt": 10,
+   "team": "away",
+   "position": "AM"
+  },
+  "period": 1,
+  "t": 252.0,
+  "clock": "4:12",
+  "video_s": 252.0,
+  "start_video_s": 213.0,
+  "end_video_s": 253.0,
+  "segments": [
+   [
+    213.0,
+    215.0
+   ],
+   [
+    223.0,
+    231.0
+   ],
+   [
+    249.0,
+    253.0
+   ]
+  ],
+  "caption": "Jonah Wendrigg makes 3 high-speed runs in 40 seconds, never more than 18 seconds apart; an attacking midfielder usually gets about 62 seconds between them.",
+  "facts": {
+   "runs": {
+    "value": 3,
+    "unit": "high-speed runs",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds": {
+    "value": 40,
+    "unit": "s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "metres": {
+    "value": 97,
+    "unit": "m above 5.5 m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "longest_gap": {
+    "value": 18,
+    "unit": "s between runs",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "usual_gap_for_position": {
+    "value": 62,
+    "unit": "s, usual time between high-speed runs for his position",
+    "source": "Bradley2009, Table I"
+   }
+  },
+  "sources": [
+   "Bradley2009",
+   "Bradley2009, Table I",
+   "signals.players[].series.speed (1-s mean)"
+  ]
+ },
+ {
+  "kind": "top_speed",
+  "label": "Top speed",
+  "value": 8.7,
+  "player": {
+   "id": "H06",
+   "name": "Adam Jorraway",
+   "shirt": 6,
+   "team": "home",
+   "position": "DM"
+  },
+  "period": 1,
+  "t": 253.0,
+  "clock": "4:13",
+  "video_s": 253.0,
+  "start_video_s": 250.0,
+  "end_video_s": 255.0,
+  "segments": [
+   [
+    250.0,
+    255.0
+   ]
+  ],
+  "caption": "Adam Jorraway hits 8.7 m/s (31 km/h); the average match top speed for a defensive midfielder is about 8.4 m/s.",
+  "facts": {
+   "top_speed": {
+    "value": 8.7,
+    "unit": "m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "top_speed_kmh": {
+    "value": 31,
+    "unit": "km/h",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "published_match_top_speed_for_position": {
+    "value": 8.4,
+    "unit": "m/s, mean match top speed for his position",
+    "source": "SilvaH2025, Table 1"
+   }
+  },
+  "sources": [
+   "SilvaH2025",
+   "SilvaH2025, Table 1",
+   "signals.players[].series.speed (1-s mean)"
+  ]
+ },
+ {
+  "kind": "longest_run",
+  "label": "Longest run",
+  "value": 39.4,
   "player": {
    "id": "H08",
    "name": "Felix Raskmere",
@@ -3370,21 +2671,81 @@
    "position": "AM"
   },
   "period": 1,
-  "t": 1067.0,
-  "clock": "17:47",
-  "video_s": 1067.0,
-  "start_video_s": 1008.0,
-  "end_video_s": 1068.0,
+  "t": 253.0,
+  "clock": "4:13",
+  "video_s": 253.0,
+  "start_video_s": 249.0,
+  "end_video_s": 254.0,
   "segments": [
    [
-    1008.0,
-    1068.0
+    249.0,
+    254.0
    ]
   ],
-  "caption": "Felix Raskmere covers 107 m above 5.5 m/s (19.8 km/h) in one minute, against a published average best minute of 62 m.",
+  "caption": "Felix Raskmere runs 39 m above 5.5 m/s (19.8 km/h) in one go back towards his own goal while the opponents had the ball, about 2 times a typical high-speed run.",
+  "facts": {
+   "metres": {
+    "value": 39,
+    "unit": "m above 5.5 m/s in one run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds": {
+    "value": 5,
+    "unit": "s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "top_speed": {
+    "value": 8.9,
+    "unit": "m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "typical_run": {
+    "value": 19,
+    "unit": "m, mean high-speed run",
+    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
+   },
+   "times_typical": {
+    "value": 2,
+    "unit": "times a typical run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "where": "back towards his own goal",
+   "ball": "the opponents"
+  },
+  "sources": [
+   "Fang2024",
+   "DiSalvo2007",
+   "Fang2024, Table 2; DiSalvo2007, p.224",
+   "signals.players[].series.speed (1-s mean)"
+  ]
+ },
+ {
+  "kind": "busiest_minute",
+  "label": "Busiest minute",
+  "value": 98.4,
+  "player": {
+   "id": "A08",
+   "name": "Jonah Wendrigg",
+   "shirt": 10,
+   "team": "away",
+   "position": "AM"
+  },
+  "period": 1,
+  "t": 253.0,
+  "clock": "4:13",
+  "video_s": 253.0,
+  "start_video_s": 194.0,
+  "end_video_s": 254.0,
+  "segments": [
+   [
+    194.0,
+    254.0
+   ]
+  ],
+  "caption": "Jonah Wendrigg covers 98 m above 5.5 m/s (19.8 km/h) in one minute, against a published average best minute of 62 m.",
   "facts": {
    "metres_in_one_minute": {
-    "value": 107,
+    "value": 98,
     "unit": "m above 5.5 m/s in one minute",
     "source": "signals.players[].series.hsr_1min"
    },
@@ -3401,9 +2762,1315 @@
   ]
  },
  {
+  "kind": "recovery_run",
+  "label": "Recovery run",
+  "value": 39.4,
+  "player": {
+   "id": "H08",
+   "name": "Felix Raskmere",
+   "shirt": 10,
+   "team": "home",
+   "position": "AM"
+  },
+  "period": 1,
+  "t": 253.0,
+  "clock": "4:13",
+  "video_s": 253.0,
+  "start_video_s": 249.0,
+  "end_video_s": 254.0,
+  "segments": [
+   [
+    249.0,
+    254.0
+   ]
+  ],
+  "caption": "Felix Raskmere runs 39 m above 5.5 m/s back towards his own goal, up to 8.9 m/s (32 km/h), starting 2 seconds after his team lost the ball.",
+  "facts": {
+   "metres": {
+    "value": 39,
+    "unit": "m above 5.5 m/s in one run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds": {
+    "value": 5,
+    "unit": "s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "top_speed": {
+    "value": 8.9,
+    "unit": "m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "typical_run": {
+    "value": 19,
+    "unit": "m, mean high-speed run",
+    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
+   },
+   "top_speed_kmh": {
+    "value": 32,
+    "unit": "km/h",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds_after_loss": {
+    "value": 2,
+    "unit": "s after his team lost the ball",
+    "source": "tracking.possession_team"
+   },
+   "metres_back": {
+    "value": 33,
+    "unit": "m back towards his own goal",
+    "source": "tracking positions"
+   }
+  },
+  "sources": [
+   "Fang2024",
+   "DiSalvo2007",
+   "Fang2024, Table 2; DiSalvo2007, p.224",
+   "signals.players[].series.speed (1-s mean)",
+   "tracking positions",
+   "tracking.possession_team"
+  ]
+ },
+ {
+  "kind": "longest_run",
+  "label": "Longest run",
+  "value": 38.93,
+  "player": {
+   "id": "H06",
+   "name": "Adam Jorraway",
+   "shirt": 6,
+   "team": "home",
+   "position": "DM"
+  },
+  "period": 1,
+  "t": 254.0,
+  "clock": "4:14",
+  "video_s": 254.0,
+  "start_video_s": 250.0,
+  "end_video_s": 255.0,
+  "segments": [
+   [
+    250.0,
+    255.0
+   ]
+  ],
+  "caption": "Adam Jorraway runs 39 m above 5.5 m/s (19.8 km/h) in one go back towards his own goal while the opponents had the ball, about 2 times a typical high-speed run.",
+  "facts": {
+   "metres": {
+    "value": 39,
+    "unit": "m above 5.5 m/s in one run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds": {
+    "value": 5,
+    "unit": "s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "top_speed": {
+    "value": 8.7,
+    "unit": "m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "typical_run": {
+    "value": 19,
+    "unit": "m, mean high-speed run",
+    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
+   },
+   "times_typical": {
+    "value": 2,
+    "unit": "times a typical run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "where": "back towards his own goal",
+   "ball": "the opponents"
+  },
+  "sources": [
+   "Fang2024",
+   "DiSalvo2007",
+   "Fang2024, Table 2; DiSalvo2007, p.224",
+   "signals.players[].series.speed (1-s mean)"
+  ]
+ },
+ {
+  "kind": "busiest_minute",
+  "label": "Busiest minute",
+  "value": 56.7,
+  "player": {
+   "id": "H06",
+   "name": "Adam Jorraway",
+   "shirt": 6,
+   "team": "home",
+   "position": "DM"
+  },
+  "period": 1,
+  "t": 254.0,
+  "clock": "4:14",
+  "video_s": 254.0,
+  "start_video_s": 195.0,
+  "end_video_s": 255.0,
+  "segments": [
+   [
+    195.0,
+    255.0
+   ]
+  ],
+  "caption": "Adam Jorraway covers 57 m above 5.5 m/s (19.8 km/h) in one minute, against a published average best minute of 62 m.",
+  "facts": {
+   "metres_in_one_minute": {
+    "value": 57,
+    "unit": "m above 5.5 m/s in one minute",
+    "source": "signals.players[].series.hsr_1min"
+   },
+   "published_best_minute": {
+    "value": 62,
+    "unit": "m, mean best minute",
+    "source": "Leifsson2024, Table 1"
+   }
+  },
+  "sources": [
+   "Leifsson2024",
+   "Leifsson2024, Table 1",
+   "signals.players[].series.hsr_1min"
+  ]
+ },
+ {
+  "kind": "recovery_run",
+  "label": "Recovery run",
+  "value": 38.93,
+  "player": {
+   "id": "H06",
+   "name": "Adam Jorraway",
+   "shirt": 6,
+   "team": "home",
+   "position": "DM"
+  },
+  "period": 1,
+  "t": 254.0,
+  "clock": "4:14",
+  "video_s": 254.0,
+  "start_video_s": 250.0,
+  "end_video_s": 255.0,
+  "segments": [
+   [
+    250.0,
+    255.0
+   ]
+  ],
+  "caption": "Adam Jorraway runs 39 m above 5.5 m/s back towards his own goal, up to 8.7 m/s (31 km/h), starting 3 seconds after his team lost the ball.",
+  "facts": {
+   "metres": {
+    "value": 39,
+    "unit": "m above 5.5 m/s in one run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds": {
+    "value": 5,
+    "unit": "s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "top_speed": {
+    "value": 8.7,
+    "unit": "m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "typical_run": {
+    "value": 19,
+    "unit": "m, mean high-speed run",
+    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
+   },
+   "top_speed_kmh": {
+    "value": 31,
+    "unit": "km/h",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds_after_loss": {
+    "value": 3,
+    "unit": "s after his team lost the ball",
+    "source": "tracking.possession_team"
+   },
+   "metres_back": {
+    "value": 32,
+    "unit": "m back towards his own goal",
+    "source": "tracking positions"
+   }
+  },
+  "sources": [
+   "Fang2024",
+   "DiSalvo2007",
+   "Fang2024, Table 2; DiSalvo2007, p.224",
+   "signals.players[].series.speed (1-s mean)",
+   "tracking positions",
+   "tracking.possession_team"
+  ]
+ },
+ {
+  "kind": "longest_run",
+  "label": "Longest run",
+  "value": 42.96,
+  "player": {
+   "id": "H02",
+   "name": "Hugo Elmock",
+   "shirt": 5,
+   "team": "home",
+   "position": "CB"
+  },
+  "period": 1,
+  "t": 256.0,
+  "clock": "4:16",
+  "video_s": 256.0,
+  "start_video_s": 251.0,
+  "end_video_s": 257.0,
+  "segments": [
+   [
+    251.0,
+    257.0
+   ]
+  ],
+  "caption": "Hugo Elmock runs 43 m above 5.5 m/s (19.8 km/h) in one go back towards his own goal while the opponents had the ball, about 2 times a typical high-speed run.",
+  "facts": {
+   "metres": {
+    "value": 43,
+    "unit": "m above 5.5 m/s in one run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds": {
+    "value": 6,
+    "unit": "s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "top_speed": {
+    "value": 7.6,
+    "unit": "m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "typical_run": {
+    "value": 19,
+    "unit": "m, mean high-speed run",
+    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
+   },
+   "times_typical": {
+    "value": 2,
+    "unit": "times a typical run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "where": "back towards his own goal",
+   "ball": "the opponents"
+  },
+  "sources": [
+   "Fang2024",
+   "DiSalvo2007",
+   "Fang2024, Table 2; DiSalvo2007, p.224",
+   "signals.players[].series.speed (1-s mean)"
+  ]
+ },
+ {
+  "kind": "recovery_run",
+  "label": "Recovery run",
+  "value": 42.96,
+  "player": {
+   "id": "H02",
+   "name": "Hugo Elmock",
+   "shirt": 5,
+   "team": "home",
+   "position": "CB"
+  },
+  "period": 1,
+  "t": 256.0,
+  "clock": "4:16",
+  "video_s": 256.0,
+  "start_video_s": 251.0,
+  "end_video_s": 257.0,
+  "segments": [
+   [
+    251.0,
+    257.0
+   ]
+  ],
+  "caption": "Hugo Elmock runs 43 m above 5.5 m/s back towards his own goal, up to 7.6 m/s (27 km/h), starting 4 seconds after his team lost the ball.",
+  "facts": {
+   "metres": {
+    "value": 43,
+    "unit": "m above 5.5 m/s in one run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds": {
+    "value": 6,
+    "unit": "s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "top_speed": {
+    "value": 7.6,
+    "unit": "m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "typical_run": {
+    "value": 19,
+    "unit": "m, mean high-speed run",
+    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
+   },
+   "top_speed_kmh": {
+    "value": 27,
+    "unit": "km/h",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds_after_loss": {
+    "value": 4,
+    "unit": "s after his team lost the ball",
+    "source": "tracking.possession_team"
+   },
+   "metres_back": {
+    "value": 31,
+    "unit": "m back towards his own goal",
+    "source": "tracking positions"
+   }
+  },
+  "sources": [
+   "Fang2024",
+   "DiSalvo2007",
+   "Fang2024, Table 2; DiSalvo2007, p.224",
+   "signals.players[].series.speed (1-s mean)",
+   "tracking positions",
+   "tracking.possession_team"
+  ]
+ },
+ {
+  "kind": "busiest_minute",
+  "label": "Busiest minute",
+  "value": 60.7,
+  "player": {
+   "id": "H02",
+   "name": "Hugo Elmock",
+   "shirt": 5,
+   "team": "home",
+   "position": "CB"
+  },
+  "period": 1,
+  "t": 279.0,
+  "clock": "4:39",
+  "video_s": 279.0,
+  "start_video_s": 220.0,
+  "end_video_s": 280.0,
+  "segments": [
+   [
+    220.0,
+    280.0
+   ]
+  ],
+  "caption": "Hugo Elmock covers 61 m above 5.5 m/s (19.8 km/h) in one minute, against a published average best minute of 62 m.",
+  "facts": {
+   "metres_in_one_minute": {
+    "value": 61,
+    "unit": "m above 5.5 m/s in one minute",
+    "source": "signals.players[].series.hsr_1min"
+   },
+   "published_best_minute": {
+    "value": 62,
+    "unit": "m, mean best minute",
+    "source": "Leifsson2024, Table 1"
+   }
+  },
+  "sources": [
+   "Leifsson2024",
+   "Leifsson2024, Table 1",
+   "signals.players[].series.hsr_1min"
+  ]
+ },
+ {
+  "kind": "busiest_minute",
+  "label": "Busiest minute",
+  "value": 57.6,
+  "player": {
+   "id": "H06",
+   "name": "Adam Jorraway",
+   "shirt": 6,
+   "team": "home",
+   "position": "DM"
+  },
+  "period": 1,
+  "t": 308.0,
+  "clock": "5:08",
+  "video_s": 308.0,
+  "start_video_s": 249.0,
+  "end_video_s": 309.0,
+  "segments": [
+   [
+    249.0,
+    309.0
+   ]
+  ],
+  "caption": "Adam Jorraway covers 58 m above 5.5 m/s (19.8 km/h) in one minute, against a published average best minute of 62 m.",
+  "facts": {
+   "metres_in_one_minute": {
+    "value": 58,
+    "unit": "m above 5.5 m/s in one minute",
+    "source": "signals.players[].series.hsr_1min"
+   },
+   "published_best_minute": {
+    "value": 62,
+    "unit": "m, mean best minute",
+    "source": "Leifsson2024, Table 1"
+   }
+  },
+  "sources": [
+   "Leifsson2024",
+   "Leifsson2024, Table 1",
+   "signals.players[].series.hsr_1min"
+  ]
+ },
+ {
+  "kind": "busiest_minute",
+  "label": "Busiest minute",
+  "value": 86.1,
+  "player": {
+   "id": "H08",
+   "name": "Felix Raskmere",
+   "shirt": 10,
+   "team": "home",
+   "position": "AM"
+  },
+  "period": 1,
+  "t": 308.0,
+  "clock": "5:08",
+  "video_s": 308.0,
+  "start_video_s": 249.0,
+  "end_video_s": 309.0,
+  "segments": [
+   [
+    249.0,
+    309.0
+   ]
+  ],
+  "caption": "Felix Raskmere covers 86 m above 5.5 m/s (19.8 km/h) in one minute, against a published average best minute of 62 m.",
+  "facts": {
+   "metres_in_one_minute": {
+    "value": 86,
+    "unit": "m above 5.5 m/s in one minute",
+    "source": "signals.players[].series.hsr_1min"
+   },
+   "published_best_minute": {
+    "value": 62,
+    "unit": "m, mean best minute",
+    "source": "Leifsson2024, Table 1"
+   }
+  },
+  "sources": [
+   "Leifsson2024",
+   "Leifsson2024, Table 1",
+   "signals.players[].series.hsr_1min"
+  ]
+ },
+ {
+  "kind": "longest_run",
+  "label": "Longest run",
+  "value": 49.82,
+  "player": {
+   "id": "H07",
+   "name": "Ben Morrbury",
+   "shirt": 8,
+   "team": "home",
+   "position": "CM"
+  },
+  "period": 1,
+  "t": 311.0,
+  "clock": "5:11",
+  "video_s": 311.0,
+  "start_video_s": 305.0,
+  "end_video_s": 312.0,
+  "segments": [
+   [
+    305.0,
+    312.0
+   ]
+  ],
+  "caption": "Ben Morrbury runs 50 m above 5.5 m/s (19.8 km/h) in one go from his own half into the opponents' half with his team on the ball, about 3 times a typical high-speed run.",
+  "facts": {
+   "metres": {
+    "value": 50,
+    "unit": "m above 5.5 m/s in one run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds": {
+    "value": 7,
+    "unit": "s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "top_speed": {
+    "value": 8.0,
+    "unit": "m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "typical_run": {
+    "value": 19,
+    "unit": "m, mean high-speed run",
+    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
+   },
+   "times_typical": {
+    "value": 3,
+    "unit": "times a typical run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "where": "from his own half into the opponents' half",
+   "ball": "his team"
+  },
+  "sources": [
+   "Fang2024",
+   "DiSalvo2007",
+   "Fang2024, Table 2; DiSalvo2007, p.224",
+   "signals.players[].series.speed (1-s mean)"
+  ]
+ },
+ {
+  "kind": "busiest_minute",
+  "label": "Busiest minute",
+  "value": 63.6,
+  "player": {
+   "id": "H03",
+   "name": "Yusuf Cadock",
+   "shirt": 4,
+   "team": "home",
+   "position": "CB"
+  },
+  "period": 1,
+  "t": 311.0,
+  "clock": "5:11",
+  "video_s": 311.0,
+  "start_video_s": 252.0,
+  "end_video_s": 312.0,
+  "segments": [
+   [
+    252.0,
+    312.0
+   ]
+  ],
+  "caption": "Yusuf Cadock covers 64 m above 5.5 m/s (19.8 km/h) in one minute, against a published average best minute of 62 m.",
+  "facts": {
+   "metres_in_one_minute": {
+    "value": 64,
+    "unit": "m above 5.5 m/s in one minute",
+    "source": "signals.players[].series.hsr_1min"
+   },
+   "published_best_minute": {
+    "value": 62,
+    "unit": "m, mean best minute",
+    "source": "Leifsson2024, Table 1"
+   }
+  },
+  "sources": [
+   "Leifsson2024",
+   "Leifsson2024, Table 1",
+   "signals.players[].series.hsr_1min"
+  ]
+ },
+ {
+  "kind": "back_to_back",
+  "label": "Back-to-back runs",
+  "value": 4.01,
+  "player": {
+   "id": "H09",
+   "name": "Kofi Kestaway",
+   "shirt": 11,
+   "team": "home",
+   "position": "WM"
+  },
+  "period": 1,
+  "t": 320.0,
+  "clock": "5:20",
+  "video_s": 320.0,
+  "start_video_s": 274.0,
+  "end_video_s": 321.0,
+  "segments": [
+   [
+    274.0,
+    277.0
+   ],
+   [
+    287.0,
+    289.0
+   ],
+   [
+    303.0,
+    304.0
+   ],
+   [
+    317.0,
+    321.0
+   ]
+  ],
+  "caption": "Kofi Kestaway makes 4 high-speed runs in 47 seconds, never more than 14 seconds apart; a wide midfielder usually gets about 51 seconds between them.",
+  "facts": {
+   "runs": {
+    "value": 4,
+    "unit": "high-speed runs",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds": {
+    "value": 47,
+    "unit": "s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "metres": {
+    "value": 65,
+    "unit": "m above 5.5 m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "longest_gap": {
+    "value": 14,
+    "unit": "s between runs",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "usual_gap_for_position": {
+    "value": 51,
+    "unit": "s, usual time between high-speed runs for his position",
+    "source": "Bradley2009, Table I"
+   }
+  },
+  "sources": [
+   "Bradley2009",
+   "Bradley2009, Table I",
+   "signals.players[].series.speed (1-s mean)"
+  ]
+ },
+ {
+  "kind": "busiest_minute",
+  "label": "Busiest minute",
+  "value": 63.7,
+  "player": {
+   "id": "H09",
+   "name": "Kofi Kestaway",
+   "shirt": 11,
+   "team": "home",
+   "position": "WM"
+  },
+  "period": 1,
+  "t": 320.0,
+  "clock": "5:20",
+  "video_s": 320.0,
+  "start_video_s": 261.0,
+  "end_video_s": 321.0,
+  "segments": [
+   [
+    261.0,
+    321.0
+   ]
+  ],
+  "caption": "Kofi Kestaway covers 64 m above 5.5 m/s (19.8 km/h) in one minute, against a published average best minute of 62 m.",
+  "facts": {
+   "metres_in_one_minute": {
+    "value": 64,
+    "unit": "m above 5.5 m/s in one minute",
+    "source": "signals.players[].series.hsr_1min"
+   },
+   "published_best_minute": {
+    "value": 62,
+    "unit": "m, mean best minute",
+    "source": "Leifsson2024, Table 1"
+   }
+  },
+  "sources": [
+   "Leifsson2024",
+   "Leifsson2024, Table 1",
+   "signals.players[].series.hsr_1min"
+  ]
+ },
+ {
+  "kind": "busiest_minute",
+  "label": "Busiest minute",
+  "value": 83.5,
+  "player": {
+   "id": "H11",
+   "name": "Nico Sorrnell",
+   "shirt": 9,
+   "team": "home",
+   "position": "CF"
+  },
+  "period": 1,
+  "t": 326.0,
+  "clock": "5:26",
+  "video_s": 326.0,
+  "start_video_s": 267.0,
+  "end_video_s": 327.0,
+  "segments": [
+   [
+    267.0,
+    327.0
+   ]
+  ],
+  "caption": "Nico Sorrnell covers 84 m above 5.5 m/s (19.8 km/h) in one minute, against a published average best minute of 62 m.",
+  "facts": {
+   "metres_in_one_minute": {
+    "value": 84,
+    "unit": "m above 5.5 m/s in one minute",
+    "source": "signals.players[].series.hsr_1min"
+   },
+   "published_best_minute": {
+    "value": 62,
+    "unit": "m, mean best minute",
+    "source": "Leifsson2024, Table 1"
+   }
+  },
+  "sources": [
+   "Leifsson2024",
+   "Leifsson2024, Table 1",
+   "signals.players[].series.hsr_1min"
+  ]
+ },
+ {
+  "kind": "busiest_minute",
+  "label": "Busiest minute",
+  "value": 101.7,
+  "player": {
+   "id": "H08",
+   "name": "Felix Raskmere",
+   "shirt": 10,
+   "team": "home",
+   "position": "AM"
+  },
+  "period": 1,
+  "t": 803.0,
+  "clock": "13:23",
+  "video_s": 803.0,
+  "start_video_s": 744.0,
+  "end_video_s": 804.0,
+  "segments": [
+   [
+    744.0,
+    804.0
+   ]
+  ],
+  "caption": "Felix Raskmere covers 102 m above 5.5 m/s (19.8 km/h) in one minute, against a published average best minute of 62 m.",
+  "facts": {
+   "metres_in_one_minute": {
+    "value": 102,
+    "unit": "m above 5.5 m/s in one minute",
+    "source": "signals.players[].series.hsr_1min"
+   },
+   "published_best_minute": {
+    "value": 62,
+    "unit": "m, mean best minute",
+    "source": "Leifsson2024, Table 1"
+   }
+  },
+  "sources": [
+   "Leifsson2024",
+   "Leifsson2024, Table 1",
+   "signals.players[].series.hsr_1min"
+  ]
+ },
+ {
+  "kind": "busiest_minute",
+  "label": "Busiest minute",
+  "value": 100.7,
+  "player": {
+   "id": "A04",
+   "name": "Luca Bremock",
+   "shirt": 3,
+   "team": "away",
+   "position": "FB"
+  },
+  "period": 1,
+  "t": 853.0,
+  "clock": "14:13",
+  "video_s": 853.0,
+  "start_video_s": 794.0,
+  "end_video_s": 854.0,
+  "segments": [
+   [
+    794.0,
+    854.0
+   ]
+  ],
+  "caption": "Luca Bremock covers 101 m above 5.5 m/s (19.8 km/h) in one minute, against a published average best minute of 62 m.",
+  "facts": {
+   "metres_in_one_minute": {
+    "value": 101,
+    "unit": "m above 5.5 m/s in one minute",
+    "source": "signals.players[].series.hsr_1min"
+   },
+   "published_best_minute": {
+    "value": 62,
+    "unit": "m, mean best minute",
+    "source": "Leifsson2024, Table 1"
+   }
+  },
+  "sources": [
+   "Leifsson2024",
+   "Leifsson2024, Table 1",
+   "signals.players[].series.hsr_1min"
+  ]
+ },
+ {
+  "kind": "back_to_back",
+  "label": "Back-to-back runs",
+  "value": 4.0,
+  "player": {
+   "id": "H04",
+   "name": "Marco Tarvsall",
+   "shirt": 3,
+   "team": "home",
+   "position": "FB"
+  },
+  "period": 1,
+  "t": 1036.0,
+  "clock": "17:16",
+  "video_s": 1036.0,
+  "start_video_s": 992.0,
+  "end_video_s": 1037.0,
+  "segments": [
+   [
+    992.0,
+    993.0
+   ],
+   [
+    1009.0,
+    1010.0
+   ],
+   [
+    1022.0,
+    1024.0
+   ],
+   [
+    1036.0,
+    1037.0
+   ]
+  ],
+  "caption": "Marco Tarvsall makes 4 high-speed runs in 45 seconds, never more than 16 seconds apart; a full-back usually gets about 74 seconds between them.",
+  "facts": {
+   "runs": {
+    "value": 4,
+    "unit": "high-speed runs",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds": {
+    "value": 45,
+    "unit": "s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "metres": {
+    "value": 31,
+    "unit": "m above 5.5 m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "longest_gap": {
+    "value": 16,
+    "unit": "s between runs",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "usual_gap_for_position": {
+    "value": 74,
+    "unit": "s, usual time between high-speed runs for his position",
+    "source": "Bradley2009, Table I"
+   }
+  },
+  "sources": [
+   "Bradley2009",
+   "Bradley2009, Table I",
+   "signals.players[].series.speed (1-s mean)"
+  ]
+ },
+ {
+  "kind": "longest_run",
+  "label": "Longest run",
+  "value": 52.27,
+  "player": {
+   "id": "H02",
+   "name": "Hugo Elmock",
+   "shirt": 5,
+   "team": "home",
+   "position": "CB"
+  },
+  "period": 1,
+  "t": 1037.0,
+  "clock": "17:17",
+  "video_s": 1037.0,
+  "start_video_s": 1030.0,
+  "end_video_s": 1038.0,
+  "segments": [
+   [
+    1030.0,
+    1038.0
+   ]
+  ],
+  "caption": "Hugo Elmock runs 52 m above 5.5 m/s (19.8 km/h) in one go from his own box into the opponents' half with his team on the ball, about 3 times a typical high-speed run.",
+  "facts": {
+   "metres": {
+    "value": 52,
+    "unit": "m above 5.5 m/s in one run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds": {
+    "value": 8,
+    "unit": "s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "top_speed": {
+    "value": 7.0,
+    "unit": "m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "typical_run": {
+    "value": 19,
+    "unit": "m, mean high-speed run",
+    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
+   },
+   "times_typical": {
+    "value": 3,
+    "unit": "times a typical run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "where": "from his own box into the opponents' half",
+   "ball": "his team"
+  },
+  "sources": [
+   "Fang2024",
+   "DiSalvo2007",
+   "Fang2024, Table 2; DiSalvo2007, p.224",
+   "signals.players[].series.speed (1-s mean)"
+  ]
+ },
+ {
+  "kind": "back_to_back",
+  "label": "Back-to-back runs",
+  "value": 4.0,
+  "player": {
+   "id": "A11",
+   "name": "Nico Jorrlowe",
+   "shirt": 9,
+   "team": "away",
+   "position": "CF"
+  },
+  "period": 1,
+  "t": 1061.0,
+  "clock": "17:41",
+  "video_s": 1061.0,
+  "start_video_s": 1038.0,
+  "end_video_s": 1062.0,
+  "segments": [
+   [
+    1038.0,
+    1039.0
+   ],
+   [
+    1043.0,
+    1046.0
+   ],
+   [
+    1056.0,
+    1058.0
+   ],
+   [
+    1060.0,
+    1062.0
+   ]
+  ],
+  "caption": "Nico Jorrlowe makes 4 high-speed runs in 24 seconds, never more than 10 seconds apart; a striker usually gets about 73 seconds between them.",
+  "facts": {
+   "runs": {
+    "value": 4,
+    "unit": "high-speed runs",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds": {
+    "value": 24,
+    "unit": "s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "metres": {
+    "value": 50,
+    "unit": "m above 5.5 m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "longest_gap": {
+    "value": 10,
+    "unit": "s between runs",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "usual_gap_for_position": {
+    "value": 73,
+    "unit": "s, usual time between high-speed runs for his position",
+    "source": "Bradley2009, Table I"
+   }
+  },
+  "sources": [
+   "Bradley2009",
+   "Bradley2009, Table I",
+   "signals.players[].series.speed (1-s mean)"
+  ]
+ },
+ {
+  "kind": "back_to_back",
+  "label": "Back-to-back runs",
+  "value": 5.01,
+  "player": {
+   "id": "H11",
+   "name": "Nico Sorrnell",
+   "shirt": 9,
+   "team": "home",
+   "position": "CF"
+  },
+  "period": 1,
+  "t": 1536.0,
+  "clock": "25:36",
+  "video_s": 1536.0,
+  "start_video_s": 1475.0,
+  "end_video_s": 1537.0,
+  "segments": [
+   [
+    1475.0,
+    1478.0
+   ],
+   [
+    1484.0,
+    1490.0
+   ],
+   [
+    1509.0,
+    1510.0
+   ],
+   [
+    1513.0,
+    1515.0
+   ],
+   [
+    1534.0,
+    1537.0
+   ]
+  ],
+  "caption": "Nico Sorrnell makes 5 high-speed runs in 62 seconds, never more than 19 seconds apart; a striker usually gets about 73 seconds between them.",
+  "facts": {
+   "runs": {
+    "value": 5,
+    "unit": "high-speed runs",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds": {
+    "value": 62,
+    "unit": "s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "metres": {
+    "value": 95,
+    "unit": "m above 5.5 m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "longest_gap": {
+    "value": 19,
+    "unit": "s between runs",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "usual_gap_for_position": {
+    "value": 73,
+    "unit": "s, usual time between high-speed runs for his position",
+    "source": "Bradley2009, Table I"
+   }
+  },
+  "sources": [
+   "Bradley2009",
+   "Bradley2009, Table I",
+   "signals.players[].series.speed (1-s mean)"
+  ]
+ },
+ {
+  "kind": "back_to_back",
+  "label": "Back-to-back runs",
+  "value": 7.01,
+  "player": {
+   "id": "A11",
+   "name": "Nico Jorrlowe",
+   "shirt": 9,
+   "team": "away",
+   "position": "CF"
+  },
+  "period": 1,
+  "t": 1594.0,
+  "clock": "26:34",
+  "video_s": 1594.0,
+  "start_video_s": 1540.0,
+  "end_video_s": 1595.0,
+  "segments": [
+   [
+    1540.0,
+    1542.0
+   ],
+   [
+    1544.0,
+    1546.0
+   ],
+   [
+    1549.0,
+    1551.0
+   ],
+   [
+    1566.0,
+    1567.0
+   ],
+   [
+    1570.0,
+    1571.0
+   ],
+   [
+    1586.0,
+    1588.0
+   ],
+   [
+    1593.0,
+    1595.0
+   ]
+  ],
+  "caption": "Nico Jorrlowe makes 7 high-speed runs in 55 seconds, never more than 15 seconds apart; a striker usually gets about 73 seconds between them.",
+  "facts": {
+   "runs": {
+    "value": 7,
+    "unit": "high-speed runs",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds": {
+    "value": 55,
+    "unit": "s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "metres": {
+    "value": 73,
+    "unit": "m above 5.5 m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "longest_gap": {
+    "value": 15,
+    "unit": "s between runs",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "usual_gap_for_position": {
+    "value": 73,
+    "unit": "s, usual time between high-speed runs for his position",
+    "source": "Bradley2009, Table I"
+   }
+  },
+  "sources": [
+   "Bradley2009",
+   "Bradley2009, Table I",
+   "signals.players[].series.speed (1-s mean)"
+  ]
+ },
+ {
+  "kind": "recovery_run",
+  "label": "Recovery run",
+  "value": 41.03,
+  "player": {
+   "id": "H04",
+   "name": "Marco Tarvsall",
+   "shirt": 3,
+   "team": "home",
+   "position": "FB"
+  },
+  "period": 1,
+  "t": 2013.0,
+  "clock": "33:33",
+  "video_s": 2013.0,
+  "start_video_s": 2008.0,
+  "end_video_s": 2014.0,
+  "segments": [
+   [
+    2008.0,
+    2014.0
+   ]
+  ],
+  "caption": "Marco Tarvsall runs 41 m above 5.5 m/s back towards his own goal, up to 7.3 m/s (26 km/h), starting 4 seconds after his team lost the ball.",
+  "facts": {
+   "metres": {
+    "value": 41,
+    "unit": "m above 5.5 m/s in one run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds": {
+    "value": 6,
+    "unit": "s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "top_speed": {
+    "value": 7.3,
+    "unit": "m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "typical_run": {
+    "value": 19,
+    "unit": "m, mean high-speed run",
+    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
+   },
+   "top_speed_kmh": {
+    "value": 26,
+    "unit": "km/h",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds_after_loss": {
+    "value": 4,
+    "unit": "s after his team lost the ball",
+    "source": "tracking.possession_team"
+   },
+   "metres_back": {
+    "value": 24,
+    "unit": "m back towards his own goal",
+    "source": "tracking positions"
+   }
+  },
+  "sources": [
+   "Fang2024",
+   "DiSalvo2007",
+   "Fang2024, Table 2; DiSalvo2007, p.224",
+   "signals.players[].series.speed (1-s mean)",
+   "tracking positions",
+   "tracking.possession_team"
+  ]
+ },
+ {
   "kind": "top_speed",
   "label": "Top speed",
-  "value": 9.07,
+  "value": 8.85,
+  "player": {
+   "id": "H09",
+   "name": "Kofi Kestaway",
+   "shirt": 11,
+   "team": "home",
+   "position": "WM"
+  },
+  "period": 1,
+  "t": 2023.0,
+  "clock": "33:43",
+  "video_s": 2023.0,
+  "start_video_s": 2021.0,
+  "end_video_s": 2025.0,
+  "segments": [
+   [
+    2021.0,
+    2025.0
+   ]
+  ],
+  "caption": "Kofi Kestaway hits 8.8 m/s (32 km/h); the average match top speed for a wide midfielder is about 8.5 m/s.",
+  "facts": {
+   "top_speed": {
+    "value": 8.8,
+    "unit": "m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "top_speed_kmh": {
+    "value": 32,
+    "unit": "km/h",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "published_match_top_speed_for_position": {
+    "value": 8.5,
+    "unit": "m/s, mean match top speed for his position",
+    "source": "SilvaH2025, Table 1"
+   }
+  },
+  "sources": [
+   "SilvaH2025",
+   "SilvaH2025, Table 1",
+   "signals.players[].series.speed (1-s mean)"
+  ]
+ },
+ {
+  "kind": "top_speed",
+  "label": "Top speed",
+  "value": 9.08,
   "player": {
    "id": "H05",
    "name": "Dario Fennock",
@@ -3412,15 +4079,15 @@
    "position": "FB"
   },
   "period": 1,
-  "t": 1466.0,
-  "clock": "24:26",
-  "video_s": 1466.0,
-  "start_video_s": 1463.0,
-  "end_video_s": 1468.0,
+  "t": 2282.0,
+  "clock": "38:02",
+  "video_s": 2282.0,
+  "start_video_s": 2279.0,
+  "end_video_s": 2284.0,
   "segments": [
    [
-    1463.0,
-    1468.0
+    2279.0,
+    2284.0
    ]
   ],
   "caption": "Dario Fennock hits 9.1 m/s (33 km/h); the average match top speed for a full-back is about 8.8 m/s.",
@@ -3448,69 +4115,103 @@
   ]
  },
  {
-  "kind": "longest_run",
-  "label": "Longest run",
-  "value": 40.64,
+  "kind": "top_speed",
+  "label": "Top speed",
+  "value": 8.96,
   "player": {
-   "id": "H05",
-   "name": "Dario Fennock",
-   "shirt": 2,
-   "team": "home",
-   "position": "FB"
+   "id": "A11",
+   "name": "Nico Jorrlowe",
+   "shirt": 9,
+   "team": "away",
+   "position": "CF"
   },
   "period": 1,
-  "t": 1467.0,
-  "clock": "24:27",
-  "video_s": 1467.0,
-  "start_video_s": 1463.0,
-  "end_video_s": 1468.0,
+  "t": 2301.0,
+  "clock": "38:21",
+  "video_s": 2301.0,
+  "start_video_s": 2298.0,
+  "end_video_s": 2303.0,
   "segments": [
    [
-    1463.0,
-    1468.0
+    2298.0,
+    2303.0
    ]
   ],
-  "caption": "Dario Fennock runs 41 m above 5.5 m/s (19.8 km/h) in one go in the opponents' half with his team on the ball, about 2 times a typical high-speed run.",
+  "caption": "Nico Jorrlowe hits 9.0 m/s (32 km/h); the average match top speed for a striker is about 8.3 m/s.",
   "facts": {
-   "metres": {
-    "value": 41,
-    "unit": "m above 5.5 m/s in one run",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds": {
-    "value": 5,
-    "unit": "s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
    "top_speed": {
-    "value": 9.1,
+    "value": 9.0,
     "unit": "m/s",
     "source": "signals.players[].series.speed (1-s mean)"
    },
-   "typical_run": {
-    "value": 19,
-    "unit": "m, mean high-speed run",
-    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
-   },
-   "times_typical": {
-    "value": 2,
-    "unit": "times a typical run",
+   "top_speed_kmh": {
+    "value": 32,
+    "unit": "km/h",
     "source": "signals.players[].series.speed (1-s mean)"
    },
-   "where": "in the opponents' half",
-   "ball": "his team"
+   "published_match_top_speed_for_position": {
+    "value": 8.3,
+    "unit": "m/s, mean match top speed for his position",
+    "source": "SilvaH2025, Table 1"
+   }
   },
   "sources": [
-   "Fang2024",
-   "DiSalvo2007",
-   "Fang2024, Table 2; DiSalvo2007, p.224",
+   "SilvaH2025",
+   "SilvaH2025, Table 1",
    "signals.players[].series.speed (1-s mean)"
   ]
  },
  {
   "kind": "top_speed",
   "label": "Top speed",
-  "value": 9.35,
+  "value": 9.0,
+  "player": {
+   "id": "A09",
+   "name": "Ivan Dorrlowe",
+   "shirt": 11,
+   "team": "away",
+   "position": "WM"
+  },
+  "period": 1,
+  "t": 2538.0,
+  "clock": "42:18",
+  "video_s": 2538.0,
+  "start_video_s": 2536.0,
+  "end_video_s": 2541.0,
+  "segments": [
+   [
+    2536.0,
+    2541.0
+   ]
+  ],
+  "caption": "Ivan Dorrlowe hits 9.0 m/s (32 km/h); the average match top speed for a wide midfielder is about 8.5 m/s.",
+  "facts": {
+   "top_speed": {
+    "value": 9.0,
+    "unit": "m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "top_speed_kmh": {
+    "value": 32,
+    "unit": "km/h",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "published_match_top_speed_for_position": {
+    "value": 8.5,
+    "unit": "m/s, mean match top speed for his position",
+    "source": "SilvaH2025, Table 1"
+   }
+  },
+  "sources": [
+   "SilvaH2025",
+   "SilvaH2025, Table 1",
+   "signals.players[].series.speed (1-s mean)"
+  ]
+ },
+ {
+  "kind": "top_speed",
+  "label": "Top speed",
+  "value": 9.2,
   "player": {
    "id": "H05",
    "name": "Dario Fennock",
@@ -3519,26 +4220,26 @@
    "position": "FB"
   },
   "period": 1,
-  "t": 1496.0,
-  "clock": "24:56",
-  "video_s": 1496.0,
-  "start_video_s": 1493.0,
-  "end_video_s": 1498.0,
+  "t": 2555.0,
+  "clock": "42:35",
+  "video_s": 2555.0,
+  "start_video_s": 2553.0,
+  "end_video_s": 2558.0,
   "segments": [
    [
-    1493.0,
-    1498.0
+    2553.0,
+    2558.0
    ]
   ],
-  "caption": "Dario Fennock hits 9.3 m/s (34 km/h); the average match top speed for a full-back is about 8.8 m/s.",
+  "caption": "Dario Fennock hits 9.2 m/s (33 km/h); the average match top speed for a full-back is about 8.8 m/s.",
   "facts": {
    "top_speed": {
-    "value": 9.3,
+    "value": 9.2,
     "unit": "m/s",
     "source": "signals.players[].series.speed (1-s mean)"
    },
    "top_speed_kmh": {
-    "value": 34,
+    "value": 33,
     "unit": "km/h",
     "source": "signals.players[].series.speed (1-s mean)"
    },
@@ -3555,363 +4256,29 @@
   ]
  },
  {
-  "kind": "longest_run",
-  "label": "Longest run",
-  "value": 41.6,
-  "player": {
-   "id": "H05",
-   "name": "Dario Fennock",
-   "shirt": 2,
-   "team": "home",
-   "position": "FB"
-  },
-  "period": 1,
-  "t": 1497.0,
-  "clock": "24:57",
-  "video_s": 1497.0,
-  "start_video_s": 1493.0,
-  "end_video_s": 1498.0,
-  "segments": [
-   [
-    1493.0,
-    1498.0
-   ]
-  ],
-  "caption": "Dario Fennock runs 42 m above 5.5 m/s (19.8 km/h) in one go from the opponents' half into the opponents' box with his team on the ball, about 2 times a typical high-speed run.",
-  "facts": {
-   "metres": {
-    "value": 42,
-    "unit": "m above 5.5 m/s in one run",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds": {
-    "value": 5,
-    "unit": "s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "top_speed": {
-    "value": 9.3,
-    "unit": "m/s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "typical_run": {
-    "value": 19,
-    "unit": "m, mean high-speed run",
-    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
-   },
-   "times_typical": {
-    "value": 2,
-    "unit": "times a typical run",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "where": "from the opponents' half into the opponents' box",
-   "ball": "his team"
-  },
-  "sources": [
-   "Fang2024",
-   "DiSalvo2007",
-   "Fang2024, Table 2; DiSalvo2007, p.224",
-   "signals.players[].series.speed (1-s mean)"
-  ]
- },
- {
-  "kind": "busiest_minute",
-  "label": "Busiest minute",
-  "value": 110.4,
-  "player": {
-   "id": "H05",
-   "name": "Dario Fennock",
-   "shirt": 2,
-   "team": "home",
-   "position": "FB"
-  },
-  "period": 1,
-  "t": 1497.0,
-  "clock": "24:57",
-  "video_s": 1497.0,
-  "start_video_s": 1438.0,
-  "end_video_s": 1498.0,
-  "segments": [
-   [
-    1438.0,
-    1498.0
-   ]
-  ],
-  "caption": "Dario Fennock covers 110 m above 5.5 m/s (19.8 km/h) in one minute, against a published average best minute of 62 m.",
-  "facts": {
-   "metres_in_one_minute": {
-    "value": 110,
-    "unit": "m above 5.5 m/s in one minute",
-    "source": "signals.players[].series.hsr_1min"
-   },
-   "published_best_minute": {
-    "value": 62,
-    "unit": "m, mean best minute",
-    "source": "Leifsson2024, Table 1"
-   }
-  },
-  "sources": [
-   "Leifsson2024",
-   "Leifsson2024, Table 1",
-   "signals.players[].series.hsr_1min"
-  ]
- },
- {
-  "kind": "longest_run",
-  "label": "Longest run",
-  "value": 51.59,
-  "player": {
-   "id": "A07",
-   "name": "Hugo Raskver",
-   "shirt": 8,
-   "team": "away",
-   "position": "CM"
-  },
-  "period": 1,
-  "t": 2150.0,
-  "clock": "35:50",
-  "video_s": 2150.0,
-  "start_video_s": 2143.0,
-  "end_video_s": 2151.0,
-  "segments": [
-   [
-    2143.0,
-    2151.0
-   ]
-  ],
-  "caption": "Hugo Raskver runs 52 m above 5.5 m/s (19.8 km/h) in one go from his own half into the opponents' half with his team on the ball, about 3 times a typical high-speed run.",
-  "facts": {
-   "metres": {
-    "value": 52,
-    "unit": "m above 5.5 m/s in one run",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds": {
-    "value": 8,
-    "unit": "s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "top_speed": {
-    "value": 7.0,
-    "unit": "m/s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "typical_run": {
-    "value": 19,
-    "unit": "m, mean high-speed run",
-    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
-   },
-   "times_typical": {
-    "value": 3,
-    "unit": "times a typical run",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "where": "from his own half into the opponents' half",
-   "ball": "his team"
-  },
-  "sources": [
-   "Fang2024",
-   "DiSalvo2007",
-   "Fang2024, Table 2; DiSalvo2007, p.224",
-   "signals.players[].series.speed (1-s mean)"
-  ]
- },
- {
-  "kind": "longest_run",
-  "label": "Longest run",
-  "value": 44.39,
-  "player": {
-   "id": "A09",
-   "name": "Ivan Dorrlowe",
-   "shirt": 11,
-   "team": "away",
-   "position": "WM"
-  },
-  "period": 1,
-  "t": 2150.0,
-  "clock": "35:50",
-  "video_s": 2150.0,
-  "start_video_s": 2145.0,
-  "end_video_s": 2151.0,
-  "segments": [
-   [
-    2145.0,
-    2151.0
-   ]
-  ],
-  "caption": "Ivan Dorrlowe runs 44 m above 5.5 m/s (19.8 km/h) in one go from his own half into the opponents' half with his team on the ball, about 2 times a typical high-speed run.",
-  "facts": {
-   "metres": {
-    "value": 44,
-    "unit": "m above 5.5 m/s in one run",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds": {
-    "value": 6,
-    "unit": "s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "top_speed": {
-    "value": 7.8,
-    "unit": "m/s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "typical_run": {
-    "value": 19,
-    "unit": "m, mean high-speed run",
-    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
-   },
-   "times_typical": {
-    "value": 2,
-    "unit": "times a typical run",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "where": "from his own half into the opponents' half",
-   "ball": "his team"
-  },
-  "sources": [
-   "Fang2024",
-   "DiSalvo2007",
-   "Fang2024, Table 2; DiSalvo2007, p.224",
-   "signals.players[].series.speed (1-s mean)"
-  ]
- },
- {
-  "kind": "busiest_minute",
-  "label": "Busiest minute",
-  "value": 78.1,
-  "player": {
-   "id": "A09",
-   "name": "Ivan Dorrlowe",
-   "shirt": 11,
-   "team": "away",
-   "position": "WM"
-  },
-  "period": 1,
-  "t": 2186.0,
-  "clock": "36:26",
-  "video_s": 2186.0,
-  "start_video_s": 2127.0,
-  "end_video_s": 2187.0,
-  "segments": [
-   [
-    2127.0,
-    2187.0
-   ]
-  ],
-  "caption": "Ivan Dorrlowe covers 78 m above 5.5 m/s (19.8 km/h) in one minute, against a published average best minute of 62 m.",
-  "facts": {
-   "metres_in_one_minute": {
-    "value": 78,
-    "unit": "m above 5.5 m/s in one minute",
-    "source": "signals.players[].series.hsr_1min"
-   },
-   "published_best_minute": {
-    "value": 62,
-    "unit": "m, mean best minute",
-    "source": "Leifsson2024, Table 1"
-   }
-  },
-  "sources": [
-   "Leifsson2024",
-   "Leifsson2024, Table 1",
-   "signals.players[].series.hsr_1min"
-  ]
- },
- {
-  "kind": "recovery_run",
-  "label": "Recovery run",
-  "value": 37.25,
-  "player": {
-   "id": "H14",
-   "name": "Ivan Lanvcott",
-   "shirt": 14,
-   "team": "home",
-   "position": "DM"
-  },
-  "period": 2,
-  "t": 1140.0,
-  "clock": "64:00",
-  "video_s": 3905.7,
-  "start_video_s": 3900.7,
-  "end_video_s": 3906.7,
-  "segments": [
-   [
-    3900.7,
-    3906.7
-   ]
-  ],
-  "caption": "Ivan Lanvcott runs 37 m above 5.5 m/s back towards his own goal, up to 6.5 m/s (23 km/h), starting 3 seconds after his team lost the ball.",
-  "facts": {
-   "metres": {
-    "value": 37,
-    "unit": "m above 5.5 m/s in one run",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds": {
-    "value": 6,
-    "unit": "s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "top_speed": {
-    "value": 6.5,
-    "unit": "m/s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "typical_run": {
-    "value": 19,
-    "unit": "m, mean high-speed run",
-    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
-   },
-   "top_speed_kmh": {
-    "value": 23,
-    "unit": "km/h",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds_after_loss": {
-    "value": 3,
-    "unit": "s after his team lost the ball",
-    "source": "tracking.possession_team"
-   },
-   "metres_back": {
-    "value": 28,
-    "unit": "m back towards his own goal",
-    "source": "tracking positions"
-   }
-  },
-  "sources": [
-   "Fang2024",
-   "DiSalvo2007",
-   "Fang2024, Table 2; DiSalvo2007, p.224",
-   "signals.players[].series.speed (1-s mean)",
-   "tracking positions",
-   "tracking.possession_team"
-  ]
- },
- {
   "kind": "top_speed",
   "label": "Top speed",
-  "value": 9.2,
+  "value": 9.24,
   "player": {
-   "id": "A13",
-   "name": "Pablo Orvrigg",
-   "shirt": 13,
-   "team": "away",
-   "position": "WM"
+   "id": "H05",
+   "name": "Dario Fennock",
+   "shirt": 2,
+   "team": "home",
+   "position": "FB"
   },
   "period": 2,
-  "t": 1290.0,
-  "clock": "66:30",
-  "video_s": 4055.7,
-  "start_video_s": 4052.7,
-  "end_video_s": 4058.7,
+  "t": 58.0,
+  "clock": "45:58",
+  "video_s": 2823.7,
+  "start_video_s": 2821.7,
+  "end_video_s": 2826.7,
   "segments": [
    [
-    4052.7,
-    4058.7
+    2821.7,
+    2826.7
    ]
   ],
-  "caption": "Pablo Orvrigg hits 9.2 m/s (33 km/h); the average match top speed for a wide midfielder is about 8.5 m/s.",
+  "caption": "Dario Fennock hits 9.2 m/s (33 km/h); the average match top speed for a full-back is about 8.8 m/s.",
   "facts": {
    "top_speed": {
     "value": 9.2,
@@ -3920,6 +4287,53 @@
    },
    "top_speed_kmh": {
     "value": 33,
+    "unit": "km/h",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "published_match_top_speed_for_position": {
+    "value": 8.8,
+    "unit": "m/s, mean match top speed for his position",
+    "source": "SilvaH2025, Table 1"
+   }
+  },
+  "sources": [
+   "SilvaH2025",
+   "SilvaH2025, Table 1",
+   "signals.players[].series.speed (1-s mean)"
+  ]
+ },
+ {
+  "kind": "top_speed",
+  "label": "Top speed",
+  "value": 9.36,
+  "player": {
+   "id": "A10",
+   "name": "Kofi Morrsall",
+   "shirt": 7,
+   "team": "away",
+   "position": "WM"
+  },
+  "period": 2,
+  "t": 58.0,
+  "clock": "45:58",
+  "video_s": 2823.7,
+  "start_video_s": 2819.7,
+  "end_video_s": 2825.7,
+  "segments": [
+   [
+    2819.7,
+    2825.7
+   ]
+  ],
+  "caption": "Kofi Morrsall hits 9.4 m/s (34 km/h); the average match top speed for a wide midfielder is about 8.5 m/s.",
+  "facts": {
+   "top_speed": {
+    "value": 9.4,
+    "unit": "m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "top_speed_kmh": {
+    "value": 34,
     "unit": "km/h",
     "source": "signals.players[].series.speed (1-s mean)"
    },
@@ -3938,30 +4352,30 @@
  {
   "kind": "longest_run",
   "label": "Longest run",
-  "value": 48.53,
+  "value": 49.83,
   "player": {
-   "id": "A13",
-   "name": "Pablo Orvrigg",
-   "shirt": 13,
+   "id": "A10",
+   "name": "Kofi Morrsall",
+   "shirt": 7,
    "team": "away",
    "position": "WM"
   },
   "period": 2,
-  "t": 1292.0,
-  "clock": "66:32",
-  "video_s": 4057.7,
-  "start_video_s": 4052.7,
-  "end_video_s": 4058.7,
+  "t": 59.0,
+  "clock": "45:59",
+  "video_s": 2824.7,
+  "start_video_s": 2819.7,
+  "end_video_s": 2825.7,
   "segments": [
    [
-    4052.7,
-    4058.7
+    2819.7,
+    2825.7
    ]
   ],
-  "caption": "Pablo Orvrigg runs 49 m above 5.5 m/s (19.8 km/h) in one go from his own half into the opponents' half with his team on the ball, about 3 times a typical high-speed run.",
+  "caption": "Kofi Morrsall runs 50 m above 5.5 m/s (19.8 km/h) in one go in the opponents' half with his team on the ball, about 3 times a typical high-speed run.",
   "facts": {
    "metres": {
-    "value": 49,
+    "value": 50,
     "unit": "m above 5.5 m/s in one run",
     "source": "signals.players[].series.speed (1-s mean)"
    },
@@ -3971,7 +4385,7 @@
     "source": "signals.players[].series.speed (1-s mean)"
    },
    "top_speed": {
-    "value": 9.2,
+    "value": 9.4,
     "unit": "m/s",
     "source": "signals.players[].series.speed (1-s mean)"
    },
@@ -3985,7 +4399,7 @@
     "unit": "times a typical run",
     "source": "signals.players[].series.speed (1-s mean)"
    },
-   "where": "from his own half into the opponents' half",
+   "where": "in the opponents' half",
    "ball": "his team"
   },
   "sources": [
@@ -3998,170 +4412,30 @@
  {
   "kind": "recovery_run",
   "label": "Recovery run",
-  "value": 36.48,
+  "value": 47.25,
   "player": {
-   "id": "H12",
-   "name": "Callum Galdock",
-   "shirt": 12,
+   "id": "H02",
+   "name": "Hugo Elmock",
+   "shirt": 5,
    "team": "home",
-   "position": "CM"
+   "position": "CB"
   },
   "period": 2,
-  "t": 1292.0,
-  "clock": "66:32",
-  "video_s": 4057.7,
-  "start_video_s": 4052.7,
-  "end_video_s": 4058.7,
+  "t": 414.0,
+  "clock": "51:54",
+  "video_s": 3179.7,
+  "start_video_s": 3173.7,
+  "end_video_s": 3180.7,
   "segments": [
    [
-    4052.7,
-    4058.7
+    3173.7,
+    3180.7
    ]
   ],
-  "caption": "Callum Galdock runs 36 m above 5.5 m/s back towards his own goal, up to 6.5 m/s (23 km/h), starting 1 second after his team lost the ball.",
+  "caption": "Hugo Elmock runs 47 m above 5.5 m/s back towards his own goal, up to 7.7 m/s (28 km/h), starting 2 seconds after his team lost the ball.",
   "facts": {
    "metres": {
-    "value": 36,
-    "unit": "m above 5.5 m/s in one run",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds": {
-    "value": 6,
-    "unit": "s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "top_speed": {
-    "value": 6.5,
-    "unit": "m/s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "typical_run": {
-    "value": 19,
-    "unit": "m, mean high-speed run",
-    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
-   },
-   "top_speed_kmh": {
-    "value": 23,
-    "unit": "km/h",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds_after_loss": {
-    "value": 1,
-    "unit": "s after his team lost the ball",
-    "source": "tracking.possession_team"
-   },
-   "metres_back": {
-    "value": 30,
-    "unit": "m back towards his own goal",
-    "source": "tracking positions"
-   }
-  },
-  "sources": [
-   "Fang2024",
-   "DiSalvo2007",
-   "Fang2024, Table 2; DiSalvo2007, p.224",
-   "signals.players[].series.speed (1-s mean)",
-   "tracking positions",
-   "tracking.possession_team"
-  ]
- },
- {
-  "kind": "recovery_run",
-  "label": "Recovery run",
-  "value": 36.75,
-  "player": {
-   "id": "H15",
-   "name": "Rafael Orvnell",
-   "shirt": 15,
-   "team": "home",
-   "position": "FB"
-  },
-  "period": 2,
-  "t": 1295.0,
-  "clock": "66:35",
-  "video_s": 4060.7,
-  "start_video_s": 4056.7,
-  "end_video_s": 4061.7,
-  "segments": [
-   [
-    4056.7,
-    4061.7
-   ]
-  ],
-  "caption": "Rafael Orvnell runs 37 m above 5.5 m/s back towards his own goal, up to 8.6 m/s (31 km/h), starting 5 seconds after his team lost the ball.",
-  "facts": {
-   "metres": {
-    "value": 37,
-    "unit": "m above 5.5 m/s in one run",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds": {
-    "value": 5,
-    "unit": "s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "top_speed": {
-    "value": 8.6,
-    "unit": "m/s",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "typical_run": {
-    "value": 19,
-    "unit": "m, mean high-speed run",
-    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
-   },
-   "top_speed_kmh": {
-    "value": 31,
-    "unit": "km/h",
-    "source": "signals.players[].series.speed (1-s mean)"
-   },
-   "seconds_after_loss": {
-    "value": 5,
-    "unit": "s after his team lost the ball",
-    "source": "tracking.possession_team"
-   },
-   "metres_back": {
-    "value": 27,
-    "unit": "m back towards his own goal",
-    "source": "tracking positions"
-   }
-  },
-  "sources": [
-   "Fang2024",
-   "DiSalvo2007",
-   "Fang2024, Table 2; DiSalvo2007, p.224",
-   "signals.players[].series.speed (1-s mean)",
-   "tracking positions",
-   "tracking.possession_team"
-  ]
- },
- {
-  "kind": "recovery_run",
-  "label": "Recovery run",
-  "value": 42.06,
-  "player": {
-   "id": "A15",
-   "name": "Rafael Galdwick",
-   "shirt": 15,
-   "team": "away",
-   "position": "AM"
-  },
-  "period": 2,
-  "t": 1635.0,
-  "clock": "72:15",
-  "video_s": 4400.7,
-  "start_video_s": 4394.7,
-  "end_video_s": 4401.7,
-  "segments": [
-   [
-    4394.7,
-    4401.7
-   ]
-  ],
-  "caption": "Rafael Galdwick runs 42 m above 5.5 m/s back towards his own goal, up to 6.8 m/s (25 km/h), starting 2 seconds after his team lost the ball.",
-  "facts": {
-   "metres": {
-    "value": 42,
+    "value": 47,
     "unit": "m above 5.5 m/s in one run",
     "source": "signals.players[].series.speed (1-s mean)"
    },
@@ -4171,7 +4445,7 @@
     "source": "signals.players[].series.speed (1-s mean)"
    },
    "top_speed": {
-    "value": 6.8,
+    "value": 7.7,
     "unit": "m/s",
     "source": "signals.players[].series.speed (1-s mean)"
    },
@@ -4181,7 +4455,7 @@
     "source": "Fang2024, Table 2; DiSalvo2007, p.224"
    },
    "top_speed_kmh": {
-    "value": 25,
+    "value": 28,
     "unit": "km/h",
     "source": "signals.players[].series.speed (1-s mean)"
    },
@@ -4191,7 +4465,314 @@
     "source": "tracking.possession_team"
    },
    "metres_back": {
-    "value": 35,
+    "value": 40,
+    "unit": "m back towards his own goal",
+    "source": "tracking positions"
+   }
+  },
+  "sources": [
+   "Fang2024",
+   "DiSalvo2007",
+   "Fang2024, Table 2; DiSalvo2007, p.224",
+   "signals.players[].series.speed (1-s mean)",
+   "tracking positions",
+   "tracking.possession_team"
+  ]
+ },
+ {
+  "kind": "recovery_run",
+  "label": "Recovery run",
+  "value": 49.71,
+  "player": {
+   "id": "H04",
+   "name": "Marco Tarvsall",
+   "shirt": 3,
+   "team": "home",
+   "position": "FB"
+  },
+  "period": 2,
+  "t": 414.0,
+  "clock": "51:54",
+  "video_s": 3179.7,
+  "start_video_s": 3173.7,
+  "end_video_s": 3180.7,
+  "segments": [
+   [
+    3173.7,
+    3180.7
+   ]
+  ],
+  "caption": "Marco Tarvsall runs 50 m above 5.5 m/s back towards his own goal, up to 7.8 m/s (28 km/h), starting 2 seconds after his team lost the ball.",
+  "facts": {
+   "metres": {
+    "value": 50,
+    "unit": "m above 5.5 m/s in one run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds": {
+    "value": 7,
+    "unit": "s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "top_speed": {
+    "value": 7.8,
+    "unit": "m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "typical_run": {
+    "value": 19,
+    "unit": "m, mean high-speed run",
+    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
+   },
+   "top_speed_kmh": {
+    "value": 28,
+    "unit": "km/h",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds_after_loss": {
+    "value": 2,
+    "unit": "s after his team lost the ball",
+    "source": "tracking.possession_team"
+   },
+   "metres_back": {
+    "value": 42,
+    "unit": "m back towards his own goal",
+    "source": "tracking positions"
+   }
+  },
+  "sources": [
+   "Fang2024",
+   "DiSalvo2007",
+   "Fang2024, Table 2; DiSalvo2007, p.224",
+   "signals.players[].series.speed (1-s mean)",
+   "tracking positions",
+   "tracking.possession_team"
+  ]
+ },
+ {
+  "kind": "top_speed",
+  "label": "Top speed",
+  "value": 9.01,
+  "player": {
+   "id": "H09",
+   "name": "Kofi Kestaway",
+   "shirt": 11,
+   "team": "home",
+   "position": "WM"
+  },
+  "period": 2,
+  "t": 417.0,
+  "clock": "51:57",
+  "video_s": 3182.7,
+  "start_video_s": 3179.7,
+  "end_video_s": 3186.7,
+  "segments": [
+   [
+    3179.7,
+    3186.7
+   ]
+  ],
+  "caption": "Kofi Kestaway hits 9.0 m/s (32 km/h); the average match top speed for a wide midfielder is about 8.5 m/s.",
+  "facts": {
+   "top_speed": {
+    "value": 9.0,
+    "unit": "m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "top_speed_kmh": {
+    "value": 32,
+    "unit": "km/h",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "published_match_top_speed_for_position": {
+    "value": 8.5,
+    "unit": "m/s, mean match top speed for his position",
+    "source": "SilvaH2025, Table 1"
+   }
+  },
+  "sources": [
+   "SilvaH2025",
+   "SilvaH2025, Table 1",
+   "signals.players[].series.speed (1-s mean)"
+  ]
+ },
+ {
+  "kind": "longest_run",
+  "label": "Longest run",
+  "value": 56.88,
+  "player": {
+   "id": "A10",
+   "name": "Kofi Morrsall",
+   "shirt": 7,
+   "team": "away",
+   "position": "WM"
+  },
+  "period": 2,
+  "t": 417.0,
+  "clock": "51:57",
+  "video_s": 3182.7,
+  "start_video_s": 3176.7,
+  "end_video_s": 3183.7,
+  "segments": [
+   [
+    3176.7,
+    3183.7
+   ]
+  ],
+  "caption": "Kofi Morrsall runs 57 m above 5.5 m/s (19.8 km/h) in one go from his own half into the opponents' box with his team on the ball, about 3 times a typical high-speed run.",
+  "facts": {
+   "metres": {
+    "value": 57,
+    "unit": "m above 5.5 m/s in one run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds": {
+    "value": 7,
+    "unit": "s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "top_speed": {
+    "value": 9.1,
+    "unit": "m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "typical_run": {
+    "value": 19,
+    "unit": "m, mean high-speed run",
+    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
+   },
+   "times_typical": {
+    "value": 3,
+    "unit": "times a typical run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "where": "from his own half into the opponents' box",
+   "ball": "his team"
+  },
+  "sources": [
+   "Fang2024",
+   "DiSalvo2007",
+   "Fang2024, Table 2; DiSalvo2007, p.224",
+   "signals.players[].series.speed (1-s mean)"
+  ]
+ },
+ {
+  "kind": "longest_run",
+  "label": "Longest run",
+  "value": 53.51,
+  "player": {
+   "id": "H09",
+   "name": "Kofi Kestaway",
+   "shirt": 11,
+   "team": "home",
+   "position": "WM"
+  },
+  "period": 2,
+  "t": 420.0,
+  "clock": "52:00",
+  "video_s": 3185.7,
+  "start_video_s": 3179.7,
+  "end_video_s": 3186.7,
+  "segments": [
+   [
+    3179.7,
+    3186.7
+   ]
+  ],
+  "caption": "Kofi Kestaway runs 54 m above 5.5 m/s (19.8 km/h) in one go back towards his own goal while the opponents had the ball, about 3 times a typical high-speed run.",
+  "facts": {
+   "metres": {
+    "value": 54,
+    "unit": "m above 5.5 m/s in one run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds": {
+    "value": 7,
+    "unit": "s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "top_speed": {
+    "value": 9.0,
+    "unit": "m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "typical_run": {
+    "value": 19,
+    "unit": "m, mean high-speed run",
+    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
+   },
+   "times_typical": {
+    "value": 3,
+    "unit": "times a typical run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "where": "back towards his own goal",
+   "ball": "the opponents"
+  },
+  "sources": [
+   "Fang2024",
+   "DiSalvo2007",
+   "Fang2024, Table 2; DiSalvo2007, p.224",
+   "signals.players[].series.speed (1-s mean)"
+  ]
+ },
+ {
+  "kind": "recovery_run",
+  "label": "Recovery run",
+  "value": 53.51,
+  "player": {
+   "id": "H09",
+   "name": "Kofi Kestaway",
+   "shirt": 11,
+   "team": "home",
+   "position": "WM"
+  },
+  "period": 2,
+  "t": 420.0,
+  "clock": "52:00",
+  "video_s": 3185.7,
+  "start_video_s": 3179.7,
+  "end_video_s": 3186.7,
+  "segments": [
+   [
+    3179.7,
+    3186.7
+   ]
+  ],
+  "caption": "Kofi Kestaway runs 54 m above 5.5 m/s back towards his own goal, up to 9.0 m/s (32 km/h), starting 8 seconds after his team lost the ball.",
+  "facts": {
+   "metres": {
+    "value": 54,
+    "unit": "m above 5.5 m/s in one run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds": {
+    "value": 7,
+    "unit": "s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "top_speed": {
+    "value": 9.0,
+    "unit": "m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "typical_run": {
+    "value": 19,
+    "unit": "m, mean high-speed run",
+    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
+   },
+   "top_speed_kmh": {
+    "value": 32,
+    "unit": "km/h",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds_after_loss": {
+    "value": 8,
+    "unit": "s after his team lost the ball",
+    "source": "tracking.possession_team"
+   },
+   "metres_back": {
+    "value": 42,
     "unit": "m back towards his own goal",
     "source": "tracking positions"
    }
@@ -4208,30 +4789,30 @@
  {
   "kind": "busiest_minute",
   "label": "Busiest minute",
-  "value": 112.1,
+  "value": 100.2,
   "player": {
-   "id": "A15",
-   "name": "Rafael Galdwick",
-   "shirt": 15,
-   "team": "away",
-   "position": "AM"
+   "id": "H04",
+   "name": "Marco Tarvsall",
+   "shirt": 3,
+   "team": "home",
+   "position": "FB"
   },
   "period": 2,
-  "t": 1649.0,
-  "clock": "72:29",
-  "video_s": 4414.7,
-  "start_video_s": 4355.7,
-  "end_video_s": 4415.7,
+  "t": 422.0,
+  "clock": "52:02",
+  "video_s": 3187.7,
+  "start_video_s": 3128.7,
+  "end_video_s": 3188.7,
   "segments": [
    [
-    4355.7,
-    4415.7
+    3128.7,
+    3188.7
    ]
   ],
-  "caption": "Rafael Galdwick covers 112 m above 5.5 m/s (19.8 km/h) in one minute, against a published average best minute of 62 m.",
+  "caption": "Marco Tarvsall covers 100 m above 5.5 m/s (19.8 km/h) in one minute, against a published average best minute of 62 m.",
   "facts": {
    "metres_in_one_minute": {
-    "value": 112,
+    "value": 100,
     "unit": "m above 5.5 m/s in one minute",
     "source": "signals.players[].series.hsr_1min"
    },
@@ -4248,56 +4829,236 @@
   ]
  },
  {
-  "kind": "top_speed",
-  "label": "Top speed",
-  "value": 9.09,
+  "kind": "back_to_back",
+  "label": "Back-to-back runs",
+  "value": 5.01,
   "player": {
-   "id": "H03",
-   "name": "Yusuf Cadock",
-   "shirt": 4,
-   "team": "home",
-   "position": "CB"
+   "id": "A05",
+   "name": "Marco Elmbury",
+   "shirt": 2,
+   "team": "away",
+   "position": "FB"
   },
   "period": 2,
-  "t": 1811.0,
-  "clock": "75:11",
-  "video_s": 4576.7,
-  "start_video_s": 4574.7,
-  "end_video_s": 4578.7,
+  "t": 447.0,
+  "clock": "52:27",
+  "video_s": 3212.7,
+  "start_video_s": 3160.7,
+  "end_video_s": 3213.7,
   "segments": [
    [
-    4574.7,
-    4578.7
+    3160.7,
+    3164.7
+   ],
+   [
+    3175.7,
+    3180.7
+   ],
+   [
+    3184.7,
+    3188.7
+   ],
+   [
+    3208.7,
+    3210.7
+   ],
+   [
+    3211.7,
+    3213.7
    ]
   ],
-  "caption": "Yusuf Cadock hits 9.1 m/s (33 km/h); the average match top speed for a centre-back is about 8.1 m/s.",
+  "caption": "Marco Elmbury makes 5 high-speed runs in 53 seconds, never more than 20 seconds apart; a full-back usually gets about 74 seconds between them.",
   "facts": {
-   "top_speed": {
-    "value": 9.1,
-    "unit": "m/s",
+   "runs": {
+    "value": 5,
+    "unit": "high-speed runs",
     "source": "signals.players[].series.speed (1-s mean)"
    },
-   "top_speed_kmh": {
-    "value": 33,
-    "unit": "km/h",
+   "seconds": {
+    "value": 53,
+    "unit": "s",
     "source": "signals.players[].series.speed (1-s mean)"
    },
-   "published_match_top_speed_for_position": {
-    "value": 8.1,
-    "unit": "m/s, mean match top speed for his position",
-    "source": "SilvaH2025, Table 1"
+   "metres": {
+    "value": 107,
+    "unit": "m above 5.5 m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "longest_gap": {
+    "value": 20,
+    "unit": "s between runs",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "usual_gap_for_position": {
+    "value": 74,
+    "unit": "s, usual time between high-speed runs for his position",
+    "source": "Bradley2009, Table I"
    }
   },
   "sources": [
-   "SilvaH2025",
-   "SilvaH2025, Table 1",
+   "Bradley2009",
+   "Bradley2009, Table I",
    "signals.players[].series.speed (1-s mean)"
+  ]
+ },
+ {
+  "kind": "busiest_minute",
+  "label": "Busiest minute",
+  "value": 100.8,
+  "player": {
+   "id": "A12",
+   "name": "Oscar Kestsall",
+   "shirt": 12,
+   "team": "away",
+   "position": "DM"
+  },
+  "period": 2,
+  "t": 2167.0,
+  "clock": "81:07",
+  "video_s": 4932.7,
+  "start_video_s": 4873.7,
+  "end_video_s": 4933.7,
+  "segments": [
+   [
+    4873.7,
+    4933.7
+   ]
+  ],
+  "caption": "Oscar Kestsall covers 101 m above 5.5 m/s (19.8 km/h) in one minute, against a published average best minute of 62 m.",
+  "facts": {
+   "metres_in_one_minute": {
+    "value": 101,
+    "unit": "m above 5.5 m/s in one minute",
+    "source": "signals.players[].series.hsr_1min"
+   },
+   "published_best_minute": {
+    "value": 62,
+    "unit": "m, mean best minute",
+    "source": "Leifsson2024, Table 1"
+   }
+  },
+  "sources": [
+   "Leifsson2024",
+   "Leifsson2024, Table 1",
+   "signals.players[].series.hsr_1min"
+  ]
+ },
+ {
+  "kind": "busiest_minute",
+  "label": "Busiest minute",
+  "value": 105.6,
+  "player": {
+   "id": "H11",
+   "name": "Nico Sorrnell",
+   "shirt": 9,
+   "team": "home",
+   "position": "CF"
+  },
+  "period": 2,
+  "t": 2569.0,
+  "clock": "87:49",
+  "video_s": 5334.7,
+  "start_video_s": 5275.7,
+  "end_video_s": 5335.7,
+  "segments": [
+   [
+    5275.7,
+    5335.7
+   ]
+  ],
+  "caption": "Nico Sorrnell covers 106 m above 5.5 m/s (19.8 km/h) in one minute, against a published average best minute of 62 m.",
+  "facts": {
+   "metres_in_one_minute": {
+    "value": 106,
+    "unit": "m above 5.5 m/s in one minute",
+    "source": "signals.players[].series.hsr_1min"
+   },
+   "published_best_minute": {
+    "value": 62,
+    "unit": "m, mean best minute",
+    "source": "Leifsson2024, Table 1"
+   }
+  },
+  "sources": [
+   "Leifsson2024",
+   "Leifsson2024, Table 1",
+   "signals.players[].series.hsr_1min"
+  ]
+ },
+ {
+  "kind": "recovery_run",
+  "label": "Recovery run",
+  "value": 51.25,
+  "player": {
+   "id": "H11",
+   "name": "Nico Sorrnell",
+   "shirt": 9,
+   "team": "home",
+   "position": "CF"
+  },
+  "period": 2,
+  "t": 2569.0,
+  "clock": "87:49",
+  "video_s": 5334.7,
+  "start_video_s": 5328.7,
+  "end_video_s": 5335.7,
+  "segments": [
+   [
+    5328.7,
+    5335.7
+   ]
+  ],
+  "caption": "Nico Sorrnell runs 51 m above 5.5 m/s back towards his own goal, up to 8.0 m/s (29 km/h), starting 3 seconds after his team lost the ball.",
+  "facts": {
+   "metres": {
+    "value": 51,
+    "unit": "m above 5.5 m/s in one run",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds": {
+    "value": 7,
+    "unit": "s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "top_speed": {
+    "value": 8.0,
+    "unit": "m/s",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "typical_run": {
+    "value": 19,
+    "unit": "m, mean high-speed run",
+    "source": "Fang2024, Table 2; DiSalvo2007, p.224"
+   },
+   "top_speed_kmh": {
+    "value": 29,
+    "unit": "km/h",
+    "source": "signals.players[].series.speed (1-s mean)"
+   },
+   "seconds_after_loss": {
+    "value": 3,
+    "unit": "s after his team lost the ball",
+    "source": "tracking.possession_team"
+   },
+   "metres_back": {
+    "value": 44,
+    "unit": "m back towards his own goal",
+    "source": "tracking positions"
+   }
+  },
+  "sources": [
+   "Fang2024",
+   "DiSalvo2007",
+   "Fang2024, Table 2; DiSalvo2007, p.224",
+   "signals.players[].series.speed (1-s mean)",
+   "tracking positions",
+   "tracking.possession_team"
   ]
  },
  {
   "kind": "most_ground",
   "label": "Most ground covered",
-  "value": 10797.4,
+  "value": 11401.5,
   "player": {
    "id": "A07",
    "name": "Hugo Raskver",
@@ -4312,15 +5073,15 @@
   "start_video_s": 2765.7,
   "end_video_s": 5565.7,
   "segments": [],
-  "caption": "Hugo Raskver covered 10.8 km over the match; Premier League midfielders average about 11.6 km.",
+  "caption": "Hugo Raskver covered 11.4 km over the match; Premier League midfielders average about 11.6 km.",
   "facts": {
    "km": {
-    "value": 10.8,
+    "value": 11.4,
     "unit": "km",
     "source": "signals.players[].series.speed (1-s mean)"
    },
    "metres": {
-    "value": 10797,
+    "value": 11402,
     "unit": "m",
     "source": "signals.players[].series.speed (1-s mean)"
    },
@@ -4341,13 +5102,13 @@
  {
   "kind": "most_ground",
   "label": "Most ground covered",
-  "value": 10493.81,
+  "value": 10975.87,
   "player": {
-   "id": "H08",
-   "name": "Felix Raskmere",
-   "shirt": 10,
-   "team": "home",
-   "position": "AM"
+   "id": "A10",
+   "name": "Kofi Morrsall",
+   "shirt": 7,
+   "team": "away",
+   "position": "WM"
   },
   "period": 2,
   "t": 2799.0,
@@ -4356,15 +5117,15 @@
   "start_video_s": 2765.7,
   "end_video_s": 5565.7,
   "segments": [],
-  "caption": "Felix Raskmere covered 10.5 km over the match; Premier League midfielders average about 11.6 km.",
+  "caption": "Kofi Morrsall covered 11 km over the match; Premier League midfielders average about 11.6 km.",
   "facts": {
    "km": {
-    "value": 10.5,
+    "value": 11.0,
     "unit": "km",
     "source": "signals.players[].series.speed (1-s mean)"
    },
    "metres": {
-    "value": 10494,
+    "value": 10976,
     "unit": "m",
     "source": "signals.players[].series.speed (1-s mean)"
    },
@@ -4385,11 +5146,11 @@
  {
   "kind": "most_ground",
   "label": "Most ground covered",
-  "value": 10228.71,
+  "value": 10732.23,
   "player": {
-   "id": "A05",
-   "name": "Marco Elmbury",
-   "shirt": 2,
+   "id": "A04",
+   "name": "Luca Bremock",
+   "shirt": 3,
    "team": "away",
    "position": "FB"
   },
@@ -4400,15 +5161,15 @@
   "start_video_s": 2765.7,
   "end_video_s": 5565.7,
   "segments": [],
-  "caption": "Marco Elmbury covered 10.2 km over the match; Premier League defenders average about 10 km.",
+  "caption": "Luca Bremock covered 10.7 km over the match; Premier League defenders average about 10 km.",
   "facts": {
    "km": {
-    "value": 10.2,
+    "value": 10.7,
     "unit": "km",
     "source": "signals.players[].series.speed (1-s mean)"
    },
    "metres": {
-    "value": 10229,
+    "value": 10732,
     "unit": "m",
     "source": "signals.players[].series.speed (1-s mean)"
    },
