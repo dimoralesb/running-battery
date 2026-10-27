@@ -194,7 +194,9 @@ h2 { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--
 .stage-main, .stage-side { min-width: 0; }
 .stage-main > .bug { margin-bottom: var(--space-2); }
 @media (min-width: 1100px) {
-  .stage { grid-template-columns: var(--col) minmax(340px, 1fr); align-items: start; }
+  /* The clip column gives way when the row is narrower than --col plus the side's 340 px (it
+     overflowed by up to 37 px around 1100 px wide). */
+  .stage { grid-template-columns: minmax(0, var(--col)) minmax(340px, 1fr); align-items: start; }
 }
 .big-play { position: absolute; inset: 0; margin: auto; width: max-content; height: max-content;
   display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-5);
