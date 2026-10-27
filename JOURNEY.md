@@ -80,6 +80,9 @@ compares "the live battery" with "the one on this page"; the agents' third box i
 the measurements"; the real-data check is "tracking data from real professional matches and …
 Premier League match data". The technical lines keep the published names (D′ balance, critical
 speed, Microsoft Foundry, Agent Framework, MCP).
+Then (the user: "unnecessary detail") the live part lost its small technical line and its last
+bullet, "Not connected yet: a tracking provider's live feed and a broadcaster's graphics"; the
+README's Limitations still says it.
 
 ### Decision 58 (user, 2026-10-27): During a live match, as run and measured
 
