@@ -19,8 +19,10 @@ we know each player's true state and can test the battery against it.
 
 The page opens on the highlights of a simulated match: a card for each clip, then the clip on a
 pitch with the player's battery, and beside it the numbers and the commentary. **Full match** is
-the whole replay with every player's battery. **How it works** explains the battery, the agents and
-the research behind them, with references.
+the whole replay with every player's battery. Under the clip, "The whole match" sums up both
+teams' running, with a map of every player's battery minute by minute. **How it works** explains the battery, the agents and the research behind them,
+with charts that compare the published model with ours and show why critical speed can't be read
+from a match, and references.
 
 You can add these to the address: `?match=natural` for the second match, `&mode=analyst` for
 analyst wording and the spread of the battery across the 200 typical professionals, `&view=full` or `&view=how` to open another view, and
@@ -103,6 +105,13 @@ Because we don't know each player's fitness, the battery is worked out for 200 t
 professionals and the page shows the middle one. In analyst mode it also shows how spread out the
 200 are: a range that holds the middle 80% of them. The true value fell inside that range 78% of
 the time, close to the 80% it should.
+
+![One simulated player's battery and range against his true reserve over a whole match](docs/figures/battery_vs_truth.png)
+
+The figure shows one player whose gap is close to that 6-point average. The battery follows when
+his true reserve drops and recovers, but sits lower, because he is fitter than the middle typical
+professional. The figure is made by
+[scripts/battery_vs_truth.py](scripts/battery_vs_truth.py).
 
 ### Can positions tell who is tired?
 

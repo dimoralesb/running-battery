@@ -281,8 +281,13 @@ it the Details tab (the numbers, the commentary and the run's speed second by se
 card, Play or Next never moves the page. Under the clip, "The whole match" gives both teams'
 high-speed running per ball-in-play minute in 15-minute blocks, and split by situation: the first
 10 s after losing the ball, the first 10 s after winning it [Bortnik2022, Table 2], settled on the
-ball, and without it. Full match is the whole replay; How it works explains the battery, the agents
-and the research.
+ball, and without it. Under those, a map gives every outfield player's battery at the end of each
+minute of play. Full match is the whole replay. How it works explains the battery, the agents and
+the research, with two charts from the opening clip's player: his best average speed over each
+length of time against the typical pro's critical speed, and his whole match's battery for one
+typical pro (CS 4.1 m/s, D′ 180 m) under the standard model (k = 1), our slower refill (k = 4)
+and ours with wear. That last line stays within about 2 points of the page's battery, which is
+the middle of 200 weighted typical pros.
 
 The highlights are measured from positions: top speed (against the average match top speed for his
 position [SilvaH2025, Table 1]), the longest run above 5.5 m/s (a typical high-speed run is about

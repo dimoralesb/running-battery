@@ -226,5 +226,22 @@
   "howRef_3_20": "Narizuka T, Takizawa K, Yamazaki Y (2023). Validation of a motion model for soccer players' sprint by means of tracking data. Scientific Reports 13, 865. https://doi.org/10.1038/s41598-023-27999-1",
   "howRef_3_21": "Bassek M, Rein R, Weber H, Memmert D (2025). An integrated dataset of spatiotemporal and event data in elite soccer. Scientific Data 12, 195. https://doi.org/10.1038/s41597-025-04505-y",
   "howRef_3_22": "Allen T, Taberner M, Zhilkin M, Green M (2025). Evolving running load demands and fixture congestion in the English Premier League: a decade of insights from 2015/2016 to 2024/2025. British Journal of Sports Medicine 59, 1643–1654. https://doi.org/10.1136/bjsports-2025-110430",
-  "howRef_3_23": "Pappalardo L, Cintia P, Rossi A, Massucco E, Ferragina P, Pedreschi D, Giannotti F (2019). A public data set of spatio-temporal match events in soccer competitions. Scientific Data 6, 236. https://doi.org/10.1038/s41597-019-0247-7"
+  "howRef_3_23": "Pappalardo L, Cintia P, Rossi A, Massucco E, Ferragina P, Pedreschi D, Giannotti F (2019). A public data set of spatio-temporal match events in soccer competitions. Scientific Data 6, 236. https://doi.org/10.1038/s41597-019-0247-7",
+  "howProfileTitle": "{name}: fastest average speed over each length of time",
+  "howProfileSub": "His whole match. Dashed: 14.8 km/h, the critical speed of a typical pro. Players don't keep up a fast pace for long in a match, so his best averages over 5 or 10 minutes sit far below that line. A critical speed fitted to a curve like this comes out far too low, which is why we take it from fitness tests.",
+  "howProfileAxis": "Best average speed, km/h",
+  "howProfileCs": "A typical pro's critical speed",
+  "howCompareTitle": "{name}'s whole match: the published model and ours",
+  "howCompareSub": "The same running and the same typical pro (critical speed 4.1 m/s, D′ 180 m). The standard model refills fastest [1]. Ours refills four times slower [8], and slower again as the match's hard running builds up.",
+  "howCompareStd": "Standard model",
+  "howCompareSlow": "Four times slower refill",
+  "howCompareOurs": "Ours: slower refill and wear",
+  "howCompareHint": "Point at the chart to read the three values.",
+  "howCompareHover": "At {time}, the battery a typical pro would have: {lo}% with the standard model, {pct}% with the slower refill, {hi}% with ours.",
+  "mapTitle": "The battery a typical pro would have, minute by minute",
+  "mapSub": "One row per player, one column per minute of play. The stronger the colour, the lower the battery after the same running. Goalkeepers are left out.",
+  "mapHigh": "A typical pro at 100%",
+  "mapLow": "A typical pro at 40% or lower",
+  "mapHint": "Point at a square to read it.",
+  "mapHover": "{name}, {time}: running that would leave a typical pro at {pct}%."
 }

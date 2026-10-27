@@ -1,4 +1,5 @@
 import { type Entry, type MatchData, type Mode, type TeamBlock, clockLabel } from "./data";
+import { BatteryMap } from "./BatteryMap";
 import { SplitChart } from "./SplitChart";
 import { TeamChart } from "./TeamChart";
 
@@ -92,6 +93,7 @@ export function Stats({ data, mode, text, onWatch }: Props) {
                    yTitle={text.teamChartAxis} onSeek={onWatch} />
         <SplitChart meta={meta} text={text} scope={text.splitWhole} blocks={meta.team_situations} />
       </div>
+      <BatteryMap data={data} text={text} />
     </div>
   );
 }
