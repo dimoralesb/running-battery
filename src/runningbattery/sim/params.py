@@ -85,7 +85,7 @@ ARRIVE_TAU = 1.25
 # their peak (at 6.5–7 m/s, 2.2 s against IDSSE's 3.1) and hard braking rare (decelerations
 # beyond 3 m/s² 0.87% of player time against IDSSE's 1.37%). Fitted by sim.calibrate (≤ 0: the
 # old law). Calm movement keeps CALM_ARRIVE_TAU.
-ARRIVE_DECEL = 3.050  # 2.423 before decision 46 (sim.calibrate)
+ARRIVE_DECEL = 3.408  # 3.050 before decision 47 (sim.calibrate)
 # Within ARRIVE_SETTLE_M of the spot he arrives as gap / ARRIVE_TAU (the two joined there): on the
 # braking curve alone the motion's lag overshot a spot a metre away (a goal huddle broke up). Our
 # assumption.
@@ -150,10 +150,10 @@ ONSIDE_SPEED = 0.60  # hurrying back from an offside position
 BEHIND_EFFORT = 1.0
 # Since decision 42 these four are fitted with POSITION_EFFORT by sim.calibrate (the values by hand
 # before it: 0.95, 0.95, 0.86 and 0.92); RECOVERY_EFFORT stays at least SHAPE_RUN_SPEED.
-TRACK_EFFORT = 0.884  # 0.940 before decision 46 (sim.calibrate)
-COUNTER_SUPPORT_EFFORT = 0.701  # 0.757 before decision 46 (sim.calibrate)
-OVERLAP_EFFORT = 0.828  # 0.957 before decision 46 (sim.calibrate)
-RECOVERY_EFFORT = 0.860  # 0.943 before decision 46 (sim.calibrate)
+TRACK_EFFORT = 0.883  # 0.884 before decision 47 (sim.calibrate)
+COUNTER_SUPPORT_EFFORT = 0.730  # 0.701 before decision 47 (sim.calibrate)
+OVERLAP_EFFORT = 0.785  # 0.828 before decision 47 (sim.calibrate)
+RECOVERY_EFFORT = 0.886  # 0.860 before decision 47 (sim.calibrate)
 SPRINT_RUN_S = (3.0, 6.0)  # how long a sprint run may last, s. Our assumption.
 # A run that heads back within TURN_S seconds of being above HI_SPEED the other way (more than
 # 90° round) goes no faster than SHAPE_RUN_MIN until then: he turns first. Our assumption
@@ -207,14 +207,14 @@ TURN_S = 10.0  # the knob's upper bound (as before decision 46; sim.calibrate)
 # shorter (their high-speed running 27 → 18 m a match); with the dead-ball jog capped after the
 # work rate, CB and FB are no longer held at 1.10.
 POSITION_EFFORT = {
-    Position.GK: 0.991,  # 1.039 before decision 46
-    Position.CB: 1.091,  # 1.116 before decision 46
-    Position.FB: 1.122,  # 1.076 before decision 46
-    Position.DM: 1.025,  # 1.065 before decision 46
-    Position.CM: 1.066,  # 1.058 before decision 46
-    Position.AM: 1.331,  # 1.185 before decision 46
-    Position.WM: 1.131,  # 1.241 before decision 46
-    Position.CF: 1.165,  # 1.056 before decision 46
+    Position.GK: 1.036,  # 0.991 before decision 47
+    Position.CB: 1.136,  # 1.091 before decision 47
+    Position.FB: 1.145,  # 1.122 before decision 47
+    Position.DM: 1.037,  # 1.025 before decision 47
+    Position.CM: 1.092,  # 1.066 before decision 47
+    Position.AM: 1.350,  # 1.331 before decision 47
+    Position.WM: 1.160,  # 1.131 before decision 47
+    Position.CF: 1.120,  # 1.165 before decision 47
 }
 # Defenders (CB, FB) who track an opponent running in behind: the nearest TRACKERS follow him,
 # TRACK_GOAL_SIDE metres goal-side of where he is now, while the pass is in flight or he has the
@@ -239,7 +239,7 @@ CARRY_MOMENTUM = 0.85
 # up the pitch, back up to the line, goes no faster than SHAPE_RUN_MIN unless the team is
 # pressing (decision 41: a defender who had dropped deep sprinted back out at 7 m/s). Our
 # assumption.
-SHAPE_RUN_GAP = 14.302  # 12.84 before decision 46 (sim.calibrate)
+SHAPE_RUN_GAP = 14.210  # 14.302 before decision 47 (sim.calibrate)
 # On the opponents' counter-attack (a transition), or caught upfield of the ball out of
 # possession, a defender (CB, FB) starts his shape run from COUNTER_DROP_GAP metres, at
 # COUNTER_DROP_SPEED of S0 or more. Our assumption (decision 41): with decoy runs no longer
@@ -249,10 +249,10 @@ COUNTER_DROP_GAP = 3.0
 COUNTER_DROP_SPEED = 0.80
 SHAPE_RUN_FULL = 25.0
 SHAPE_RUN_END = 3.0
-SHAPE_RUN_MIN = 0.489  # 0.463 before decision 46 (sim.calibrate)
+SHAPE_RUN_MIN = 0.455  # 0.489 before decision 47 (sim.calibrate)
 SHAPE_RUN_SPEED = 0.84
 SHAPE_RUN_MAX_S = 8.0
-RECOVERY_START = 0.674  # 0.787 before decision 46 (sim.calibrate)
+RECOVERY_START = 0.663  # 0.674 before decision 47 (sim.calibrate)
 FORWARD_RECOVERY = False
 # A defender this close to where a pass will arrive closes the receiver down. Our assumption.
 CLOSE_DOWN_REACH = 15.0
@@ -268,7 +268,7 @@ ROLE_KEEP_M = 2.0
 # The cover defender's top wanted speed (roles.targets; SHAPE_RUN_SPEED before decision 43; the
 # fit keeps it near: lower values cut 1–2 s sprints but cost the high-speed running). Since
 # decision 46 he runs at it only when far from his spot (Roles.cover_pace, a shape run's law).
-COVER_SPEED = 0.793  # 0.840 before decision 46 (sim.calibrate)
+COVER_SPEED = 0.750  # 0.793 before decision 47 (sim.calibrate)
 # Chances that a run starts when a team-mate gets the ball (per touch), and how long it lasts.
 # Our assumption. OVERLAP_CHANCE was 0.75 with fatigue off: a tired full-back who skips an
 # overlap does not get it offered again, so with fatigue on more are offered (2026-10-16).
@@ -360,7 +360,7 @@ MID_SUPPORT_BEHIND = 10.0
 # assumptions, after the "five-second rule" of counter-pressing teams; negative transitions last
 # 9.3 ± 3.4 s [Bortnik2022, Tables 1–2]. Real players run about two-thirds of their high-speed
 # metres without the ball within 10 m of it (IDSSE, 7 matches); ours ran a tenth.
-COUNTERPRESS_CHANCE = 0.490  # new in decision 46 (sim.calibrate)
+COUNTERPRESS_CHANCE = 0.473  # 0.490 before decision 47 (sim.calibrate)
 COUNTERPRESS_N = 2
 COUNTERPRESS_REACH = 15.0
 COUNTERPRESS_S = (3.0, 5.0)
@@ -652,7 +652,7 @@ SHAPE_SWITCH_S = (4.0, 1.5)
 # jump. Our assumption, tuned to the IDSSE jogging share (PLAN §2.5); 1.5 before decision 42
 # fitted it (sim.calibrate) with SHAPE_RUN_GAP to the IDSSE dithering, shape runs that chase a
 # target swinging back with the ball.
-SHAPE_LAG_S = 0.949  # 1.104 before decision 46 (sim.calibrate)
+SHAPE_LAG_S = 0.759  # 0.949 before decision 47 (sim.calibrate)
 # Small repositioning: every WANDER_S seconds each player picks a new spot about WANDER_SD
 # metres (SD per axis) from their shape or set-piece position, in play and while the ball is
 # dead. Our assumption, tuned to dead-ball running, 63 m/min [Allen2026b, Table 5, derived],
@@ -767,7 +767,7 @@ CUT_OUT_EDGE_S = 0.3
 # gets him there (``roles.targets``). Our assumption (decision 41: duels were decided from up to
 # 4 m, aerial ones up to 7 m, with no contact). DUEL_PER_TOUCH was 0.18 before it: fewer
 # challengers reach the ball, so more go in (duels per match, summary.TARGETS).
-DUEL_PER_TOUCH = 0.400  # 0.378 before decision 46 (sim.calibrate)
+DUEL_PER_TOUCH = 0.364  # 0.400 before decision 47 (sim.calibrate)
 DUEL_ENGAGE = 4.0  # m
 DUEL_HOLD_S = 1.5
 DUEL_APPROACH = 0.65  # share of S0: going in for the ball is not a sprint
@@ -782,7 +782,7 @@ PRESSURE_RADIUS = 5.0  # m; the nearest opponent within this distance logs a pre
 # are our assumption, tuned to about 24 shots per match [Bassek2025, p.6].
 SHOT_RANGE = 30.0  # m from the goal centre
 # chance of shooting on release, lane blocked, at the goal line; falls with distance
-SHOT_RATE = 0.395  # 0.33 before decision 46 (sim.calibrate)
+SHOT_RATE = 0.335  # 0.395 before decision 47 (sim.calibrate)
 SHOT_RATE_SCALE = 16.0  # m
 # A shooting lane is blocked when an outfield opponent is goal-side of the ball within
 # SHOT_LANE_HALF metres of the line from the ball to the goal centre. With a clear lane the
@@ -808,9 +808,9 @@ GK_RUSH_GAP = 1.0
 GK_SMOTHER_WINS = 0.5
 SIX_YARD_DEPTH = 5.5
 SIX_YARD_HALF_WIDTH = 9.16
-GK_CLAIM_CHANCE = 0.755  # new in decision 46 (sim.calibrate)
+GK_CLAIM_CHANCE = 0.748  # 0.755 before decision 47 (sim.calibrate)
 SHOT_LANE_HALF = 8.0  # m
-SHOT_RATE_CLEAR = 0.997  # 0.95 before decision 46 (sim.calibrate)
+SHOT_RATE_CLEAR = 0.907  # 0.997 before decision 47 (sim.calibrate)
 SHOT_CLEAR_SCALE = 33.0  # m: about 0.7 at 18 m and 0.55 at 25 m
 SHOT_CLOSE = 8.0  # m
 SHOT_CLOSE_MIN = 0.8
@@ -947,13 +947,13 @@ HUDDLE_BACK_S = 20.0
 # 47.5 s (median, 31 of them) against 26.2 s for a free kick with none (119), 7 matches
 # [Bassek2025]. DEAD_TIME_SCALE sets the waits' level against ball in play (sim.calibrate).
 CARD_DELAY_S = 21.0
-DEAD_TIME_SCALE = 1.057  # new in decision 46 (sim.calibrate)
+DEAD_TIME_SCALE = 1.107  # 1.057 before decision 47 (sim.calibrate)
 
 # Transitions: about 50 ± 11 per match, about 10 s each; positive 10.9 ± 3.9 s, negative
 # 9.3 ± 3.4 s [Bortnik2022, Tables 1–2]. The chance that an open-play turnover starts one is
 # our assumption, tuned to the count. The drawn length is longer than 10 s because many end
 # early (turnover, ball out); tuned so the realised length is about 10 s (our assumption).
-TRANSITION_CHANCE = 0.246  # 0.256 before decision 46 (sim.calibrate)
+TRANSITION_CHANCE = 0.234  # 0.246 before decision 47 (sim.calibrate)
 TRANSITION_S = (15.0, 4.5, 5.0, 27.0)  # drawn length: mean, SD, min, max
 # High press: chance the defending team presses when the opponent has the ball in its own
 # third; lasts at most about 10 s (high-press spells 9.8 ± 3.7 s [Bortnik2022, Table 2]).

@@ -217,7 +217,7 @@ class Roles:
         out = tgt
         movers = [i for i in self.runs if purpose[i] == CODE[self.runs[i].purpose]]
         covering = CODE[RunPurpose.COVERING]
-        if self.cover >= 0 and e.mode == "touch" and purpose[self.cover] == covering:
+        if self.cover >= 0 and e.mode in ("touch", "flight") and purpose[self.cover] == covering:
             movers.append(self.cover)
         keep = (CODE[RunPurpose.CLOSE_DOWN], CODE[RunPurpose.INTERCEPTION])
         movers = [i for i in dict.fromkeys(movers) if not anchored[i] and purpose[i] not in keep]
@@ -226,8 +226,15 @@ class Roles:
             mates = np.array([int(j) for j in e.members(int(e.team_of[i])) if j != i])
             if out is tgt:
                 out = tgt.copy()
-            # End spot: away from team-mates' spots and from where they will be.
-            spots = np.concatenate([out[mates], ahead[mates]])
+            # End spot: away from team-mates' spots, from where they stand now, and from where
+            # they will be (and if a shape run's spot is already occupied by a team-mate within
+            # SHAPE_RUN_END, the runner has nothing to fill and ends his run).
+            if i in self.runs and self.runs[i].shape:
+                d_now = np.hypot(*(out[i] - e.pos[mates]).T)
+                if d_now.min() < P.SHAPE_RUN_END and np.hypot(*(out[i] - e.pos[i])) < 8.0:
+                    del self.runs[i]
+                    continue
+            spots = np.concatenate([out[mates], e.pos[mates], ahead[mates]])
             gap = out[i] - spots
             d = np.hypot(*gap.T)
             j = int(np.argmin(d))
@@ -275,13 +282,15 @@ class Roles:
         idx = e.members(team)
         ball_u = e.to_uv(team, e.ball_xy[:2])[0]
         uv = e.to_uv(team, e.pos[idx])
-        behind = self.is_mid[idx] & ~self.is_dm[idx] & (uv[:, 0] < ball_u)
+        behind = self.is_mid[idx] & ~self.is_dm[idx] & (uv[:, 0] < ball_u + 15.0)
         order = np.argsort(np.hypot(*(e.pos[idx] - e.ball_xy[:2]).T))
         chosen = [int(idx[j]) for j in order if behind[j]][: P.SUPPORT_RUNNERS]
         rng = e.rng
         for i in chosen:
             side = np.sign(e.to_uv(team, e.pos[i])[1] - e.to_uv(team, e.ball_xy[:2])[1]) or 1.0
             offset = np.array([-rng.uniform(2.0, 6.0), side * rng.uniform(6.0, 12.0)])
+            if float(e.to_uv(team, e.pos[i])[0]) > ball_u + 8.0:
+                continue  # already well ahead of the ball: no backward support run (decision 47)
             # for the whole counter (decision 46: a 3-6 s timer cut the long runs of a counter,
             # 0.8 runs of 5 s or more per 90 player-minutes with the ball against IDSSE's 2.2)
             t_end = e.transition[1]
@@ -292,7 +301,7 @@ class Roles:
         # (decision 46: they ran up to 13 m beyond it while the carrier ran with the ball).
         for j, i in enumerate(idx):
             i = int(i)
-            if self.is_forward[i] and uv[j, 0] > ball_u and self.free(i):
+            if self.is_forward[i] and uv[j, 0] > ball_u - 5.0 and self.free(i):
                 if rng.random() < P.COUNTER_RUN_CHANCE:
                     target = uv[j] + np.array([rng.uniform(*P.COUNTER_DEPTH), -0.3 * uv[j, 1]])
                     target[0] = min(target[0], GOAL_U - 8.0, self.behind_cap(team))
@@ -316,12 +325,19 @@ class Roles:
             return
         idx = e.members(team)[1:]
         d = np.hypot(*(e.pos[idx] - e.ball_xy[:2]).T)
-        for k in np.argsort(d)[: P.COUNTERPRESS_N]:
-            if d[k] > P.COUNTERPRESS_REACH:
+        for k, i in enumerate(idx[np.argsort(d)[: P.COUNTERPRESS_N]]):
+            if d[np.argsort(d)[k]] > P.COUNTERPRESS_REACH:
                 break
-            i = int(idx[k])
+            i = int(i)
             run = Run(RunPurpose.CLOSE_DOWN, t + rng.uniform(*P.COUNTERPRESS_S), P.CHASE_SPEED)
-            run.offset_uv, run.hunt = np.array([-P.PRESS_GAP, 0.0]), True
+            if self.is_defender[i] and e.to_uv(team, e.ball_xy[:2])[0] > 0.0:
+                continue  # defenders do not counter-press in the opponents' half (decision 47)
+            side = (
+                0.0
+                if k == 0
+                else (np.sign(e.to_uv(team, e.pos[i] - e.ball_xy[:2])[1]) or 1.0) * 3.0
+            )
+            run.offset_uv, run.hunt = np.array([-P.PRESS_GAP - 1.5 * k, side]), True
             self.start(i, run, t)
 
     def on_touch(self, carrier: int, t: float) -> None:
@@ -334,10 +350,11 @@ class Roles:
         c_xy = e.pos[carrier]
         c_u, c_v = e.to_uv(team, c_xy)
         # Close-down runs follow the ball, so they were aimed at the last carrier: they end
-        # (a counter-press goes on, after whoever has the ball).
+        # (a counter-press goes on, after whoever has the ball, unless the keeper holds it).
         for i, run in list(self.runs.items()):
-            if run.purpose == RunPurpose.CLOSE_DOWN and int(e.team_of[i]) != team and not run.hunt:
-                del self.runs[i]
+            if run.purpose == RunPurpose.CLOSE_DOWN and int(e.team_of[i]) != team:
+                if not run.hunt or self.is_gk[carrier]:
+                    del self.runs[i]
         if self.is_gk[carrier]:
             return
         self.press_carrier(carrier, t)
@@ -429,9 +446,9 @@ class Roles:
         team = 1 - int(e.team_of[carrier])
         u = e.to_uv(team, e.pos[carrier])[0]
         if u >= 0.0:
-            who, chance = self.is_forward, P.PRESS_RUN_CHANCE
+            who, chance = self.is_forward | self.is_cm, P.PRESS_RUN_CHANCE
         elif u > -P.THIRD:
-            who, chance = self.is_dm | self.is_cm, P.MID_PRESS_CHANCE
+            who, chance = self.is_dm | self.is_cm | self.is_forward, P.MID_PRESS_CHANCE
         else:
             return
         if e.story_press(team, t):
@@ -440,12 +457,18 @@ class Roles:
         if not near or e.rng.random() >= chance:
             return
         mates = e.members(team)[1:]
-        if np.hypot(*(e.pos[mates] - e.pos[carrier]).T).min() < P.PRESS_COVERED:
+        d_mates = np.hypot(*(e.pos[mates] - e.pos[carrier]).T)
+        if d_mates.min() < P.PRESS_COVERED:
             return  # a team-mate is already on the carrier
+        first = int(mates[int(np.argmin(d_mates))])
+        near = [i for i in near if i != first]
+        if not near:
+            return
         i = min(near, key=lambda j: float(np.hypot(*(e.pos[j] - e.pos[carrier]))))
         if np.hypot(*(e.pos[i] - e.pos[carrier])) <= P.PRESS_REACH:
             run = Run(RunPurpose.CLOSE_DOWN, t + e.rng.uniform(*P.RUN_S), P.CHASE_SPEED)
             run.offset_uv = np.array([-P.PRESS_GAP, 0.0])
+            run.hunt = u > -P.THIRD
             self.start(i, run, t)
 
     def on_pass(
@@ -470,9 +493,9 @@ class Roles:
         else:
             self.receiver_purpose = RunPurpose.MOVE_TO_RECEIVE
         self.runs.pop(receiver, None)
-        # A run about the passer (an overlap past him, coming short to him) has lost its point
-        # once he plays the ball: it ends, and the next touch decides again (decision 45: a third
-        # of overlaps went on for 2 s after the pass).
+        # A run about the passer (coming short to him, or an overlap when the pass does not go
+        # forward) has lost its point once he plays the ball: it ends, and the next touch decides
+        # again (decision 45: a third of overlaps went on for 2 s after a pass back).
         # So has a run for the next pass (in behind, into space, in support) when the pass goes
         # elsewhere square or back (decision 46: a fifth of them ran on for 2 s); a forward pass
         # carries the attack on, and the run with it, and a cross is the one the runners into the
@@ -481,7 +504,10 @@ class Roles:
         forward = e.to_uv(team, end)[0] - e.to_uv(team, e.pos[passer])[0] >= P.BEHIND_PASS_FORWARD
         for i, run in list(self.runs.items()):
             box = cross and run.purpose == RunPurpose.BREAK_INTO_BOX
-            if run.carrier == passer or (run.next_pass and not (box or forward)):
+            keep_overlap = forward and run.purpose == RunPurpose.OVER_UNDERLAP
+            if keep_overlap and run.carrier == passer:
+                run.carrier = receiver
+            elif run.carrier == passer or (run.next_pass and not (box or forward)):
                 del self.runs[i]
         if not open_play or not forward:
             return  # a square or backward pass: the receiver cannot play a forward in behind
@@ -588,6 +614,20 @@ class Roles:
             onside = self.onside_u(holder)
             uv[:, 0] = np.minimum(uv[:, 0], onside - P.LINE_DEPTH_KEEP * (top - uv[:, 0]))
             tgt[idx] = e.to_uv(holder, uv)
+            # When the goalkeeper holds the ball (or a pass/save is on its way to him), opponents
+            # do not hold their shape inside his penalty area or within 10 m of him (decision 47:
+            # while shape_w decayed after a save or back-pass, forwards' shape spots stayed inside
+            # the six-yard box).
+            gk_ball = (e.mode == "touch" and self.is_gk[e.touch.player]) or (
+                e.mode == "flight" and e.flight.to >= 0 and self.is_gk[e.flight.to]
+            )
+            if gk_ball:
+                gk = int(e.members(holder)[0])
+                cap_u = min(GOAL_U - P.BOX_DEPTH, float(e.to_uv(1 - holder, e.pos[gk])[0]) - 10.0)
+                opp = e.members(1 - holder)[1:]
+                opp_uv = e.to_uv(1 - holder, tgt[opp])
+                opp_uv[:, 0] = np.minimum(opp_uv[:, 0], cap_u)
+                tgt[opp] = e.to_uv(1 - holder, opp_uv)
         return tgt, holder
 
     def onside_u(self, team: int) -> float:
@@ -640,21 +680,20 @@ class Roles:
                 continue
             idx = e.members(k)
             counter = e.transition is not None and e.transition[0] != k
-            beaten = e.to_uv(k, e.pos[idx])[:, 0] > e.to_uv(k, e.ball_xy[:2])[0]
-            dropping = self.is_defender[idx] & (counter | beaten)
-            start_gap[idx[dropping]] = P.COUNTER_DROP_GAP
+            ball_u = e.to_uv(k, e.ball_xy[:2])[0]
+            beaten = (e.to_uv(k, e.pos[idx])[:, 0] > ball_u) & (ball_u < P.DANGER_U)
+            dropping = (
+                self.is_defender[idx] & (counter | beaten) & (e.to_uv(k, gap_xy[idx])[:, 0] < 0.0)
+            )
+            start_gap[idx[dropping]] = max(P.COUNTER_DROP_GAP, 0.65 * P.SHAPE_RUN_GAP)
         for i in np.flatnonzero(gap > start_gap):
             i = int(i)
             if not self.free(i):
                 continue
             team = int(e.team_of[i])
             gap_u = e.to_uv(team, gap_xy[i])[0]
-            urgency = np.clip(
-                (gap[i] - P.SHAPE_RUN_GAP) / (P.SHAPE_RUN_FULL - P.SHAPE_RUN_GAP), 0, 1
-            )
+            urgency = np.clip((gap[i] - start_gap[i]) / (P.SHAPE_RUN_FULL - start_gap[i]), 0, 1)
             speed = P.SHAPE_RUN_MIN + (P.SHAPE_RUN_SPEED - P.SHAPE_RUN_MIN) * float(urgency)
-            if start_gap[i] < P.SHAPE_RUN_GAP:
-                speed = max(speed, P.COUNTER_DROP_SPEED)
             if team == holder:
                 if gap_u < 0.5 * gap[i]:
                     continue  # dropping back into shape with the ball: no labelled run
@@ -665,8 +704,25 @@ class Roles:
                 purpose = RunPurpose.RECOVERY_RUN if not_goal_side else RunPurpose.COVERING
                 counter = e.transition is not None and e.transition[0] != team
                 danger = not_goal_side and (ball_u < P.DANGER_U or counter)
+                pressing = e.press is not None and e.press[0] == team
                 if danger and (P.FORWARD_RECOVERY or not self.is_forward[i]):
-                    speed = P.RECOVERY_START + (P.RECOVERY_EFFORT - P.RECOVERY_START) * urgency
+                    lo = (
+                        P.COUNTER_DROP_SPEED
+                        if (counter and self.is_defender[i])
+                        else P.RECOVERY_START
+                    )
+                    speed = lo + (max(P.RECOVERY_EFFORT, lo) - lo) * urgency
+                elif counter and self.is_defender[i] and gap_u < 0:
+                    speed = P.RECOVERY_START + (P.COUNTER_DROP_SPEED - P.RECOVERY_START) * urgency
+                elif (
+                    gap_u >= 0.0
+                    and not (self.is_back[i] and gap_u - line_u[team] <= P.SHAPE_RUN_GAP)
+                    and not pressing
+                ):
+                    # Out of possession, only the back line stepping up together sprints upfield
+                    # into shape (decision 47: midfielders and forwards sprinted upfield away from
+                    # their own goal while the opponents' keeper held the ball or on a turnover).
+                    speed = min(speed, P.SHAPE_RUN_MIN)
                 elif gap_u > 0.5 * gap[i] and gap_u - line_u[team] > P.SHAPE_RUN_GAP:
                     speed = min(speed, P.SHAPE_RUN_MIN)  # back up to a line that is not moving
             run = Run(purpose, t + P.SHAPE_RUN_MAX_S, speed, shape=True)
@@ -698,9 +754,10 @@ class Roles:
     def keep_distance(self, tgt: np.ndarray) -> None:
         """Opponents keep the legal distance from a restart (``RESTART_DISTANCE``, ``CORNER_ARC``,
         ``THROW_IN_DISTANCE``), plus ``RESTART_MARGIN``. A player inside, or with a target inside,
-        heads for the edge on their own side (the shortest way out); at a free kick or corner, a
-        player whose straight path would cross the circle walks round its edge instead
-        (``RESTART_ARC_STEP``)."""
+        heads for the edge on their own side, at most ``RESTART_ARC_STEP`` round towards his
+        target; at a free kick or corner, a player whose straight path would cross the circle walks
+        round its edge instead. Decision 47: stepping straight out, a wall member who had come in
+        fast and ended 0.5 m inside stood on the edge 2 m from his spot for the rest of the wait."""
         e = self.e
         r = e.restart
         keep = {
@@ -738,6 +795,7 @@ class Roles:
         turn = np.where(np.abs(turn) > np.pi - P.RESTART_ARC_STEP, P.RESTART_ARC_STEP, turn)
         at = at + np.clip(turn, -P.RESTART_ARC_STEP, P.RESTART_ARC_STEP)
         round_edge = r.spot + keep * np.stack([np.cos(at), np.sin(at)], axis=1)
+        out = np.where(d[:, None] > 1e-6, round_edge, out)  # on the ball: towards his own goal
         new = np.where(step_out[:, None], out, np.where(crosses[:, None], round_edge, goal))
         tgt[idx] = movement.clip_to_pitch(new)
 
@@ -897,13 +955,17 @@ class Roles:
             self.start_shape_runs(t, shape, holder)
             # Attackers caught offside hurry back (their shape target is just onside).
             idx = e.members(holder)[1:]
-            beyond = e.to_uv(holder, e.pos[idx])[:, 0] > self.onside_u(holder) + P.ONSIDE_MARGIN
+            off_u = e.to_uv(holder, e.pos[idx])[:, 0] - (self.onside_u(holder) + P.ONSIDE_MARGIN)
+            beyond = off_u > 0.0
             frac[idx[beyond]] = P.ONSIDE_SPEED
             calm[idx[beyond]] = False
             # A forward on the last defender's shoulder (his shape target held onside) goes with
             # the line as it drops, at the pace of a run: a calm drift fell behind it (decision
             # 46: real forwards' high-speed running with the ball is half within 5 m of the line).
-            if self.line_vel[holder] > P.LINE_HOLD_SPEED:
+            if (
+                self.line_vel[holder] > P.LINE_HOLD_SPEED
+                and e.to_uv(holder, e.ball_xy[:2])[0] > 0.0
+            ):
                 lead = self.onside_aim(holder) - self.onside_u(holder)
                 for i in idx[self.is_forward[idx] & ~beyond]:
                     uv = e.to_uv(holder, shape[i])
@@ -936,7 +998,12 @@ class Roles:
             elif run.target is not None:
                 target = run.target
             else:
-                target = e.ball_xy[:2] + e.to_uv(team, run.offset_uv)
+                lead_xy = (
+                    e.vel[e.touch.player] * P.ARRIVE_TAU
+                    if mode == "touch" and run.purpose == RunPurpose.CLOSE_DOWN
+                    else 0.0
+                )
+                target = e.ball_xy[:2] + lead_xy + e.to_uv(team, run.offset_uv)
             if run.onside and not self.timed(run, team, t):
                 uv = e.to_uv(team, target)
                 uv[0] = min(uv[0], self.onside_aim(team))
@@ -964,43 +1031,51 @@ class Roles:
                 RunPurpose.RUN_WITH_BALL,
             )
             opp_team = 1 - int(e.team_of[c])
-            n_press = 2 if e.press is not None and e.press[0] == opp_team else 1
-            idx = e.members(opp_team)[1:]
-            # Nearest first; the players who had a job last frame keep it unless another is
-            # ROLE_KEEP_M nearer (decision 46: handed out afresh every frame, the presser and the
-            # cover swapped every half second and ran side by side).
-            d = np.hypot(*(e.pos[idx] - e.pos[c]).T)
-            d = d - P.ROLE_KEEP_M * np.isin(idx, self.pressers)
-            order = idx[np.argsort(d, kind="stable")]
-            rest = order[n_press:]
-            dc = np.hypot(*(e.pos[rest] - e.pos[c]).T) - P.ROLE_KEEP_M * (rest == self.cover)
-            press = self.goal_side(opp_team, e.pos[c], P.PRESS_GAP)
-            cover_i = int(rest[int(np.argmin(dc))])
-            cover = self.cover_spot(opp_team, c, cover_i)
-            self.pressers = [int(i) for i in order[:n_press]]
-            self.cover = cover_i
-            for i in order[:n_press]:
-                role(int(i), press, P.CHASE_SPEED, RunPurpose.CLOSE_DOWN)
-            role(cover_i, cover, self.cover_pace(cover_i, cover), RunPurpose.COVERING)
-            # A carrier through on goal (within GK_RUSH_RANGE, nobody goal-side in his lane):
-            # the keeper comes out to meet him, GK_RUSH_GAP short of him (decision 46: he stayed
-            # on his line and the carrier walked in).
-            gk = int(e.members(opp_team)[0])
-            goal = e.to_uv(opp_team, np.array([-GOAL_U, 0.0]))
-            if (np.hypot(*(e.pos[c] - goal)) < P.GK_RUSH_RANGE
-                    and not e.lane_blocked(1 - opp_team, e.pos[c])):  # fmt: skip
-                way = goal - e.pos[c]
-                spot = e.pos[c] + way / max(float(np.hypot(*way)), 1e-6) * P.GK_RUSH_GAP
-                role(gk, spot, P.CHASE_SPEED, None)
-            pressers = [int(i) for i in idx if purpose[int(i)] == CODE[RunPurpose.CLOSE_DOWN]]
-            if len(pressers) > 1:
-                to_goal = e.to_uv(opp_team, np.array([-GOAL_U, 0.0])) - e.pos[c]
-                unit = to_goal / max(float(np.hypot(*to_goal)), 1e-6)
-                across = np.array([-unit[1], unit[0]])
-                pressers.sort(key=lambda j: float((e.pos[j] - e.pos[c]) @ across))
-                for k_p, j in enumerate(pressers):
-                    side = (k_p - (len(pressers) - 1) / 2.0) * 1.6
-                    tgt[j] = movement.clip_to_pitch(press + side * across)
+            if not self.is_gk[c]:
+                n_press = 2 if e.press is not None and e.press[0] == opp_team else 1
+                idx = e.members(opp_team)[1:]
+                # Nearest first; the players who had a job last frame keep it unless another is
+                # ROLE_KEEP_M nearer (decision 46: handed out afresh every frame, the presser and
+                # the cover swapped every half second and ran side by side).
+                d = np.hypot(*(e.pos[idx] - e.pos[c]).T)
+                d = d - P.ROLE_KEEP_M * np.isin(idx, self.pressers)
+                order = idx[np.argsort(d, kind="stable")]
+                rest = order[n_press:]
+                not_pressing = rest[purpose[rest] != CODE[RunPurpose.CLOSE_DOWN]]
+                if len(not_pressing):
+                    rest = not_pressing
+                dc = np.hypot(*(e.pos[rest] - e.pos[c]).T) - P.ROLE_KEEP_M * (rest == self.cover)
+                goal = e.to_uv(opp_team, np.array([-GOAL_U, 0.0]))
+                d_goal = float(np.hypot(*(e.pos[c] - goal)))
+                lead_c = e.vel[c] * P.ARRIVE_TAU if d_goal >= P.SHOT_RANGE else 0.0
+                press = self.goal_side(opp_team, e.pos[c] + lead_c, P.PRESS_GAP)
+                cover_i = int(rest[int(np.argmin(dc))])
+                cover = self.cover_spot(opp_team, c, cover_i)
+                self.pressers = [int(i) for i in order[:n_press]]
+                self.cover = cover_i
+                for i in order[:n_press]:
+                    role(int(i), press, P.CHASE_SPEED, RunPurpose.CLOSE_DOWN)
+                role(cover_i, cover, self.cover_pace(cover_i, cover), RunPurpose.COVERING)
+                # A carrier through on goal (within GK_RUSH_RANGE, nobody goal-side in his lane):
+                # the keeper comes out to meet him, GK_RUSH_GAP short of him (decision 46: he stayed
+                # on his line and the carrier walked in).
+                gk = int(e.members(opp_team)[0])
+                if d_goal < P.GK_RUSH_RANGE and not e.lane_blocked(1 - opp_team, e.pos[c]):
+                    way = goal - e.pos[c]
+                    spot = e.pos[c] + way / max(float(np.hypot(*way)), 1e-6) * P.GK_RUSH_GAP
+                    role(gk, spot, P.CHASE_SPEED, None)
+                pressers = [int(i) for i in idx if purpose[int(i)] == CODE[RunPurpose.CLOSE_DOWN]]
+                if len(pressers) > 1:
+                    to_goal = goal - e.pos[c]
+                    unit = to_goal / max(float(np.hypot(*to_goal)), 1e-6)
+                    across = np.array([-unit[1], unit[0]])
+                    pressers.sort(key=lambda j: float((e.pos[j] - e.pos[c]) @ across))
+                    for k_p, j in enumerate(pressers):
+                        side = (k_p - (len(pressers) - 1) / 2.0) * 3.0
+                        tgt[j] = movement.clip_to_pitch(press + side * across)
+            else:
+                self.pressers = []
+                self.cover = -1
             ch = e.touch.challenger
             if ch >= 0:  # going in for the ball (match.update_touch): through it, where it will
                 # be in ARRIVE_TAU, plus a stride, so that he does not ease off as he gets near
@@ -1024,19 +1099,40 @@ class Roles:
                 )
                 role(f.to, f.end, chase, self.receiver_purpose)
                 anchored[f.to] = True
-                defenders = e.members(1 - int(e.team_of[f.to]))[1:]
+                opp_team = 1 - int(e.team_of[f.to])
+                defenders = e.members(opp_team)[1:]
                 d = np.hypot(*(e.pos[defenders] - f.end).T)
                 j = int(np.argmin(d))
                 closer = int(defenders[j])
+                spot = self.goal_side(opp_team, f.end, P.PRESS_GAP)
                 if f.challenger >= 0:  # the pace that gets him under it in time (decision 41)
                     ch = f.challenger
                     way = f.end - e.pos[ch]
                     aim = e.pos[ch] + way * max(P.ARRIVE_TAU / max(f.t1 - t, P.DT), 1.0)
                     role(ch, movement.clip_to_pitch(aim), P.CHASE_SPEED, RunPurpose.INTERCEPTION)
-                elif d[j] < P.CLOSE_DOWN_REACH:
-                    spot = self.goal_side(int(e.team_of[closer]), f.end, P.PRESS_GAP)
+                elif not self.is_gk[f.to] and d[j] < P.CLOSE_DOWN_REACH:
                     role(closer, spot, P.CHASE_SPEED, RunPurpose.CLOSE_DOWN)
-                keeper = int(e.members(1 - int(e.team_of[f.to]))[0])
+                if (
+                    not self.is_gk[f.to]
+                    and self.cover >= 0
+                    and self.free(self.cover)
+                    and self.cover not in (closer, f.challenger)
+                    and float(np.hypot(*(e.pos[self.cover] - f.end))) < P.CLOSE_DOWN_REACH
+                ):
+                    cover = self.cover_spot(opp_team, f.to, self.cover)
+                    role(self.cover, cover, self.cover_pace(self.cover, cover), RunPurpose.COVERING)
+                pressers = [
+                    int(i) for i in defenders if purpose[int(i)] == CODE[RunPurpose.CLOSE_DOWN]
+                ]
+                if len(pressers) > 1:
+                    to_goal = e.to_uv(opp_team, np.array([-GOAL_U, 0.0])) - f.end
+                    unit = to_goal / max(float(np.hypot(*to_goal)), 1e-6)
+                    across = np.array([-unit[1], unit[0]])
+                    pressers.sort(key=lambda k_i: float((e.pos[k_i] - f.end) @ across))
+                    for k_p, k_i in enumerate(pressers):
+                        side = (k_p - (len(pressers) - 1) / 2.0) * 3.0
+                        tgt[k_i] = movement.clip_to_pitch(spot + side * across)
+                keeper = int(e.members(opp_team)[0])
                 claim = self.keeper_claim(keeper, f.end)
                 if claim is not None:
                     role(keeper, claim, P.CHASE_SPEED, None)

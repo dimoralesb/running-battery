@@ -204,14 +204,9 @@ def test_ball_in_play_and_possession(summaries):
 # behind make more chances, and the fit (SHOT_RATE, SHOT_RATE_CLEAR) left 29 a match on 120 seeds
 # against 24.4 [Bassek2025] and Wyscout's Premier League 23.4 (10th-90th percentile of matches
 # 17-30). It reports XPASS once the gap closes.
-SHOTS_GAP = pytest.mark.xfail(reason="decision 46: accepted gap, about 29 shots a match")
-
-
 @pytest.mark.parametrize(
-    "key",
-    ["passes", pytest.param("shots", marks=SHOTS_GAP), "duels", "fouls", "throw_ins", "corners",
-     "transitions", "offsides"],
-)  # fmt: skip
+    "key", ["passes", "shots", "duels", "fouls", "throw_ins", "corners", "transitions", "offsides"]
+)
 def test_event_counts_near_targets(summaries, key):
     mean = np.mean([summaries[s][0].counts[key] for s in SEEDS])
     target = TARGETS[key][0]
@@ -1450,3 +1445,70 @@ def test_the_keeper_comes_out_to_a_carrier_through_on_goal():
     tgt, _, _, _, _ = roles.targets(5.0)
     gk = int(engine.members(1)[0])
     assert np.hypot(*(tgt[gk] - engine.pos[carrier])) < P.GK_RUSH_GAP + 0.5
+
+
+def test_opponents_do_not_press_or_crowd_a_keeper_on_the_ball():
+    """Decision 47: when the goalkeeper holds the ball, opponents neither press nor cover him, and
+    their shape spots stay outside his penalty area and at least 10 m in front of him (while
+    shape_w decayed after a save, attackers' shape targets stayed inside the six-yard box)."""
+    engine = _engine()
+    roles = engine.roles
+    gk = int(engine.members(0)[0])
+    engine.pos[gk] = engine.to_uv(0, np.array([-P.HALF_LENGTH + 4.0, 0.0]))
+    engine.shape_w[:] = [0.0, 1.0]  # team 1 still in full attacking shape after a shot
+    engine.start_touch(gk, 5.0)
+    roles.clear()
+    engine.follow_ball(5.0)
+    shape, _ = roles.shape()
+    opp = engine.members(1)[1:]
+    opp_u = engine.to_uv(1, shape[opp])[:, 0]
+    gk_u = float(engine.to_uv(1, engine.pos[gk])[0])
+    assert np.all(opp_u <= min(P.HALF_LENGTH - P.BOX_DEPTH, gk_u - 10.0) + 1e-6)
+    _, _, purpose, _, _ = roles.targets(5.0)
+    assert roles.pressers == [] and roles.cover == -1
+    assert not np.any(purpose[opp] == PURPOSES_CODE[RunPurpose.CLOSE_DOWN])
+
+
+def test_out_of_possession_upfield_shape_runs_do_not_sprint():
+    """Decision 47: out of possession and not pressing, midfielders and forwards whose shape spot
+    is upfield move into shape at no more than SHAPE_RUN_MIN (not sprinting away from the goal they
+    defend)."""
+    engine = _engine()
+    roles = engine.roles
+    roles.clear()
+    engine.press = None
+    shape, _ = roles.shape()
+    cm = 16  # team 1 central midfielder, out of possession (holder == 0)
+    engine.pos[cm] = shape[cm] - engine.to_uv(1, np.array([22.0, 0.0]))
+    roles.start_shape_runs(5.0, shape, 0)
+    assert cm in roles.runs and roles.runs[cm].speed == pytest.approx(P.SHAPE_RUN_MIN)
+
+
+def test_cover_does_not_overwrite_a_second_presser_and_pressers_space_out():
+    """Decision 47: when a second player closes the carrier down (counter-press or build-up press),
+    the cover role goes to another team-mate instead of overwriting his CLOSE_DOWN run, and the
+    two pressers' targets stand 3 m apart."""
+    from runningbattery.sim.roles import Run
+
+    engine = _engine()
+    roles = engine.roles
+    carrier = 7
+    p1, p2, p3 = 16, 17, 15
+    c_xy = engine.to_uv(0, np.array([0.0, 0.0]))
+    engine.pos[carrier], engine.vel[carrier] = c_xy, 0.0
+    for j in engine.members(1)[1:]:
+        engine.pos[j] = engine.to_uv(1, np.array([-35.0, float(j) - 16.0]))
+    engine.pos[p1] = c_xy + engine.to_uv(1, np.array([-4.0, -2.0]))
+    engine.pos[p2] = c_xy + engine.to_uv(1, np.array([-6.0, 2.0]))
+    engine.pos[p3] = c_xy + engine.to_uv(1, np.array([-9.0, 0.0]))
+    engine.start_touch(carrier, 5.0)
+    roles.clear()
+    run = Run(RunPurpose.CLOSE_DOWN, 9.0, P.CHASE_SPEED)
+    run.offset_uv = np.array([-P.PRESS_GAP, 0.0])
+    run.hunt = True
+    roles.runs[p2] = run
+    tgt, _, purpose, _, _ = roles.targets(5.0)
+    assert purpose[p1] == PURPOSES_CODE[RunPurpose.CLOSE_DOWN]
+    assert purpose[p2] == PURPOSES_CODE[RunPurpose.CLOSE_DOWN]
+    assert roles.cover == p3 and purpose[p3] == PURPOSES_CODE[RunPurpose.COVERING]
+    assert np.hypot(*(tgt[p1] - tgt[p2])) == pytest.approx(3.0, abs=0.2)
