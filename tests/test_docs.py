@@ -1,4 +1,4 @@
-"""Docs: every citation key in the README is in docs/References.bib (BUILD_PLAN "Sun 25")."""
+"""Docs: every citation key in the README and docs/TECHNICAL.md is in docs/References.bib."""
 
 import re
 from pathlib import Path
@@ -44,7 +44,8 @@ def test_claims_register_sources_are_in_the_bib():
 
 
 def test_readme_citations_are_in_the_bib():
-    keys = cited((ROOT / "README.md").read_text())
+    text = (ROOT / "README.md").read_text() + (ROOT / "docs" / "TECHNICAL.md").read_text()
+    keys = cited(text)
     assert len(keys) >= 20
     entries = bib_entries()
     missing = sorted(k for k in keys if not resolves(k, entries))

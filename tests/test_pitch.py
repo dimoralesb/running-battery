@@ -4,9 +4,13 @@ by sentence, as the overlay's fixed copy does."""
 import re
 from pathlib import Path
 
+import pytest
+
 from runningbattery.agents.verifier import verify
 
 PITCH = Path(__file__).resolve().parents[1] / "docs" / "PITCH.md"
+# The pitch is kept out of the public repository; the test runs where the file is.
+pytestmark = pytest.mark.skipif(not PITCH.exists(), reason="docs/PITCH.md is not in this checkout")
 
 
 def sentences() -> list[str]:
