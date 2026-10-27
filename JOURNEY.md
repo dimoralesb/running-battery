@@ -69,6 +69,31 @@ Overlay (one page, the URL's parameters set where it opens)
 
 ## Page specs
 
+### Decision 60 (user, 2026-10-27): the research cited, the test results gone
+
+The user: "I think we should delete this in the website" (the two result sentences, `howVer_1` and
+`howVer_2`), and "In the how it works, we should also cite the model we are using for the battery
+and put a reference section. Also, cite any other relevant study … We need to take advantage on
+the scientific approach". Asked whether the page should say the findings list holds 47 papers, the
+user: "Are we really using those 47 papers?" No: the lines and clips shown on the site cite 15 of
+them and the battery's maths 7, so the page cites only what it relies on, 23 papers in three
+groups (the battery 1–9, the comparisons in the lines and clips 10–19, the simulated matches
+20–23). On Mizelman 2024 and Lord 2020 the user: "we should mention that … It's part of the
+strength of the project": they show that critical speed fitted to tracking depends on the method
+(about 7 km/h and about 14 km/h), so the battery takes its values from fitness tests.
+
+- **The battery** gains three paragraphs: the D′ balance model [1, 2, 3], what critical speed and
+  D′ are, the typical pro's values and where they come from [3, 4, 5], why they can't come from
+  tracking [6, 7], and the refill four times slower [8] and slowed by repeated efforts [9]. The
+  small technical line keeps the spread and the tuning.
+- **The commentary** loses the two result boxes and "We tested the check on 192 sentences we
+  wrote"; one sentence says the lines' comparisons come from published match studies [10–19].
+- **The simulated matches** cite the sprint model [20], the real tracking [21] and the Premier
+  League data [22, 23].
+- **References** (`howRef_<group>_<n>` in copy.json, each through the Verifier's copy test): authors,
+  year, title, journal, volume, pages and a DOI link. The markers don't link, so nothing moves the
+  page.
+
 ### Decision 59 (user, 2026-10-27): no internal terms on the page
 
 The user approved decision 56's new clips, and: "Be careful to mention things that the general

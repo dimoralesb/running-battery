@@ -356,6 +356,15 @@ Audience sit side by side with their labels above, and Match takes the next row 
 inline (the top controls 200 → 92 px). How to read the page: one line under each step's heading,
 `.sub` (`--text-sm`, `--text-secondary`), as step 1's.
 
+## Decision 60 (user, 2026-10-27): references on How it works
+
+The check's two result boxes are gone, so the commentary part is one column at 70ch. Citations
+are `[n]` markers inside the sentence, `.cite` (0.85em, `--text-secondary`, no wrap), and link
+nowhere. The References part closes the view above the README line: `h3`, then one `h4` per group
+(`--text-sm`, `--text-secondary`) and a numbered list (`--text-sm`, up to 110ch, numbers in
+`--text-secondary`), each entry ending in its DOI link (`--text-secondary`, wraps anywhere on a
+phone).
+
 ## Decision 52 (user, 2026-10-27): How it works
 
 The third view keeps the page's tokens: headings at `--text-lg`, text at 70ch, parts split by a

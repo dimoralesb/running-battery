@@ -5,7 +5,9 @@ import { type Item, type MatchData, clockLabel, signalIndex } from "./data";
 // test (copy.json "how*"). The battery chart uses the opening clip's player around his run, from
 // this match's own data, and shades the seconds above critical speed so the drain and the refill
 // show (with wear, decision 56: in the story match 35 of his 35 seconds above it that change the
-// battery lower it).
+// battery lower it). Decision 60: the check's test results are gone, and the page cites its
+// research with [n] markers and a References section (copy.json "howRef_<group>_<n>", each ending
+// in its DOI link).
 
 const REPO = "https://github.com/dimoralesb/running-battery#readme";
 const CS_KMH = 4.1 * 3.6; // the typical pro's critical speed, 4.1 m/s (engine prior, PLAN decision 13)
@@ -21,6 +23,10 @@ interface Props {
 
 const fill = (t: string, v: Record<string, string | number>) =>
   t.replace(/\{(\w+)\}/g, (_, k) => String(v[k] ?? ""));
+
+/** The [n] citation markers, set apart so the sentence reads first; they don't link anywhere. */
+const cite = (t: string) =>
+  t.split(/(\[\d[\d,\s–]*\])/).map((part, k) => (k % 2 ? <span key={k} className="cite">{part}</span> : part));
 
 /** His speed and the typical-pro battery, second by second, from 90 s before the clip's run to
  * 8 minutes after it, within its half (the story match's 3:50 run takes the battery from 90% to
@@ -106,7 +112,7 @@ export function HowItWorks({ data, item, name, text }: Props) {
       <section className="how-part how-two">
         <div>
           <h3>{text.howBatteryTitle}</h3>
-          {list("howBattery_").map((p) => <p key={p}>{p}</p>)}
+          {list("howBattery_").map((p) => <p key={p}>{cite(p)}</p>)}
           <p className="how-tech">{text.howBatteryTech}</p>
         </div>
         {item?.player && <BatteryChart data={data} item={item} name={name} text={text} />}
@@ -116,27 +122,45 @@ export function HowItWorks({ data, item, name, text }: Props) {
         <h3>{text.howAgentsTitle}</h3>
         <p>{text.howAgents_1}</p>
         <Flow steps={list("howAgentStep_")} label={text.howAgentsTitle} />
-        <div className="how-two">
-          <div>
-            <p>{text.howAgents_2}</p>
-            <p className="sub">{text.howAgents_3}</p>
-            <p className="how-tech">{text.howAgentsTech}</p>
-          </div>
-          <ul className="how-results">{list("howVer_").map((p) => <li key={p}>{p}</li>)}</ul>
-        </div>
+        <p>{text.howAgents_2}</p>
+        <p>{cite(text.howAgentsCite)}</p>
+        <p className="sub">{text.howAgents_3}</p>
+        <p className="how-tech">{text.howAgentsTech}</p>
       </section>
 
       <section className="how-part how-two">
         <div>
           <h3>{text.howDataTitle}</h3>
           <ul className="how-list">{list("howData_").map((p) => <li key={p}>{p}</li>)}</ul>
-          <p className="sub">{text.howDataSynthetic}</p>
+          <p className="sub">{cite(text.howDataSynthetic)}</p>
         </div>
         <div>
           <h3>{text.howLiveTitle}</h3>
           <p className="sub">{text.howLiveIntro}</p>
           <ul className="how-list">{list("howLive_").map((p) => <li key={p}>{p}</li>)}</ul>
         </div>
+      </section>
+
+      <section className="how-part how-refs">
+        <h3>{text.howRefTitle}</h3>
+        {list("howRefGroup_").map((title, g) => {
+          const refs = Object.keys(text).filter((k) => k.startsWith(`howRef_${g + 1}_`)).sort();
+          return (
+            <div key={title}>
+              <h4>{title}</h4>
+              <ol>
+                {refs.map((k) => {
+                  const [ref, url] = text[k].split(" https://");
+                  return (
+                    <li key={k} value={Number(k.split("_")[2])}>
+                      {ref} <a href={`https://${url}`} target="_blank" rel="noreferrer">{`https://${url}`}</a>
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+          );
+        })}
       </section>
 
       <p className="how-more">

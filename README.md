@@ -159,8 +159,8 @@ first recovery run, decision 50), with "Play the clip" on the pitch (decision 49
 the page is); a card, Play or Next starts a clip without moving the page (decisions 51 and 57),
 and a link that names a clip opens with the pitch in view. During a clip, clicking any other player shows his battery
 and its percentage on the pitch. A third view, **How it works** (decision 52), explains the battery
-(with the opening clip's run and its drain and refill), the agents and the Verifier's test results,
-the data it needs, and how it could run during a live match (not built).
+(with the opening clip's run and its drain and refill), the agents and the check, the data it needs
+and the live runner, and cites its research with numbered references (decision 60).
 Each clip plays once, as it happened, at
 normal speed, with only that player's path on the pitch (the others dimmed), in white, fading
 towards its start with an arrowhead where he is. A moment measured over minutes shows the part

@@ -560,9 +560,12 @@ h2 { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--
   .flow li:not(:last-child)::after { content: "↓"; right: auto; left: var(--space-3); top: auto;
     bottom: calc(-1 * var(--space-4) - 1px); transform: none; }
 }
-.how-results { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); }
-.how-results li { padding: var(--space-3) var(--space-4); background: var(--surface); border: 1px solid var(--border-subtle);
-  font-size: var(--text-lg); line-height: var(--leading-body); max-width: 60ch; }
+.how .cite { color: var(--text-secondary); font-size: 0.85em; white-space: nowrap; }
+.how-refs h4 { margin: var(--space-4) 0 var(--space-2); font-size: var(--text-sm); color: var(--text-secondary); }
+.how-refs ol { margin: 0; padding-left: var(--space-6); display: grid; gap: var(--space-2); max-width: 110ch;
+  font-size: var(--text-sm); line-height: var(--leading-body); }
+.how-refs li::marker { color: var(--text-secondary); }
+.how-refs a { color: var(--text-secondary); overflow-wrap: anywhere; text-underline-offset: 2px; }
 .how-list, .how-steps { margin: var(--space-2) 0 var(--space-3); padding-left: var(--space-5); display: grid; gap: var(--space-1); }
 .how-steps li::marker { font-weight: 700; }
 .how p.how-more { max-width: none; }
