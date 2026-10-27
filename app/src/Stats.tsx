@@ -1,14 +1,13 @@
 import { type Entry, type MatchData, type Mode, type TeamBlock, clockLabel } from "./data";
-import { Blocked, Verdict } from "./Feed";
 import { SplitChart } from "./SplitChart";
 import { TeamChart } from "./TeamChart";
 
 // The Stats tab (decision 46): the teams' running over the whole match, as statistics, not clips.
 // A team moment ("Westerlyn Albion did 19% more high-speed running per ball-in-play minute in
 // 15:00–30:00") compares fifteen minutes; its clip showed a few seconds of them, at times a dead
-// ball. Here each 15-minute block has both teams' numbers, its team lines with their Verifier
-// verdicts (blocked lines struck through, with the rule), and a link to the full match there;
-// then the two team charts.
+// ball. Here each 15-minute block has both teams' numbers, its team lines (decision 49: no
+// verdicts or blocked lines on the page), and a link to the full match there; then the two team
+// charts.
 
 interface Props {
   data: MatchData;
@@ -80,16 +79,7 @@ export function Stats({ data, mode, text, onWatch }: Props) {
                 ))}
               </div>
               {mine.filter((e) => e.shown).map((e, k) => (
-                <article key={`s${k}`} className="line">
-                  <p>{e.sentence}</p>
-                  <Verdict e={e} mode={mode} text={text} />
-                </article>
-              ))}
-              {mine.filter((e) => e.verdict === "blocked").map((e, k) => (
-                <article key={`b${k}`} className="line blocked">
-                  <p className="line-meta">{text.verdictBlocked}</p>
-                  <Blocked e={e} text={text} />
-                </article>
+                <article key={`s${k}`} className="line"><p>{e.sentence}</p></article>
               ))}
             </li>
           );

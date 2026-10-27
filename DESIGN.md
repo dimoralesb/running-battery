@@ -332,6 +332,19 @@ Mown stripes `--grass` / `--grass-alt` (7.5 m bands), lines `--pitch-line` 0.35 
 
 `.design-foundations/mocks/running-battery-styled-{watch,details,watch-light,watch-analyst}.html`, with PNGs at 1440×900 (`-1440.png`) and Watch at 390×844 (`running-battery-styled-watch-390.png`). Each file's `:root` is this token block, verbatim. Measured in the render: column 863 px; tab bar at y 704 and the panel at y 752 of 900 (Details: numbers strip and the first line above the fold); 390 px: page width 390 (no sideways scroll); 0 elements with uppercase outside the score bug; Saira loaded.
 
+## Decision 49 (user, 2026-10-27): the overview layout
+
+The tokens, type, battery, score bug, lower third and pitch are unchanged. The page is no longer
+one column as wide as the pitch: up to 1320 px, a top bar (brand line left; View, Match, Audience
+right, each with its quiet label) over a hairline, then numbered steps (a 22 px filled circle in
+`--text` with the number in `--background`, the step name at `--text-lg` 700): **1 Pick a moment**,
+one row of moment cards (`--surface`, a hairline edge, `--text` edge and inset ring when it is the
+current clip; time 700, kind 600, surname with the team dot at `--text-xs`, the battery as a 6 px
+bar in `--text` on `--border-subtle` with its percentage), then **2 Watch it** (the pitch's width
+from the window's height, at most 780 px) beside **3 What it shows** (at least 340 px) from 1100 px
+up. "Play the clip" sits on the pitch as a plate-coloured pill (`--plate`, `--plate-text`) with a
+play triangle: the only control drawn over the picture, and only before the first clip plays.
+
 ## Lock decisions (user, 2026-10-20)
 
 1. **The lower third docks under the pitch** at every width, not over it (it hid a player and the start of his run).

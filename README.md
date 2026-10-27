@@ -7,7 +7,7 @@ Running Battery measures from tracking data how much hard running each football 
 All match data is **synthetic**: we built a generator whose players get tired according to published sports science, with a hidden "true" fatigue we use to test our estimator.
 
 **Try it:** https://happy-bay-06ca1e90f.3.azurestaticapps.net/?match=story (the story match, fan mode).
-It opens on the **Highlights**: each clip plays once as it happened, then shows its details (numbers, sources and the Verifier's verdicts); "Replay" plays it again (a progress bar, Play/Pause and ½× 1× 2× work like a video player's), and "Full match" is the whole replay.
+It opens on the **Highlights**: a card for each clip of the match, then the first clip, stopped until you press Play; each clip plays once as it happened, beside its details (the numbers and the commentary); "Replay" plays it again (a progress bar, Play/Pause and ½× 1× 2× work like a video player's), and "Full match" is the whole replay.
 Add `?match=natural`, `&mode=analyst`, `&view=full&t=<seconds>`, `&hl=<kind>&step=details` (or `&step=replay` for the replay), `&tab=stats` (the teams' running, 15 minutes at a time) or `&theme=dark` to the address.
 
 ![Running Battery broadcast overlay](docs/figures/overlay.png)
@@ -140,14 +140,20 @@ caught 0 of 2 before it and 2 of 2 after, with both valid ones passing.
 ## The overlay
 
 `app/` is a match broadcast, cleaned up (decision 36; the screens in [JOURNEY.md](JOURNEY.md),
-the look in [DESIGN.md](DESIGN.md)). One column as wide as the pitch: the brand line ("Running
-Battery · synthetic match" and what it shows), the score bug with each team's colour, the pitch,
-one lower third docked under it, a quiet play bar, then five tabs: **Clips**, **Team sheet**,
-**Stats**, **Details** and **Settings** (view, fan or analyst, match, dark or light, the
-key). While a clip plays, only the score, the pitch and the lower third ask for attention.
+the look in [DESIGN.md](DESIGN.md)). Since decision 49 an overview comes first: a top bar (the
+brand line "Running Battery · synthetic match" with what it shows; the view, the match, fan or
+analyst), then **1 Pick a moment**, one card per clip in match order (its time, what it is, the
+player, and the battery a typical professional would have at its end), then **2 Watch it**, the
+score bug with each team's colour, the pitch, one lower third docked under it and a quiet play bar,
+beside **3 What it shows**: the tabs **Details**, **Team sheet**, **Stats** and **Settings** (dark or
+light, the key; the full match adds **Clips**). On a phone the columns stack. While a clip plays,
+only the score, the pitch and the lower third ask for attention.
 
 It opens on the **Highlights** (decision 29): one clip at a time, in match order, from the
-match's best physical moments and the feed's moments. Each clip plays once, as it happened, at
+match's best physical moments and the feed's moments. The page opens on the first clip stopped,
+with "Play the clip" on the pitch (decision 49: a clip that played at once left no time to see what
+the page is); a card, a link that names a clip, or Play starts it and brings the pitch into view.
+Each clip plays once, as it happened, at
 normal speed, with only that player's path on the pitch (the others dimmed), in white, fading
 towards its start with an arrowhead where he is. A moment measured over minutes shows the part
 of the match it is about (decision 38): a counter-attack after his team lost the ball, or the run
@@ -163,15 +169,16 @@ player's high-speed runs, with "Fast-forward to his next run" on the play bar (d
 Real tracking loses players for a moment (we
 simulate it too, so the estimator copes with gaps); the pitch draws such a player faded, on the
 line between where the tracking last and next saw him.
-When it is over it stops on its last frame ("Clip ended · last frame") and the **Details** tab
-opens (decision 34): the numbers (top speed, distance, metres above 5.5 m/s, the gap timer between
-back-to-back runs), what the feed says about it, the run's speed second by second and his number
-against the published one. Fans see one short label under each line ("Verified · measured",
-"Verified · our estimate", "Verified · published research") that opens to the claim, the papers
-and the check; analysts see the full citation and verdict, and the 10–90% band as the first line.
+When it is over it stops on its last frame ("Clip ended · last frame"). The **Details** tab beside
+it (decision 34) has the numbers (top speed, distance, metres above 5.5 m/s, the gap timer between
+back-to-back runs), what the feed says about it, the run's speed second by second (not for the most
+ground covered: decision 49 dropped its distance-since-kick-off chart) and his number against the
+published one; analysts get the 10–90% band as the first line. The Verifier's verdicts and blocked
+lines are not on the page (decision 49: too much for a match page); they are in the feed files,
+[docs/feeds/](docs/feeds/), and in the Verifier section below.
 **Replay** plays the clip again at the clip speed (1× unless the viewer picks ½× or 2×), with the numbers growing; the progress bar seeks within the clip; **Next** starts the next
 clip and gives back the tab the viewer was on. "Play highlights" leaves the details up for 6 s
-before the next clip. The Clips tab shows each team's fastest second so
+before the next clip. The full match's Clips tab shows each team's fastest second so
 far.
 
 **The battery is the one bold graphic** (decisions 32, 33, 36). The lower third names the clip or
@@ -192,8 +199,7 @@ player, and the key is in Settings.
 **Stats** (decision 46) holds the teams' running over the whole match, as statistics rather than
 clips: a team comparison covers fifteen minutes, and its clip showed a few seconds of them (once a
 dead ball). Each 15-minute block gives both teams' high-speed running per ball-in-play minute, the
-feed's team lines about it with their Verifier verdicts (the blocked ones struck through, with the
-rule they broke) and a link to the full match there. Then both teams' high-speed running per
+feed's team lines about it and a link to the full match there. Then both teams' high-speed running per
 ball-in-play minute as one chart, "High-speed running per minute", and under it **high-speed running
 by situation** (decision 30) splits each team's high-speed running by situation of play, from who
 had the ball and where it was, as metres per minute of that situation (G5): the first 10 s after
@@ -204,9 +210,7 @@ the minutes of each situation under its name, and per team the share of its high
 that came in the 10 s after the ball changed hands; it sums the finished 15-minute blocks so far,
 and a team moment's Replay shows its own block. Over the story match, 56% of Westerlyn Albion's
 high-speed running came in those 10 s, in 50% of the time the ball was in play (257 m per minute after losing the ball against 161 settled on the ball). It says where the
-running happened, never why: "pressing" is a purpose, and positions don't show it (below). Each
-feed line shows its claim,
-sources and the Verifier's verdict, and a toggle shows what the Verifier blocked. All of the
+running happened, never why: "pressing" is a purpose, and positions don't show it (below). All of the
 overlay's own text, labels and tooltips included (`app/src/copy.json`), passes the Verifier too.
 Dark by default, light in Settings; phone layout with a 16 px gutter, plain dots on the pitch and
 no sideways scroll.

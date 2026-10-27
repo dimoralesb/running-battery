@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { type Entry, type Item, type MatchData, type Mode, clockLabel, signalIndex } from "./data";
-import { Blocked, Verdict, splitSources } from "./Feed";
+import { type Item, type MatchData, type Mode, clockLabel, signalIndex } from "./data";
 
 // The clip's details (decisions 29 and 34): shown when the clip is over, and growing with the
 // run during the replay; the numbers, the run's speed second by second, the published
-// number it is compared with, and the feed's lines with their sources and the Verifier's verdict.
+// number it is compared with, and the feed's lines (decision 49: no verdicts, no blocked lines and
+// no distance chart for the whole match on the page).
 const WIDTH = 640;
 const HEIGHT = 170;
 const PAD = { l: 40, r: 12, t: 26, b: 22 };
@@ -188,71 +188,25 @@ function Compare({ item, name, text }: { item: Item; name: string; text: Record<
   );
 }
 
-function Line({ e, mode, text }: { e: Entry; mode: Mode; text: Record<string, string> }) {
-  return (
-    <article className={`line${e.verdict === "blocked" ? " blocked" : ""}`}>
-      {e.verdict === "blocked" ? <Blocked e={e} text={text} /> : <p>{e.sentence}</p>}
-      {e.verdict !== "blocked" && <Verdict e={e} mode={mode} text={text} />}
-    </article>
-  );
-}
-
 export function Replay({ data, item, now, mode, name, replaying, band, text, onSeek }: Props) {
   const lines = item.momentId
     ? data.feed.entries.filter((e) => e.moment_id === item.momentId && e.mode === mode && e.shown)
     : [];
-  const blocked = item.momentId
-    ? data.feed.entries.filter((e) => e.moment_id === item.momentId && e.mode === mode
-                                      && e.verdict === "blocked")
-    : [];
-  const allBlocked = data.feed.entries.filter((e) => e.mode === mode && e.verdict === "blocked");
   const over = now >= item.end;
   const about = item.momentKind ? text[`about_${item.momentKind}`] : undefined;
-  const [cites, fields] = item.h ? splitSources(item.h.sources) : [[], []];
   return (
     <section className="replay">
       {item.player && <Stats data={data} item={item} now={now} replaying={replaying} text={text} />}
       <h3>{text.linesTitle}</h3>
       {[
         band && <article key="band" className="line"><p>{band}</p></article>,
-        item.h && (
-          <article key="caption" className="line">
-            <p>{item.caption}</p>
-            <details className="verdict" open={mode === "analyst"}>
-              <summary>{mode === "analyst" ? `${text.hlChecked} · ${text.measuredFact}` : text.verdictMeasured}</summary>
-              <ul>
-                {cites.length > 0 && <li>{cites.join(", ")}</li>}
-                {fields.map((f) => <li key={f}><code>{f}</code></li>)}
-              </ul>
-            </details>
-          </article>
-        ),
-        ...lines.map((e, k) => <Line key={k} e={e} mode={mode} text={text} />),
+        item.h && <article key="caption" className="line"><p>{item.caption}</p></article>,
+        ...lines.map((e, k) => <article key={k} className="line"><p>{e.sentence}</p></article>),
       ].filter(Boolean).flatMap((el, k) =>
         // What this kind of moment is, after the clip's first line (decision 38): the first
         // line stays above the fold at 1440×900 (JOURNEY fix 1).
         k === 0 && about ? [el, <p key="about" className="sub about">{about}</p>] : [el])}
-      {blocked.length > 0 && (
-        <>
-          <h4>{text.verdictBlocked}</h4>
-          {blocked.map((e, k) => <Line key={k} e={e} mode={mode} text={text} />)}
-        </>
-      )}
-      {allBlocked.length > 0 && (
-        <details className="verdict">
-          <summary>{fill(text.allBlocked, { n: allBlocked.length })}</summary>
-          <div className="blocked-list">
-            <p className="sub">{text.blocked}</p>
-            {allBlocked.map((e, k) => (
-              <article key={k} className="line blocked">
-                <p className="line-meta num">{e.clock} · {e.player?.name ?? e.team_name}</p>
-                <Blocked e={e} text={text} />
-              </article>
-            ))}
-          </div>
-        </details>
-      )}
-      {item.player && <SpeedChart data={data} item={item} now={now} name={name} text={text} onSeek={onSeek} />}
+      {item.player && !item.lapse && <SpeedChart data={data} item={item} now={now} name={name} text={text} onSeek={onSeek} />}
       {over && <Compare item={item} name={name} text={text} />}
     </section>
   );

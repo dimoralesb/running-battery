@@ -69,6 +69,33 @@ Overlay (one page, the URL's parameters set where it opens)
 
 ## Page specs
 
+### Decision 49 (user, 2026-10-27): an overview first, no Verifier on the page
+
+The user, comparing a competitor's page: the clip played at once and "people won't have time to
+gauge what this page is about. We need an overview"; the "Verified · measured" labels are "too much
+information for this web page"; the most ground covered's distance chart is useless; then "remove
+all of it" for the Verifier on the page. Where the specs below differ, this section wins:
+
+- **Order:** top bar (brand line with tagline; View, Match, Audience), then **1 Pick a moment**
+  (`step1`, `step1Sub`, "Play highlights"): one card per clip in match order, its time, its kind,
+  the player's surname with the team dot, and the battery at the clip's end as a bar and a
+  percentage; then **2 Watch it** (`step2`; full match `step2Full`): score bug, pitch, lower third,
+  play bar; beside it at 1100 px and wider **3 What it shows** (`step3`): the tabs Details, Team
+  sheet, Stats, Settings (the full match adds Clips: its moments and highlights panel). The cards
+  replace the Highlights view's Clips tab and its clip list. Below 1100 px the columns stack; the
+  card row scrolls sideways on a phone.
+- **No autoplay:** a bare page load stops on the first clip with "Play the clip" (`playClip`) on
+  the pitch; a card, Play, or a link that names a clip (`moment`, `hl`, `item`, `step`, `auto`, `t`)
+  plays it and scrolls the clip area into view.
+- **Details from the start:** the Details tab shows the clip's numbers and lines while it plays,
+  not only when it ends (`detailsWait` removed).
+- **No Verifier on the page:** no verdict labels (fix 4 below is withdrawn), no blocked lines in
+  Details, Stats or the full match's commentary, no "What the Verifier blocked" checkbox, no
+  "Verifier block" tag; the copy keys for them are removed. Lines are plain text; the verdicts stay
+  in the feed files and the README.
+- **Charts:** no distance-since-kick-off chart for the most ground covered (its speed chart only
+  ever showed for the other clips).
+
 ### The overlay
 
 **Purpose:** show one player's hard running as one clip at a time, with the battery (what the running would leave a typical professional, never the player's own state) as the one bold graphic, and keep every detail one click away in a tab.
@@ -117,7 +144,7 @@ A clip plays once at 1×, from 3 s before its first run to 2 s after its end (a 
 
 The clip stops on its last frame. Lower third unchanged. Pitch flag "Clip ended · last frame". The Details tab opens (rule 1) with, in order:
 
-1. **Numbers strip** (at most 4 cells; Cowan ~4±1): "Top speed in this clip" (m/s, km/h in brackets), "Distance in this clip", "Of it above 5.5 m/s (19.8 km/h)"; a back-to-back clip adds "High-speed run n / N" and "Since his last high-speed run"; a whole-match clip shows "Distance since kick-off" alone. "Speed now" shows only in Replay (it moves). No battery cell: the lower third carries it (no repeated values). **Not built:** the mock's "3rd time so far" cell (no such field in `feed.json`).
+1. **Numbers strip** (at most 4 cells; Cowan ~4±1): "Top speed in this clip" (m/s, km/h in brackets), "Distance in this clip", "Run above 19.8 km/h (5.5 m/s)" (decision 49; was "Of it above 5.5 m/s"); a back-to-back clip adds "High-speed run n / N" and "Since his last high-speed run"; a whole-match clip shows "Distance since kick-off" alone. "Speed now" shows only in Replay (it moves). No battery cell: the lower third carries it (no repeated values). **Not built:** the mock's "3rd time so far" cell (no such field in `feed.json`).
 2. **The lines**, under "Commentary" (`linesTitle`): the clip's first line (the caption, which for a highlight is the measured caption), then one quiet line (`--text-secondary`, `--text-sm`) saying what this kind of moment is (`about_<kind>`, decision 38; feed moments only; after the first line, which stays above the fold), then the moment's other lines, then, under a quiet "Blocked by the Verifier", any lines the Verifier blocked (struck through with the rule they broke; kept for both modes, they are the Verifier's evidence).
 3. **Speed chart** (`speedChart`, hover for values, click to jump; whole-match clip: the distance chart).
 4. **"Against the published number"** (`compare`) for highlight clips, once the clip is over.

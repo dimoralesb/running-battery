@@ -109,15 +109,15 @@ export default function App() {
   const [clipSpeed, setClipSpeed] = useState(1);
   const [mode, setMode] = useState<Mode>(QUERY.get("mode") === "analyst" ? "analyst" : "fan");
   const [selected, setSelected] = useState<string | null>(null);
-  const [showBlocked, setShowBlocked] = useState(false);
   const [allBatteries, setAllBatteries] = useState(QUERY.get("batteries") === "all");
   const [cur, setCur] = useState<Item | null>(null);
   const [step, setStep] = useState<Step>("watch");
   const [auto, setAuto] = useState(QUERY.get("auto") === "1");
+  // The page opens on its first clip, stopped, with a Play button (decision 49: a clip that
+  // played at once left no time to see what the page is); a link that names a clip plays it.
+  const [poised, setPoised] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">(THEME);
-  const [tab, setTab] = useState<Tab>(
-    QUERY.get("tab") === "stats" ? "stats" : QUERY.get("view") === "full" ? "details" : "clips",
-  );
+  const [tab, setTab] = useState<Tab>(QUERY.get("tab") === "stats" ? "stats" : "details");
   // Tab rules (JOURNEY.md): a clip's end borrows the Details tab and the next clip hands back
   // the tab the viewer was on; a tab the viewer picks during a clip is never changed for them.
   const back = useRef<Tab | null>(null);
@@ -147,6 +147,7 @@ export default function App() {
 
   // Play a clip (watch, replay), or open it finished with its details.
   const start = (it: Item, st: Step, d: MatchData = data!) => {
+    setPoised(false);
     setCur(it);
     setStep(st);
     setView("highlights");
@@ -187,6 +188,10 @@ export default function App() {
           const st = QUERY.get("step");
           start(it, st === "replay" || st === "details" ? st : "watch", d);
           if (hasT) setNow(t);
+          if (st === null && !["moment", "hl", "item", "auto", "t"].some((k) => QUERY.has(k))) {
+            setPlaying(false);
+            setPoised(true);
+          }
         } else if (view === "highlights") {
           setView("full"); // no clips in this mode: open the full match
           setTab("details");
@@ -207,6 +212,16 @@ export default function App() {
   const gapsRef = useRef(gaps);
   gapsRef.current = gaps;
   const skipping = playing && gaps.some(([a, b]) => now >= a && now < b);
+
+  useEffect(() => {
+    if (playing) setPoised(false);
+  }, [playing]);
+  // A clip that starts brings the pitch, its lower third and the play bar into view (the cards
+  // above push them down); the page's opening stays at the top.
+  const stageRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (view === "highlights" && cur && !poised) stageRef.current?.scrollIntoView({ block: "start" });
+  }, [cur?.id, poised, view]);
 
   // Play: advance replay time with the wall clock.
   const last = useRef<number | null>(null);
@@ -340,137 +355,175 @@ export default function App() {
   const stepName = step === "watch" ? copy.stepWatch : step === "replay" ? copy.stepReplay : copy.stepDetails;
   const band = mode === "analyst" && cur?.player ? reading(data, players[cur.player], now) : null;
 
-  const hasBlocked = (it: Item) =>
-    Boolean(it.momentId && data.feed.entries.some(
-      (e) => e.moment_id === it.momentId && e.mode === mode && e.verdict === "blocked",
-    ));
-  const clipRow = (it: Item, n: number | null) => (
-    <li key={`${it.id}-${n ?? "x"}`}>
-      <button className={`clip-row${cur && it.id === cur.id ? " on" : ""}`}
-              onClick={() => start(it, "watch")}>
-        <span className="clip-n num">{n ?? ""}</span>
-        <span className={`dot ${it.team}`} aria-hidden="true" />
-        <span className="clip-kind">{label(it)}</span>
-        <span className="clip-who">{who(it)}</span>
-        <span className="clip-clock num">{it.clock}</span>
-        <span className="clip-now">
-          {cur && it.id === cur.id ? copy.nowPlaying : hasBlocked(it) ? copy.clipBlocked : ""}
-        </span>
-      </button>
-    </li>
-  );
+  // A moment card (decision 49): the clip's time, what it is, whose, and the battery a typical pro
+  // would have at its end.
+  const card = (it: Item) => {
+    const r = reading(data, it.player ? players[it.player] : undefined, clipTo(it, data));
+    const on = view === "highlights" && cur?.id === it.id;
+    return (
+      <li key={it.id}>
+        <button className={`card${on ? " on" : ""}`} aria-current={on || undefined}
+                onClick={() => start(it, "watch")}>
+          <span className="card-clock num">{it.clock}</span>
+          <span className="card-kind">{label(it)}</span>
+          <span className="card-who"><span className={`dot ${it.team}`} aria-hidden="true" />
+            {it.player ? who(it)?.split(" ").slice(-1)[0] : who(it)}</span>
+          {r && (
+            <span className="card-battery" title={copy.cardBattery}>
+              <span className="card-track"><span className="card-fill" style={{ width: `${r.pct}%` }} /></span>
+              <span className="num">{r.pct}%</span>
+            </span>
+          )}
+        </button>
+      </li>
+    );
+  };
+  const playAll = () => {
+    if (!items.length) return;
+    setAuto(true);
+    start(items[0], "watch");
+  };
+  // The Clips tab is the full match's (its moments and highlights); the cards are the clips.
+  const tabs = TABS.filter(([t]) => view === "full" || t !== "clips");
+  const shown = view === "highlights" && tab === "clips" ? "details" : tab;
 
   return (
     <div className="app">
-      <header className="masthead">
-        <div className="bug" aria-label={`${home.name} ${sc.home}, ${away.name} ${sc.away}`}>
-          <span className="bug-team"><span className="chip home" aria-hidden="true" />
-            <span className="full">{home.name}</span><span className="code">{code(home.name)}</span></span>
-          <span className="bug-score num">{sc.home}–{sc.away}</span>
-          <span className="bug-team"><span className="full">{away.name}</span>
-            <span className="code">{code(away.name)}</span><span className="chip away" aria-hidden="true" /></span>
-          <span className="bug-clock num">{clockLabel(data.meta, now)}</span>
-        </div>
+      <header className="top">
         <div className="brand">
           <p className="brand-name"><BrandMark /><strong>{copy.brand}</strong>
             <span className="brand-syn">· {copy.brandSynthetic}</span></p>
           <p className="tagline">{copy.tagline}</p>
         </div>
+        <div className="top-controls">
+          <Choice label={copy.settingsView} value={view}
+                  options={[["highlights", copy.viewHighlights], ["full", copy.viewFull]]}
+                  onPick={(v) => (v === "full" ? toFull() : toHighlights())} />
+          <label className="field">
+            <span className="field-label">{copy.settingsMatch}</span>
+            <select value={matchId} onChange={(e) => setMatchId(e.target.value)}>
+              {MATCHES.map((m) => (
+                <option key={m.id} value={m.id}>{TEXT[`match_${m.id}`] ?? m.id}</option>
+              ))}
+            </select>
+          </label>
+          <Choice label={copy.settingsAudience} value={mode}
+                  options={[["fan", copy.fan], ["analyst", copy.analyst]]} onPick={setMode} />
+        </div>
       </header>
 
-      <div className="frame">
-        <div className="pitch-wrap">
-          {view === "highlights" && cur ? (
-            <Pitch data={data} now={now} mode={mode} view={step === "watch" ? "watch" : "replay"}
-                   selected={selected} allBatteries={false} item={cur} focus={null}
-                   flatLabel={copy.flatLabel} onSelect={setSelected} />
-          ) : (
-            <Pitch data={data} now={now} mode={mode} view="full" selected={selected}
-                   allBatteries={allBatteries} item={null} focus={focus}
-                   flatLabel={copy.flatLabel} onSelect={setSelected} />
-          )}
-          {view === "highlights" && step === "details" && <span className="pitch-flag">{copy.clipEnded}</span>}
+      <section className="moments-strip" aria-labelledby="step1">
+        <div className="step-head">
+          <h2 id="step1"><span className="step-n" aria-hidden="true">1</span>{copy.step1}</h2>
+          <button className="outline" onClick={playAll}>{copy.hlPlay}</button>
         </div>
+        <p className="sub">{fill(copy.step1Sub, { n: items.length })}</p>
+        <ol className="cards">{items.map(card)}</ol>
+      </section>
 
-        {view === "highlights" && cur
-          ? lowerThird(label(cur), cur.clock, cur.team, who(cur) ?? "", cur.player ?? undefined)
-          : momentLine
-            ? lowerThird(KIND[momentLine.kind] ?? momentLine.kind, momentLine.clock, momentLine.team,
-                         momentLine.team_name, momentLine.player?.id)
-            : sel && lowerThird(copy.ltFollow, clockLabel(data.meta, now), sel.team, sel.name, sel.id)}
+      <div className="stage" ref={stageRef}>
+        <div className="stage-main">
+          <h2><span className="step-n" aria-hidden="true">2</span>
+            {view === "highlights" ? copy.step2 : copy.step2Full}</h2>
+          <div className="bug" aria-label={`${home.name} ${sc.home}, ${away.name} ${sc.away}`}>
+            <span className="bug-team"><span className="chip home" aria-hidden="true" />
+              <span className="full">{home.name}</span><span className="code">{code(home.name)}</span></span>
+            <span className="bug-score num">{sc.home}–{sc.away}</span>
+            <span className="bug-team"><span className="full">{away.name}</span>
+              <span className="code">{code(away.name)}</span><span className="chip away" aria-hidden="true" /></span>
+            <span className="bug-clock num">{clockLabel(data.meta, now)}</span>
+          </div>
 
-        {view === "highlights" && cur ? (
-          <div className="playbar clip-bar">
-            <div className="scrub">
-              <input type="range" min={clipFrom(cur, data)} max={clipTo(cur, data)} step={cur.lapse ? 1 : 0.1}
-                     value={Math.min(Math.max(now, clipFrom(cur, data)), clipTo(cur, data))}
-                     onChange={(e) => seekClip(Number(e.target.value))} aria-label={copy.clipTime} />
-              <span className="time num">
-                {mmss(now - clipFrom(cur, data))} / {mmss(clipTo(cur, data) - clipFrom(cur, data))}
-              </span>
+          <div className="frame">
+            <div className="pitch-wrap">
+              {view === "highlights" && cur ? (
+                <Pitch data={data} now={now} mode={mode} view={step === "watch" ? "watch" : "replay"}
+                       selected={selected} allBatteries={false} item={cur} focus={null}
+                       flatLabel={copy.flatLabel} onSelect={setSelected} />
+              ) : (
+                <Pitch data={data} now={now} mode={mode} view="full" selected={selected}
+                       allBatteries={allBatteries} item={null} focus={focus}
+                       flatLabel={copy.flatLabel} onSelect={setSelected} />
+              )}
+              {view === "highlights" && step === "details" && <span className="pitch-flag">{copy.clipEnded}</span>}
+              {view === "highlights" && cur && poised && !playing && (
+                <button className="big-play" onClick={() => setPlaying(true)}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+                  {copy.playClip}
+                </button>
+              )}
             </div>
-            <div className="controls">
-              <button onClick={() => prev && start(prev, "watch")} disabled={!prev}>{copy.prev}</button>
-              <button className={step === "details" ? "outline" : ""}
-                      onClick={() => start(cur, "replay")}>{copy.replayButton}</button>
-              <button onClick={() => (step === "details" ? start(cur, "replay") : setPlaying((p) => !p))}>
-                {playing ? copy.pause : copy.play}
-              </button>
-              <button className={step === "details" ? "outline" : ""}
-                      onClick={() => next && start(next, "watch")} disabled={!next}>{copy.next}</button>
-              {!cur.lapse && (
+
+            {view === "highlights" && cur
+              ? lowerThird(label(cur), cur.clock, cur.team, who(cur) ?? "", cur.player ?? undefined)
+              : momentLine
+                ? lowerThird(KIND[momentLine.kind] ?? momentLine.kind, momentLine.clock, momentLine.team,
+                             momentLine.team_name, momentLine.player?.id)
+                : sel && lowerThird(copy.ltFollow, clockLabel(data.meta, now), sel.team, sel.name, sel.id)}
+
+            {view === "highlights" && cur ? (
+              <div className="playbar clip-bar">
+                <div className="scrub">
+                  <input type="range" min={clipFrom(cur, data)} max={clipTo(cur, data)} step={cur.lapse ? 1 : 0.1}
+                         value={Math.min(Math.max(now, clipFrom(cur, data)), clipTo(cur, data))}
+                         onChange={(e) => seekClip(Number(e.target.value))} aria-label={copy.clipTime} />
+                  <span className="time num">
+                    {mmss(now - clipFrom(cur, data))} / {mmss(clipTo(cur, data) - clipFrom(cur, data))}
+                  </span>
+                </div>
+                <div className="controls">
+                  <button onClick={() => prev && start(prev, "watch")} disabled={!prev}>{copy.prev}</button>
+                  <button className={step === "details" ? "outline" : ""}
+                          onClick={() => start(cur, "replay")}>{copy.replayButton}</button>
+                  <button onClick={() => (step === "details" ? start(cur, "replay") : setPlaying((p) => !p))}>
+                    {playing ? copy.pause : copy.play}
+                  </button>
+                  <button className={step === "details" ? "outline" : ""}
+                          onClick={() => next && start(next, "watch")} disabled={!next}>{copy.next}</button>
+                  {!cur.lapse && (
+                    <div className="speeds" role="group" aria-label={copy.speed}>
+                      {CLIP_SPEEDS.map((x) => (
+                        <button key={x} className={clipSpeed === x ? "on" : ""} aria-pressed={clipSpeed === x}
+                                onClick={() => { setClipSpeed(x); setSpeed(x); }}>
+                          <span className="num">{x === 0.5 ? "½" : x}×</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <span className="status num">
+                    {skipping ? copy.fastForward : stepName}{ix >= 0 ? ` · ${ix + 1} / ${items.length}` : ""}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="playbar transport">
+                <button onClick={() => setPlaying((p) => !p)}>{playing ? copy.pause : copy.play}</button>
+                <input type="range" min={0} max={data.duration - 1} step={1} value={now}
+                       onChange={(e) => setNow(Number(e.target.value))} aria-label={copy.matchTime} />
                 <div className="speeds" role="group" aria-label={copy.speed}>
-                  {CLIP_SPEEDS.map((x) => (
-                    <button key={x} className={clipSpeed === x ? "on" : ""} aria-pressed={clipSpeed === x}
-                            onClick={() => { setClipSpeed(x); setSpeed(x); }}>
-                      <span className="num">{x === 0.5 ? "½" : x}×</span>
-                    </button>
+                  {SPEEDS.map((x) => (
+                    <button key={x} className={speed === x ? "on" : ""} aria-pressed={speed === x}
+                            onClick={() => setSpeed(x)}><span className="num">{x}×</span></button>
                   ))}
                 </div>
-              )}
-              <span className="status num">
-                {skipping ? copy.fastForward : stepName}{ix >= 0 ? ` · ${ix + 1} / ${items.length}` : ""}
-              </span>
-            </div>
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="playbar transport">
-            <button onClick={() => setPlaying((p) => !p)}>{playing ? copy.pause : copy.play}</button>
-            <input type="range" min={0} max={data.duration - 1} step={1} value={now}
-                   onChange={(e) => setNow(Number(e.target.value))} aria-label={copy.matchTime} />
-            <div className="speeds" role="group" aria-label={copy.speed}>
-              {SPEEDS.map((x) => (
-                <button key={x} className={speed === x ? "on" : ""} aria-pressed={speed === x}
-                        onClick={() => setSpeed(x)}><span className="num">{x}×</span></button>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+        </div>
 
-      <nav className="tabs" role="tablist">
-        {TABS.map(([t, l]) => (
-          <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? "on" : ""}
-                  onClick={() => pickTab(t)}>{l}</button>
-        ))}
-      </nav>
+        <div className="stage-side">
+          <h2><span className="step-n" aria-hidden="true">3</span>{copy.step3}</h2>
+          <nav className="tabs" role="tablist">
+            {tabs.map(([t, l]) => (
+              <button key={t} role="tab" aria-selected={shown === t} className={shown === t ? "on" : ""}
+                      onClick={() => pickTab(t)}>{l}</button>
+            ))}
+          </nav>
 
-      <section className="panel" role="tabpanel">
-        {tab === "clips" && (
-          <div className="clips">
-            <ul className="fastest">{fastest(home)}{fastest(away)}</ul>
-            {view === "highlights" ? (
-              <>
-                <button className="link" onClick={toFull}>{copy.viewFull}</button>
-                <h3>{copy.upNext}</h3>
-                <ol className="clip-list">
-                  {cur && ix < 0 && clipRow(cur, null)}
-                  {items.map((it, k) => clipRow(it, k + 1))}
-                </ol>
-              </>
-            ) : (
-              <>
-                <button className="link" onClick={toHighlights}>{copy.viewHighlights}</button>
+          <section className="panel" role="tabpanel">
+            {shown === "clips" && (
+              <div className="clips">
+                <ul className="fastest">{fastest(home)}{fastest(away)}</ul>
                 <div className="moments">
                   {data.feed.moments.map((m) => (
                     <button key={m.moment_id} className="moment" onClick={() => setNow(m.video_s - 3)}>
@@ -481,117 +534,95 @@ export default function App() {
                 <Highlights all={data.highlights} meta={data.meta} now={now} text={TEXT}
                             hidden={(h) => isHidden(data, itemOfHighlight(h))}
                             onPick={(h) => start(toShot(data, itemOfHighlight(h)), "watch")}
-                            onReel={() => {
-                              if (!items.length) return;
-                              setAuto(true);
-                              start(items[0], "watch");
-                            }} />
-              </>
-            )}
-          </div>
-        )}
-
-        {tab === "team" && (
-          <div className="team">
-            {view === "full" && (
-              <div className="player-card">
-                {sel ? (
-                  i === null || !s ? (
-                    <p>{fill(copy.offPitch, { name: sel.name })}</p>
-                  ) : (
-                    <>
-                      <h3><span className="num">{sel.shirt}</span> {sel.name}
-                        <span className="sub"> {sel.position}, {sel.team_name}</span></h3>
-                      <p className="num">{fill(copy.battery, { name: sel.name, pct: s.battery[i] })}</p>
-                      {mode === "analyst" && s.lo && s.hi && (
-                        <p className="sub num">{fill(copy.band, { lo: s.lo[i], hi: s.hi[i] })}</p>
-                      )}
-                      {mode === "analyst" && s.low_chance && (
-                        <p className="sub num">{fill(copy.lowChance, {
-                          chance: s.low_chance[i] < 1 ? "less than 1%" : `about ${s.low_chance[i]}%`,
-                        })}</p>
-                      )}
-                      <p className="num">{fill(copy.topSpeed, topSpeed(sel.name, s.speed, i))}</p>
-                      {s.red_zone[i] ? <p>{fill(copy.redZone, { name: sel.name })}</p>
-                        : s.post_peak[i] ? <p>{fill(copy.postPeak, { name: sel.name })}</p> : null}
-                    </>
-                  )
-                ) : (
-                  <p className="sub">{copy.clickPlayer}</p>
-                )}
-                {mode === "analyst" && sel && s && (
-                  <Trace signals={s} meta={data.meta} now={now} name={sel.name} text={TEXT}
-                         onSeek={setNow} />
-                )}
+                            onReel={playAll} />
               </div>
             )}
-            <TeamSheet data={data} now={now} mode={mode}
-                       on={view === "highlights" ? cur?.player ?? null : selected}
-                       text={TEXT} onSelect={(id) => {
-                         setSelected(id);
-                         if (view === "highlights") toFull();
-                       }} />
-          </div>
-        )}
 
-        {tab === "stats" && (
-          <Stats data={data} mode={mode} text={TEXT} onWatch={(v) => {
-            toFull();
-            setNow(v);
-            setPlaying(true);
-          }} />
-        )}
+            {shown === "team" && (
+              <div className="team">
+                {view === "full" && (
+                  <div className="player-card">
+                    {sel ? (
+                      i === null || !s ? (
+                        <p>{fill(copy.offPitch, { name: sel.name })}</p>
+                      ) : (
+                        <>
+                          <h3><span className="num">{sel.shirt}</span> {sel.name}
+                            <span className="sub"> {sel.position}, {sel.team_name}</span></h3>
+                          <p className="num">{fill(copy.battery, { name: sel.name, pct: s.battery[i] })}</p>
+                          {mode === "analyst" && s.lo && s.hi && (
+                            <p className="sub num">{fill(copy.band, { lo: s.lo[i], hi: s.hi[i] })}</p>
+                          )}
+                          {mode === "analyst" && s.low_chance && (
+                            <p className="sub num">{fill(copy.lowChance, {
+                              chance: s.low_chance[i] < 1 ? "less than 1%" : `about ${s.low_chance[i]}%`,
+                            })}</p>
+                          )}
+                          <p className="num">{fill(copy.topSpeed, topSpeed(sel.name, s.speed, i))}</p>
+                          {s.red_zone[i] ? <p>{fill(copy.redZone, { name: sel.name })}</p>
+                            : s.post_peak[i] ? <p>{fill(copy.postPeak, { name: sel.name })}</p> : null}
+                        </>
+                      )
+                    ) : (
+                      <p className="sub">{copy.clickPlayer}</p>
+                    )}
+                    {mode === "analyst" && sel && s && (
+                      <Trace signals={s} meta={data.meta} now={now} name={sel.name} text={TEXT}
+                             onSeek={setNow} />
+                    )}
+                  </div>
+                )}
+                <TeamSheet data={data} now={now} mode={mode}
+                           on={view === "highlights" ? cur?.player ?? null : selected}
+                           text={TEXT} onSelect={(id) => {
+                             setSelected(id);
+                             if (view === "highlights") toFull();
+                           }} />
+              </div>
+            )}
 
-        {tab === "details" && (
-          view === "highlights" && cur ? (
-            step === "watch" ? <p className="sub">{copy.detailsWait}</p> : (
-              <>
+            {shown === "stats" && (
+              <Stats data={data} mode={mode} text={TEXT} onWatch={(v) => {
+                toFull();
+                setNow(v);
+                setPlaying(true);
+              }} />
+            )}
+
+            {shown === "details" && (
+              view === "highlights" && cur ? (
                 <Replay data={data} item={cur} now={now} mode={mode} name={who(cur) ?? ""}
                         replaying={step === "replay"}
                         band={band && band.lo !== null ? fill(copy.ltBand, { lo: band.lo, hi: band.hi ?? "" }) : null}
                         text={TEXT} onSeek={(v) => { setNow(v); setPlaying(false); }} />
-              </>
-            )
-          ) : (
-            <Feed feed={data.feed} now={now} mode={mode} text={TEXT}
-                  showBlocked={showBlocked} onShowBlocked={setShowBlocked} onSeek={(v, p) => {
-                    setNow(v);
-                    if (p) setSelected(p);
-                  }} />
-          )
-        )}
+              ) : (
+                <Feed feed={data.feed} now={now} mode={mode} text={TEXT} onSeek={(v, p) => {
+                  setNow(v);
+                  if (p) setSelected(p);
+                }} />
+              )
+            )}
 
-        {tab === "settings" && (
-          <div className="settings">
-            <Choice label={copy.settingsView} value={view}
-                    options={[["highlights", copy.viewHighlights], ["full", copy.viewFull]]}
-                    onPick={(v) => (v === "full" ? toFull() : toHighlights())} />
-            <Choice label={copy.settingsAudience} value={mode}
-                    options={[["fan", copy.fan], ["analyst", copy.analyst]]} onPick={setMode} />
-            <label className="field">
-              <span className="field-label">{copy.settingsMatch}</span>
-              <select value={matchId} onChange={(e) => setMatchId(e.target.value)}>
-                {MATCHES.map((m) => (
-                  <option key={m.id} value={m.id}>{TEXT[`match_${m.id}`] ?? m.id}</option>
-                ))}
-              </select>
-            </label>
-            <Choice label={copy.settingsTheme} value={theme}
-                    options={[["dark", copy.themeDark], ["light", copy.themeLight]]} onPick={setTheme} />
-            {view === "full" && mode === "fan" && (
-              <div className="field">
-                <span className="field-label">{copy.settingsPitch}</span>
-                <label className="check">
-                  <input type="checkbox" checked={allBatteries}
-                         onChange={(e) => setAllBatteries(e.target.checked)} />
-                  {allBatteries ? copy.batteriesAll : copy.batteriesSome}
-                </label>
+            {shown === "settings" && (
+              <div className="settings">
+                <Choice label={copy.settingsTheme} value={theme}
+                        options={[["dark", copy.themeDark], ["light", copy.themeLight]]} onPick={setTheme} />
+                {view === "full" && mode === "fan" && (
+                  <div className="field">
+                    <span className="field-label">{copy.settingsPitch}</span>
+                    <label className="check">
+                      <input type="checkbox" checked={allBatteries}
+                             onChange={(e) => setAllBatteries(e.target.checked)} />
+                      {allBatteries ? copy.batteriesAll : copy.batteriesSome}
+                    </label>
+                  </div>
+                )}
+                <Legend mode={mode} text={TEXT} />
               </div>
             )}
-            <Legend mode={mode} text={TEXT} />
-          </div>
-        )}
-      </section>
+          </section>
+        </div>
+      </div>
 
       <footer className="footer">{copy.disclaimer}</footer>
     </div>
