@@ -83,6 +83,11 @@ speed, Microsoft Foundry, Agent Framework, MCP).
 Then (the user: "unnecessary detail") the live part lost its small technical line and its last
 bullet, "Not connected yet: a tracking provider's live feed and a broadcaster's graphics"; the
 README's Limitations still says it.
+The user: "each claim has to match published research" overstated the check (decision 49: it
+checks a line's numbers against the moment's facts and a general statement against our claims list,
+taken from the papers by hand; it never reads a paper). Now: "a general statement about football has
+to agree with our list of findings, which we took from sports research by hand. The check does not
+read the research itself." Agent 2's box: "writes each line from our list of research findings".
 
 ### Decision 58 (user, 2026-10-27): During a live match, as run and measured
 
