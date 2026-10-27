@@ -148,9 +148,16 @@ select { background: var(--surface); border: 1px solid var(--border); border-rad
 .top .tagline { font-size: var(--text-sm); margin-top: 2px; }
 .top-controls { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-2) var(--space-5); }
 .top-controls .field { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; margin: 0; }
+.repo-link { display: inline-flex; align-items: center; gap: var(--space-2); padding-bottom: 6px;
+  color: var(--text-secondary); font-size: var(--text-sm); font-weight: 600; text-decoration: none; }
+.repo-link:hover, .repo-link:focus-visible { color: var(--text); }
 /* Phone (decision 52, was decision 50's two columns): one row per control, its label inline, so
-   View's three choices fit. */
+   View's three choices fit. The GitHub link moves to the brand row's right end (decision 63). */
 @media (max-width: 520px) {
+  .top { position: relative; }
+  .top .brand { padding-right: 5.5em; }
+  .top .brand-name { flex-wrap: wrap; white-space: normal; row-gap: 0; }
+  .repo-link { position: absolute; top: 0; right: 0; padding: 4px 0; }
   .top-controls { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-1); }
   .top-controls .field { flex-direction: row; align-items: center; gap: var(--space-2); }
   .top-controls .field-label { flex: none; width: 4.6em; }
