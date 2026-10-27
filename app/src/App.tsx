@@ -9,6 +9,7 @@ import {
   type TeamBlock,
   clockLabel,
   fastSegments,
+  isHidden,
   itemOfHighlight,
   loadMatch,
   queue,
@@ -65,7 +66,8 @@ function itemFromUrl(d: MatchData, list: Item[]): Item | undefined {
   const hl = QUERY.get("hl") as Parameters<typeof topSoFar>[1] | null;
   if (hl) {
     const top = topSoFar(d.highlights, hl, d.duration, 1)[0];
-    return top ? list.find((i) => i.h === top) ?? toShot(d, itemOfHighlight(top)) : undefined;
+    const it = top && (list.find((i) => i.h === top) ?? toShot(d, itemOfHighlight(top)));
+    return it && !isHidden(d, it) ? it : undefined; // removed by hand: the default clip
   }
   const m = QUERY.get("moment");
   if (m) {
@@ -477,6 +479,7 @@ export default function App() {
                   ))}
                 </div>
                 <Highlights all={data.highlights} meta={data.meta} now={now} text={TEXT}
+                            hidden={(h) => isHidden(data, itemOfHighlight(h))}
                             onPick={(h) => start(toShot(data, itemOfHighlight(h)), "watch")}
                             onReel={() => {
                               if (!items.length) return;

@@ -11,11 +11,12 @@ interface Props {
   meta: Meta;
   now: number;
   text: Record<string, string>;
+  hidden: (h: Highlight) => boolean; // its clip was removed by hand (decision 48): no link
   onPick: (h: Highlight) => void;
   onReel: () => void;
 }
 
-export function Highlights({ all, now, text, onPick, onReel }: Props) {
+export function Highlights({ all, now, text, hidden, onPick, onReel }: Props) {
   if (!all.length) return null;
   return (
     <section className="highlights">
@@ -38,7 +39,7 @@ export function Highlights({ all, now, text, onPick, onReel }: Props) {
               <ol>
                 {top.map((h) => (
                   <li key={`${h.player.id}-${h.video_s}`}>
-                    <button className="hl-item"
+                    <button className="hl-item" disabled={hidden(h)}
                             onClick={() => onPick(h)} title={h.caption}>
                       <span className={`dot ${h.player.team}`} aria-hidden="true" />
                       <span className="hl-name">{h.player.name}</span>

@@ -132,6 +132,9 @@ export interface MatchData {
   signals: Record<string, Signals>;
   feed: Feed;
   duration: number;
+  // Clips removed by hand (hidden.json, decision 48: their movement did not look like football):
+  // Item ids; a hidden moment's lines stay in the full match.
+  hidden: Set<string>;
 }
 
 // Labels in copy.json ("match_<id>"), checked by the Verifier with the rest of the copy.
@@ -139,7 +142,7 @@ export const MATCHES = [{ id: "story" }, { id: "natural" }];
 
 export async function loadMatch(id: string): Promise<MatchData> {
   const base = `${import.meta.env.BASE_URL}data/${id}/`;
-  const [meta, buf, signals, feed, highlights] = await Promise.all([
+  const [meta, buf, signals, feed, highlights, hidden] = await Promise.all([
     fetch(base + "match.json").then((r) => r.json() as Promise<Meta>),
     fetch(base + "positions.bin").then((r) => r.arrayBuffer()),
     fetch(base + "signals.json").then((r) => r.json() as Promise<Record<string, Signals>>),
@@ -147,9 +150,13 @@ export async function loadMatch(id: string): Promise<MatchData> {
     fetch(base + "highlights.json")
       .then((r) => (r.ok ? (r.json() as Promise<Highlight[]>) : []))
       .catch(() => []),
+    fetch(base + "hidden.json")
+      .then((r) => (r.ok ? (r.json() as Promise<string[]>) : []))
+      .catch(() => []),
   ]);
   const duration = meta.periods.reduce((s, p) => s + p.duration_s, 0);
-  return { meta, highlights, pos: new Int16Array(buf), signals, feed, duration };
+  return { meta, highlights, pos: new Int16Array(buf), signals, feed, duration,
+           hidden: new Set(hidden) };
 }
 
 /** The broadcast clock label for a replay time ("45+2:10", "67:12"). */
@@ -424,7 +431,14 @@ export function queue(d: MatchData, mode: Mode, best: Highlight[]): Item[] {
       out.push(m);
     }
   }
-  return [...items, ...out].sort((a, b) => a.at - b.at);
+  // A clip removed by hand leaves a gap (decision 48): the list is built as before and the hidden
+  // clips (a highlight, or a moment, also one that became a highlight's line) taken out after, so
+  // no other clip takes their place.
+  return [...items, ...out].sort((a, b) => a.at - b.at).filter((it) => !isHidden(d, it));
+}
+
+export function isHidden(d: MatchData, it: Item): boolean {
+  return d.hidden.has(it.id) || (it.momentId !== undefined && d.hidden.has(it.momentId));
 }
 
 /** The top n so far of one kind, one per player (the best of each), best first. */

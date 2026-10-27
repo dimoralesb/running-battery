@@ -152,7 +152,10 @@ normal speed, with only that player's path on the pitch (the others dimmed), in 
 towards its start with an arrowhead where he is. A moment measured over minutes shows the part
 of the match it is about (decision 38): a counter-attack after his team lost the ball, or the run
 behind a second wind or a substitute's fresh legs, on to the end of that play; a moment with
-nothing to see stays in the full match's commentary, and one action is one clip. A clip whose play
+nothing to see stays in the full match's commentary, and one action is one clip. Some clips were
+removed by hand because their movement did not look like football (decision 48: every
+caught-on-the-break and quiet-spell clip, and three more in the story match); their lines stay in
+the full match's commentary. A clip whose play
 ends in a shot runs on to the shot and the ball's arrival (decision 46: three clips had stopped
 3–14 s before it). A clip stays inside its half, and a highlight
 that spans a minute (back-to-back runs, the busiest minute) fast-forwards at 4× between the
@@ -223,7 +226,8 @@ whole-match players (against the Premier League average for defenders, midfielde
 9.97 / 11.59 / 10.71 km [Kavanagh2024, Table 2]; Bradley2009, Table I agrees by position within
 1–8%). The story match is short (92.8 min with added time, against a usual 99.5 [Allen2025,
 Table 2]), and its most ground covered is 10.7 km. The panel shows the top 3 so far, one per
-player; a click opens the clip, and "Play highlights" plays the clips one after another.
+player; a click opens the clip (a clip removed by hand keeps its number, with no link), and "Play
+highlights" plays the clips one after another.
 Captions come from fixed templates and pass the Verifier; they describe what the player did,
 never how hard he tried (claim 38). Hardest accelerations and stops are left out: tracking
 systems count them about 10-fold apart (claim 32).
@@ -490,6 +494,10 @@ used offline for calibration only.
   range (711 against 715–1019). Close to the edge of a restart's 9.15 m circle a player arriving
   at speed can still overshoot it just before the kick (2 of 549 free kicks). Defenders' and holding midfielders' backward sprints
   without the ball came twice as often as real at decision 43, not measured since.
+- Some clips were removed by hand because their movement did not look like football (decision 48:
+  10 of 31 in the two demo matches, every caught-on-the-break and quiet-spell clip among them);
+  the generator was not changed, so the full match still has that movement, and their lines stay
+  in the full match's commentary.
 - The story match's press is our setting (`sim.story`): at first it gave one 15-min block a 79%
   gap between the teams, beyond the real 46%; a scripted search over the press settings now
   gives 28% at most (PLAN decisions 44–47). The natural match has no settings of ours.

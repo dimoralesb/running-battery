@@ -5,7 +5,7 @@
 
 Rebuilds the clip list as the overlay does (``reel`` in Highlights.tsx, ``queue`` in data.ts,
 played from 3 s before a clip's start to 2 s after its end within its half, ``clipFrom``/``clipTo``
-in App.tsx)
+in App.tsx; without the clips removed by hand, ``hidden.json``, decision 48)
 and reports, per clip: the clip player's top speed and metres above 5.5 m/s (flagged below
 5.5 m/s); players the tracking loses for longer than the overlay fills (2.4 s, drawn nowhere) and
 the shorter gaps it draws faded; shots, and passes on a clear chance (inside 25 m, no outfield
@@ -37,6 +37,7 @@ from __future__ import annotations
 import json
 import math
 import sys
+from pathlib import Path
 
 import numpy as np
 
@@ -116,13 +117,25 @@ def to_shot(match: dict, it: dict, shots: list[dict]) -> dict:
     return it
 
 
+def js_num(x: float) -> str:
+    """A number as JavaScript prints it in a template string (803.0 -> "803")."""
+    return str(int(x)) if float(x).is_integer() else repr(x)
+
+
 def queue(
-    match: dict, feed: dict, clips: dict, hls: list[dict], mode: str, shots: list[dict]
+    match: dict,
+    feed: dict,
+    clips: dict,
+    hls: list[dict],
+    mode: str,
+    shots: list[dict],
+    hidden: frozenset[str] = frozenset(),
 ) -> list[dict]:
-    """data.ts ``queue``: one clip per action; no team moments (decision 46: the Stats tab)."""
+    """data.ts ``queue``: one clip per action; no team moments (decision 46: the Stats tab);
+    the clips removed by hand (``hidden``, decision 48) taken out last, leaving a gap."""
     items = [
         to_shot(match, dict(
-            id=f"hl:{h['kind']}:{h['player']['id']}:{h['video_s']}", kind=h["kind"],
+            id=f"hl:{h['kind']}:{h['player']['id']}:{js_num(h['video_s'])}", kind=h["kind"],
             player=h["player"]["id"], clock=h["clock"],
             at=h["start_video_s"] if h["kind"] == "recovery_run" else h["video_s"],
             start=0.0 if h["kind"] == "most_ground" else h["start_video_s"],
@@ -184,7 +197,8 @@ def queue(
         else:
             items.pop(k)
             out.append(m)
-    return sorted(items + out, key=lambda i: i["at"])
+    return [i for i in sorted(items + out, key=lambda i: i["at"])
+            if i["id"] not in hidden and i["moment"] not in hidden]  # fmt: skip
 
 
 def main() -> None:
@@ -497,7 +511,9 @@ def main() -> None:
 
     end = match["periods"][-1]["video_start"] + match["periods"][-1]["duration_s"]
     moment_at = {mo["moment_id"]: mo for mo in feed["moments"]}
-    items = queue(match, feed, match.get("clips", {}), reel(hl, end), mode, shot_play)
+    hidden_json = Path(export_dir) / "hidden.json"
+    hidden = frozenset(json.loads(hidden_json.read_text())) if hidden_json.exists() else frozenset()
+    items = queue(match, feed, match.get("clips", {}), reel(hl, end), mode, shot_play, hidden)
     report = []
     for it in items:
         half = next(q for q in reversed(match["periods"]) if q["video_start"] <= it["start"])
