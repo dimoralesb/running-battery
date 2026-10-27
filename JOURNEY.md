@@ -69,6 +69,18 @@ Overlay (one page, the URL's parameters set where it opens)
 
 ## Page specs
 
+### Decision 59 (user, 2026-10-27): no internal terms on the page
+
+The user approved decision 56's new clips, and: "Be careful to mention things that the general
+public or judges will not understand and that are internal", naming "within 1.4 points in 95 of
+every 100 player-seconds" and "like the one we use for real IDSSE matches"; and "Tools that hand
+the agents the numbers … should try to be more direct". How it works now names no dataset, command,
+test file or internal word ("the replay's", "player-seconds", "Verifier", "draws"): the live part
+compares "the live battery" with "the one on this page"; the agents' third box is "The agents read
+the measurements"; the real-data check is "tracking data from real professional matches and …
+Premier League match data". The technical lines keep the published names (D′ balance, critical
+speed, Microsoft Foundry, Agent Framework, MCP).
+
 ### Decision 58 (user, 2026-10-27): During a live match, as run and measured
 
 How it works' "During a live match (not built yet)" read as a plan; the user: "They want something
