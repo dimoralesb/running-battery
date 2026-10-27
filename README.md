@@ -37,7 +37,7 @@ flowchart TD
 ```
 
 1. **Generator** (`sim/`): a 10 Hz match with events, a sprint motion model [Narizuka2023], role behaviours and a hidden physiology (two short-term pools and a whole-match tank) that changes which hard runs players make.
-2. **Estimator** (`engine/`): from positions alone, per player and second, the running (high-speed distance, his hardest minutes so far, energy) and what it would leave a typical professional (a battery with a 10–90% band, and a calibrated chance of falling below half of it).
+2. **Estimator** (`engine/`): from positions alone, per player and second, the running (high-speed distance, his hardest minutes so far, energy) and what it would leave a typical professional (a battery with a 10–90% band, and a calibrated chance of falling below half of it). The battery drains above critical speed and refills below it, more slowly the more hard running there has been in the match (wear, decision 56).
 3. **Agents** (`agents/`): an MCP server with seven read-only tools, four agents on Foundry, and a Verifier that checks every sentence against a register of published claims.
 4. **Overlay** (`app/`): the replay, the batteries, the charts and the verified feed, as static files on Azure.
 
@@ -155,8 +155,8 @@ attention.
 It opens on the **Highlights** (decision 29): one clip at a time, in match order, from the
 match's best physical moments and the feed's moments. The page opens on a clip stopped (the
 first recovery run, decision 50), with "Play the clip" on the pitch (decision 49: a clip that played at once left no time to see what
-the page is); a card or a link that names a clip starts it and brings the pitch into view, and
-Play never moves the page (decision 51). During a clip, clicking any other player shows his battery
+the page is); a card, Play or Next starts a clip without moving the page (decisions 51 and 57),
+and a link that names a clip opens with the pitch in view. During a clip, clicking any other player shows his battery
 and its percentage on the pitch. A third view, **How it works** (decision 52), explains the battery
 (with the opening clip's run and its drain and refill), the agents and the Verifier's test results,
 the data it needs, and how it could run during a live match (not built).
@@ -167,8 +167,9 @@ of the match it is about (decision 38): a counter-attack after his team lost the
 behind a second wind or a substitute's fresh legs, on to the end of that play; a moment with
 nothing to see stays in the full match's commentary, and one action is one clip. Some clips were
 removed by hand because their movement did not look like football (decision 48: every
-caught-on-the-break and quiet-spell clip, and three more in the story match); their lines stay in
-the full match's commentary. A clip whose play
+caught-on-the-break and quiet-spell clip, and two more in the story match), and every second-wind
+clip because those moments matter less (decision 57); their lines stay in the full match's
+commentary. A clip whose play
 ends in a shot runs on to the shot and the ball's arrival (decision 46: three clips had stopped
 3–14 s before it). A clip stays inside its half, and a highlight
 that spans a minute (back-to-back runs, the busiest minute) fast-forwards at 4× between the
@@ -255,14 +256,14 @@ synthetic matches, it does not hold up from positions, and the Verifier blocks i
 
 - **"He is tired."** With each player's true fitness, the generator's own physiology finds the
   tired moments almost perfectly (precision 0.997); without it, the best any positions-only
-  detector reaches is precision 0.20 at recall 0.1, and our battery reaches 0.16 (dev seeds 1–60,
+  detector reaches is precision 0.20 at recall 0.1, and our battery reaches 0.15 (dev seeds 1–60,
   [validate/ceiling.py](src/runningbattery/validate/ceiling.py)). The same running drains players of
   different fitness very differently. So we say what the running would cost a *typical*
   professional (claims 11 and 33).
 - **"Which team is more tired."** Home-minus-away differences pick the team with more
   short-term tiredness 42–57% of the time (chance 50%; with 60 matches one match is 1.7 points).
-  They pick the team with more late-match wear 32–72% of the time (the typical-pro chance does
-  best, 72%), plain high-speed running nearly as well (62%), and more than one match in four is still wrong (60 matches,
+  They pick the team with more late-match wear 32–70% of the time (the typical-pro chance does
+  best, 70%), plain high-speed running nearly as well (62%), and more than one match in four is still wrong (60 matches,
   [validate/teams.py](src/runningbattery/validate/teams.py)). We show the measured running
   instead: team totals per ball-in-play minute, and how a gap changed (claim 35).
 - **"He ran slower than he could when it mattered."** After his team lost the ball, a slow defender had no
@@ -293,10 +294,29 @@ synthetic matches, it does not hold up from positions, and the Verifier blocks i
 
 **Estimator vs hidden truth.** The battery (blue, with its band) against the generator's hidden
 pools (orange) for one player of a validation match; the calibration of the typical-pro chance
-before and after its map (held-out matches: expected calibration error 0.009 → 0.002); and how
+before and after its map (held-out matches: expected calibration error 0.022 → 0.001); and how
 well anything could tell *who* is tired from positions alone (above).
 
 ![Estimator vs truth](docs/figures/estimator_vs_truth.png)
+
+**Wear (decision 56).** The battery's refill slows as metres above critical speed build up over
+the match: refill time × (1 + α (1 − e^(−W/scale))), W the metres above CS so far, half of them
+cleared at half-time; α 1.0 and scale 400 m were fitted on dev seeds 1–60 (a grid of 12, the
+lowest error within 0.001 with the bias nearest zero). Against the hidden pools, before → after:
+
+| | Dev 1–60 (fitted) | Held out 61–120 | Validation v1001–1050 (varied players) |
+|---|---|---|---|
+| Mean absolute error | 0.063 → 0.058 | 0.063 → 0.059 | 0.098 → 0.093 |
+| Bias | +0.036 → −0.002 | +0.032 → −0.007 | +0.063 → +0.025 |
+| 10–90% band coverage | 67% → 79% | 68% → 78% | 50% → 60% |
+
+It finds the truly low moments no better (best precision at recall 0.1: 0.16 → 0.15; positions
+cannot tell who is less fit). The generator has a similar mechanism (its whole-match tank slows
+its slow pool [Chorley2022]), so part of the gain is the test bench agreeing with itself. On the 7
+real IDSSE matches the battery dips deeper: the median lowest battery per player 0.70 → 0.66, and
+5% of players go below half (none before), against 0.79 ± 0.06 published for university players
+[Sutcliffe2025, Fig. 3]. No version of the battery, with or without wear, tells which real players
+fade in the last 15 minutes (Spearman 0.03 → 0.04).
 
 **No-fatigue control.** The same 240 synthetic matches with fatigue switched on and off. Most of
 the published drop after a player's most intense spell appears even without fatigue (picking the
@@ -486,7 +506,8 @@ used offline for calibration only.
   physiology; in real matches part of it is the player's choice [Snyder2023; synthesis §8.1].
 - The typical-pro chance is calibrated for a typical professional (dev seeds, professional
   prior). On matches with a wider range of players it stays poorly calibrated (expected
-  calibration error 0.064 → 0.058), because a typical-pro signal cannot see who is less fit.
+  calibration error 0.052 raw, 0.058 after the map fitted on default matches), because a
+  typical-pro signal cannot see who is less fit.
 - On the 7 real IDSSE matches [Bassek2025] real players faded more in the second half than ours
   (high-speed running −21% vs −14%); the peaks agree within 5% (PLAN §2.6).
 - What is still off in the movement, against every real source we have ("Checked on real
@@ -505,8 +526,9 @@ used offline for calibration only.
   range (711 against 715–1019). Close to the edge of a restart's 9.15 m circle a player arriving
   at speed can still overshoot it just before the kick (2 of 549 free kicks). Defenders' and holding midfielders' backward sprints
   without the ball came twice as often as real at decision 43, not measured since.
-- Some clips were removed by hand because their movement did not look like football (decision 48:
-  10 of 31 in the two demo matches, every caught-on-the-break and quiet-spell clip among them);
+- Some clips were removed by hand (decisions 48 and 57: 13 of 33 in the two demo matches, every
+  caught-on-the-break, quiet-spell and second-wind clip among them), most because their movement
+  did not look like football;
   the generator was not changed, so the full match still has that movement, and their lines stay
   in the full match's commentary.
 - The story match's press is our setting (`sim.story`): at first it gave one 15-min block a 79%

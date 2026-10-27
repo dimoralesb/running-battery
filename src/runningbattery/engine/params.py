@@ -67,6 +67,22 @@ PRIORS = {
 DEFAULT_PRIOR = "pro"
 # Per-player update (decision 9): about 200 draws from the prior per player.
 N_DRAWS = 200
+
+# Wear (decision 56, on since then): each draw's metres above its CS so far, ``W``, slow its refill,
+# τ × (1 + WEAR_ALPHA · (1 − exp(−W / WEAR_SCALE_M))); half-time keeps ``WEAR_HALF_KEEP`` of W.
+# The idea is the generator's tank slowing its slow pool [Chorley2022]; alpha and the scale were
+# fitted on dev seeds 1–60 only (grid 0.25–2 × 400–1700 m; the lowest error within 0.001, bias
+# nearest 0), then scored on held-out seeds 61–120 and the varied validation seeds. WEAR_ALPHA 0
+# is the battery before decision 56.
+# ``DRIVE`` "power" (tested in decision 56, not used): the battery driven by the equivalent speed,
+# metabolic power over the cost of steady running on grass [diPrampero2005; Osgnach2010]. With the
+# speed CS and D′ it empties every real player (IDSSE median lowest battery 5%, against a deepest
+# dip of about 21% of D′ in matches [Sutcliffe2025, Fig. 3]); it would need a critical metabolic
+# power, which has no published professional value.
+DRIVE = "speed"
+WEAR_ALPHA = 1.0
+WEAR_SCALE_M = 400.0
+WEAR_HALF_KEEP = 0.5
 # Soft down-weighting of draws the running contradicts. A draw whose balance would go below zero
 # is kept at zero by raising its D′ (the one-way correction, applied to every draw); its weight is
 # exp(−½ (raise / (PENALTY_WIDTH · D′))²), so a draw that needed 10% more D′ keeps 61% of its weight
@@ -137,30 +153,32 @@ LOW_BATTERY = 0.50
 # than the generator's fast pool. So the engine reports a calibrated chance: the raw chance put
 # through a monotone (isotonic) map from raw chance to the observed share of ``tired``, fitted on
 # the default matches of dev seeds 1–60 only (never the validation seeds), and keeps the raw one
-# as ``low_chance_raw``. Fitted 2026-10-17 with ``python -m runningbattery.validate.calibrate
-# data/synthetic/dev``: (mean raw chance of each isotonic block, its share tired); in between,
-# linear interpolation; beyond the ends, the end values. It holds only for the settings it was
-# fitted with (LOW_CHANCE_MAP_FOR); with any other prior, k, mode or update the engine passes the
-# raw chance through and says so in ``engine.low_chance_map``. 7,209,200 outfield player-seconds,
-# tired 1.27%; 86% of them have a raw chance of exactly 0 (tired 0.5%). The knots above a raw
-# chance of 0.6 rest on about 1,300 seconds, so the top of the map is the least certain part.
+# as ``low_chance_raw``. Refitted 2026-10-27 for wear (decision 56; first fitted 2026-10-17) with
+# ``python -m runningbattery.validate.calibrate data/synthetic/dev``: (mean raw chance of each
+# isotonic block, its share tired); in between, linear interpolation; beyond the ends, the end
+# values. It holds only for the settings it was fitted with (LOW_CHANCE_MAP_FOR); with any other
+# prior, k, mode, update, drive or wear the engine passes the raw chance through and says so in
+# ``engine.low_chance_map``. 7,209,200 outfield player-seconds, tired 1.21%; 65% of them have a raw
+# chance of exactly 0 (tired 0.1%). The knots above a raw chance of 0.7 rest on about 2,000
+# seconds, so the top of the map is the least certain part.
 LOW_CHANCE_MAP: tuple[tuple[float, float], ...] | None = (
-    (0.000, 0.005),
-    (0.018, 0.039),
-    (0.069, 0.062),
-    (0.121, 0.099),
-    (0.172, 0.105),
-    (0.221, 0.126),
-    (0.272, 0.150),
-    (0.323, 0.184),
-    (0.373, 0.184),
-    (0.478, 0.193),
-    (0.622, 0.345),
-    (0.690, 0.433),
-    (0.797, 0.582),
+    (0.000, 0.001),
+    (0.021, 0.013),
+    (0.071, 0.022),
+    (0.122, 0.043),
+    (0.173, 0.054),
+    (0.222, 0.068),
+    (0.273, 0.098),
+    (0.324, 0.105),
+    (0.374, 0.111),
+    (0.423, 0.131),
+    (0.521, 0.190),
+    (0.671, 0.211),
+    (0.766, 0.246),
 )
-LOW_CHANCE_MAP_FOR = {"mode": "broadcast", "update": "draws", "prior": "pro", "k": K}
-LOW_CHANCE_MAP_SOURCE = "isotonic fit on dev seeds 1–60 (pro prior, k 4), 2026-10-17"
+LOW_CHANCE_MAP_FOR = {"mode": "broadcast", "update": "draws", "prior": "pro", "k": K,
+                      "drive": DRIVE, "wear": (WEAR_ALPHA, WEAR_SCALE_M, WEAR_HALF_KEEP)}
+LOW_CHANCE_MAP_SOURCE = "isotonic fit on dev seeds 1–60 (pro prior, k 4, wear 1.0 / 400 m), 2026-10-27"
 
 # Events listed with a tired spell, for the agents: the player's defensive actions (PLAN §3.3:
 # duel, pressure; recovery runs are not events) and the player's own ball losses.

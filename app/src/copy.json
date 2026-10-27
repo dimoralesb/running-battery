@@ -158,7 +158,7 @@
   "viewHow": "How it works",
   "howTitle": "How it works",
   "howBatteryTitle": "The battery",
-  "howBattery_1": "The battery is a short-term reserve for hard running. Running faster than about 15 km/h uses it up, and the faster the run, the quicker it goes. Below that pace it refills, fastest at a walk.",
+  "howBattery_1": "The battery is a short-term reserve for hard running. Running faster than about 15 km/h uses it up, and the faster the run, the quicker it goes. Below that pace it refills, fastest at a walk. The more hard running there has been in the match, the slower it refills, so the same rest brings back less late in a game.",
   "howBattery_2": "We can't measure how tired or how fit a player actually is, so the battery shows what the same running would leave a typical professional. We run it for 200 typical professionals of different fitness and show the middle value.",
   "howChartTitle": "{name}: speed and the battery a typical pro would have",
   "howChartSub": "The opening clip's run and the eight minutes after it. Shaded: the seconds above 15 km/h. The typical pro's battery falls in those seconds and mostly refills in the rest.",
@@ -192,7 +192,7 @@
   "howLive_6": "Batteries and lines go to the broadcast as they are ready. We planned Azure Event Hubs for this and cut it to finish in time.",
   "howMore": "Formulas, tests and the research behind each number:",
   "howMoreLink": "the project's README",
-  "howBatteryTech": "The model: a D′ balance (critical speed 4.1 ± 0.3 m/s, D′ 180 ± 54 m, from published tests), 200 draws and their weighted median. Analysts also see the 10 to 90% band for a typical pro.",
+  "howBatteryTech": "The model: a D′ balance (critical speed 4.1 ± 0.3 m/s, D′ 180 ± 54 m, from published tests) whose refill slows as metres above critical speed build up, fitted on 60 synthetic matches and checked on 110 others; 200 draws and their weighted median. Analysts also see the 10 to 90% band for a typical pro.",
   "howAgentsTech": "Built with Microsoft Foundry and Agent Framework (gpt-5-mini), an MCP server with seven read-only tools, and the Verifier (rules, then an LLM pass that can only block).",
   "howVer_1": "Of 119 sentences that should have been blocked, the fixed rules blocked 87. With the AI check added, 116 were blocked.",
   "howVer_2": "Of 73 correct sentences, the fixed rules blocked none. With the AI check added, 1 was blocked by mistake."

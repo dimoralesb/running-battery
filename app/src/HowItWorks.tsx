@@ -4,7 +4,8 @@ import { type Item, type MatchData, clockLabel, signalIndex } from "./data";
 // quiet line per part (decisions 53–54), all from the README and checked by the Verifier's copy
 // test (copy.json "how*"). The battery chart uses the opening clip's player around his run, from
 // this match's own data, and shades the seconds above critical speed so the drain and the refill
-// show (decision 54: in the story match 38 of his 39 seconds above it lower the battery).
+// show (with wear, decision 56: in the story match 35 of his 35 seconds above it that change the
+// battery lower it).
 
 const REPO = "https://github.com/dimoralesb/running-battery#readme";
 const CS_KMH = 4.1 * 3.6; // the typical pro's critical speed, 4.1 m/s (engine prior, PLAN decision 13)
@@ -23,7 +24,7 @@ const fill = (t: string, v: Record<string, string | number>) =>
 
 /** His speed and the typical-pro battery, second by second, from 90 s before the clip's run to
  * 8 minutes after it, within its half (the story match's 3:50 run takes the battery from 90% to
- * 60%, back to 86% by 11:30); both panels shade his seconds above critical speed. */
+ * 58%, back to 83% by 11:30, with wear); both panels shade his seconds above critical speed. */
 function BatteryChart({ data, item, name, text }: Props & { item: Item }) {
   const s = data.signals[item.player!];
   const half = data.meta.periods.filter((p) => p.video_start <= item.start).at(-1) ?? data.meta.periods[0];

@@ -32,7 +32,10 @@ above 5.5 m/s (19.8 km/h), each player's hardest minutes so far, and each team's
 running per ball-in-play minute, split by situation (the first 10 s after losing or winning the
 ball, settled on the ball, without it). Estimated: what that running would leave a typical
 professional, with a 10–90% band and a calibrated chance of falling below half of it (expected
-calibration error 0.009 to 0.002 on held-out matches).
+calibration error 0.022 to 0.001 on held-out matches). The battery refills more slowly the more
+hard running there has been in the match (decision 56: on held-out synthetic matches its error
+against the hidden truth falls from 0.063 to 0.059 and its band covers the truth 78% of the time,
+68% before).
 
 **What we tested and don't claim.** We built a match generator whose players have a hidden
 fitness and fatigue state, and tested the sentences fans would like to read against it. From
@@ -67,7 +70,7 @@ rules alone never block a valid sentence, and rules plus the LLM catch most unsu
 |---|---|
 | 46 claims (14 supported, 14 qualified, 18 blocked) | `src/runningbattery/agents/claims.json`; synthesis §5 |
 | 5.5 m/s (19.8 km/h) high-speed threshold | README "The overlay"; `engine/params.py` |
-| 10–90% band, calibrated chance; ECE 0.009 to 0.002 | PLAN decision 15; README "Validation" |
+| 10–90% band, calibrated chance; ECE 0.022 to 0.001 | PLAN decisions 15 and 56; README "Validation" |
 | Precision 0.20 at recall 0.1 for the best positions-only detector | README "What we tested"; `validate/ceiling.py`, dev seeds 1–60 |
 | Home-minus-away right 42–57% of the time | PLAN decision 23; `validate/teams.py`, 60 matches |
 | AUC 0.37, skipped run vs no run asked | PLAN decision 24; `validate/teams.py` |

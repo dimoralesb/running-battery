@@ -67,14 +67,16 @@ def tau(speed: np.ndarray, cs: np.ndarray, d_prime: np.ndarray, k: float) -> np.
 
 
 def step(
-    bal: np.ndarray, dp: np.ndarray, v: np.ndarray, cs: np.ndarray, k: float, dt: float
+    bal: np.ndarray, dp: np.ndarray, v: np.ndarray, cs: np.ndarray, k: float, dt: float,
+    slow: np.ndarray | float = 1.0,
 ) -> tuple[np.ndarray, np.ndarray]:
     """One time step of the balance ``bal`` (m) with the one-way correction; returns the new
-    balance and D′. ``v`` NaN (off the pitch) leaves both unchanged."""
+    balance and D′. ``v`` NaN (off the pitch) leaves both unchanged. ``slow`` multiplies the
+    recharge time (the wear experiment; 1 as built)."""
     off = np.isnan(v)
     v = np.where(off, 0.0, v)
     drained = bal - (v - cs) * dt
-    refilled = dp - (dp - bal) * np.exp(-dt / tau(v, cs, dp, k))
+    refilled = dp - (dp - bal) * np.exp(-dt / (tau(v, cs, dp, k) * slow))
     new = np.where(v > cs, drained, refilled)
     new_dp = dp + np.maximum(-new, 0.0)
     new = np.maximum(new, 0.0)
@@ -108,6 +110,7 @@ def run(
     k: float = P.K,
     width: float | None = P.PENALTY_WIDTH,
     low: float = P.LOW_BATTERY,
+    wear: tuple[float, float, float] = (P.WEAR_ALPHA, P.WEAR_SCALE_M, P.WEAR_HALF_KEEP),
 ) -> BatteryResult:
     """Run the battery over a match.
 
@@ -115,11 +118,15 @@ def run(
     bool, the frames to report. ``cs`` and ``d_prime`` are (players, draws). With one draw per
     player (club mode, or the fallback) there is no band; with several, ``width`` sets the soft
     penalty and the battery is the weighted median with a 10–90% band, and ``low_chance`` the
-    weighted share of the draws whose balance is below ``low`` of their D′.
+    weighted share of the draws whose balance is below ``low`` of their D′. ``wear`` (alpha,
+    scale m, half-time keep) slows the refill as metres above CS pile up; alpha 0 is the battery as
+    built (decision 56 experiment).
     """
+    alpha, scale, keep = wear
     banded = cs.shape[1] > 1
     bal = d_prime.astype(float).copy()
     dp = bal.copy()
+    work = np.zeros_like(bal)  # metres above CS so far, per draw (wear)
     rows = np.flatnonzero(record)
     med = np.empty((len(rows), cs.shape[0]))
     lo = np.empty_like(med) if banded else None
@@ -130,7 +137,14 @@ def run(
     for f in range(len(speed)):
         if f > 0 and period[f] != period[f - 1]:  # half-time: rest standing still
             bal = dp - (dp - bal) * np.exp(-P.HALF_TIME_S / tau(np.zeros(1), cs, dp, k))
-        bal, dp = step(bal, dp, speed[f][:, None], cs, k, P.DT)
+            work *= keep
+        v = speed[f][:, None]
+        if alpha:
+            work += np.where(np.isnan(v), 0.0, np.maximum(v - cs, 0.0)) * P.DT
+            slow = 1.0 + alpha * (1.0 - np.exp(-work / scale))
+        else:
+            slow = 1.0
+        bal, dp = step(bal, dp, v, cs, k, P.DT, slow)
         if r < len(rows) and rows[r] == f:
             level = bal / dp
             if banded:

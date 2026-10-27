@@ -232,10 +232,11 @@ export default function App() {
   useEffect(() => {
     if (playing) setPoised(false);
   }, [playing]);
-  // A clip started from above the pitch (a card, "Play highlights", a link that names a clip)
-  // brings the pitch, its lower third and the play bar into view; Play, Replay, Previous and Next
-  // never move the page (decision 50: Play scrolled it down). A link's clip waits for the first
-  // render (reveal); the others scroll at once.
+  // Only a link that names a clip opens the page scrolled to the pitch (after the first render:
+  // reveal), and a section-4 "Watch … in the full match" link brings it up from below. No click on
+  // a clip moves the page: not Play, Replay, Previous or Next (decision 51), and not a card or
+  // "Play highlights" either (decision 57, the user: "when clicking on a clip, the page should not
+  // move").
   const stageRef = useRef<HTMLDivElement>(null);
   const toStage = () => stageRef.current?.scrollIntoView({ block: "start" });
   const reveal = useRef(false);
@@ -397,7 +398,7 @@ export default function App() {
     return (
       <li key={it.id}>
         <button className={`card${on ? " on" : ""}`} aria-current={on || undefined}
-                onClick={() => { start(it, "watch"); toStage(); }}>
+                onClick={() => start(it, "watch")}>
           <span className="card-clock num">{it.clock}</span>
           <span className="card-kind">{label(it)}</span>
           <span className="card-who"><span className={`dot ${it.team}`} aria-hidden="true" />
@@ -416,7 +417,6 @@ export default function App() {
     if (!items.length) return;
     setAuto(true);
     start(items[0], "watch");
-    toStage();
   };
   // The Clips tab is the full match's (its moments and highlights); the cards are the clips.
   const tabs = TABS.filter(([t]) => view === "full" || t !== "clips");

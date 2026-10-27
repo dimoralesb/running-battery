@@ -69,6 +69,27 @@ Overlay (one page, the URL's parameters set where it opens)
 
 ## Page specs
 
+### Decision 57 (user, 2026-10-27): no second-wind clips; a click never moves the page
+
+The user: "Just hide second wind. Those moments are not that relevant" and "when clicking on a
+clip, the page should not move". hidden.json's rule (decision 48) adds every `second_wind:`
+moment; their lines stay in the full match. A card and "Play highlights" no longer scroll to the
+pitch (decision 50 had them do so): only a link that names a clip opens scrolled to it, and a
+section-4 "Watch … in the full match" link brings the pitch up from below. Clips: story 11,
+natural 9. `scratch/movement/click49.py`'s check (a card click brings the clip into view) no
+longer applies.
+
+### Decision 56 (user, 2026-10-27): wear in the battery
+
+The battery refills more slowly the more hard running there has been in the match (PLAN §3.3,
+"Wear, decision 56"). On the page: How it works' first battery paragraph says so ("The more hard
+running there has been in the match, the slower it refills, so the same rest brings back less late
+in a game") and its model line names the fit; the acceleration test is not mentioned (the user).
+The feeds were regenerated, so the clips changed: story 13 (new Longest run · 51:57, Hardest
+minutes · 80:11, Busiest minute · 87:49; Hardest minutes · 87:10 gone), natural 11 (new Second
+wind · 10:38, Flat out · 77:10, Fresh legs · 78:23; Second wind · 24:33 gone). hidden.json keeps
+decision 48's rule. Late-match batteries read lower (story 80:11 47%, 87:49 46%).
+
 ### Decision 55 (user, 2026-10-27): no "can't change the numbers", the test results as sentences
 
 The user: "we don't need to reinstate that the AI can't change the numbers … If you write that

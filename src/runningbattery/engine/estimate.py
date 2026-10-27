@@ -15,7 +15,7 @@ import numpy as np
 from runningbattery.engine import params as P
 from runningbattery.engine.battery import BatteryResult, prior_draws, run
 from runningbattery.engine.preprocess import Tracks, tracks
-from runningbattery.engine.signals import Seconds, per_second, red_zone, spells, tired
+from runningbattery.engine.signals import Seconds, metabolic_power, per_second, red_zone, spells, tired
 from runningbattery.io import Match
 from runningbattery.schema import (
     Capacity,
@@ -69,10 +69,13 @@ def capacities(
     return draws[..., 0], draws[..., 1]
 
 
-def chance_map(mode: Mode, update: Update, prior: str, k: float) -> tuple | None:
+def chance_map(mode: Mode, update: Update, prior: str, k: float, drive: str = P.DRIVE,
+               wear: tuple[float, float, float] = (P.WEAR_ALPHA, P.WEAR_SCALE_M, P.WEAR_HALF_KEEP)
+               ) -> tuple | None:
     """The calibration map of the typical-pro chance, if it was fitted for these settings."""
     want = P.LOW_CHANCE_MAP_FOR
-    same = (mode, update, prior, k) == (want["mode"], want["update"], want["prior"], want["k"])
+    same = (mode, update, prior, k, drive, tuple(wear)) == (
+        want["mode"], want["update"], want["prior"], want["k"], want["drive"], tuple(want["wear"]))
     return P.LOW_CHANCE_MAP if same else None
 
 
@@ -84,12 +87,14 @@ def compute(
     n_draws: int = P.N_DRAWS,
     penalty_width: float = P.PENALTY_WIDTH,
     prior: str = P.DEFAULT_PRIOR,
+    drive: str = P.DRIVE,
+    wear: tuple[float, float, float] = (P.WEAR_ALPHA, P.WEAR_SCALE_M, P.WEAR_HALF_KEEP),
 ) -> Estimate:
     if mode == "broadcast":
         match = broadcast_view(match)
     else:
         update = "correction"
-    table = chance_map(mode, update, prior, k)
+    table = chance_map(mode, update, prior, k, drive, wear)
     settings = EngineSettings(
         mode=mode,
         update=update,
@@ -105,7 +110,10 @@ def compute(
     )
     tr = tracks(match)
     cs, dp = capacities(match, tr.ids, mode, update, n_draws, P.PRIORS[prior])
-    bat = run(tr.speed, tr.period, tr.whole_second, cs, dp, k, penalty_width, P.LOW_BATTERY)
+    v = tr.speed
+    if drive == "power":  # decision 56 experiment: equivalent speed, metabolic power / steady cost
+        v = metabolic_power(tr.speed, np.nan_to_num(tr.accel)) / (P.EC_POLY[-1] * P.KT)
+    bat = run(v, tr.period, tr.whole_second, cs, dp, k, penalty_width, P.LOW_BATTERY, wear)
     return Estimate(settings, tr, bat, per_second(tr, bat, table))
 
 

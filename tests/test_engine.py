@@ -34,12 +34,17 @@ ENGINE = Path(__file__).resolve().parents[1] / "src" / "runningbattery" / "engin
 HZ = round(P.FRAME_RATE_HZ)
 
 
-def _battery(speed: np.ndarray, cs: float = 4.0, dp: float = 200.0, k: float = P.K, period=None):
-    """Run one player's battery at 10 Hz with one (CS, D′); returns the result."""
+NO_WEAR = (0.0, P.WEAR_SCALE_M, P.WEAR_HALF_KEEP)
+
+
+def _battery(speed: np.ndarray, cs: float = 4.0, dp: float = 200.0, k: float = P.K, period=None,
+             wear=NO_WEAR):
+    """Run one player's battery at 10 Hz with one (CS, D′); returns the result. Without wear by
+    default, so the battery maths below hold exactly; wear has its own tests."""
     speed = np.asarray(speed, dtype=float)[:, None]
     period = np.ones(len(speed), dtype=int) if period is None else period
     record = np.arange(len(speed)) % HZ == HZ - 1  # the end of each second
-    return run(speed, period, record, np.array([[cs]]), np.array([[dp]]), k)
+    return run(speed, period, record, np.array([[cs]]), np.array([[dp]]), k, wear=wear)
 
 
 # --- Battery maths ------------------------------------------------------------------------------
@@ -61,6 +66,31 @@ def test_refills_with_tau_k_dprime_over_gap():
     deficit = 1.0 - res.median[-1, 0]
     assert deficit == pytest.approx(0.25 * np.exp(-1.0), rel=1e-6)
     assert tau(np.array(0.0), np.array(4.0), np.array(200.0), 4.0) == pytest.approx(200.0)
+
+
+def test_wear_slows_the_refill_by_its_factor():
+    """Decision 56: after 50 m above CS the refill time is τ × (1 + α (1 − e^(−50/scale))); with
+    the defaults (α 1, scale 400 m) that is ×1.1175, so 200 s standing leaves 0.25·e^(−1/1.1175)."""
+    drain = np.full(25 * HZ, 6.0)
+    rest = np.zeros(200 * HZ)
+    wear = (P.WEAR_ALPHA, P.WEAR_SCALE_M, P.WEAR_HALF_KEEP)
+    res = _battery(np.concatenate([drain, rest]), wear=wear)
+    slow = 1.0 + P.WEAR_ALPHA * (1.0 - np.exp(-50.0 / P.WEAR_SCALE_M))
+    assert 1.0 - res.median[-1, 0] == pytest.approx(0.25 * np.exp(-1.0 / slow), rel=1e-4)
+    # the drain itself is unchanged: metre for metre
+    assert _battery(drain, wear=wear).median[-1, 0] == pytest.approx(0.75)
+
+
+def test_wear_builds_with_hard_running():
+    """The same 50 m spell and 60 s rest leave the battery lower the sixth time than the first,
+    with wear; without it the battery after each rest is the same steady cycle or higher."""
+    wear = (P.WEAR_ALPHA, P.WEAR_SCALE_M, P.WEAR_HALF_KEEP)
+    spell = np.concatenate([np.full(25 * HZ, 6.0), np.zeros(60 * HZ)])
+    six = np.concatenate([spell] * 6)
+    worn, plain = _battery(six, wear=wear), _battery(six)
+    end_of = lambda res, n: res.median[n * len(spell) // HZ - 1, 0]  # noqa: E731
+    assert end_of(worn, 6) < end_of(plain, 6)
+    assert end_of(plain, 6) - end_of(worn, 6) > end_of(plain, 1) - end_of(worn, 1)
 
 
 def test_tau_clipped_and_k_scales_it():
