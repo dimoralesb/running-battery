@@ -23,7 +23,7 @@ the whole replay with every player's battery. **How it works** explains the batt
 the research behind them, with references.
 
 You can add these to the address: `?match=natural` for the second match, `&mode=analyst` for
-analyst wording and the battery's range, `&view=full` or `&view=how` to open another view, and
+analyst wording and the spread of the battery across the 200 typical professionals, `&view=full` or `&view=how` to open another view, and
 `&theme=dark` or `&theme=light`.
 
 ## How it works
@@ -90,8 +90,8 @@ would leave a typical pro at X%", never as how tired the player is.
 The model and the typical professional's values come from the research above. We added four
 things. The research applies the model to one athlete whose fitness has been tested; we apply it
 to every player in a match, from their positions alone. Since we can't test the players, we run it
-for 200 typical professionals and show the middle one, and the draws the running contradicts count
-less. We made the refill slow down as the match's hard running builds up, with a formula and
+for 200 typical professionals and show the middle one. A typical professional whose battery the
+player's running would push below empty counts for less, because the player is clearly fitter. We made the refill slow down as the match's hard running builds up, with a formula and
 settings we fitted on simulated matches. And we test the battery on simulated matches where each
 player's true state is known, which real matches can't offer.
 
@@ -100,30 +100,58 @@ sentence the measurements or our list of research findings don't support.
 
 ## What we tested
 
-- On held-out simulated matches the battery is off by 0.06 of the reserve on average compared with
-  the hidden truth, and its 10–90% range holds the true value 78% of the time. On matches with a
-  wider spread of players: 0.09 and 60%.
-- Positions can't tell who is tired. Even the best positions-only detector we could build finds a player's truly low moments with a precision of 0.20 (ours: 0.15). The same running
-  drains players of different fitness very differently, so the page never says a player is tired.
-- We tested the check on 192 sentences we wrote, including paraphrases written before the rules
-  that could catch them:
+### Does the battery match the truth?
 
-  | | Unsupported sentences blocked | Correct sentences blocked |
-  |---|---|---|
-  | Fixed rules | 87 of 119 | 0 of 73 |
-  | Fixed rules + AI | 116 of 119 | 1 of 73 |
+Real matches can't tell us how much reserve a player really has left, so we tested the battery on
+our simulated matches, where we know it for every player and every second. On matches we didn't use
+to set the battery up, it was 6 points away from the true value on average, on a scale from 0 to
+100%.
 
-- We compared 240 simulated matches with published numbers from the Premier League and other
-  leagues (running per position, the drop late in matches, the drop after a player's hardest
-  minutes, ball in play, energy). Most pass; the ones that don't are listed. The movement was also
-  compared with 29 real tracked matches (Bundesliga, A-League and two sample matches) and the events
-  with 380 Premier League matches. Real data was used on our machine only; none is in this
-  repository or on the site.
-- On the story match the live runner's battery stays within half a point of the replay
-  on average, speeds arrive 0.5 s later, a second of play takes 1.5 ms to process, and 128 of the
-  134 times a player reached his hardest minutes are caught within 30 s.
+Because we don't know each player's fitness, the battery is worked out for 200 typical
+professionals and the page shows the middle one. In analyst mode it also shows how spread out the
+200 are: a range that holds the middle 80% of them. The true value fell inside that range 78% of
+the time, close to the 80% it should.
 
-All tables, figures and the full list of gaps are in [docs/TECHNICAL.md](docs/TECHNICAL.md).
+### Can positions tell who is tired?
+
+No. We tried to find the moments when a player's true reserve was really low, using only where the
+players were and how fast they moved. When the best method we could build flagged a moment, it was
+right about 1 time in 5 (our battery: about 1 time in 7). The same running drains a fitter player
+less, and positions don't show fitness. So the page never says a player is tired.
+
+### Does the check stop wrong sentences?
+
+Before a line of commentary reaches the page, a check reads it in two steps. First, fixed rules
+compare every number with the measurements, and every general statement about football with our
+list of research findings. Then a second AI reads the sentence; it can stop it but can't change it.
+
+To test the check we wrote 192 sentences by hand: 119 that should be stopped (a wrong number, or a
+claim the research doesn't support) and 73 correct ones. The fixed rules alone stopped 87 of the
+119 and none of the correct ones. With the second AI added, the check stopped 116 of the 119, and
+stopped 1 correct sentence by mistake.
+
+### Do the simulated matches look like real football?
+
+We generated 240 matches and compared them with numbers from published studies of the Premier
+League and other leagues: how far each position runs, how much running drops in the last 15
+minutes, how much of the match the ball is in play. Most fall inside the margin we set; the ones
+that don't are listed in [docs/TECHNICAL.md](docs/TECHNICAL.md#validation).
+
+We also compared how the simulated players move with 29 real matches that have tracking data (7
+from the Bundesliga, 20 from Australia's A-League and 2 sample matches), and the passes, shots and
+other events with 380 Premier League matches. The real data stayed on our computers; none of it is
+in this repository or on the site.
+
+### Does it work live?
+
+We fed the story match to the battery one frame at a time, as a stadium feed would send it,
+without looking ahead. The live battery was less than half a point away from the one on the site,
+on average. Speeds arrive half a second late, because a live position can only be smoothed with
+what has already happened, and one second of play takes 1.5 milliseconds to process. A player
+reaches "his hardest minutes" when a stretch of one to five minutes is about as intense as his best
+so far; of the 134 times that happened, the live version caught 128 within 30 seconds.
+
+All the numbers, tables and figures are in [docs/TECHNICAL.md](docs/TECHNICAL.md).
 
 ## Limitations
 
