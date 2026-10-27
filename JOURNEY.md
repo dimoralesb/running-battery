@@ -69,6 +69,16 @@ Overlay (one page, the URL's parameters set where it opens)
 
 ## Page specs
 
+### Decision 55 (user, 2026-10-27): no "can't change the numbers", the test results as sentences
+
+The user: "we don't need to reinstate that the AI can't change the numbers … If you write that
+the AI read the number, no one will actually think that it will change them"; "the table is not
+easy to understand". How it works drops the read-only wording from the text and the flow (it stays
+in the small technical line), and the Verifier's test table becomes two sentences (`howVer_1`,
+`howVer_2`): "Of 119 sentences that should have been blocked, the fixed rules blocked 87. With the
+AI check added, 116 were blocked." and "Of 73 correct sentences, the fixed rules blocked none. With
+the AI check added, 1 was blocked by mistake."
+
 ### Decision 54 (user, 2026-10-27): plain, not simplified; show the battery working
 
 The user: "You don't need to dumb it down either with … 'think of a phone battery'. Also, I would

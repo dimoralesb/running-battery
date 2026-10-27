@@ -121,17 +121,7 @@ export function HowItWorks({ data, item, name, text }: Props) {
             <p className="sub">{text.howAgents_3}</p>
             <p className="how-tech">{text.howAgentsTech}</p>
           </div>
-          <div className="table-wrap">
-            <table className="how-table">
-              <thead>
-                <tr><th />{[text.howVerCaught, text.howVerBlocked].map((h) => <th key={h}>{h}</th>)}</tr>
-              </thead>
-              <tbody>
-                <tr><th scope="row">{text.howVerRules}</th><td className="num">87 / 119</td><td className="num">0 / 73</td></tr>
-                <tr><th scope="row">{text.howVerBoth}</th><td className="num">116 / 119</td><td className="num">1 / 73</td></tr>
-              </tbody>
-            </table>
-          </div>
+          <ul className="how-results">{list("howVer_").map((p) => <li key={p}>{p}</li>)}</ul>
         </div>
       </section>
 

@@ -560,12 +560,9 @@ h2 { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--
   .flow li:not(:last-child)::after { content: "↓"; right: auto; left: var(--space-3); top: auto;
     bottom: calc(-1 * var(--space-4) - 1px); transform: none; }
 }
-.table-wrap { overflow-x: auto; }
-.how-table { border-collapse: collapse; font-size: var(--text-sm); width: 100%; }
-.how-table th, .how-table td { padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--border-subtle);
-  text-align: left; vertical-align: top; }
-.how-table thead th { color: var(--text-secondary); font-weight: 500; }
-.how-table td { font-size: var(--text-lg); font-weight: 700; }
+.how-results { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); }
+.how-results li { padding: var(--space-3) var(--space-4); background: var(--surface); border: 1px solid var(--border-subtle);
+  font-size: var(--text-lg); line-height: var(--leading-body); max-width: 60ch; }
 .how-list, .how-steps { margin: var(--space-2) 0 var(--space-3); padding-left: var(--space-5); display: grid; gap: var(--space-1); }
 .how-steps li::marker { font-weight: 700; }
 .how p.how-more { max-width: none; }
