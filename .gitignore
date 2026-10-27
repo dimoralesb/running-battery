@@ -34,15 +34,3 @@ dist/
 .env.*
 !.env.example
 *.tsbuildinfo
-
-# Internal working documents: plans, research notes, design files and the pitch stay on our
-# machines and out of the public repository.
-docs/research/
-docs/PLAN.md
-docs/BUILD_PLAN.md
-docs/RESEARCH_SYNTHESIS.md
-docs/READING_LIST.md
-docs/PITCH.md
-DESIGN.md
-JOURNEY.md
-.design-foundations/
